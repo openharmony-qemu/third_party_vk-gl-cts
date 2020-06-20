@@ -119159,6 +119159,7 @@ dEQP-VK.draw.explicit_vertex_parameter.noperspective_sample_samples_64
 dEQP-VK.draw.explicit_vertex_parameter.smooth_centroid_samples_64
 dEQP-VK.draw.explicit_vertex_parameter.noperspective_centroid_samples_64
 dEQP-VK.compute.basic.concurrent_compute
+dEQP-VK.compute.basic.write_ssbo_array
 dEQP-VK.compute.cooperative_matrix.length.float32_float32.buffer.rowmajor
 dEQP-VK.compute.cooperative_matrix.length.float32_float32.buffer.colmajor
 dEQP-VK.compute.cooperative_matrix.length.float32_float32.workgroup.rowmajor
