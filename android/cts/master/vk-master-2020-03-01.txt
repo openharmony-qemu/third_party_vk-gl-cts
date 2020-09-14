@@ -174853,6 +174853,7 @@ dEQP-VK.spirv_assembly.instruction.compute.indexing.input.struct.opinboundsacces
 dEQP-VK.spirv_assembly.instruction.compute.indexing.input.struct.opinboundsaccesschain_s32
 dEQP-VK.spirv_assembly.instruction.compute.indexing.input.struct.opptraccesschain_u32
 dEQP-VK.spirv_assembly.instruction.compute.indexing.input.struct.opptraccesschain_s32
+dEQP-VK.spirv_assembly.instruction.compute.variable_pointers.dynamic_offset.select_descriptor_array
 dEQP-VK.spirv_assembly.instruction.compute.physical_pointers.compute.reads_opselect_single_buffer
 dEQP-VK.spirv_assembly.instruction.compute.physical_pointers.compute.reads_opfunctioncall_single_buffer
 dEQP-VK.spirv_assembly.instruction.compute.physical_pointers.compute.reads_opphi_single_buffer
