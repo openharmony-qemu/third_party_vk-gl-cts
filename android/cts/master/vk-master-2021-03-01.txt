@@ -260752,6 +260752,7 @@ dEQP-VK.graphicsfuzz.stable-mergesort-for-always-false-if-discard
 dEQP-VK.graphicsfuzz.stable-mergesort-reversed-for-loop
 dEQP-VK.graphicsfuzz.stable-colorgrid-modulo-float-mat-determinant-clamp
 dEQP-VK.graphicsfuzz.stable-colorgrid-modulo-injected-conditional-true
+dEQP-VK.graphicsfuzz.stable-colorgrid-modulo-true-conditional-divided-1
 dEQP-VK.graphicsfuzz.stable-colorgrid-modulo-true-conditional-simple-loop
 dEQP-VK.graphicsfuzz.stable-colorgrid-modulo-vec3-values-from-matrix
 dEQP-VK.graphicsfuzz.stable-mergesort-clamped-conditional-bit-shift
