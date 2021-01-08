@@ -3730,6 +3730,7 @@ dEQP-VK.api.info.sparse_image_format_properties2.3d.linear.astc_12x12_srgb_block
 dEQP-VK.api.info.android.mandatory_extensions
 dEQP-VK.api.info.android.no_unknown_extensions
 dEQP-VK.api.info.android.no_layers
+dEQP-VK.api.device_drm_properties.drm_files_exist
 dEQP-VK.api.device_init.create_instance_name_version
 dEQP-VK.api.device_init.create_instance_invalid_api_version
 dEQP-VK.api.device_init.create_instance_null_appinfo
