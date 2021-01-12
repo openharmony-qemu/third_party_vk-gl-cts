@@ -401483,6 +401483,10 @@ dEQP-VK.transform_feedback.simple.multistreams_1
 dEQP-VK.transform_feedback.simple.multistreams_3
 dEQP-VK.transform_feedback.simple.multistreams_6
 dEQP-VK.transform_feedback.simple.multistreams_14
+dEQP-VK.transform_feedback.simple.multiquery_1
+dEQP-VK.transform_feedback.simple.multiquery_3
+dEQP-VK.transform_feedback.simple.multiquery_6
+dEQP-VK.transform_feedback.simple.multiquery_14
 dEQP-VK.transform_feedback.fuzz.2_level_array.float.vertex
 dEQP-VK.transform_feedback.fuzz.2_level_array.float.geometry
 dEQP-VK.transform_feedback.fuzz.2_level_array.vec2.vertex
