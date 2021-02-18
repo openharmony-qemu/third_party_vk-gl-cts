@@ -1,0 +1,2 @@
+/android/cts/master/vk-master.txt filter=lfs diff=lfs merge=lfs -text
+/external/vulkancts/mustpass/master/vk-default.txt filter=lfs diff=lfs merge=lfs -text
