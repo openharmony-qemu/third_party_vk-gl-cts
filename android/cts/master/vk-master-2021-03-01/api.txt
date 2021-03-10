@@ -20,6 +20,7 @@ dEQP-VK.api.info.image_format_properties2.2d.linear.g12x4_b12x4r12x4_2plane_444_
 dEQP-VK.api.info.image_format_properties2.2d.linear.g16_b16r16_2plane_444_unorm_ext
 dEQP-VK.api.device_init.enumerate_devices_alloc_leak
 dEQP-VK.api.device_init.create_device_global_priority
+dEQP-VK.api.device_init.create_device_global_priority_query
 dEQP-VK.api.object_management.private_data.device_memory_small
 dEQP-VK.api.object_management.private_data.buffer_uniform_small
 dEQP-VK.api.object_management.private_data.buffer_uniform_large

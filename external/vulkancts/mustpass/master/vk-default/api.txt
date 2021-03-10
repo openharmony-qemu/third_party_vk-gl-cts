@@ -3740,6 +3740,7 @@ dEQP-VK.api.device_init.create_multiple_devices
 dEQP-VK.api.device_init.create_device_unsupported_extensions
 dEQP-VK.api.device_init.create_device_various_queue_counts
 dEQP-VK.api.device_init.create_device_global_priority
+dEQP-VK.api.device_init.create_device_global_priority_query
 dEQP-VK.api.device_init.create_device_features2
 dEQP-VK.api.device_init.create_device_unsupported_features
 dEQP-VK.api.device_init.create_device_queue2
