@@ -107242,6 +107242,12 @@ dEQP-VK.dynamic_state.compute_transfer.multi.compute.before
 dEQP-VK.dynamic_state.compute_transfer.multi.compute.after
 dEQP-VK.dynamic_state.compute_transfer.multi.transfer.before
 dEQP-VK.dynamic_state.compute_transfer.multi.transfer.after
+dEQP-VK.dynamic_state.inheritance.baseline
+dEQP-VK.dynamic_state.inheritance.primary
+dEQP-VK.dynamic_state.inheritance.secondary
+dEQP-VK.dynamic_state.inheritance.split
+dEQP-VK.dynamic_state.inheritance.primary_with_count
+dEQP-VK.dynamic_state.inheritance.secondary_with_count
 dEQP-VK.ssbo.layout.single_basic_type.std140.row_major_lowp_mat2_store_cols
 dEQP-VK.ssbo.layout.single_basic_type.std140.row_major_lowp_mat2_comp_access_store_cols
 dEQP-VK.ssbo.layout.single_basic_type.std140.row_major_mediump_mat2_store_cols
