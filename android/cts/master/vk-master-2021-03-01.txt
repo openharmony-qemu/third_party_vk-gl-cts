@@ -104499,6 +104499,12 @@ dEQP-VK.spirv_assembly.instruction.graphics.float32.comparison_4.frexpstruct_tes
 dEQP-VK.spirv_assembly.instruction.graphics.float32.comparison_4.frexpstruct_tese
 dEQP-VK.spirv_assembly.instruction.graphics.float32.comparison_4.frexpstruct_geom
 dEQP-VK.spirv_assembly.instruction.graphics.float32.comparison_4.frexpstruct_frag
+dEQP-VK.spirv_assembly.instruction.graphics.early_fragment.depth_less
+dEQP-VK.spirv_assembly.instruction.graphics.early_fragment.depth_greater
+dEQP-VK.spirv_assembly.instruction.graphics.early_fragment.depth_less_or_equal
+dEQP-VK.spirv_assembly.instruction.graphics.early_fragment.depth_greater_or_equal
+dEQP-VK.spirv_assembly.instruction.graphics.early_fragment.depth_equal
+dEQP-VK.spirv_assembly.instruction.graphics.early_fragment.depth_not_equal
 dEQP-VK.spirv_assembly.instruction.spirv1p4.hlsl_functionality1.member_decorate_string
 dEQP-VK.spirv_assembly.instruction.function_params.sampler_param
 dEQP-VK.spirv_assembly.instruction.amd_trinary_minmax.min3.i8.scalar
