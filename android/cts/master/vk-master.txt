@@ -1,3 +1,43 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:d21c918f758ef94f2a05d229bfdcca014d81a5491b8b4591c1a67ab72d20b567
-size 103474234
+vk-master/api.txt
+vk-master/binding-model.txt
+vk-master/clipping.txt
+vk-master/compute.txt
+vk-master/conditional-rendering.txt
+vk-master/descriptor-indexing.txt
+vk-master/device-group.txt
+vk-master/draw.txt
+vk-master/drm-format-modifiers.txt
+vk-master/dynamic-state.txt
+vk-master/fragment-operations.txt
+vk-master/fragment-shader-interlock.txt
+vk-master/fragment-shading-rate.txt
+vk-master/geometry.txt
+vk-master/glsl.txt
+vk-master/graphicsfuzz.txt
+vk-master/image.txt
+vk-master/imageless-framebuffer.txt
+vk-master/info.txt
+vk-master/memory-model.txt
+vk-master/memory.txt
+vk-master/multiview.txt
+vk-master/pipeline.txt
+vk-master/protected-memory.txt
+vk-master/query-pool.txt
+vk-master/rasterization.txt
+vk-master/ray-query.txt
+vk-master/ray-tracing-pipeline.txt
+vk-master/renderpass.txt
+vk-master/renderpass2.txt
+vk-master/robustness.txt
+vk-master/sparse-resources.txt
+vk-master/spirv-assembly.txt
+vk-master/ssbo.txt
+vk-master/subgroups.txt
+vk-master/synchronization.txt
+vk-master/synchronization2.txt
+vk-master/tessellation.txt
+vk-master/texture.txt
+vk-master/transform-feedback.txt
+vk-master/ubo.txt
+vk-master/wsi.txt
+vk-master/ycbcr.txt
