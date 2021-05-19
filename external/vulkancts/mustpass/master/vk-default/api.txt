@@ -25906,6 +25906,11 @@ dEQP-VK.api.copy_and_blit.core.image_to_image.cube.cube_to_cube_layers
 dEQP-VK.api.copy_and_blit.core.image_to_image.cube.cube_to_cube_whole
 dEQP-VK.api.copy_and_blit.core.image_to_image.array.array_to_array_layers
 dEQP-VK.api.copy_and_blit.core.image_to_image.array.array_to_array_whole
+dEQP-VK.api.copy_and_blit.core.image_to_image.array.array_to_array_whole_mipmap_r8g8b8a8_uint
+dEQP-VK.api.copy_and_blit.core.image_to_image.array.array_to_array_whole_mipmap_d32_sfloat
+dEQP-VK.api.copy_and_blit.core.image_to_image.array.array_to_array_whole_mipmap_d16_unorm
+dEQP-VK.api.copy_and_blit.core.image_to_image.array.array_to_array_whole_mipmap_d24_unorm_s8_uint
+dEQP-VK.api.copy_and_blit.core.image_to_image.array.array_to_array_whole_mipmap_s8_uint
 dEQP-VK.api.copy_and_blit.core.image_to_buffer.whole
 dEQP-VK.api.copy_and_blit.core.image_to_buffer.buffer_offset
 dEQP-VK.api.copy_and_blit.core.image_to_buffer.buffer_offset_relaxed
@@ -108547,6 +108552,11 @@ dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.cube.cube_to_cube_
 dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.cube.cube_to_cube_whole
 dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.array.array_to_array_layers
 dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.array.array_to_array_whole
+dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.array.array_to_array_whole_mipmap_r8g8b8a8_uint
+dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.array.array_to_array_whole_mipmap_d32_sfloat
+dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.array.array_to_array_whole_mipmap_d16_unorm
+dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.array.array_to_array_whole_mipmap_d24_unorm_s8_uint
+dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.array.array_to_array_whole_mipmap_s8_uint
 dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_buffer.whole
 dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_buffer.buffer_offset
 dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_buffer.buffer_offset_relaxed
@@ -121562,6 +121572,11 @@ dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.cube.cube_to_cube_layers
 dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.cube.cube_to_cube_whole
 dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.array.array_to_array_layers
 dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.array.array_to_array_whole
+dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.array.array_to_array_whole_mipmap_r8g8b8a8_uint
+dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.array.array_to_array_whole_mipmap_d32_sfloat
+dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.array.array_to_array_whole_mipmap_d16_unorm
+dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.array.array_to_array_whole_mipmap_d24_unorm_s8_uint
+dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.array.array_to_array_whole_mipmap_s8_uint
 dEQP-VK.api.copy_and_blit.copy_commands2.image_to_buffer.whole
 dEQP-VK.api.copy_and_blit.copy_commands2.image_to_buffer.buffer_offset
 dEQP-VK.api.copy_and_blit.copy_commands2.image_to_buffer.buffer_offset_relaxed
