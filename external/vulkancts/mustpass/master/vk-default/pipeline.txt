@@ -142527,6 +142527,8 @@ dEQP-VK.pipeline.vertex_input.single_attribute.vec3.as_r8g8b8_srgb_rate_vertex
 dEQP-VK.pipeline.vertex_input.single_attribute.vec3.as_r8g8b8_srgb_rate_instance
 dEQP-VK.pipeline.vertex_input.single_attribute.vec3.as_b8g8r8_srgb_rate_vertex
 dEQP-VK.pipeline.vertex_input.single_attribute.vec3.as_b8g8r8_srgb_rate_instance
+dEQP-VK.pipeline.vertex_input.single_attribute.vec3.as_b10g11r11_ufloat_pack32_rate_vertex
+dEQP-VK.pipeline.vertex_input.single_attribute.vec3.as_b10g11r11_ufloat_pack32_rate_instance
 dEQP-VK.pipeline.vertex_input.single_attribute.vec4.as_r8g8b8a8_unorm_rate_vertex
 dEQP-VK.pipeline.vertex_input.single_attribute.vec4.as_r8g8b8a8_unorm_rate_instance
 dEQP-VK.pipeline.vertex_input.single_attribute.vec4.as_r8g8b8a8_snorm_rate_vertex
@@ -142613,6 +142615,8 @@ dEQP-VK.pipeline.vertex_input.single_attribute.mat3.as_r8g8b8_srgb_rate_vertex
 dEQP-VK.pipeline.vertex_input.single_attribute.mat3.as_r8g8b8_srgb_rate_instance
 dEQP-VK.pipeline.vertex_input.single_attribute.mat3.as_b8g8r8_srgb_rate_vertex
 dEQP-VK.pipeline.vertex_input.single_attribute.mat3.as_b8g8r8_srgb_rate_instance
+dEQP-VK.pipeline.vertex_input.single_attribute.mat3.as_b10g11r11_ufloat_pack32_rate_vertex
+dEQP-VK.pipeline.vertex_input.single_attribute.mat3.as_b10g11r11_ufloat_pack32_rate_instance
 dEQP-VK.pipeline.vertex_input.single_attribute.mat4.as_r8g8b8a8_unorm_rate_vertex
 dEQP-VK.pipeline.vertex_input.single_attribute.mat4.as_r8g8b8a8_unorm_rate_instance
 dEQP-VK.pipeline.vertex_input.single_attribute.mat4.as_r8g8b8a8_snorm_rate_vertex
