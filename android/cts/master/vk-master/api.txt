@@ -1415,6 +1415,7 @@ dEQP-VK.api.info.image_format_properties.3d.linear.astc_12x10_unorm_block
 dEQP-VK.api.info.image_format_properties.3d.linear.astc_12x10_srgb_block
 dEQP-VK.api.info.image_format_properties.3d.linear.astc_12x12_unorm_block
 dEQP-VK.api.info.image_format_properties.3d.linear.astc_12x12_srgb_block
+dEQP-VK.api.info.extension_core_versions.extension_core_versions
 dEQP-VK.api.info.get_physical_device_properties2.features
 dEQP-VK.api.info.get_physical_device_properties2.properties
 dEQP-VK.api.info.get_physical_device_properties2.format_properties
