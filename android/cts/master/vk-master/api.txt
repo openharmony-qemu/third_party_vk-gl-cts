@@ -223771,6 +223771,8 @@ dEQP-VK.api.pipeline.renderpass.framebuffer_compatible_renderpass
 dEQP-VK.api.pipeline.pipeline_layout.lifetime.graphics
 dEQP-VK.api.pipeline.pipeline_layout.lifetime.compute
 dEQP-VK.api.pipeline.pipeline_layout.lifetime.destroy_after_end
+dEQP-VK.api.pipeline.pipeline_layout.lifetime.destroy_after_compute_pipeline_construction
+dEQP-VK.api.pipeline.pipeline_layout.lifetime.destroy_after_graphics_pipeline_construction
 dEQP-VK.api.pipeline.pipeline_invalid_pointers_unused_structs.graphics
 dEQP-VK.api.pipeline.pipeline_invalid_pointers_unused_structs.compute
 dEQP-VK.api.invariance.random
