@@ -63,6 +63,8 @@ dEQP-VK.api.object_management.private_data.command_pool
 dEQP-VK.api.object_management.private_data.command_pool_transient
 dEQP-VK.api.object_management.private_data.command_buffer_primary
 dEQP-VK.api.object_management.private_data.command_buffer_secondary
+dEQP-VK.api.buffer.basic.max_size
+dEQP-VK.api.buffer.basic.max_size_sparse
 dEQP-VK.api.buffer.basic.size_max_uint64
 dEQP-VK.api.command_buffers.record_many_draws_primary_1
 dEQP-VK.api.command_buffers.record_many_draws_primary_2
