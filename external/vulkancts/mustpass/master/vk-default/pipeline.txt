@@ -137698,6 +137698,7 @@ dEQP-VK.pipeline.push_constant.graphics_pipeline.overlap_4_shaders_vert_tess_fra
 dEQP-VK.pipeline.push_constant.graphics_pipeline.overlap_5_shaders_vert_tess_geom_frag
 dEQP-VK.pipeline.push_constant.graphics_pipeline.overwrite
 dEQP-VK.pipeline.push_constant.compute_pipeline.simple_test
+dEQP-VK.pipeline.push_constant.compute_pipeline.uninitialized
 dEQP-VK.pipeline.push_constant.compute_pipeline.overwrite
 dEQP-VK.pipeline.push_constant.lifetime.push_range0_bind_layout1
 dEQP-VK.pipeline.push_constant.lifetime.push_range1_bind_layout1_push_range0
