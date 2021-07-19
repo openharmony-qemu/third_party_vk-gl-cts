@@ -223774,6 +223774,7 @@ dEQP-VK.api.pipeline.pipeline_layout.lifetime.destroy_after_end
 dEQP-VK.api.pipeline.pipeline_invalid_pointers_unused_structs.graphics
 dEQP-VK.api.pipeline.pipeline_invalid_pointers_unused_structs.compute
 dEQP-VK.api.invariance.random
+dEQP-VK.api.invariance.memory_requirements_matching
 dEQP-VK.api.tooling_info.validate_getter
 dEQP-VK.api.tooling_info.validate_tools_properties
 dEQP-VK.api.tooling_info.validate_instance_layers
