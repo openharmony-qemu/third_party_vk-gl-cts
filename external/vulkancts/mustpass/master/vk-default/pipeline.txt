@@ -137849,6 +137849,10 @@ dEQP-VK.pipeline.spec_constant.graphics.vertex.basic.double_packed
 dEQP-VK.pipeline.spec_constant.graphics.vertex.basic.double_2_packed
 dEQP-VK.pipeline.spec_constant.graphics.vertex.basic.mixed_packed
 dEQP-VK.pipeline.spec_constant.graphics.vertex.basic.mixed_reversed_packed
+dEQP-VK.pipeline.spec_constant.graphics.vertex.basic.unused_single
+dEQP-VK.pipeline.spec_constant.graphics.vertex.basic.unused_single_packed
+dEQP-VK.pipeline.spec_constant.graphics.vertex.basic.unused_multiple
+dEQP-VK.pipeline.spec_constant.graphics.vertex.basic.unused_multiple_packed
 dEQP-VK.pipeline.spec_constant.graphics.vertex.builtin.default
 dEQP-VK.pipeline.spec_constant.graphics.vertex.builtin.specialized
 dEQP-VK.pipeline.spec_constant.graphics.vertex.expression.spec_const_expression
@@ -138079,6 +138083,10 @@ dEQP-VK.pipeline.spec_constant.graphics.fragment.basic.double_packed
 dEQP-VK.pipeline.spec_constant.graphics.fragment.basic.double_2_packed
 dEQP-VK.pipeline.spec_constant.graphics.fragment.basic.mixed_packed
 dEQP-VK.pipeline.spec_constant.graphics.fragment.basic.mixed_reversed_packed
+dEQP-VK.pipeline.spec_constant.graphics.fragment.basic.unused_single
+dEQP-VK.pipeline.spec_constant.graphics.fragment.basic.unused_single_packed
+dEQP-VK.pipeline.spec_constant.graphics.fragment.basic.unused_multiple
+dEQP-VK.pipeline.spec_constant.graphics.fragment.basic.unused_multiple_packed
 dEQP-VK.pipeline.spec_constant.graphics.fragment.builtin.default
 dEQP-VK.pipeline.spec_constant.graphics.fragment.builtin.specialized
 dEQP-VK.pipeline.spec_constant.graphics.fragment.expression.spec_const_expression
@@ -138309,6 +138317,10 @@ dEQP-VK.pipeline.spec_constant.graphics.tess_control.basic.double_packed
 dEQP-VK.pipeline.spec_constant.graphics.tess_control.basic.double_2_packed
 dEQP-VK.pipeline.spec_constant.graphics.tess_control.basic.mixed_packed
 dEQP-VK.pipeline.spec_constant.graphics.tess_control.basic.mixed_reversed_packed
+dEQP-VK.pipeline.spec_constant.graphics.tess_control.basic.unused_single
+dEQP-VK.pipeline.spec_constant.graphics.tess_control.basic.unused_single_packed
+dEQP-VK.pipeline.spec_constant.graphics.tess_control.basic.unused_multiple
+dEQP-VK.pipeline.spec_constant.graphics.tess_control.basic.unused_multiple_packed
 dEQP-VK.pipeline.spec_constant.graphics.tess_control.builtin.default
 dEQP-VK.pipeline.spec_constant.graphics.tess_control.builtin.specialized
 dEQP-VK.pipeline.spec_constant.graphics.tess_control.expression.spec_const_expression
@@ -138539,6 +138551,10 @@ dEQP-VK.pipeline.spec_constant.graphics.tess_eval.basic.double_packed
 dEQP-VK.pipeline.spec_constant.graphics.tess_eval.basic.double_2_packed
 dEQP-VK.pipeline.spec_constant.graphics.tess_eval.basic.mixed_packed
 dEQP-VK.pipeline.spec_constant.graphics.tess_eval.basic.mixed_reversed_packed
+dEQP-VK.pipeline.spec_constant.graphics.tess_eval.basic.unused_single
+dEQP-VK.pipeline.spec_constant.graphics.tess_eval.basic.unused_single_packed
+dEQP-VK.pipeline.spec_constant.graphics.tess_eval.basic.unused_multiple
+dEQP-VK.pipeline.spec_constant.graphics.tess_eval.basic.unused_multiple_packed
 dEQP-VK.pipeline.spec_constant.graphics.tess_eval.builtin.default
 dEQP-VK.pipeline.spec_constant.graphics.tess_eval.builtin.specialized
 dEQP-VK.pipeline.spec_constant.graphics.tess_eval.expression.spec_const_expression
@@ -138769,6 +138785,10 @@ dEQP-VK.pipeline.spec_constant.graphics.geometry.basic.double_packed
 dEQP-VK.pipeline.spec_constant.graphics.geometry.basic.double_2_packed
 dEQP-VK.pipeline.spec_constant.graphics.geometry.basic.mixed_packed
 dEQP-VK.pipeline.spec_constant.graphics.geometry.basic.mixed_reversed_packed
+dEQP-VK.pipeline.spec_constant.graphics.geometry.basic.unused_single
+dEQP-VK.pipeline.spec_constant.graphics.geometry.basic.unused_single_packed
+dEQP-VK.pipeline.spec_constant.graphics.geometry.basic.unused_multiple
+dEQP-VK.pipeline.spec_constant.graphics.geometry.basic.unused_multiple_packed
 dEQP-VK.pipeline.spec_constant.graphics.geometry.builtin.default
 dEQP-VK.pipeline.spec_constant.graphics.geometry.builtin.specialized
 dEQP-VK.pipeline.spec_constant.graphics.geometry.expression.spec_const_expression
@@ -138999,6 +139019,10 @@ dEQP-VK.pipeline.spec_constant.compute.basic.double_packed
 dEQP-VK.pipeline.spec_constant.compute.basic.double_2_packed
 dEQP-VK.pipeline.spec_constant.compute.basic.mixed_packed
 dEQP-VK.pipeline.spec_constant.compute.basic.mixed_reversed_packed
+dEQP-VK.pipeline.spec_constant.compute.basic.unused_single
+dEQP-VK.pipeline.spec_constant.compute.basic.unused_single_packed
+dEQP-VK.pipeline.spec_constant.compute.basic.unused_multiple
+dEQP-VK.pipeline.spec_constant.compute.basic.unused_multiple_packed
 dEQP-VK.pipeline.spec_constant.compute.builtin.default
 dEQP-VK.pipeline.spec_constant.compute.builtin.specialized
 dEQP-VK.pipeline.spec_constant.compute.expression.spec_const_expression
