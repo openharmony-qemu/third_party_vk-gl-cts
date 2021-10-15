@@ -220386,7 +220386,6 @@ dEQP-VK.binding_model.descriptorset_random.sets4.constant.ubolimithigh.sbolimitl
 dEQP-VK.binding_model.descriptorset_random.sets4.constant.ubolimithigh.sbolimitlow.sampledimglow.outimgtexlow.iublimithigh.uab.comp.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.constant.ubolimithigh.sbolimitlow.sampledimglow.outimgtexlow.iublimithigh.uab.frag.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.constant.ubolimithigh.sbolimitlow.sampledimglow.outimgtexlow.iublimithigh.uab.vert.noia.0
-dEQP-VK.binding_model.descriptorset_random.sets4.constant.ubolimithigh.sbolimitlow.sampledimglow.outimgtexlow.noiub.nouab.comp.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.constant.ubolimithigh.sbolimitlow.sampledimglow.outimgtexlow.noiub.nouab.frag.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.constant.ubolimithigh.sbolimitlow.sampledimglow.outimgtexlow.noiub.nouab.vert.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.constant.ubolimithigh.sbolimitlow.sampledimglow.outimgtexlow.noiub.uab.comp.noia.0
@@ -220652,7 +220651,6 @@ dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimi
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.lowimgnotex.noiub.nouab.vert.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.lowimgnotex.noiub.uab.comp.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.lowimgnotex.noiub.uab.frag.noia.0
-dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.lowimgnotex.noiub.uab.vert.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.lowimgnotex.iublimitlow.nouab.comp.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.lowimgnotex.iublimitlow.nouab.frag.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.lowimgnotex.iublimitlow.nouab.vert.noia.0
@@ -302651,8 +302649,6 @@ dEQP-VK.draw.zero_viewport_height.front_cw_cull_front
 dEQP-VK.draw.zero_viewport_height.front_cw_cull_back
 dEQP-VK.draw.zero_viewport_height.front_cw_cull_both
 dEQP-VK.draw.inverted_depth_ranges.depthclamp_deltazero
-dEQP-VK.draw.inverted_depth_ranges.depthclamp_deltasmall
-dEQP-VK.draw.inverted_depth_ranges.depthclamp_deltaone
 dEQP-VK.draw.inverted_depth_ranges.depthclamp_depth_range_unrestricted
 dEQP-VK.draw.inverted_depth_ranges.nodepthclamp_deltasmall
 dEQP-VK.draw.inverted_depth_ranges.nodepthclamp_deltaone
