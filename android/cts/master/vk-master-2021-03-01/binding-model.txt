@@ -353,6 +353,7 @@ dEQP-VK.binding_model.descriptorset_random.sets4.constant.ubolimitlow.sbolimitlo
 dEQP-VK.binding_model.descriptorset_random.sets4.constant.ubolimitlow.sbolimitlow.sampledimghigh.outimgtexlow.iublimitlow.uab.chit.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.constant.ubolimitlow.sbolimitlow.sampledimghigh.outimgtexlow.iublimitlow.uab.miss.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.constant.ubolimitlow.sbolimitlow.sampledimghigh.outimgtexlow.iublimitlow.uab.call.noia.0
+dEQP-VK.binding_model.descriptorset_random.sets4.constant.ubolimithigh.sbolimitlow.sampledimglow.outimgtexlow.noiub.nouab.comp.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.unifindexed.noubo.nosbo.nosampledimg.outimgonly.noiub.nouab.comp.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.unifindexed.noubo.nosbo.nosampledimg.outimgonly.noiub.nouab.frag.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.unifindexed.noubo.nosbo.nosampledimg.outimgonly.noiub.nouab.frag.ialimitlow.0
@@ -6665,6 +6666,7 @@ dEQP-VK.binding_model.descriptorset_random.sets4.dynindexed.ubolimitlow.sbolimit
 dEQP-VK.binding_model.descriptorset_random.sets4.dynindexed.ubolimitlow.sbolimitlow.sampledimghigh.lowimgsingletex.iublimithigh.uab.chit.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.dynindexed.ubolimitlow.sbolimitlow.sampledimghigh.lowimgsingletex.iublimithigh.uab.miss.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.dynindexed.ubolimitlow.sbolimitlow.sampledimghigh.lowimgsingletex.iublimithigh.uab.call.noia.0
+dEQP-VK.binding_model.descriptorset_random.sets4.dynindexed.ubolimitlow.sbolimithigh.nosampledimg.lowimgsingletex.noiub.uab.frag.ialimitlow.0
 dEQP-VK.binding_model.descriptorset_random.sets4.dynindexed.ubolimitlow.sbolimithigh.sampledimglow.outimgonly.noiub.nouab.frag.ialimitlow.0
 dEQP-VK.binding_model.descriptorset_random.sets4.dynindexed.ubolimitlow.sbolimithigh.sampledimglow.outimgonly.noiub.uab.frag.ialimitlow.0
 dEQP-VK.binding_model.descriptorset_random.sets4.dynindexed.ubolimitlow.sbolimithigh.sampledimglow.outimgonly.iublimitlow.nouab.frag.ialimitlow.0
@@ -8933,6 +8935,8 @@ dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.nosbo.s
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.nosbo.sampledimghigh.lowimgsingletex.iublimitlow.uab.frag.ialimitlow.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.nosbo.sampledimghigh.lowimgsingletex.iublimithigh.nouab.frag.ialimitlow.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.nosbo.sampledimghigh.lowimgsingletex.iublimithigh.uab.frag.ialimitlow.0
+dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.nosampledimg.outimgtexlow.noiub.nouab.frag.ialimitlow.4
+dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.nosampledimg.outimgtexlow.noiub.nouab.frag.ialimitlow.8
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.nosampledimg.lowimgnotex.noiub.nouab.frag.ialimitlow.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.nosampledimg.lowimgnotex.noiub.nouab.frag.ialimitlow.1
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.nosampledimg.lowimgnotex.noiub.nouab.frag.ialimitlow.2
@@ -8986,6 +8990,7 @@ dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimi
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.nosampledimg.lowimgsingletex.iublimithigh.nouab.frag.ialimitlow.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.nosampledimg.lowimgsingletex.iublimithigh.nouab.frag.ialimithigh.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.nosampledimg.lowimgsingletex.iublimithigh.uab.frag.ialimitlow.0
+dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.nosampledimg.storageimghigh.noiub.nouab.frag.ialimitlow.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.nosampledimg.storageimghigh.iublimitlow.nouab.frag.ialimitlow.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.outimgonly.noiub.nouab.frag.ialimitlow.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.outimgonly.noiub.nouab.frag.ialimitlow.1
@@ -9355,6 +9360,7 @@ dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimi
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.lowimgnotex.noiub.uab.frag.ialimitlow.8
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.lowimgnotex.noiub.uab.frag.ialimitlow.9
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.lowimgnotex.noiub.uab.frag.ialimithigh.0
+dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.lowimgnotex.noiub.uab.vert.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.lowimgnotex.noiub.uab.rgnv.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.lowimgnotex.noiub.uab.rgnv.noia.1
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.lowimgnotex.noiub.uab.rgnv.noia.2
@@ -9728,7 +9734,9 @@ dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimi
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.storageimghigh.noiub.nouab.chit.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.storageimghigh.noiub.nouab.miss.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.storageimghigh.noiub.nouab.call.noia.0
+dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.storageimghigh.noiub.uab.frag.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.storageimghigh.noiub.uab.frag.ialimitlow.0
+dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.storageimghigh.noiub.uab.vert.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.storageimghigh.noiub.uab.rgnv.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.storageimghigh.noiub.uab.rgen.noia.0
 dEQP-VK.binding_model.descriptorset_random.sets4.runtimesize.ubolimitlow.sbolimitlow.sampledimglow.storageimghigh.noiub.uab.sect.noia.0
