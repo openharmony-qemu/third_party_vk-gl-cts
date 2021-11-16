@@ -87592,7 +87592,8 @@ dEQP-VK.api.granularity.in_render_pass.d24_unorm_s8_uint
 dEQP-VK.api.granularity.in_render_pass.d32_sfloat_s8_uint
 dEQP-VK.api.get_memory_commitment.memory_commitment
 dEQP-VK.api.get_memory_commitment.memory_commitment_allocate_only
-dEQP-VK.api.external.semaphore.sync_fd.info
+dEQP-VK.api.external.semaphore.sync_fd.info_binary
+dEQP-VK.api.external.semaphore.sync_fd.info_timeline
 dEQP-VK.api.external.semaphore.sync_fd.import_twice_temporary
 dEQP-VK.api.external.semaphore.sync_fd.reimport_temporary
 dEQP-VK.api.external.semaphore.sync_fd.import_multiple_times_temporary
@@ -87604,7 +87605,8 @@ dEQP-VK.api.external.semaphore.sync_fd.dup_temporary
 dEQP-VK.api.external.semaphore.sync_fd.dup2_temporary
 dEQP-VK.api.external.semaphore.sync_fd.dup3_temporary
 dEQP-VK.api.external.semaphore.sync_fd.send_over_socket_temporary
-dEQP-VK.api.external.semaphore.opaque_fd.info
+dEQP-VK.api.external.semaphore.opaque_fd.info_binary
+dEQP-VK.api.external.semaphore.opaque_fd.info_timeline
 dEQP-VK.api.external.semaphore.opaque_fd.import_twice_temporary
 dEQP-VK.api.external.semaphore.opaque_fd.reimport_temporary
 dEQP-VK.api.external.semaphore.opaque_fd.import_multiple_times_temporary
@@ -87633,7 +87635,8 @@ dEQP-VK.api.external.semaphore.opaque_fd.send_over_socket_permanent
 dEQP-VK.api.external.semaphore.opaque_fd.signal_wait_import_permanent
 dEQP-VK.api.external.semaphore.opaque_fd.export_signal_import_wait_permanent
 dEQP-VK.api.external.semaphore.opaque_fd.export_import_signal_wait_permanent
-dEQP-VK.api.external.semaphore.opaque_win32.info
+dEQP-VK.api.external.semaphore.opaque_win32.info_binary
+dEQP-VK.api.external.semaphore.opaque_win32.info_timeline
 dEQP-VK.api.external.semaphore.opaque_win32.create_win32_temporary
 dEQP-VK.api.external.semaphore.opaque_win32.import_twice_temporary
 dEQP-VK.api.external.semaphore.opaque_win32.reimport_temporary
@@ -87654,7 +87657,8 @@ dEQP-VK.api.external.semaphore.opaque_win32.transference_permanent
 dEQP-VK.api.external.semaphore.opaque_win32.signal_wait_import_permanent
 dEQP-VK.api.external.semaphore.opaque_win32.export_signal_import_wait_permanent
 dEQP-VK.api.external.semaphore.opaque_win32.export_import_signal_wait_permanent
-dEQP-VK.api.external.semaphore.opaque_win32_kmt.info
+dEQP-VK.api.external.semaphore.opaque_win32_kmt.info_binary
+dEQP-VK.api.external.semaphore.opaque_win32_kmt.info_timeline
 dEQP-VK.api.external.semaphore.opaque_win32_kmt.create_win32_temporary
 dEQP-VK.api.external.semaphore.opaque_win32_kmt.import_twice_temporary
 dEQP-VK.api.external.semaphore.opaque_win32_kmt.reimport_temporary
