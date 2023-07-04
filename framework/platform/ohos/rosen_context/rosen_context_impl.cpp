@@ -275,15 +275,15 @@ bool RosenContextImpl::InitNativeWindow()
     }
     if (pixelFormat_.redBits == 8 && pixelFormat_.greenBits == 8 && pixelFormat_.blueBits == 8 && pixelFormat_.alphaBits == 8)
     {
-        NativeWindowHandleOpt(nativeWindow_, SET_FORMAT, PIXEL_FMT_RGBA_8888);
+        NativeWindowHandleOpt(nativeWindow_, SET_FORMAT, GRAPHIC_PIXEL_FMT_RGBA_8888);
     }
     else if (pixelFormat_.redBits == 5 && pixelFormat_.greenBits == 6 && pixelFormat_.blueBits == 5 && pixelFormat_.alphaBits == 0)
     {
-        NativeWindowHandleOpt(nativeWindow_, SET_FORMAT, PIXEL_FMT_RGB_565);
+        NativeWindowHandleOpt(nativeWindow_, SET_FORMAT, GRAPHIC_PIXEL_FMT_RGB_565);
     }
     else if (pixelFormat_.redBits == 4 && pixelFormat_.greenBits == 4 && pixelFormat_.blueBits == 4 && pixelFormat_.alphaBits == 4)
     {
-        NativeWindowHandleOpt(nativeWindow_, SET_FORMAT, PIXEL_FMT_RGBA_4444);
+        NativeWindowHandleOpt(nativeWindow_, SET_FORMAT, GRAPHIC_PIXEL_FMT_RGBA_4444);
     }
     printf("native window ok\n");
     return true;
