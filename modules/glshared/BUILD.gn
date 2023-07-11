@@ -56,48 +56,44 @@ ohos_source_set("deqp-gl-shared_source") {
     "//third_party/vk-gl-cts/modules/glshared/glsTextureTestUtil.cpp",
     "//third_party/vk-gl-cts/modules/glshared/glsUniformBlockCase.cpp",
     "//third_party/vk-gl-cts/modules/glshared/glsVertexArrayTests.cpp",
-
   ]
-  include_dirs = [
-    "//third_party/vk-gl-cts/modules/glshared",
-
-  ]
+  include_dirs = [ "//third_party/vk-gl-cts/modules/glshared" ]
   include_dirs += deqp_common_include_dirs
   deps = [
+    "//third_party/libpng:libpng",
+    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
+    "//third_party/vk-gl-cts/framework/opengl/simplereference:libdeqp_glutil-sglr",
     "//third_party/vk-gl-cts/framework/opengl/wrapper:libdeqp_glwrapper",
     "//third_party/vk-gl-cts/framework/randomshaders:libdeqp_randomshaders",
-    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
-    "//third_party/vk-gl-cts/framework/opengl/simplereference:libdeqp_glutil-sglr",
     "//third_party/zlib:libz",
-    "//third_party/libpng:libpng",
   ]
 
   configs = [ ":deqp-gl-shared_config" ]
 
-#   lib_dirs = [
-#     "//third_party/vk-gl-cts/outlibs"
-#   ]
-#   libs = [
-#     "png",
-#     "z",
-#     # "glslang",
-#     # "SPIRV",
-#     # "SPVRemapper",
-#     # "spirv-tools",
-#     # "spirv-tools-link",
-#     # "spirv-tools-lint",
-#     # "spirv-tools-opt",
-#     # "spirv-tools-reduce",
-#     # "MachineIndependent",
-#     # "OGLCompiler",
-#     # "OSDependent",
-#     # "GenericCodeGen",
-#   ]
+  #   lib_dirs = [
+  #     "//third_party/vk-gl-cts/outlibs"
+  #   ]
+  #   libs = [
+  #     "png",
+  #     "z",
+  #     # "glslang",
+  #     # "SPIRV",
+  #     # "SPVRemapper",
+  #     # "spirv-tools",
+  #     # "spirv-tools-link",
+  #     # "spirv-tools-lint",
+  #     # "spirv-tools-opt",
+  #     # "spirv-tools-reduce",
+  #     # "MachineIndependent",
+  #     # "OGLCompiler",
+  #     # "OSDependent",
+  #     # "GenericCodeGen",
+  #   ]
 }
 
 ohos_static_library("libdeqp-gl-shared") {
   deps = [ ":deqp-gl-shared_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

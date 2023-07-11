@@ -24,19 +24,18 @@ config("deqp_delib_deutil_config") {
 
 ohos_source_set("deqp_delib_deutil_source") {
   sources = [
-    "//third_party/vk-gl-cts/framework/delibs/deutil/deClock.c",        
-    "//third_party/vk-gl-cts/framework/delibs/deutil/deDynamicLibrary.c",     
-    "//third_party/vk-gl-cts/framework/delibs/deutil/deSocket.c",  
-    "//third_party/vk-gl-cts/framework/delibs/deutil/deTimerTest.c",  
-    "//third_party/vk-gl-cts/framework/delibs/deutil/deCommandLine.c",  
-    "//third_party/vk-gl-cts/framework/delibs/deutil/deFile.c",            
-    "//third_party/vk-gl-cts/framework/delibs/deutil/deProcess.c",  
+    "//third_party/vk-gl-cts/framework/delibs/deutil/deClock.c",
+    "//third_party/vk-gl-cts/framework/delibs/deutil/deCommandLine.c",
+    "//third_party/vk-gl-cts/framework/delibs/deutil/deDynamicLibrary.c",
+    "//third_party/vk-gl-cts/framework/delibs/deutil/deFile.c",
+    "//third_party/vk-gl-cts/framework/delibs/deutil/deProcess.c",
+    "//third_party/vk-gl-cts/framework/delibs/deutil/deSocket.c",
     "//third_party/vk-gl-cts/framework/delibs/deutil/deTimer.c",
-    
+    "//third_party/vk-gl-cts/framework/delibs/deutil/deTimerTest.c",
   ]
 
   include_dirs = deqp_common_include_dirs
-  deps = [  
+  deps = [
     "//third_party/vk-gl-cts/framework/delibs/debase:libdeqp_debase",
     "//third_party/vk-gl-cts/framework/delibs/depool:libdeqp_depool",
     "//third_party/vk-gl-cts/framework/delibs/dethread:libdeqp_dethread",
@@ -47,7 +46,6 @@ ohos_source_set("deqp_delib_deutil_source") {
 
 ohos_static_library("libdeqp_deutil") {
   deps = [ ":deqp_delib_deutil_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
-

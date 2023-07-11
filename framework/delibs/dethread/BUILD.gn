@@ -20,9 +20,7 @@ config("deqp_delib_dethread_config") {
   cflags = deqp_common_cflags
 
   defines = deqp_common_defines
-  defines += [
-    "_XOPEN_SOURCE=600"
-  ]
+  defines += [ "_XOPEN_SOURCE=600" ]
 }
 
 ohos_source_set("deqp_delib_dethread_source") {
@@ -30,20 +28,19 @@ ohos_source_set("deqp_delib_dethread_source") {
     "//third_party/vk-gl-cts/framework/delibs/dethread/deAtomic.c",
     "//third_party/vk-gl-cts/framework/delibs/dethread/deSingleton.c",
     "//third_party/vk-gl-cts/framework/delibs/dethread/deThreadTest.c",
-    "//third_party/vk-gl-cts/framework/delibs/dethread/win32/deMutexWin32.c",
-    "//third_party/vk-gl-cts/framework/delibs/dethread/win32/deSemaphoreWin32.c",
-    "//third_party/vk-gl-cts/framework/delibs/dethread/win32/deThreadWin32.c",
-    "//third_party/vk-gl-cts/framework/delibs/dethread/win32/deThreadLocalWin32.c",
     "//third_party/vk-gl-cts/framework/delibs/dethread/unix/deMutexUnix.c",
     "//third_party/vk-gl-cts/framework/delibs/dethread/unix/deNamedSemaphoreUnix.c",
     "//third_party/vk-gl-cts/framework/delibs/dethread/unix/deSemaphoreUnix.c",
+    "//third_party/vk-gl-cts/framework/delibs/dethread/unix/deThreadLocalUnix.c",
     "//third_party/vk-gl-cts/framework/delibs/dethread/unix/deThreadUnix.c",
-    "//third_party/vk-gl-cts/framework/delibs/dethread/unix/deThreadLocalUnix.c", 
-    
+    "//third_party/vk-gl-cts/framework/delibs/dethread/win32/deMutexWin32.c",
+    "//third_party/vk-gl-cts/framework/delibs/dethread/win32/deSemaphoreWin32.c",
+    "//third_party/vk-gl-cts/framework/delibs/dethread/win32/deThreadLocalWin32.c",
+    "//third_party/vk-gl-cts/framework/delibs/dethread/win32/deThreadWin32.c",
   ]
 
   include_dirs = deqp_common_include_dirs
-  deps = [  
+  deps = [
     "//third_party/vk-gl-cts/framework/delibs/debase:libdeqp_debase",
     "//third_party/vk-gl-cts/framework/delibs/depool:libdeqp_depool",
   ]
@@ -53,7 +50,6 @@ ohos_source_set("deqp_delib_dethread_source") {
 
 ohos_static_library("libdeqp_dethread") {
   deps = [ ":deqp_delib_dethread_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
-

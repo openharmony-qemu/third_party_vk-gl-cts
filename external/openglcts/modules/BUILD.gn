@@ -27,9 +27,7 @@ config("glcts_config") {
 }
 
 ohos_source_set("glcts_source") {
-  sources = [
-    "//third_party/vk-gl-cts/external/openglcts/modules/glcTestPackageRegistry.cpp",
-  ]
+  sources = [ "//third_party/vk-gl-cts/external/openglcts/modules/glcTestPackageRegistry.cpp" ]
   include_dirs = [
     "//third_party/vk-gl-cts/modules/glshared",
     "//third_party/vk-gl-cts/modules/egl",
@@ -45,7 +43,6 @@ ohos_source_set("glcts_source") {
     "//third_party/vk-gl-cts/external/openglcts/modules/gles32",
     "//third_party/vk-gl-cts/external/openglcts/modules/glesext",
     "//third_party/vk-gl-cts/external/openglcts/modules",
-
   ]
   include_dirs += deqp_common_include_dirs
 
@@ -57,7 +54,6 @@ ohos_source_set("glcts_source") {
     "//third_party/vk-gl-cts/external/openglcts/modules/gles31:libdeqp_glcts-es31",
     "//third_party/vk-gl-cts/external/openglcts/modules/gles32:libdeqp_glcts-es32",
     "//third_party/vk-gl-cts/external/openglcts/modules/glesext:libdeqp_glcts-esext",
-
     "//third_party/vk-gl-cts/modules/egl:libdeqp-egl",
     "//third_party/vk-gl-cts/modules/gles2:libdeqp-gles2",
     "//third_party/vk-gl-cts/modules/gles3:libdeqp-gles3",
@@ -69,14 +65,14 @@ ohos_source_set("glcts_source") {
 
 ohos_static_library("libdeqp_glcts") {
   deps = [ ":glcts_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
 ohos_executable("deqp_glcts") {
   sources = [
-    "//third_party/vk-gl-cts/framework/platform/tcuMain.cpp",
     "//third_party/vk-gl-cts/external/openglcts/modules/glcTestPackageEntry.cpp",
+    "//third_party/vk-gl-cts/framework/platform/tcuMain.cpp",
   ]
   include_dirs = [
     "//third_party/zlib/src",
@@ -114,7 +110,7 @@ ohos_executable("deqp_glcts") {
   ]
 
   configs = [ ":glcts_config" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -156,12 +152,12 @@ ohos_executable("deqp_cts-runner") {
 
   deps = [
     ":libdeqp_glcts",
-    "//third_party/vk-gl-cts/framework/platform:libdeqp_tcutil-platform",
     "//third_party/vk-gl-cts/external/openglcts/modules/runner:libdeqp_glcts-runner",
+    "//third_party/vk-gl-cts/framework/platform:libdeqp_tcutil-platform",
     "//third_party/vk-gl-cts/modules/glshared:libdeqp-gl-shared",
   ]
 
   configs = [ ":glcts_config" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
