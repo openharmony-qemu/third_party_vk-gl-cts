@@ -19,27 +19,28 @@ import("//third_party/vk-gl-cts/vk_gl_cts.gni")
 config("deqp_vk_memory_config") {
   cflags_cc = deqp_common_cflags_cc
   defines = deqp_common_defines
+
   #defines += [ "_XOPEN_SOURCE=600" ]
 }
 
 ohos_source_set("deqp_vk_memory_source") {
   sources = [
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryAllocationTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryAllocationTests.hpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryMappingTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryMappingTests.hpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryPipelineBarrierTests.hpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryPipelineBarrierTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryRequirementsTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryRequirementsTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryBindingTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryBindingTests.hpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryExternalMemoryHostTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryExternalMemoryHostTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryDeviceMemoryReportTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryDeviceMemoryReportTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryExternalMemoryHostTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryExternalMemoryHostTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryMappingTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryMappingTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryPipelineBarrierTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryPipelineBarrierTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryRequirementsTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryRequirementsTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/memory/vktMemoryTests.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs
@@ -49,8 +50,8 @@ ohos_source_set("deqp_vk_memory_source") {
   ]
 
   deps = [
-    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",
+    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
   ]
 
   configs = [ ":deqp_vk_memory_config" ]

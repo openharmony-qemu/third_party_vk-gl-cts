@@ -19,37 +19,35 @@ import("//third_party/vk-gl-cts/vk_gl_cts.gni")
 config("deqp_vk_ray_tracing_config") {
   cflags_cc = deqp_common_cflags_cc
   defines = deqp_common_defines
+
   #defines += [ "_XOPEN_SOURCE=600" ]
 }
 
 ohos_source_set("deqp_vk_ray_tracing_source") {
   sources = [
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingCaptureReplayTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingProceduralGeometryTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingAccelerationStructuresTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingComplexControlFlowTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingShaderBindingTableTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingBarrierTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingDataSpillTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingBarycentricCoordinatesTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingDirectionTests.cpp",
-
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingTraceRaysTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingBuildIndirectTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingMemGuaranteeTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingTraversalControlTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingBuildLargeTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingMiscTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingWatertightnessTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingBuildTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingNonUniformArgsTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingBuiltinTests.cpp",
-
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingNullASTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingCallableShadersTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingCaptureReplayTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingComplexControlFlowTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingDataSpillTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingDirectionTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingMemGuaranteeTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingMiscTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingNonUniformArgsTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingNullASTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingPipelineLibraryTests.cpp",
-    
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingProceduralGeometryTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingShaderBindingTableTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingTraceRaysTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingTraversalControlTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingWatertightnessTests.cpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs

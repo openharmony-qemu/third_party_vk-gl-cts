@@ -19,6 +19,7 @@ import("//third_party/vk-gl-cts/vk_gl_cts.gni")
 config("deqp_vk_fragment_shader_interlock_config") {
   cflags_cc = deqp_common_cflags_cc
   defines = deqp_common_defines
+
   #defines += [ "_XOPEN_SOURCE=600" ]
 }
 
@@ -29,13 +30,11 @@ ohos_source_set("deqp_vk_fragment_shader_interlock_source") {
   ]
 
   include_dirs = deqp_vk_common_include_dirs
-  include_dirs += [
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_shader_interlock",
-  ]
+  include_dirs += [ "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_shader_interlock" ]
 
   deps = [
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
-  #  "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",
+    #  "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",
   ]
 
   configs = [ ":deqp_vk_fragment_shader_interlock_config" ]

@@ -19,9 +19,7 @@ import("//third_party/vk-gl-cts/vk_gl_cts.gni")
 config("amberenginevulkan_config") {
   cflags_cc = deqp_common_cflags_cc
 
-  cflags_cc -= [
-    "-fexceptions",
-  ]
+  cflags_cc -= [ "-fexceptions" ]
   cflags_cc += [
     "-g",
     "-fPIC",
@@ -108,4 +106,3 @@ ohos_static_library("libdeqp_amberenginevulkan") {
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
-

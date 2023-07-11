@@ -19,15 +19,16 @@ import("//third_party/vk-gl-cts/vk_gl_cts.gni")
 config("deqp_vk_transform_feedback_config") {
   cflags_cc = deqp_common_cflags_cc
   defines = deqp_common_defines
+
   #defines += [ "_XOPEN_SOURCE=600" ]
 }
 
 ohos_source_set("deqp_vk_transform_feedback_source") {
   sources = [
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback/vktTransformFeedbackRandomLayoutCase.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback/vktTransformFeedbackFuzzLayoutCase.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback/vktTransformFeedbackSimpleTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback/vktTransformFeedbackFuzzLayoutTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback/vktTransformFeedbackRandomLayoutCase.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback/vktTransformFeedbackSimpleTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback/vktTransformFeedbackTests.cpp",
   ]
 

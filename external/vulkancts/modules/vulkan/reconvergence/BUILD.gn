@@ -19,13 +19,12 @@ import("//third_party/vk-gl-cts/vk_gl_cts.gni")
 config("deqp_vk_reconvergence_config") {
   cflags_cc = deqp_common_cflags_cc
   defines = deqp_common_defines
+
   #defines += [ "_XOPEN_SOURCE=600" ]
 }
 
 ohos_source_set("deqp_vk_reconvergence_source") {
-  sources = [
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/reconvergence/vktReconvergenceTests.cpp",
-  ]
+  sources = [ "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/reconvergence/vktReconvergenceTests.cpp" ]
 
   include_dirs = deqp_vk_common_include_dirs
   include_dirs += [

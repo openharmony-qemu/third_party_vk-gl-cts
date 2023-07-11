@@ -19,6 +19,7 @@ import("//third_party/vk-gl-cts/vk_gl_cts.gni")
 config("deqp_vk_clipping_config") {
   cflags_cc = deqp_common_cflags_cc
   defines = deqp_common_defines
+
   #defines += [ "_XOPEN_SOURCE=600" ]
 }
 
@@ -35,9 +36,9 @@ ohos_source_set("deqp_vk_clipping_source") {
   ]
 
   deps = [
-    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util:libdeqp_vk_util",
+    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
   ]
 
   configs = [ ":deqp_vk_clipping_config" ]

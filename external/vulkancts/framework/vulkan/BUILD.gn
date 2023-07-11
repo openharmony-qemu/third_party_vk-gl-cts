@@ -21,7 +21,7 @@ config("deqp_vkutil_config") {
   defines = deqp_common_defines
   defines += [
     "_XOPEN_SOURCE=600",
-    "VK_USE_PLATFORM_OHOS_OPENHARMONY"
+    "VK_USE_PLATFORM_OHOS_OPENHARMONY",
   ]
 }
 
