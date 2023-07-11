@@ -108,7 +108,7 @@ ohos_source_set("amber_source") {
     "//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
   ]
 
-  deps = [ "//third_party/vk-gl-cts/external/amber/src/src/vulkan:libdeqp_amberenginevulkan", ]
+  deps = [ "vulkan:libdeqp_amberenginevulkan", ]
   #deps = []
   configs = [ ":amber_config" ]
 }
