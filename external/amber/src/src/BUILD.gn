@@ -19,16 +19,14 @@ import("//third_party/vk-gl-cts/vk_gl_cts.gni")
 config("amber_config") {
   cflags_cc = deqp_common_cflags_cc
 
-  cflags_cc -= [
-    "-fexceptions",
-  ]
+  cflags_cc -= [ "-fexceptions" ]
   cflags_cc += [
     "-g",
     "-fPIC",
     "-fno-exceptions",
     "-Wno-padded",
-    "-Wno-switch-enum", 
-    "-pedantic-errors", 
+    "-Wno-switch-enum",
+    "-pedantic-errors",
     "-Wno-c++98-compat",
     "-Wno-c++98-compat-pedantic",
     "-Wno-format-pedantic",
@@ -108,7 +106,8 @@ ohos_source_set("amber_source") {
     "//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
   ]
 
-  deps = [ "vulkan:libdeqp_amberenginevulkan", ]
+  deps = [ "vulkan:libdeqp_amberenginevulkan" ]
+
   #deps = []
   configs = [ ":amber_config" ]
 }
@@ -118,4 +117,3 @@ ohos_shared_library("libdeqp_amber") {
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
-
