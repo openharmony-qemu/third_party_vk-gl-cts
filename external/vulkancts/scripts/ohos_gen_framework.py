@@ -102,6 +102,9 @@ PLATFORM_TYPES		= [
 	(["GgpFrameToken"],						["GgpFrameToken"],				"int32_t"),
 	(["GgpStreamDescriptor"],				["GgpStreamDescriptor"],		"int32_t"),
 	(["CAMetalLayer"],						["CAMetalLayer"],				"void*"),
+
+	# VK_OpenHarmony_OHOS_surface
+	(["NativeWindow", "*"],					["OhosNativeWindowPtr"],		"void*"),
 ]
 
 PLATFORM_TYPE_NAMESPACE	= "pt"
@@ -112,10 +115,25 @@ TYPE_SUBSTITUTIONS		= [
 	("HANDLE*",		PLATFORM_TYPE_NAMESPACE + "::" + "Win32Handle*"),
 ]
 
-EXTENSION_POSTFIXES				= ["KHR", "EXT", "NV", "NVX", "KHX", "NN", "MVK", "FUCHSIA", "GGP", "AMD", "QNX"]
+EXTENSION_POSTFIXES				= ["KHR", "EXT", "NV", "NVX", "KHX", "NN", "MVK", "FUCHSIA", "GGP", "AMD", "QNX", "OpenHarmony"]
 EXTENSION_POSTFIXES_STANDARD	= ["KHR", "EXT"]
 
 def prefixName (prefix, name):
+	if name=="VkOHOSNativeBufferUsageOpenHarmony":
+		return "VK_STRUCTURE_TYPE_OHOS_NATIVE_BUFFER_USAGE_OPENHARMONY"
+	if name=="VkOHOSNativeBufferPropertiesOpenHarmony":
+		return "VK_STRUCTURE_TYPE_OHOS_NATIVE_BUFFER_PROPERTIES_OPENHARMONY"
+	if name=="VkOHOSNativeBufferFormatPropertiesOpenHarmony":
+		return "VK_STRUCTURE_TYPE_OHOS_NATIVE_BUFFER_FORMAT_PROPERTIES_OPENHARMONY"
+	if name=="VkImportOHOSNativeBufferInfoOpenHarmony":
+		return "VK_STRUCTURE_TYPE_IMPORT_OHOS_NATIVE_BUFFER_INFO_OPENHARMONY"
+	if name=="VkMemoryGetOHOSNativeBufferInfoOpenHarmony":
+		return "VK_STRUCTURE_TYPE_MEMORY_GET_OHOS_NATIVE_BUFFER_INFO_OPENHARMONY"
+	if name=="VkExternalFormatOpenHarmony":
+		return "VK_STRUCTURE_TYPE_EXTERNAL_FORMAT_OPENHARMONY"
+	if name=="VkOHOSSurfaceCreateInfoOpenHarmony":
+		return "VK_STRUCTURE_TYPE_OHOS_SURFACE_CREATE_INFO_OPENHARMONY"
+
 	name = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', name[2:])
 	name = re.sub(r'([a-zA-Z])([0-9])', r'\1_\2', name)
 	name = name.upper()
@@ -2454,6 +2472,7 @@ if __name__ == "__main__":
 		"vulkan_xcb.h",
 		"vulkan_xlib.h",
 		"vulkan_xlib_xrandr.h",
+		"vulkan_ohos.h"
 	]
 	for target in targets:
 		execute([pythonExecutable, "../scripts/genvk.py", "-o", "../include/vulkan", target])

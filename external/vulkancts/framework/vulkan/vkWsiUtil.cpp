@@ -71,7 +71,8 @@ const char* getName (Type wsiType)
 		"android",
 		"win32",
 		"macos",
-		"headless"
+		"headless",
+		"ohos"
 	};
 	return de::getSizedArrayElement<TYPE_LAST>(s_names, wsiType);
 }
@@ -86,7 +87,8 @@ const char* getExtensionName (Type wsiType)
 		"VK_KHR_android_surface",
 		"VK_KHR_win32_surface",
 		"VK_MVK_macos_surface",
-		"VK_EXT_headless_surface"
+		"VK_EXT_headless_surface",
+		"VK_OpenHarmony_OHOS_surface"
 	};
 	return de::getSizedArrayElement<TYPE_LAST>(s_extNames, wsiType);
 }
@@ -152,6 +154,13 @@ const PlatformProperties& getPlatformProperties (Type wsiType)
 			noDisplayLimit,
 			noWindowLimit,
 		},
+		//VK_OpenHarmony_OHOS_surface
+		{
+			PlatformProperties::FEATURE_INITIAL_WINDOW_SIZE,
+			PlatformProperties::SWAPCHAIN_EXTENT_SCALED_TO_WINDOW_SIZE,
+			1u,
+			1u, // Only one window available
+		},
 	};
 
 	return de::getSizedArrayElement<TYPE_LAST>(s_properties, wsiType);
@@ -166,7 +175,7 @@ VkResult createSurface (const InstanceInterface&		vki,
 						VkSurfaceKHR*					pSurface)
 {
 	// Update this function if you add more WSI implementations
-	DE_STATIC_ASSERT(TYPE_LAST == 7);
+	DE_STATIC_ASSERT(TYPE_LAST == 8);
 
 	switch (wsiType)
 	{
@@ -274,6 +283,19 @@ VkResult createSurface (const InstanceInterface&		vki,
 			return vki.createHeadlessSurfaceEXT(instance, &createInfo, pAllocator, pSurface);
 		}
 
+		case TYPE_OHOS:
+		{//cxunmz
+			const OhosWindowInterface&			ohosWindow		= dynamic_cast<const OhosWindowInterface&>(nativeWindow);
+			const VkOHOSSurfaceCreateInfoOpenHarmony createInfo =
+			{
+				VK_STRUCTURE_TYPE_OHOS_SURFACE_CREATE_INFO_OPENHARMONY,
+				DE_NULL,
+				(VkOHOSSurfaceCreateFlagsOpenHarmony)0,
+				ohosWindow.getNative()
+			};
+			return vki.createOHOSSurfaceOpenHarmony(instance, &createInfo, pAllocator, pSurface);
+		}
+
 		default:
 			DE_FATAL("Unknown WSI type");
 			return VK_ERROR_SURFACE_LOST_KHR;
@@ -345,6 +367,7 @@ VkBool32 getPhysicalDevicePresentationSupport (const InstanceInterface&	vki,
 		case TYPE_HEADLESS:
 		case TYPE_ANDROID:
 		case TYPE_MACOS:
+		case TYPE_OHOS://cxunmz
 		{
 			return 1;
 		}
@@ -583,6 +606,11 @@ tcu::UVec2 getFullScreenSize (const vk::wsi::Type wsiType, const vk::wsi::Displa
 		{
 #if ( DE_OS == DE_OS_OSX )
 #endif
+			break;
+		}
+
+		case TYPE_OHOS://cxunmz
+		{
 			break;
 		}
 

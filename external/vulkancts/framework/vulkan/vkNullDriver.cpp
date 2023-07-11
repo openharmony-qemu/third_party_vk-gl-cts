@@ -241,6 +241,7 @@ public:
 										SurfaceKHR		(VkInstance, const VkHeadlessSurfaceCreateInfoEXT*)	{}
 										SurfaceKHR		(VkInstance, const VkStreamDescriptorSurfaceCreateInfoGGP*)	{}
 										SurfaceKHR		(VkInstance, const VkMetalSurfaceCreateInfoEXT*)	{}
+										SurfaceKHR		(VkInstance, const VkOHOSSurfaceCreateInfoOpenHarmony*)	{}
 										~SurfaceKHR		(void)												{}
 };
 

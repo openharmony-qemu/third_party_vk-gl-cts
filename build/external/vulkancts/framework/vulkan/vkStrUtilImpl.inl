@@ -72,6 +72,7 @@ std::ostream& operator<< (std::ostream& s, zx_handle_t					v) { return s << tcu:
 std::ostream& operator<< (std::ostream& s, GgpFrameToken				v) { return s << tcu::toHex(v.internal); }
 std::ostream& operator<< (std::ostream& s, GgpStreamDescriptor			v) { return s << tcu::toHex(v.internal); }
 std::ostream& operator<< (std::ostream& s, CAMetalLayer					v) { return s << tcu::toHex(v.internal); }
+std::ostream& operator<< (std::ostream& s, OhosNativeWindowPtr			v) { return s << tcu::toHex(v.internal); }
 }
 
 const char* getResultName (VkResult value)
@@ -746,6 +747,13 @@ const char* getStructureTypeName (VkStructureType value)
 		case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_PROPERTIES_KHR:						return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_PROPERTIES_KHR";
 		case VK_STRUCTURE_TYPE_DEVICE_BUFFER_MEMORY_REQUIREMENTS_KHR:								return "VK_STRUCTURE_TYPE_DEVICE_BUFFER_MEMORY_REQUIREMENTS_KHR";
 		case VK_STRUCTURE_TYPE_DEVICE_IMAGE_MEMORY_REQUIREMENTS_KHR:								return "VK_STRUCTURE_TYPE_DEVICE_IMAGE_MEMORY_REQUIREMENTS_KHR";
+		case VK_STRUCTURE_TYPE_OHOS_SURFACE_CREATE_INFO_OPENHARMONY:								return "VK_STRUCTURE_TYPE_OHOS_SURFACE_CREATE_INFO_OPENHARMONY";
+		case VK_STRUCTURE_TYPE_OHOS_NATIVE_BUFFER_USAGE_OPENHARMONY:								return "VK_STRUCTURE_TYPE_OHOS_NATIVE_BUFFER_USAGE_OPENHARMONY";
+		case VK_STRUCTURE_TYPE_OHOS_NATIVE_BUFFER_PROPERTIES_OPENHARMONY:							return "VK_STRUCTURE_TYPE_OHOS_NATIVE_BUFFER_PROPERTIES_OPENHARMONY";
+		case VK_STRUCTURE_TYPE_OHOS_NATIVE_BUFFER_FORMAT_PROPERTIES_OPENHARMONY:					return "VK_STRUCTURE_TYPE_OHOS_NATIVE_BUFFER_FORMAT_PROPERTIES_OPENHARMONY";
+		case VK_STRUCTURE_TYPE_IMPORT_OHOS_NATIVE_BUFFER_INFO_OPENHARMONY:							return "VK_STRUCTURE_TYPE_IMPORT_OHOS_NATIVE_BUFFER_INFO_OPENHARMONY";
+		case VK_STRUCTURE_TYPE_MEMORY_GET_OHOS_NATIVE_BUFFER_INFO_OPENHARMONY:						return "VK_STRUCTURE_TYPE_MEMORY_GET_OHOS_NATIVE_BUFFER_INFO_OPENHARMONY";
+		case VK_STRUCTURE_TYPE_EXTERNAL_FORMAT_OPENHARMONY:											return "VK_STRUCTURE_TYPE_EXTERNAL_FORMAT_OPENHARMONY";
 		case VK_STRUCTURE_TYPE_MAX_ENUM:															return "VK_STRUCTURE_TYPE_MAX_ENUM";
 		default:																					return DE_NULL;
 	}
@@ -3590,6 +3598,7 @@ tcu::Format::Bitfield<32> getExternalMemoryHandleTypeFlagsStr (VkExternalMemoryH
 		tcu::Format::BitDesc(VK_EXTERNAL_MEMORY_HANDLE_TYPE_HOST_MAPPED_FOREIGN_MEMORY_BIT_EXT,		"VK_EXTERNAL_MEMORY_HANDLE_TYPE_HOST_MAPPED_FOREIGN_MEMORY_BIT_EXT"),
 		tcu::Format::BitDesc(VK_EXTERNAL_MEMORY_HANDLE_TYPE_ZIRCON_VMO_BIT_FUCHSIA,					"VK_EXTERNAL_MEMORY_HANDLE_TYPE_ZIRCON_VMO_BIT_FUCHSIA"),
 		tcu::Format::BitDesc(VK_EXTERNAL_MEMORY_HANDLE_TYPE_RDMA_ADDRESS_BIT_NV,					"VK_EXTERNAL_MEMORY_HANDLE_TYPE_RDMA_ADDRESS_BIT_NV"),
+		tcu::Format::BitDesc(VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OPENHARMONY,		"VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OPENHARMONY"),
 		tcu::Format::BitDesc(VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT_KHR,						"VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT_KHR"),
 		tcu::Format::BitDesc(VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT_KHR,					"VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT_KHR"),
 		tcu::Format::BitDesc(VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT_BIT_KHR,				"VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT_BIT_KHR"),
@@ -4609,6 +4618,11 @@ tcu::Format::Bitfield<32> getMacOSSurfaceCreateFlagsMVKStr (VkMacOSSurfaceCreate
 }
 
 tcu::Format::Bitfield<32> getMetalSurfaceCreateFlagsEXTStr (VkMetalSurfaceCreateFlagsEXT value)
+{
+	return tcu::Format::Bitfield<32>(value, DE_NULL, DE_NULL);
+}
+
+tcu::Format::Bitfield<32> getOHOSSurfaceCreateFlagsOpenHarmonyStr (VkOHOSSurfaceCreateFlagsOpenHarmony value)
 {
 	return tcu::Format::Bitfield<32>(value, DE_NULL, DE_NULL);
 }
@@ -12106,6 +12120,74 @@ std::ostream& operator<< (std::ostream& s, const VkPhysicalDevicePageableDeviceL
 	return s;
 }
 
+std::ostream& operator<< (std::ostream& s, const VkOHOSNativeBufferUsageOpenHarmony& value)
+{
+	s << "VkOHOSNativeBufferUsageOpenHarmony = {\n";
+	s << "\tsType = " << value.sType << '\n';
+	s << "\tpNext = " << value.pNext << '\n';
+	s << "\tOHOSNativeBufferUsage = " << value.OHOSNativeBufferUsage << '\n';
+	s << '}';
+	return s;
+}
+
+std::ostream& operator<< (std::ostream& s, const VkOHOSNativeBufferPropertiesOpenHarmony& value)
+{
+	s << "VkOHOSNativeBufferPropertiesOpenHarmony = {\n";
+	s << "\tsType = " << value.sType << '\n';
+	s << "\tpNext = " << value.pNext << '\n';
+	s << "\tallocationSize = " << value.allocationSize << '\n';
+	s << "\tmemoryTypeBits = " << value.memoryTypeBits << '\n';
+	s << '}';
+	return s;
+}
+
+std::ostream& operator<< (std::ostream& s, const VkOHOSNativeBufferFormatPropertiesOpenHarmony& value)
+{
+	s << "VkOHOSNativeBufferFormatPropertiesOpenHarmony = {\n";
+	s << "\tsType = " << value.sType << '\n';
+	s << "\tpNext = " << value.pNext << '\n';
+	s << "\tformat = " << value.format << '\n';
+	s << "\texternalFormat = " << value.externalFormat << '\n';
+	s << "\tformatFeatures = " << getFormatFeatureFlagsStr(value.formatFeatures) << '\n';
+	s << "\tsamplerYcbcrConversionComponents = " << value.samplerYcbcrConversionComponents << '\n';
+	s << "\tsuggestedYcbcrModel = " << value.suggestedYcbcrModel << '\n';
+	s << "\tsuggestedYcbcrRange = " << value.suggestedYcbcrRange << '\n';
+	s << "\tsuggestedXChromaOffset = " << value.suggestedXChromaOffset << '\n';
+	s << "\tsuggestedYChromaOffset = " << value.suggestedYChromaOffset << '\n';
+	s << '}';
+	return s;
+}
+
+std::ostream& operator<< (std::ostream& s, const VkImportOHOSNativeBufferInfoOpenHarmony& value)
+{
+	s << "VkImportOHOSNativeBufferInfoOpenHarmony = {\n";
+	s << "\tsType = " << value.sType << '\n';
+	s << "\tpNext = " << value.pNext << '\n';
+	s << "\tbuffer = " << value.buffer << '\n';
+	s << '}';
+	return s;
+}
+
+std::ostream& operator<< (std::ostream& s, const VkMemoryGetOHOSNativeBufferInfoOpenHarmony& value)
+{
+	s << "VkMemoryGetOHOSNativeBufferInfoOpenHarmony = {\n";
+	s << "\tsType = " << value.sType << '\n';
+	s << "\tpNext = " << value.pNext << '\n';
+	s << "\tmemory = " << value.memory << '\n';
+	s << '}';
+	return s;
+}
+
+std::ostream& operator<< (std::ostream& s, const VkExternalFormatOpenHarmony& value)
+{
+	s << "VkExternalFormatOpenHarmony = {\n";
+	s << "\tsType = " << value.sType << '\n';
+	s << "\tpNext = " << value.pNext << '\n';
+	s << "\texternalFormat = " << value.externalFormat << '\n';
+	s << '}';
+	return s;
+}
+
 std::ostream& operator<< (std::ostream& s, const VkDeviceOrHostAddressKHR& value)
 {
 	s << "VkDeviceOrHostAddressKHR = {\n";
@@ -14430,6 +14512,17 @@ std::ostream& operator<< (std::ostream& s, const VkMetalSurfaceCreateInfoEXT& va
 	s << "\tpNext = " << value.pNext << '\n';
 	s << "\tflags = " << getMetalSurfaceCreateFlagsEXTStr(value.flags) << '\n';
 	s << "\tpLayer = " << value.pLayer << '\n';
+	s << '}';
+	return s;
+}
+
+std::ostream& operator<< (std::ostream& s, const VkOHOSSurfaceCreateInfoOpenHarmony& value)
+{
+	s << "VkOHOSSurfaceCreateInfoOpenHarmony = {\n";
+	s << "\tsType = " << value.sType << '\n';
+	s << "\tpNext = " << value.pNext << '\n';
+	s << "\tflags = " << getOHOSSurfaceCreateFlagsOpenHarmonyStr(value.flags) << '\n';
+	s << "\twindow = " << value.window << '\n';
 	s << '}';
 	return s;
 }

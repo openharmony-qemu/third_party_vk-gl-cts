@@ -515,6 +515,7 @@ tcu::Format::Bitfield<32>	getStreamDescriptorSurfaceCreateFlagsGGPStr					(VkStr
 tcu::Format::Bitfield<32>	getIOSSurfaceCreateFlagsMVKStr								(VkIOSSurfaceCreateFlagsMVK value);
 tcu::Format::Bitfield<32>	getMacOSSurfaceCreateFlagsMVKStr							(VkMacOSSurfaceCreateFlagsMVK value);
 tcu::Format::Bitfield<32>	getMetalSurfaceCreateFlagsEXTStr							(VkMetalSurfaceCreateFlagsEXT value);
+tcu::Format::Bitfield<32>	getOHOSSurfaceCreateFlagsOpenHarmonyStr						(VkOHOSSurfaceCreateFlagsOpenHarmony value);
 tcu::Format::Bitfield<32>	getViSurfaceCreateFlagsNNStr								(VkViSurfaceCreateFlagsNN value);
 tcu::Format::Bitfield<32>	getWaylandSurfaceCreateFlagsKHRStr							(VkWaylandSurfaceCreateFlagsKHR value);
 tcu::Format::Bitfield<32>	getWin32SurfaceCreateFlagsKHRStr							(VkWin32SurfaceCreateFlagsKHR value);
@@ -1124,6 +1125,12 @@ std::ostream&	operator<<	(std::ostream& s, const VkMultiDrawIndexedInfoEXT& valu
 std::ostream&	operator<<	(std::ostream& s, const VkPhysicalDeviceBorderColorSwizzleFeaturesEXT& value);
 std::ostream&	operator<<	(std::ostream& s, const VkSamplerBorderColorComponentMappingCreateInfoEXT& value);
 std::ostream&	operator<<	(std::ostream& s, const VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT& value);
+std::ostream&	operator<<	(std::ostream& s, const VkOHOSNativeBufferUsageOpenHarmony& value);
+std::ostream&	operator<<	(std::ostream& s, const VkOHOSNativeBufferPropertiesOpenHarmony& value);
+std::ostream&	operator<<	(std::ostream& s, const VkOHOSNativeBufferFormatPropertiesOpenHarmony& value);
+std::ostream&	operator<<	(std::ostream& s, const VkImportOHOSNativeBufferInfoOpenHarmony& value);
+std::ostream&	operator<<	(std::ostream& s, const VkMemoryGetOHOSNativeBufferInfoOpenHarmony& value);
+std::ostream&	operator<<	(std::ostream& s, const VkExternalFormatOpenHarmony& value);
 std::ostream&	operator<<	(std::ostream& s, const VkDeviceOrHostAddressKHR& value);
 std::ostream&	operator<<	(std::ostream& s, const VkAccelerationStructureBuildRangeInfoKHR& value);
 std::ostream&	operator<<	(std::ostream& s, const VkAccelerationStructureGeometryTrianglesDataKHR& value);
@@ -1292,6 +1299,7 @@ std::ostream&	operator<<	(std::ostream& s, const VkPresentFrameTokenGGP& value);
 std::ostream&	operator<<	(std::ostream& s, const VkIOSSurfaceCreateInfoMVK& value);
 std::ostream&	operator<<	(std::ostream& s, const VkMacOSSurfaceCreateInfoMVK& value);
 std::ostream&	operator<<	(std::ostream& s, const VkMetalSurfaceCreateInfoEXT& value);
+std::ostream&	operator<<	(std::ostream& s, const VkOHOSSurfaceCreateInfoOpenHarmony& value);
 std::ostream&	operator<<	(std::ostream& s, const VkViSurfaceCreateInfoNN& value);
 std::ostream&	operator<<	(std::ostream& s, const VkWaylandSurfaceCreateInfoKHR& value);
 std::ostream&	operator<<	(std::ostream& s, const VkWin32SurfaceCreateInfoKHR& value);
