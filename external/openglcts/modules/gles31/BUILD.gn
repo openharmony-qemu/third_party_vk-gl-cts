@@ -82,11 +82,11 @@ ohos_source_set("glcts-es31_source") {
   include_dirs += deqp_common_include_dirs
 
   deps = [
-    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
-    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/external/openglcts/modules/common:libdeqp_glcts-common",
-    "//third_party/vk-gl-cts/framework/opengl/wrapper:libdeqp_glwrapper",
     "//third_party/vk-gl-cts/external/openglcts/modules/gl:libdeqp_glcts-gl",
+    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
+    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
+    "//third_party/vk-gl-cts/framework/opengl/wrapper:libdeqp_glwrapper",
   ]
 
   configs = [ ":glcts-es31_config" ]

@@ -3,8 +3,8 @@ import("//build/ohos.gni")
 ohos_shared_library("rosen_context") {
   sources = [
     "ohos_context_i.cpp",
+    "raw_context.cpp",
     "rosen_context_impl.cpp",
-    "raw_context.cpp"
   ]
   include_dirs = [
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
@@ -15,7 +15,5 @@ ohos_shared_library("rosen_context") {
     "//foundation/graphic/graphic_2d/interfaces/innerkits/surface",
   ]
 
-  deps = [
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-  ]
+  deps = [ "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client" ]
 }

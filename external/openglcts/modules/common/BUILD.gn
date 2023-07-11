@@ -87,9 +87,11 @@ ohos_source_set("glcts-common_source") {
   include_dirs = [
     "//third_party/zlib/src",
     "//third_party/spirv-headers/include",
+
     #"//third_party/vk-gl-cts/external/amber",
     #"//third_party/vk-gl-cts/external/renderdoc/src",
     "//third_party/libpng",
+
     #"//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
     "//third_party/vk-gl-cts/external/openglcts/include",
     "//third_party/vk-gl-cts/external/openglcts/framework/egl/wrapper",
@@ -114,44 +116,41 @@ ohos_source_set("glcts-common_source") {
   include_dirs += deqp_common_include_dirs
 
   deps = [
-    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
-    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
-    "//third_party/vk-gl-cts/framework/egl:libdeqp_eglutil",
-    "//third_party/vk-gl-cts/external/openglcts/modules/common/subgroups:libdeqp-gl-subgroups",
-
+    "//third_party/glslang/OGLCompilersDLL:libdeqp_OGLCompiler",
+    "//third_party/glslang/SPIRV:libdeqp_spirv",
+    "//third_party/glslang/SPIRV:libdeqp_spvremapper",
+    "//third_party/glslang/glslang:libdeqp_GenericCodeGen",
     "//third_party/glslang/glslang:libdeqp_MachineIndependent",
     "//third_party/glslang/glslang:libdeqp_OSDependent",
-    "//third_party/glslang/glslang:libdeqp_GenericCodeGen",
-
-    "//third_party/glslang/OGLCompilersDLL:libdeqp_OGLCompiler",
-    "//third_party/glslang/SPIRV:libdeqp_spvremapper",
-    "//third_party/glslang/SPIRV:libdeqp_spirv",
     "//third_party/glslang/glslang:libdeqp_glslang",
-
     "//third_party/spirv-tools:libdeqp_spirvtools",
     "//third_party/spirv-tools/source/link:libdeqp_spirvtools-link",
+    "//third_party/spirv-tools/source/lint:libdeqp_spirvtools-lint",
     "//third_party/spirv-tools/source/opt:libdeqp_spirvtools-opt",
     "//third_party/spirv-tools/source/reduce:libdeqp_spirvtools-reduce",
-    "//third_party/spirv-tools/source/lint:libdeqp_spirvtools-lint",
+    "//third_party/vk-gl-cts/external/openglcts/modules/common/subgroups:libdeqp-gl-subgroups",
+    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
+    "//third_party/vk-gl-cts/framework/egl:libdeqp_eglutil",
+    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
   ]
 
-#   lib_dirs = [
-#     "//third_party/vk-gl-cts/outlibs"
-#   ]
-#   libs = [
-#     "glslang",
-#     "SPIRV",
-#     "SPVRemapper",
-#     "spirv-tools",
-#     "spirv-tools-link",
-#     "spirv-tools-lint",
-#     "spirv-tools-opt",
-#     "spirv-tools-reduce",
-#     "MachineIndependent",
-#     "OGLCompiler",
-#     "OSDependent",
-#     "GenericCodeGen",
-#   ]
+  #   lib_dirs = [
+  #     "//third_party/vk-gl-cts/outlibs"
+  #   ]
+  #   libs = [
+  #     "glslang",
+  #     "SPIRV",
+  #     "SPVRemapper",
+  #     "spirv-tools",
+  #     "spirv-tools-link",
+  #     "spirv-tools-lint",
+  #     "spirv-tools-opt",
+  #     "spirv-tools-reduce",
+  #     "MachineIndependent",
+  #     "OGLCompiler",
+  #     "OSDependent",
+  #     "GenericCodeGen",
+  #   ]
 
   configs = [ ":glcts-common_config" ]
 }
@@ -162,19 +161,19 @@ ohos_static_library("libdeqp_glcts-common") {
   subsystem_name = "graphic"
 }
 
-
 ohos_source_set("glcts-common-nocontext-package_source") {
   sources = [
     "//third_party/vk-gl-cts/external/openglcts/modules/common/glcNoDefaultContextPackage.cpp",
     "//third_party/vk-gl-cts/external/openglcts/modules/common/glcSingleConfigTestPackage.cpp",
-
   ]
   include_dirs = [
     "//third_party/zlib/src",
     "//third_party/spirv-headers/include",
+
     #"//third_party/vk-gl-cts/external/amber",
     #"//third_party/vk-gl-cts/external/renderdoc/src",
     "//third_party/libpng",
+
     #"//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
     "//third_party/vk-gl-cts/external/openglcts/include",
     "//third_party/vk-gl-cts/external/openglcts/framework/egl/wrapper",
@@ -196,10 +195,9 @@ ohos_source_set("glcts-common-nocontext-package_source") {
   include_dirs += deqp_common_include_dirs
 
   deps = [
-    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/framework/egl:libdeqp_eglutil",
-
+    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
   ]
 
   configs = [ ":glcts-common_config" ]
