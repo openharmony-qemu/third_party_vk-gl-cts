@@ -111,7 +111,7 @@ ohos_source_set("deqp_vkutilnoshader_source") {
 
 ohos_static_library("libdeqp_vkutilnoshader") {
   deps = [ ":deqp_vkutilnoshader_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -206,6 +206,6 @@ ohos_source_set("deqp_vkutil_source") {
 }
 ohos_static_library("libdeqp_vkutil") {
   deps = [ ":deqp_vkutil_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

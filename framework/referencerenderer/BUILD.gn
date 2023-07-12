@@ -37,17 +37,16 @@ ohos_source_set("referencerenderer_source") {
   include_dirs = deqp_common_include_dirs
 
   deps = [
-    "//third_party/vk-gl-cts/framework/delibs/decpp:libdeqp_decpp",
-    "//third_party/vk-gl-cts/framework/delibs/debase:libdeqp_debase",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
+    "//third_party/vk-gl-cts/framework/delibs/debase:libdeqp_debase",
+    "//third_party/vk-gl-cts/framework/delibs/decpp:libdeqp_decpp",
   ]
 
   configs = [ ":referencerenderer_config" ]
-
 }
 
 ohos_static_library("libdeqp_referencerenderer") {
-    deps = [ ":referencerenderer_source" ]
-    part_name = "graphic_standard"
-    subsystem_name = "graphic"
+  deps = [ ":referencerenderer_source" ]
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
 }

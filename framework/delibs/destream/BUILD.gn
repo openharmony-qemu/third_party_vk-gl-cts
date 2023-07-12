@@ -24,18 +24,17 @@ config("deqp_delib_destream_config") {
 
 ohos_source_set("deqp_delib_destream_source") {
   sources = [
-    "//third_party/vk-gl-cts/framework/delibs/destream/deFileStream.c",       
-    "//third_party/vk-gl-cts/framework/delibs/destream/deRingbuffer.c",   
-    "//third_party/vk-gl-cts/framework/delibs/destream/deThreadStream.c",   
-    "//third_party/vk-gl-cts/framework/delibs/destream/deStreamCpyThread.c", 
-    
+    "//third_party/vk-gl-cts/framework/delibs/destream/deFileStream.c",
+    "//third_party/vk-gl-cts/framework/delibs/destream/deRingbuffer.c",
+    "//third_party/vk-gl-cts/framework/delibs/destream/deStreamCpyThread.c",
+    "//third_party/vk-gl-cts/framework/delibs/destream/deThreadStream.c",
   ]
 
   include_dirs = deqp_common_include_dirs
-  deps = [  
-   "//third_party/vk-gl-cts/framework/delibs/deutil:libdeqp_deutil",
-   "//third_party/vk-gl-cts/framework/delibs/debase:libdeqp_debase",
-   "//third_party/vk-gl-cts/framework/delibs/dethread:libdeqp_dethread",
+  deps = [
+    "//third_party/vk-gl-cts/framework/delibs/debase:libdeqp_debase",
+    "//third_party/vk-gl-cts/framework/delibs/dethread:libdeqp_dethread",
+    "//third_party/vk-gl-cts/framework/delibs/deutil:libdeqp_deutil",
   ]
 
   configs = [ ":deqp_delib_destream_config" ]
@@ -43,7 +42,6 @@ ohos_source_set("deqp_delib_destream_source") {
 
 ohos_static_library("libdeqp_destream") {
   deps = [ ":deqp_delib_destream_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
-

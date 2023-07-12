@@ -23,22 +23,22 @@ config("xexml_config") {
 
 ohos_source_set("xexml_source") {
   sources = [
+    "//third_party/vk-gl-cts/framework/xexml/xeDefs.cpp",
     "//third_party/vk-gl-cts/framework/xexml/xeXMLParser.cpp",
-    "//third_party/vk-gl-cts/framework/xexml/xeDefs.cpp"
   ]
   include_dirs = deqp_common_include_dirs
 
   deps = [
+    "//third_party/vk-gl-cts/framework/delibs/debase:libdeqp_debase",
     "//third_party/vk-gl-cts/framework/delibs/decpp:libdeqp_decpp",
     "//third_party/vk-gl-cts/framework/delibs/deutil:libdeqp_deutil",
-    "//third_party/vk-gl-cts/framework/delibs/debase:libdeqp_debase",
   ]
 
   configs = [ ":xexml_config" ]
 }
 
 ohos_static_library("libdeqp_xexml") {
-    deps = [ ":xexml_source" ]
-    part_name = "graphic_standard"
-    subsystem_name = "graphic"
+  deps = [ ":xexml_source" ]
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
 }

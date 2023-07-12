@@ -42,40 +42,40 @@ ohos_source_set("eglutil_source") {
   include_dirs = deqp_common_include_dirs
 
   deps = [
+    "//third_party/libpng:libpng",
+    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/framework/egl/wrapper:libdeqp_eglwrapper",
     "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
     "//third_party/vk-gl-cts/framework/opengl/wrapper:libdeqp_glwrapper",
-    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/zlib:libz",
-    "//third_party/libpng:libpng",
   ]
 
   configs = [ ":eglutil_config" ]
-#   lib_dirs = [
-#     "//third_party/vk-gl-cts/outlibs"
-#   ]
-#   libs = [
-#     "png",
-#     "z",
-#     # "glslang",
-#     # "SPIRV",
-#     # "SPVRemapper",
-#     # "spirv-tools",
-#     # "spirv-tools-link",
-#     # "spirv-tools-lint",
-#     # "spirv-tools-opt",
-#     # "spirv-tools-reduce",
-#     # "MachineIndependent",
-#     # "OGLCompiler",
-#     # "OSDependent",
-#     # "GenericCodeGen",
-#   ]
 
+  #   lib_dirs = [
+  #     "//third_party/vk-gl-cts/outlibs"
+  #   ]
+  #   libs = [
+  #     "png",
+  #     "z",
+  #     # "glslang",
+  #     # "SPIRV",
+  #     # "SPVRemapper",
+  #     # "spirv-tools",
+  #     # "spirv-tools-link",
+  #     # "spirv-tools-lint",
+  #     # "spirv-tools-opt",
+  #     # "spirv-tools-reduce",
+  #     # "MachineIndependent",
+  #     # "OGLCompiler",
+  #     # "OSDependent",
+  #     # "GenericCodeGen",
+  #   ]
 }
 
 ohos_static_library("libdeqp_eglutil") {
-    deps = [ ":eglutil_source" ]
-    part_name = "graphic_standard"
-    subsystem_name = "graphic"
+  deps = [ ":eglutil_source" ]
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
 }

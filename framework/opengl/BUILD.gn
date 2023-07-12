@@ -23,37 +23,37 @@ config("deqp_opengl_config") {
 
 ohos_source_set("deqp_opengl_source") {
   sources = [
-    "//third_party/vk-gl-cts/framework/opengl/gluDrawUtil.cpp",            
-    "//third_party/vk-gl-cts/framework/opengl/gluProgramInterfaceQuery.cpp",  
-    "//third_party/vk-gl-cts/framework/opengl/gluStateReset.cpp",       
-    "//third_party/vk-gl-cts/framework/opengl/gluVarTypeUtil.cpp",               
-    "//third_party/vk-gl-cts/framework/opengl/gluDummyRenderContext.cpp",  
-    "//third_party/vk-gl-cts/framework/opengl/gluRenderConfig.cpp",           
-    "//third_party/vk-gl-cts/framework/opengl/gluStrUtil.cpp",          
-    "//third_party/vk-gl-cts/framework/opengl/gluCallLogWrapper.cpp",  
-    "//third_party/vk-gl-cts/framework/opengl/gluFboRenderContext.cpp",    
-    "//third_party/vk-gl-cts/framework/opengl/gluRenderContext.cpp",          
-    "//third_party/vk-gl-cts/framework/opengl/gluTexture.cpp",          
-    "//third_party/vk-gl-cts/framework/opengl/gluContextFactory.cpp",  
-    "//third_party/vk-gl-cts/framework/opengl/gluObjectWrapper.cpp",       
-    "//third_party/vk-gl-cts/framework/opengl/gluShaderLibrary.cpp",          
+    "//third_party/vk-gl-cts/framework/opengl/gluCallLogWrapper.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluContextFactory.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluContextInfo.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluDefs.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluDrawUtil.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluDummyRenderContext.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluFboRenderContext.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluObjectWrapper.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluPixelTransfer.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluPlatform.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluProgramInterfaceQuery.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluRenderConfig.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluRenderContext.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluShaderLibrary.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluShaderProgram.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluShaderUtil.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluStateReset.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluStrUtil.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluTexture.cpp",
     "//third_party/vk-gl-cts/framework/opengl/gluTextureTestUtil.cpp",
-    "//third_party/vk-gl-cts/framework/opengl/gluContextInfo.cpp",     
-    "//third_party/vk-gl-cts/framework/opengl/gluPixelTransfer.cpp",       
-    "//third_party/vk-gl-cts/framework/opengl/gluShaderProgram.cpp",          
     "//third_party/vk-gl-cts/framework/opengl/gluTextureUtil.cpp",
-    "//third_party/vk-gl-cts/framework/opengl/gluDefs.cpp",            
-    "//third_party/vk-gl-cts/framework/opengl/gluPlatform.cpp",            
-    "//third_party/vk-gl-cts/framework/opengl/gluShaderUtil.cpp",             
-    "//third_party/vk-gl-cts/framework/opengl/gluVarType.cpp", 
+    "//third_party/vk-gl-cts/framework/opengl/gluVarType.cpp",
+    "//third_party/vk-gl-cts/framework/opengl/gluVarTypeUtil.cpp",
   ]
 
   include_dirs = deqp_common_include_dirs
-  deps = [  
+  deps = [
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/framework/opengl/wrapper:libdeqp_glwrapper",
     "//third_party/vk-gl-cts/framework/referencerenderer:libdeqp_referencerenderer",
-    "//third_party/vk-gl-cts/framework/xexml:libdeqp_xexml"
+    "//third_party/vk-gl-cts/framework/xexml:libdeqp_xexml",
   ]
 
   #lib_dirs = ["//third_party/outlibs"]
@@ -68,7 +68,6 @@ ohos_source_set("deqp_opengl_source") {
 
 ohos_static_library("libdeqp_glutil") {
   deps = [ ":deqp_opengl_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
-

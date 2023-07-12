@@ -19,10 +19,8 @@ import("//third_party/vk-gl-cts/vk_gl_cts.gni")
 config("deqp_qphelper_config") {
   cflags_cc = deqp_common_cflags_cc
   defines = deqp_common_defines
-  defines -=[
-    "DE_OS=DE_OS_UNIX"
-  ]
-  defines +=[
+  defines -= [ "DE_OS=DE_OS_UNIX" ]
+  defines += [
     "DE_OS=DE_OS_QNX",
     "QP_SUPPORT_PNG",
   ]
@@ -30,21 +28,21 @@ config("deqp_qphelper_config") {
 
 ohos_source_set("deqp_qphelper_source") {
   sources = [
-    "//third_party/vk-gl-cts/framework/qphelper/qpCrashHandler.c",  
-    "//third_party/vk-gl-cts/framework/qphelper/qpDebugOut.c",        
-    "//third_party/vk-gl-cts/framework/qphelper/qpInfo.c",  
-    "//third_party/vk-gl-cts/framework/qphelper/qpTestLog.c",                
-    "//third_party/vk-gl-cts/framework/qphelper/qpWatchDog.c",        
-    "//third_party/vk-gl-cts/framework/qphelper/qpXmlWriter.c"
+    "//third_party/vk-gl-cts/framework/qphelper/qpCrashHandler.c",
+    "//third_party/vk-gl-cts/framework/qphelper/qpDebugOut.c",
+    "//third_party/vk-gl-cts/framework/qphelper/qpInfo.c",
+    "//third_party/vk-gl-cts/framework/qphelper/qpTestLog.c",
+    "//third_party/vk-gl-cts/framework/qphelper/qpWatchDog.c",
+    "//third_party/vk-gl-cts/framework/qphelper/qpXmlWriter.c",
   ]
 
   include_dirs = deqp_common_include_dirs
-  include_dirs += ["//third_party/libpng"]
-  deps = [  
+  include_dirs += [ "//third_party/libpng" ]
+  deps = [
     "//third_party/vk-gl-cts/framework/delibs/debase:libdeqp_debase",
     "//third_party/vk-gl-cts/framework/delibs/depool:libdeqp_depool",
     "//third_party/vk-gl-cts/framework/delibs/dethread:libdeqp_dethread",
-    "//third_party/vk-gl-cts/framework/delibs/deutil:libdeqp_deutil"
+    "//third_party/vk-gl-cts/framework/delibs/deutil:libdeqp_deutil",
   ]
 
   configs = [ ":deqp_qphelper_config" ]
@@ -52,6 +50,6 @@ ohos_source_set("deqp_qphelper_source") {
 
 ohos_static_library("libdeqp_qphelper") {
   deps = [ ":deqp_qphelper_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

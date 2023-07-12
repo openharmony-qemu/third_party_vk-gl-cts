@@ -109,19 +109,18 @@ ohos_source_set("deqp-gles2-functional_source") {
   include_dirs += deqp_common_include_dirs
 
   deps = [
-    "//third_party/vk-gl-cts/modules/glshared:libdeqp-gl-shared",
+    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
     "//third_party/vk-gl-cts/framework/opengl/simplereference:libdeqp_glutil-sglr",
-    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/framework/referencerenderer:libdeqp_referencerenderer",
+    "//third_party/vk-gl-cts/modules/glshared:libdeqp-gl-shared",
   ]
 
   configs = [ ":deqp-gles2-functional_config" ]
-
 }
 
 ohos_static_library("libdeqp-gles2-functional") {
   deps = [ ":deqp-gles2-functional_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

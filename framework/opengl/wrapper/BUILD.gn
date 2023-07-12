@@ -31,45 +31,44 @@ ohos_source_set("deqp_opengl_wrapper_source") {
     "//third_party/vk-gl-cts/framework/opengl/wrapper/glwInitES31Direct.cpp",
     "//third_party/vk-gl-cts/framework/opengl/wrapper/glwInitES32Direct.cpp",
     "//third_party/vk-gl-cts/framework/opengl/wrapper/glwInitFunctions.cpp",
-    "//third_party/vk-gl-cts/framework/opengl/wrapper/glwWrapper.cpp", 
+    "//third_party/vk-gl-cts/framework/opengl/wrapper/glwWrapper.cpp",
   ]
 
   include_dirs = deqp_common_include_dirs
   deps = [
+    "//third_party/libpng:libpng",
+    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/framework/delibs/debase:libdeqp_debase",
     "//third_party/vk-gl-cts/framework/delibs/decpp:libdeqp_decpp",
     "//third_party/vk-gl-cts/framework/delibs/deutil:libdeqp_deutil",
-    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/framework/referencerenderer:libdeqp_referencerenderer",
     "//third_party/zlib:libz",
-    "//third_party/libpng:libpng",
   ]
 
   configs = [ ":deqp_opengl_wrapper_config" ]
 
-#   lib_dirs = [
-#     "//third_party/vk-gl-cts/outlibs"
-#   ]
-#   libs = [
-#     "png",
-#     "z",
-#     # "glslang",
-#     # "SPIRV",
-#     # "SPVRemapper",
-#     # "spirv-tools",
-#     # "spirv-tools-link",
-#     # "spirv-tools-lint",
-#     # "spirv-tools-opt",
-#     # "spirv-tools-reduce",
-#     # "MachineIndependent",
-#     # "OGLCompiler",
-#     # "OSDependent",
-#   ]
+  #   lib_dirs = [
+  #     "//third_party/vk-gl-cts/outlibs"
+  #   ]
+  #   libs = [
+  #     "png",
+  #     "z",
+  #     # "glslang",
+  #     # "SPIRV",
+  #     # "SPVRemapper",
+  #     # "spirv-tools",
+  #     # "spirv-tools-link",
+  #     # "spirv-tools-lint",
+  #     # "spirv-tools-opt",
+  #     # "spirv-tools-reduce",
+  #     # "MachineIndependent",
+  #     # "OGLCompiler",
+  #     # "OSDependent",
+  #   ]
 }
 
 ohos_static_library("libdeqp_glwrapper") {
   deps = [ ":deqp_opengl_wrapper_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
-

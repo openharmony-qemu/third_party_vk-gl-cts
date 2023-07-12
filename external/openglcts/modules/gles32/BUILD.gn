@@ -28,8 +28,8 @@ config("glcts-es32_config") {
 
 ohos_source_set("glcts-es32_source") {
   sources = [
-    "//third_party/vk-gl-cts/external/openglcts/modules/gles32/es32cTestPackage.cpp",
     "//third_party/vk-gl-cts/external/openglcts/modules/gles32/es32cCopyImageTests.cpp",
+    "//third_party/vk-gl-cts/external/openglcts/modules/gles32/es32cTestPackage.cpp",
   ]
   include_dirs = [
     "//third_party/zlib/src",
@@ -58,12 +58,13 @@ ohos_source_set("glcts-es32_source") {
   include_dirs += deqp_common_include_dirs
 
   deps = [
-    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
-    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/external/openglcts/modules/common:libdeqp_glcts-common",
-    "//third_party/vk-gl-cts/framework/opengl/wrapper:libdeqp_glwrapper",
     "//third_party/vk-gl-cts/external/openglcts/modules/gl:libdeqp_glcts-gl",
+    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
+    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
     "//third_party/vk-gl-cts/framework/opengl/simplereference:libdeqp_glutil-sglr",
+    "//third_party/vk-gl-cts/framework/opengl/wrapper:libdeqp_glwrapper",
+
     #DEQP_GLES32_LIBRARIES
   ]
 
@@ -72,6 +73,6 @@ ohos_source_set("glcts-es32_source") {
 
 ohos_static_library("libdeqp_glcts-es32") {
   deps = [ ":glcts-es32_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
