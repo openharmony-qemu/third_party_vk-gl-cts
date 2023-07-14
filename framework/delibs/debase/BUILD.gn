@@ -20,27 +20,27 @@ config("deqp_delib_debase_config") {
   cflags = deqp_common_cflags
   defines = deqp_common_defines
   defines += [
-    "FE_DOWNWARD=0x00800000", 
-    "FE_TONEAREST=0x00000000", 
-    "FE_TOWARDZERO=0x00c00000", 
-    "FE_UPWARD=0x00400000", 
-    "_XOPEN_SOURCE=600"
+    "FE_DOWNWARD=0x00800000",
+    "FE_TONEAREST=0x00000000",
+    "FE_TOWARDZERO=0x00c00000",
+    "FE_UPWARD=0x00400000",
+    "_XOPEN_SOURCE=600",
   ]
 }
 
 ohos_source_set("deqp_delib_debase_source") {
   sources = [
-    "//third_party/vk-gl-cts/framework/delibs/debase/deFloat16Test.c",  
-    "//third_party/vk-gl-cts/framework/delibs/debase/deMath.c",        
-    "//third_party/vk-gl-cts/framework/delibs/debase/deRandom.c",  
-    "//third_party/vk-gl-cts/framework/delibs/debase/deDefs.c",                
-    "//third_party/vk-gl-cts/framework/delibs/debase/deInt32.c",        
-    "//third_party/vk-gl-cts/framework/delibs/debase/deMathTest.c",    
-    "//third_party/vk-gl-cts/framework/delibs/debase/deSha1.c",    
-    "//third_party/vk-gl-cts/framework/delibs/debase/deFloat16.c",             
-    "//third_party/vk-gl-cts/framework/delibs/debase/deInt32Test.c",    
-    "//third_party/vk-gl-cts/framework/delibs/debase/deMemory.c",           
-    "//third_party/vk-gl-cts/framework/delibs/debase/deString.c"
+    "//third_party/vk-gl-cts/framework/delibs/debase/deDefs.c",
+    "//third_party/vk-gl-cts/framework/delibs/debase/deFloat16.c",
+    "//third_party/vk-gl-cts/framework/delibs/debase/deFloat16Test.c",
+    "//third_party/vk-gl-cts/framework/delibs/debase/deInt32.c",
+    "//third_party/vk-gl-cts/framework/delibs/debase/deInt32Test.c",
+    "//third_party/vk-gl-cts/framework/delibs/debase/deMath.c",
+    "//third_party/vk-gl-cts/framework/delibs/debase/deMathTest.c",
+    "//third_party/vk-gl-cts/framework/delibs/debase/deMemory.c",
+    "//third_party/vk-gl-cts/framework/delibs/debase/deRandom.c",
+    "//third_party/vk-gl-cts/framework/delibs/debase/deSha1.c",
+    "//third_party/vk-gl-cts/framework/delibs/debase/deString.c",
   ]
 
   include_dirs = deqp_common_include_dirs
@@ -53,4 +53,3 @@ ohos_static_library("libdeqp_debase") {
   part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
-

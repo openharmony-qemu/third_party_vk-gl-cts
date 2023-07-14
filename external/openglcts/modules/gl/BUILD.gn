@@ -134,6 +134,6 @@ ohos_source_set("glcts-gl_source") {
 
 ohos_static_library("libdeqp_glcts-gl") {
   deps = [ ":glcts-gl_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

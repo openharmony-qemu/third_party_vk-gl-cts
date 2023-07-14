@@ -65,7 +65,7 @@ ohos_source_set("glcts_source") {
 
 ohos_static_library("libdeqp_glcts") {
   deps = [ ":glcts_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -110,7 +110,7 @@ ohos_executable("deqp_glcts") {
   ]
 
   configs = [ ":glcts_config" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -158,6 +158,6 @@ ohos_executable("deqp_cts-runner") {
   ]
 
   configs = [ ":glcts_config" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
