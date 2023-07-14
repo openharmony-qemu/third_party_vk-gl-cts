@@ -47,7 +47,7 @@ ohos_source_set("deqp_delib_deutil_source") {
 
 ohos_static_library("libdeqp_deutil") {
   deps = [ ":deqp_delib_deutil_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 

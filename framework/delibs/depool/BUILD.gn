@@ -46,7 +46,7 @@ ohos_source_set("deqp_delib_depool_source") {
 
 ohos_static_library("libdeqp_depool") {
   deps = [ ":deqp_delib_depool_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 

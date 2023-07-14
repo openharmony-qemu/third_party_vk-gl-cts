@@ -57,7 +57,7 @@ ohos_source_set("tcutil-platform_source") {
 
 ohos_static_library("libdeqp_tcutil-platform") {
   deps = [ ":tcutil-platform_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
