@@ -29,7 +29,6 @@ ohos_source_set("deqp-gles2-stress_source") {
     "//third_party/vk-gl-cts/modules/gles2/stress/es2sSpecialFloatTests.cpp",
     "//third_party/vk-gl-cts/modules/gles2/stress/es2sStressTests.cpp",
     "//third_party/vk-gl-cts/modules/gles2/stress/es2sVertexArrayTests.cpp",
-
   ]
   include_dirs = [
     "//third_party/vk-gl-cts/modules/glshared",
@@ -38,12 +37,11 @@ ohos_source_set("deqp-gles2-stress_source") {
   ]
   include_dirs += deqp_common_include_dirs
   deps = [
-    "//third_party/vk-gl-cts/modules/glshared:libdeqp-gl-shared",
-    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
+    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
+    "//third_party/vk-gl-cts/modules/glshared:libdeqp-gl-shared",
   ]
   configs = [ ":deqp-gles2-stress_config" ]
-
 }
 
 ohos_static_library("libdeqp-gles2-stress") {

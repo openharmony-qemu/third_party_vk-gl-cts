@@ -79,29 +79,28 @@ ohos_source_set("tcutil_source") {
     "//third_party/vk-gl-cts/framework/qphelper",
     "//third_party/vk-gl-cts/framework/xexml",
     "//third_party/libpng",
-    "//third_party/vk-gl-cts/framework/referencerenderer"
+    "//third_party/vk-gl-cts/framework/referencerenderer",
   ]
 
   deps = [
-    "//third_party/vk-gl-cts/framework/delibs/decpp:libdeqp_decpp",
+    "//third_party/libpng:libpng",
     "//third_party/vk-gl-cts/framework/delibs/debase:libdeqp_debase",
+    "//third_party/vk-gl-cts/framework/delibs/decpp:libdeqp_decpp",
+    "//third_party/vk-gl-cts/framework/delibs/dethread:libdeqp_dethread",
     "//third_party/vk-gl-cts/framework/delibs/deutil:libdeqp_deutil",
     "//third_party/vk-gl-cts/framework/qphelper:libdeqp_qphelper",
-    "//third_party/vk-gl-cts/framework/delibs/dethread:libdeqp_dethread",
     "//third_party/vk-gl-cts/framework/xexml:libdeqp_xexml",
-    "//third_party/libpng:libpng",
   ]
 
-#   lib_dirs = ["//third_party/vk-gl-cts/outlibs"]
+  #   lib_dirs = ["//third_party/vk-gl-cts/outlibs"]
 
-#   libs=["png"]
+  #   libs=["png"]
 
   configs = [ ":tcutil_config" ]
-
 }
 
 ohos_static_library("libdeqp_tcutil") {
-    deps = [ ":tcutil_source" ]
-    part_name = "graphic_2d"
-    subsystem_name = "graphic"
+  deps = [ ":tcutil_source" ]
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
 }

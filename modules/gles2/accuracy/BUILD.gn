@@ -31,14 +31,13 @@ ohos_source_set("deqp-gles2-accuracy_source") {
     "//third_party/vk-gl-cts/modules/gles2/accuracy/es2aTextureMipmapTests.hpp",
     "//third_party/vk-gl-cts/modules/gles2/accuracy/es2aVaryingInterpolationTests.cpp",
     "//third_party/vk-gl-cts/modules/gles2/accuracy/es2aVaryingInterpolationTests.hpp",
-
   ]
   include_dirs = [
     "//third_party/vk-gl-cts/modules/glshared",
     "//third_party/vk-gl-cts/modules/gles2/accuracy",
     "//third_party/vk-gl-cts/modules/gles2",
   ]
-  
+
   include_dirs += deqp_common_include_dirs
 
   deps = [
@@ -48,7 +47,6 @@ ohos_source_set("deqp-gles2-accuracy_source") {
   ]
 
   configs = [ ":deqp-gles2-accuracy_config" ]
-
 }
 
 ohos_static_library("libdeqp-gles2-accuracy") {

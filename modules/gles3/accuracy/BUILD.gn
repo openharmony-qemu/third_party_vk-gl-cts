@@ -27,9 +27,8 @@ ohos_source_set("deqp-gles3-accuracy_source") {
     "//third_party/vk-gl-cts/modules/gles3/accuracy/es3aTextureFilteringTests.cpp",
     "//third_party/vk-gl-cts/modules/gles3/accuracy/es3aTextureMipmapTests.cpp",
     "//third_party/vk-gl-cts/modules/gles3/accuracy/es3aVaryingInterpolationTests.cpp",
-
   ]
-  
+
   include_dirs = [
     "//third_party/vk-gl-cts/modules/glshared",
     "//third_party/vk-gl-cts/modules/gles3/accuracy",
@@ -37,13 +36,12 @@ ohos_source_set("deqp-gles3-accuracy_source") {
   ]
   include_dirs += deqp_common_include_dirs
   deps = [
-    "//third_party/vk-gl-cts/modules/glshared:libdeqp-gl-shared",
-    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
+    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
+    "//third_party/vk-gl-cts/modules/glshared:libdeqp-gl-shared",
   ]
 
   configs = [ ":deqp-gles3-accuracy_config" ]
-
 }
 
 ohos_static_library("libdeqp-gles3-accuracy") {

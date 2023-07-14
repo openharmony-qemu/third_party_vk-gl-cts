@@ -25,9 +25,8 @@ ohos_source_set("deqp-gles31-stress_source") {
   sources = [
     "//third_party/vk-gl-cts/modules/gles31/stress/es31sDrawTests.cpp",
     "//third_party/vk-gl-cts/modules/gles31/stress/es31sStressTests.cpp",
-    "//third_party/vk-gl-cts/modules/gles31/stress/es31sVertexAttributeBindingTests.cpp",
     "//third_party/vk-gl-cts/modules/gles31/stress/es31sTessellationGeometryInteractionTests.cpp",
-
+    "//third_party/vk-gl-cts/modules/gles31/stress/es31sVertexAttributeBindingTests.cpp",
   ]
   include_dirs = [
     "//third_party/vk-gl-cts/modules/glshared",
@@ -36,9 +35,9 @@ ohos_source_set("deqp-gles31-stress_source") {
   ]
   include_dirs += deqp_common_include_dirs
   deps = [
-    "//third_party/vk-gl-cts/modules/glshared:libdeqp-gl-shared",
-    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
+    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
+    "//third_party/vk-gl-cts/modules/glshared:libdeqp-gl-shared",
   ]
 
   configs = [ ":deqp-gles31-stress_config" ]

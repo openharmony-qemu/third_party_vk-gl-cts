@@ -39,7 +39,6 @@ ohos_source_set("deqp-gles2-performance_source") {
     "//third_party/vk-gl-cts/modules/gles2/performance/es2pTextureFilteringTests.cpp",
     "//third_party/vk-gl-cts/modules/gles2/performance/es2pTextureFormatTests.cpp",
     "//third_party/vk-gl-cts/modules/gles2/performance/es2pTextureUploadTests.cpp",
-
   ]
   include_dirs = [
     "//third_party/vk-gl-cts/modules/glshared",
@@ -49,13 +48,12 @@ ohos_source_set("deqp-gles2-performance_source") {
   include_dirs += deqp_common_include_dirs
 
   deps = [
-    "//third_party/vk-gl-cts/modules/glshared:libdeqp-gl-shared",
-    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
+    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
+    "//third_party/vk-gl-cts/modules/glshared:libdeqp-gl-shared",
   ]
 
   configs = [ ":deqp-gles2-performance_config" ]
-
 }
 
 ohos_static_library("libdeqp-gles2-performance") {

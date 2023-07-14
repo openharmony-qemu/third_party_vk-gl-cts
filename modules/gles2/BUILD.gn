@@ -33,7 +33,6 @@ ohos_source_set("deqp-gles2_source") {
     "//third_party/vk-gl-cts/modules/gles2/tes2TestCase.hpp",
     "//third_party/vk-gl-cts/modules/gles2/tes2TestPackage.cpp",
     "//third_party/vk-gl-cts/modules/gles2/tes2TestPackage.hpp",
-
   ]
   include_dirs = [
     "//third_party/vk-gl-cts/modules/gles2/accuracy",
@@ -47,37 +46,38 @@ ohos_source_set("deqp-gles2_source") {
   include_dirs += deqp_common_include_dirs
 
   deps = [
+    "//third_party/libpng:libpng",
+    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
+    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
+    "//third_party/vk-gl-cts/framework/opengl/wrapper:libdeqp_glwrapper",
     "//third_party/vk-gl-cts/modules/gles2/accuracy:libdeqp-gles2-accuracy",
     "//third_party/vk-gl-cts/modules/gles2/functional:libdeqp-gles2-functional",
     "//third_party/vk-gl-cts/modules/gles2/performance:libdeqp-gles2-performance",
     "//third_party/vk-gl-cts/modules/gles2/stress:libdeqp-gles2-stress",
-    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
-    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
-    "//third_party/vk-gl-cts/framework/opengl/wrapper:libdeqp_glwrapper",
     "//third_party/zlib:libz",
-    "//third_party/libpng:libpng",
   ]
 
   configs = [ ":deqp-gles2_config" ]
-#   lib_dirs = [
-#     "//third_party/vk-gl-cts/outlibs"
-#   ]
-#   libs = [
-#     "png",
-#     "z",
-#     # "glslang",
-#     # "SPIRV",
-#     # "SPVRemapper",
-#     # "spirv-tools",
-#     # "spirv-tools-link",
-#     # "spirv-tools-lint",
-#     # "spirv-tools-opt",
-#     # "spirv-tools-reduce",
-#     # "MachineIndependent",
-#     # "OGLCompiler",
-#     # "OSDependent",
-#     # "GenericCodeGen",
-#   ]
+
+  #   lib_dirs = [
+  #     "//third_party/vk-gl-cts/outlibs"
+  #   ]
+  #   libs = [
+  #     "png",
+  #     "z",
+  #     # "glslang",
+  #     # "SPIRV",
+  #     # "SPVRemapper",
+  #     # "spirv-tools",
+  #     # "spirv-tools-link",
+  #     # "spirv-tools-lint",
+  #     # "spirv-tools-opt",
+  #     # "spirv-tools-reduce",
+  #     # "MachineIndependent",
+  #     # "OGLCompiler",
+  #     # "OSDependent",
+  #     # "GenericCodeGen",
+  #   ]
 }
 
 ohos_static_library("libdeqp-gles2") {
