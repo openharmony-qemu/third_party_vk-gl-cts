@@ -63,6 +63,6 @@ ohos_source_set("deqp_vk_protected_memory_source") {
 }
 ohos_static_library("libdeqp_vk_protected_memory") {
   deps = [ ":deqp_vk_protected_memory_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

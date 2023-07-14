@@ -72,6 +72,6 @@ ohos_source_set("glcts-es2_source") {
 
 ohos_static_library("libdeqp_glcts-es2") {
   deps = [ ":glcts-es2_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

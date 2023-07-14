@@ -58,6 +58,6 @@ ohos_source_set("deqp-gles3-performance_source") {
 
 ohos_static_library("libdeqp-gles3-performance") {
   deps = [ ":deqp-gles3-performance_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

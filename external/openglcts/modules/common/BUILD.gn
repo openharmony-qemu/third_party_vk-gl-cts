@@ -157,7 +157,7 @@ ohos_source_set("glcts-common_source") {
 
 ohos_static_library("libdeqp_glcts-common") {
   deps = [ ":glcts-common_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -205,6 +205,6 @@ ohos_source_set("glcts-common-nocontext-package_source") {
 
 ohos_static_library("libdeqp_glcts-common-nocontext-package") {
   deps = [ ":glcts-common-nocontext-package_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

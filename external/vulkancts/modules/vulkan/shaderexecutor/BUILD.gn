@@ -61,6 +61,6 @@ ohos_source_set("deqp_vk_shaderexecutor_source") {
 }
 ohos_static_library("libdeqp_vk_shaderexecutor") {
   deps = [ ":deqp_vk_shaderexecutor_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

@@ -114,6 +114,6 @@ ohos_source_set("amber_source") {
 
 ohos_shared_library("libdeqp_amber") {
   deps = [ ":amber_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

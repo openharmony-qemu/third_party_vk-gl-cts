@@ -47,6 +47,6 @@ ohos_source_set("deqp_vk_transform_feedback_source") {
 }
 ohos_static_library("libdeqp_vk_transform_feedback") {
   deps = [ ":deqp_vk_transform_feedback_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

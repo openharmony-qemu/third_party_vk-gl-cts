@@ -98,6 +98,6 @@ ohos_source_set("deqp-gl-shared_source") {
 
 ohos_static_library("libdeqp-gl-shared") {
   deps = [ ":deqp-gl-shared_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

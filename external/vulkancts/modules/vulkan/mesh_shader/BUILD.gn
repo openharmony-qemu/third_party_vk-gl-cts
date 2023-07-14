@@ -49,6 +49,6 @@ ohos_source_set("deqp_vk_mesh_shader_source") {
 }
 ohos_static_library("libdeqp_vk_mesh_shader") {
   deps = [ ":deqp_vk_mesh_shader_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

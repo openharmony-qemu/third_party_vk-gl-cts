@@ -180,7 +180,7 @@ ohos_source_set("deqp_vk_package_source") {
 
 ohos_static_library("libdeqp_vk_package") {
   deps = [ ":deqp_vk_package_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -199,7 +199,7 @@ ohos_executable("deqp_vk_execute") {
   ]
 
   configs = [ ":deqp_vk_package_config" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -212,6 +212,6 @@ ohos_executable("deqp_vk_build") {
   deps += [ ":libdeqp_vk_package" ]
 
   configs = [ ":deqp_vk_package_config" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

@@ -43,6 +43,6 @@ ohos_source_set("deqp_vk_device_group_source") {
 }
 ohos_static_library("libdeqp_vk_device_group") {
   deps = [ ":deqp_vk_device_group_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

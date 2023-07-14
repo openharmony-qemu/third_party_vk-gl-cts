@@ -103,6 +103,6 @@ ohos_source_set("amberenginevulkan_source") {
 
 ohos_static_library("libdeqp_amberenginevulkan") {
   deps = [ ":amberenginevulkan_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

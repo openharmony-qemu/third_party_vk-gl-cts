@@ -140,6 +140,6 @@ ohos_source_set("deqp-gles31-functional_source") {
 
 ohos_static_library("libdeqp-gles31-functional") {
   deps = [ ":deqp-gles31-functional_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

@@ -46,6 +46,6 @@ ohos_source_set("deqp-gles31-stress_source") {
 
 ohos_static_library("libdeqp-gles31-stress") {
   deps = [ ":deqp-gles31-stress_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

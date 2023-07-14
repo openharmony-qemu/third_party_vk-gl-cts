@@ -72,6 +72,6 @@ ohos_source_set("deqp-gles31_source") {
 
 ohos_static_library("libdeqp-gles31") {
   deps = [ ":deqp-gles31_source" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
