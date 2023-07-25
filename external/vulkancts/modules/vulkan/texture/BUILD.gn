@@ -59,6 +59,6 @@ ohos_source_set("deqp_vk_texture_source") {
 }
 ohos_static_library("libdeqp_vk_texture") {
   deps = [ ":deqp_vk_texture_source" ]
-  part_name = "graphic_2d"
-  subsystem_name = "graphic"
+  part_name = "xts_acts"
+  subsystem_name = "xts"
 }

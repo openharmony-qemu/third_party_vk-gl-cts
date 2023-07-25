@@ -57,6 +57,6 @@ ohos_source_set("deqp_vk_conditional_rendering_source") {
 }
 ohos_static_library("libdeqp_vk_conditional_rendering") {
   deps = [ ":deqp_vk_conditional_rendering_source" ]
-  part_name = "graphic_2d"
-  subsystem_name = "graphic"
+  part_name = "xts_acts"
+  subsystem_name = "xts"
 }

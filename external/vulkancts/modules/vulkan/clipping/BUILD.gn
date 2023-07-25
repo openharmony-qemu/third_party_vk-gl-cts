@@ -45,6 +45,6 @@ ohos_source_set("deqp_vk_clipping_source") {
 }
 ohos_static_library("libdeqp_vk_clipping") {
   deps = [ ":deqp_vk_clipping_source" ]
-  part_name = "graphic_2d"
-  subsystem_name = "graphic"
+  part_name = "xts_acts"
+  subsystem_name = "xts"
 }
