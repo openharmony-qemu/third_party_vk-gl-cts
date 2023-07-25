@@ -164,8 +164,8 @@ ohos_shared_library("libdeqp_ohos_platform") {
     "//third_party/zlib:libz",
   ]
   external_deps = [
-    # "hilog_native:libhilog",
-    "multimedia_image_framework:image_native",
+    "hilog:libhilog",
+    "image_framework:image_native",
   ]
 
   configs = [ ":deqp_platform_ohos_config" ]
