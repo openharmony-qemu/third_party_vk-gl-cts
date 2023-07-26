@@ -200,8 +200,8 @@ ohos_executable("deqp_vk_execute") {
   ]
 
   configs = [ ":deqp_vk_package_config" ]
-  part_name = "graphic_2d"
-  subsystem_name = "graphic"
+  part_name = "xts_acts"
+  subsystem_name = "xts"
 }
 
 ohos_executable("deqp_vk_build") {
@@ -213,6 +213,6 @@ ohos_executable("deqp_vk_build") {
   deps += [ ":libdeqp_vk_package" ]
 
   configs = [ ":deqp_vk_package_config" ]
-  part_name = "graphic_2d"
-  subsystem_name = "graphic"
+  part_name = "xts_acts"
+  subsystem_name = "xts"
 }
