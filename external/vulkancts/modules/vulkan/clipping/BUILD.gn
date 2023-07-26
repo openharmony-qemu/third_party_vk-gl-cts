@@ -40,7 +40,8 @@ ohos_source_set("deqp_vk_clipping_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util:libdeqp_vk_util",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
   ]
-
+  part_name = "xts_acts"
+  subsystem_name = "xts"
   configs = [ ":deqp_vk_clipping_config" ]
 }
 ohos_static_library("libdeqp_vk_clipping") {

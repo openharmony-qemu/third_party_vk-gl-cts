@@ -174,7 +174,8 @@ ohos_source_set("deqp_vk_package_source") {
 
   include_dirs = vk_common_include_dirs
   deps = vk_common_deps
-
+  part_name = "xts_acts"
+  subsystem_name = "xts"
   configs = [ ":deqp_vk_package_config" ]
 }
 

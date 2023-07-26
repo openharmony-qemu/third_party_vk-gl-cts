@@ -53,7 +53,8 @@ ohos_source_set("deqp_vk_memory_source") {
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
   ]
-
+  part_name = "xts_acts"
+  subsystem_name = "xts"
   configs = [ ":deqp_vk_memory_config" ]
 }
 ohos_static_library("libdeqp_vk_memory") {
