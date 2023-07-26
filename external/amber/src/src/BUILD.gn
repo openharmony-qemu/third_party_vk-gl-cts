@@ -109,6 +109,7 @@ ohos_source_set("amber_source") {
   deps = [ "vulkan:libdeqp_amberenginevulkan" ]
   part_name = "xts_acts"
   subsystem_name = "xts"
+
   #deps = []
   configs = [ ":amber_config" ]
 }
