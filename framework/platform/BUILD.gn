@@ -169,6 +169,8 @@ ohos_shared_library("libdeqp_ohos_platform") {
   ]
 
   configs = [ ":deqp_platform_ohos_config" ]
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
 }
 
 ohos_executable("glcts") {
@@ -217,4 +219,6 @@ ohos_executable("glcts") {
   ]
   deps = [ ":libdeqp_ohos_platform" ]
   configs = [ ":deqp_platform_ohos_config" ]
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
 }
