@@ -1,7 +1,7 @@
 {
-    "name": "@ohos/vkglcts",
+    "name": "@ohos/vk-gl-cts",
     "description": "This repository contains Khronos Conformance Testing Suite called VK-GL-CTS.",
-    "version": "opengl-es-cts-3.2.8.0",
+    "version": "3.2",
     "license": "Apache License 2.0",
     "publishAs": "code-segment",
     "segment": {
@@ -14,7 +14,7 @@
         "en": "README"
     },
     "component": {
-        "name": "vkglcts",
+        "name": "vk-gl-cts",
         "subsystem": "thirdparty",
         "syscap": [],
         "features": [],
