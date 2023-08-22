@@ -107,7 +107,7 @@ ohos_source_set("amber_source") {
   ]
 
   deps = [ "vulkan:libdeqp_amberenginevulkan" ]
-  part_name = "xts_acts"
+  part_name = "acts"
   subsystem_name = "xts"
 
   #deps = []
@@ -116,6 +116,6 @@ ohos_source_set("amber_source") {
 
 ohos_shared_library("libdeqp_amber") {
   deps = [ ":amber_source" ]
-  part_name = "xts_acts"
+  part_name = "acts"
   subsystem_name = "xts"
 }

@@ -174,14 +174,14 @@ ohos_source_set("deqp_vk_package_source") {
 
   include_dirs = vk_common_include_dirs
   deps = vk_common_deps
-  part_name = "xts_acts"
+  part_name = "acts"
   subsystem_name = "xts"
   configs = [ ":deqp_vk_package_config" ]
 }
 
 ohos_static_library("libdeqp_vk_package") {
   deps = [ ":deqp_vk_package_source" ]
-  part_name = "xts_acts"
+  part_name = "acts"
   subsystem_name = "xts"
 }
 
@@ -200,7 +200,7 @@ ohos_executable("deqp_vk_execute") {
   ]
 
   configs = [ ":deqp_vk_package_config" ]
-  part_name = "xts_acts"
+  part_name = "acts"
   subsystem_name = "xts"
 }
 
@@ -213,6 +213,6 @@ ohos_executable("deqp_vk_build") {
   deps += [ ":libdeqp_vk_package" ]
 
   configs = [ ":deqp_vk_package_config" ]
-  part_name = "xts_acts"
+  part_name = "acts"
   subsystem_name = "xts"
 }

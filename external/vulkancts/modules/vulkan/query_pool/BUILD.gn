@@ -48,12 +48,12 @@ ohos_source_set("deqp_vk_query_pool_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/draw:libdeqp_vk_draw",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
   ]
-  part_name = "xts_acts"
+  part_name = "acts"
   subsystem_name = "xts"
   configs = [ ":deqp_vk_query_pool_config" ]
 }
 ohos_static_library("libdeqp_vk_query_pool") {
   deps = [ ":deqp_vk_query_pool_source" ]
-  part_name = "xts_acts"
+  part_name = "acts"
   subsystem_name = "xts"
 }

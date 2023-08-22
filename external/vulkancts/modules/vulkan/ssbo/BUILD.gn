@@ -43,12 +43,12 @@ ohos_source_set("deqp_vk_ssbo_source") {
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
   ]
-  part_name = "xts_acts"
+  part_name = "acts"
   subsystem_name = "xts"
   configs = [ ":deqp_vk_ssbo_config" ]
 }
 ohos_static_library("libdeqp_vk_ssbo") {
   deps = [ ":deqp_vk_ssbo_source" ]
-  part_name = "xts_acts"
+  part_name = "acts"
   subsystem_name = "xts"
 }

@@ -46,6 +46,6 @@ ohos_source_set("deqp_vk_memory_model_source") {
 }
 ohos_static_library("libdeqp_vk_memory_model") {
   deps = [ ":deqp_vk_memory_model_source" ]
-  part_name = "xts_acts"
+  part_name = "acts"
   subsystem_name = "xts"
 }
