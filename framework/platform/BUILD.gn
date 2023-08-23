@@ -117,6 +117,9 @@ ohos_shared_library("libdeqp_ohos_platform") {
     "//third_party/vk-gl-cts/framework/referencerenderer",
     "//third_party/vk-gl-cts/modules/glshared",
     "ohos/rosen_context",
+
+    "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
+    "//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
   ]
   deps = [
     ":libdeqp_tcutil-platform",
@@ -136,6 +139,11 @@ ohos_shared_library("libdeqp_ohos_platform") {
     "//foundation/window/window_manager/wmserver:libwms",
     "//third_party/libpng:libpng",
     "//third_party/vk-gl-cts/external/openglcts/modules:libdeqp_glcts",
+    "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutilnoshader",
+
+    #"//third_party/vk-gl-cts/external/vulkancts/modules/vulkan:deqp_vk_execute",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan:deqp_vk_build",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan:libdeqp_vk_package",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/framework/delibs/debase:libdeqp_debase",
     "//third_party/vk-gl-cts/framework/delibs/decpp:libdeqp_decpp",
@@ -205,6 +213,9 @@ ohos_executable("glcts") {
     "//third_party/vk-gl-cts/framework/referencerenderer",
     "//third_party/vk-gl-cts/modules/glshared",
     "ohos/rosen_context",
+
+    "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
+    "//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
   ]
   deps = [ ":libdeqp_ohos_platform" ]
   configs = [ ":deqp_platform_ohos_config" ]

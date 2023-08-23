@@ -981,6 +981,10 @@ void getInstanceExtensionFunctions (uint32_t apiVersion, ::std::string extName, 
 	{
 		return;
 	}
+	if (extName == "VK_OpenHarmony_external_memory_OHOS_native_buffer")
+	{
+		return;
+	}
 	if (extName == "VK_KHR_acceleration_structure")
 	{
 		return;
@@ -2267,6 +2271,12 @@ void getDeviceExtensionFunctions (uint32_t apiVersion, ::std::string extName, ::
 		functions.push_back("vkSetDeviceMemoryPriorityEXT");
 		return;
 	}
+	if (extName == "VK_OpenHarmony_external_memory_OHOS_native_buffer")
+	{
+		functions.push_back("vkGetOHOSNativeBufferPropertiesOpenHarmony");
+		functions.push_back("vkGetMemoryOHOSNativeBufferOpenHarmony");
+		return;
+	}
 	if (extName == "VK_KHR_acceleration_structure")
 	{
 		functions.push_back("vkCreateAccelerationStructureKHR");
@@ -2572,6 +2582,7 @@ void getDeviceExtensionFunctions (uint32_t apiVersion, ::std::string extName, ::
 	"VK_EXT_color_write_enable",
 	"VK_EXT_multi_draw",
 	"VK_EXT_pageable_device_local_memory",
+	"VK_OpenHarmony_external_memory_OHOS_native_buffer",
 	"VK_KHR_acceleration_structure",
 	"VK_KHR_ray_tracing_pipeline",
 	"VK_ANDROID_external_memory_android_hardware_buffer",

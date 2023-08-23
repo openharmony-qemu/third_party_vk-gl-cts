@@ -105,6 +105,7 @@ m_vk.createStreamDescriptorSurfaceGGP									= (CreateStreamDescriptorSurfaceGG
 m_vk.createIOSSurfaceMVK												= (CreateIOSSurfaceMVKFunc)												GET_PROC_ADDR("vkCreateIOSSurfaceMVK");
 m_vk.createMacOSSurfaceMVK												= (CreateMacOSSurfaceMVKFunc)											GET_PROC_ADDR("vkCreateMacOSSurfaceMVK");
 m_vk.createMetalSurfaceEXT												= (CreateMetalSurfaceEXTFunc)											GET_PROC_ADDR("vkCreateMetalSurfaceEXT");
+m_vk.createOHOSSurfaceOpenHarmony										= (CreateOHOSSurfaceOpenHarmonyFunc)									GET_PROC_ADDR("vkCreateOHOSSurfaceOpenHarmony");
 m_vk.createViSurfaceNN													= (CreateViSurfaceNNFunc)												GET_PROC_ADDR("vkCreateViSurfaceNN");
 m_vk.createWaylandSurfaceKHR											= (CreateWaylandSurfaceKHRFunc)											GET_PROC_ADDR("vkCreateWaylandSurfaceKHR");
 m_vk.getPhysicalDeviceWaylandPresentationSupportKHR						= (GetPhysicalDeviceWaylandPresentationSupportKHRFunc)					GET_PROC_ADDR("vkGetPhysicalDeviceWaylandPresentationSupportKHR");

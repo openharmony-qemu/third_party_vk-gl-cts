@@ -320,6 +320,8 @@ CmdSetColorWriteEnableEXTFunc						cmdSetColorWriteEnableEXT;
 CmdDrawMultiEXTFunc									cmdDrawMultiEXT;
 CmdDrawMultiIndexedEXTFunc							cmdDrawMultiIndexedEXT;
 SetDeviceMemoryPriorityEXTFunc						setDeviceMemoryPriorityEXT;
+GetOHOSNativeBufferPropertiesOpenHarmonyFunc		getOHOSNativeBufferPropertiesOpenHarmony;
+GetMemoryOHOSNativeBufferOpenHarmonyFunc			getMemoryOHOSNativeBufferOpenHarmony;
 CreateAccelerationStructureKHRFunc					createAccelerationStructureKHR;
 DestroyAccelerationStructureKHRFunc					destroyAccelerationStructureKHR;
 CmdBuildAccelerationStructuresKHRFunc				cmdBuildAccelerationStructuresKHR;
