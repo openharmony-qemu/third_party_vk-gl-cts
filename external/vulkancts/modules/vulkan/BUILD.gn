@@ -71,7 +71,6 @@ vk_common_include_dirs += [
   "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader",
   "//third_party/zlib",
   "//third_party/spirv-headers/include",
-  "//third_party/libpng",
   "//third_party/vk-gl-cts/external/amber",
   "//third_party/vk-gl-cts/build/include",
   "//third_party/glslang",

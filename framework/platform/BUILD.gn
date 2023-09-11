@@ -35,7 +35,6 @@ ohos_source_set("tcutil-platform_source") {
     "//third_party/spirv-headers/include",
     "//third_party/amber",
     "//third_party/renderdoc/src",
-    "//third_party/libpng",
     "//third_party/vulkancts/framework/vulkan",
     "//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
     "//third_party/glslang/glslang",
@@ -47,6 +46,7 @@ ohos_source_set("tcutil-platform_source") {
   include_dirs += deqp_common_include_dirs
 
   deps = [
+    "//third_party/libpng:libpng",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/framework/egl:libdeqp_eglutil",
@@ -104,7 +104,6 @@ ohos_shared_library("libdeqp_ohos_platform") {
     "//third_party/vk-gl-cts/framework/opengl/wrapper",
     "//third_party/vk-gl-cts/framework/opengl/simplereference",
     "//third_party/vk-gl-cts/framework/platform/ohos",
-    "//third_party/libpng",
     "//third_party/vk-gl-cts/external/openglcts/modules",
     "//third_party/vk-gl-cts/external/openglcts/modules/common",
     "//third_party/vk-gl-cts/external/openglcts/modules/gl",
@@ -200,7 +199,6 @@ ohos_executable("glcts") {
     "//third_party/vk-gl-cts/framework/opengl/wrapper",
     "//third_party/vk-gl-cts/framework/opengl/simplereference",
     "//third_party/vk-gl-cts/framework/platform/ohos",
-    "//third_party/libpng",
     "//third_party/vk-gl-cts/external/openglcts/modules",
     "//third_party/vk-gl-cts/external/openglcts/modules/common",
     "//third_party/vk-gl-cts/external/openglcts/modules/gl",
@@ -217,7 +215,10 @@ ohos_executable("glcts") {
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
     "//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
   ]
-  deps = [ ":libdeqp_ohos_platform" ]
+  deps = [
+    ":libdeqp_ohos_platform",
+    "//third_party/libpng:libpng",
+  ]
   configs = [ ":deqp_platform_ohos_config" ]
   part_name = "graphic_2d"
   subsystem_name = "graphic"
