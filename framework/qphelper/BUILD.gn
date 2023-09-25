@@ -37,8 +37,8 @@ ohos_source_set("deqp_qphelper_source") {
   ]
 
   include_dirs = deqp_common_include_dirs
-  include_dirs += [ "//third_party/libpng" ]
   deps = [
+    "//third_party/libpng:libpng",
     "//third_party/vk-gl-cts/framework/delibs/debase:libdeqp_debase",
     "//third_party/vk-gl-cts/framework/delibs/depool:libdeqp_depool",
     "//third_party/vk-gl-cts/framework/delibs/dethread:libdeqp_dethread",
