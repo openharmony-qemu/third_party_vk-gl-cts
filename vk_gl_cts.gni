@@ -87,3 +87,10 @@ deqp_common_include_dirs = [
   "//third_party/vk-gl-cts/framework/delibs/deimage",
   "//third_party/vk-gl-cts/framework/delibs/destream",
 ]
+
+deqp_vk_common_include_dirs = deqp_common_include_dirs
+deqp_vk_common_include_dirs += [
+  "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
+  "//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
+  "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan",
+]

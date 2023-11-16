@@ -265,6 +265,12 @@ VKAPI_ATTR VkResult VKAPI_CALL createMetalSurfaceEXT (VkInstance instance, const
 	VK_NULL_RETURN((*pSurface = allocateNonDispHandle<SurfaceKHR, VkSurfaceKHR>(instance, pCreateInfo, pAllocator)));
 }
 
+VKAPI_ATTR VkResult VKAPI_CALL createOHOSSurfaceOpenHarmony (VkInstance instance, const VkOHOSSurfaceCreateInfoOpenHarmony* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface)
+{
+	DE_UNREF(pAllocator);
+	VK_NULL_RETURN((*pSurface = allocateNonDispHandle<SurfaceKHR, VkSurfaceKHR>(instance, pCreateInfo, pAllocator)));
+}
+
 VKAPI_ATTR VkResult VKAPI_CALL createViSurfaceNN (VkInstance instance, const VkViSurfaceCreateInfoNN* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface)
 {
 	DE_UNREF(pAllocator);
@@ -2854,6 +2860,22 @@ VKAPI_ATTR void VKAPI_CALL setDeviceMemoryPriorityEXT (VkDevice device, VkDevice
 	DE_UNREF(priority);
 }
 
+VKAPI_ATTR VkResult VKAPI_CALL getOHOSNativeBufferPropertiesOpenHarmony (VkDevice device, const struct OH_NativeBuffer* buffer, VkOHOSNativeBufferPropertiesOpenHarmony* pProperties)
+{
+	DE_UNREF(device);
+	DE_UNREF(buffer);
+	DE_UNREF(pProperties);
+	return VK_SUCCESS;
+}
+
+VKAPI_ATTR VkResult VKAPI_CALL getMemoryOHOSNativeBufferOpenHarmony (VkDevice device, const VkMemoryGetOHOSNativeBufferInfoOpenHarmony* pInfo, struct OH_NativeBuffer** pBuffer)
+{
+	DE_UNREF(device);
+	DE_UNREF(pInfo);
+	DE_UNREF(pBuffer);
+	return VK_SUCCESS;
+}
+
 VKAPI_ATTR void VKAPI_CALL cmdBuildAccelerationStructuresKHR (VkCommandBuffer commandBuffer, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos, const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos)
 {
 	DE_UNREF(commandBuffer);
@@ -3385,6 +3407,7 @@ static const tcu::StaticFunctionLibrary::Entry s_instanceFunctions[] =
 	VK_NULL_FUNC_ENTRY(vkCreateIOSSurfaceMVK,												createIOSSurfaceMVK),
 	VK_NULL_FUNC_ENTRY(vkCreateMacOSSurfaceMVK,												createMacOSSurfaceMVK),
 	VK_NULL_FUNC_ENTRY(vkCreateMetalSurfaceEXT,												createMetalSurfaceEXT),
+	VK_NULL_FUNC_ENTRY(vkCreateOHOSSurfaceOpenHarmony,										createOHOSSurfaceOpenHarmony),
 	VK_NULL_FUNC_ENTRY(vkCreateViSurfaceNN,													createViSurfaceNN),
 	VK_NULL_FUNC_ENTRY(vkCreateWaylandSurfaceKHR,											createWaylandSurfaceKHR),
 	VK_NULL_FUNC_ENTRY(vkGetPhysicalDeviceWaylandPresentationSupportKHR,					getPhysicalDeviceWaylandPresentationSupportKHR),
@@ -3748,6 +3771,8 @@ static const tcu::StaticFunctionLibrary::Entry s_deviceFunctions[] =
 	VK_NULL_FUNC_ENTRY(vkCmdDrawMultiEXT,									cmdDrawMultiEXT),
 	VK_NULL_FUNC_ENTRY(vkCmdDrawMultiIndexedEXT,							cmdDrawMultiIndexedEXT),
 	VK_NULL_FUNC_ENTRY(vkSetDeviceMemoryPriorityEXT,						setDeviceMemoryPriorityEXT),
+	VK_NULL_FUNC_ENTRY(vkGetOHOSNativeBufferPropertiesOpenHarmony,			getOHOSNativeBufferPropertiesOpenHarmony),
+	VK_NULL_FUNC_ENTRY(vkGetMemoryOHOSNativeBufferOpenHarmony,				getMemoryOHOSNativeBufferOpenHarmony),
 	VK_NULL_FUNC_ENTRY(vkCreateAccelerationStructureKHR,					createAccelerationStructureKHR),
 	VK_NULL_FUNC_ENTRY(vkDestroyAccelerationStructureKHR,					destroyAccelerationStructureKHR),
 	VK_NULL_FUNC_ENTRY(vkCmdBuildAccelerationStructuresKHR,					cmdBuildAccelerationStructuresKHR),

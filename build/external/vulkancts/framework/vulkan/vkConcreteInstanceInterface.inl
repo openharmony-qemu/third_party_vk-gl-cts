@@ -73,6 +73,7 @@ virtual VkResult	createStreamDescriptorSurfaceGGP								(VkInstance instance, c
 virtual VkResult	createIOSSurfaceMVK												(VkInstance instance, const VkIOSSurfaceCreateInfoMVK* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) const;
 virtual VkResult	createMacOSSurfaceMVK											(VkInstance instance, const VkMacOSSurfaceCreateInfoMVK* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) const;
 virtual VkResult	createMetalSurfaceEXT											(VkInstance instance, const VkMetalSurfaceCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) const;
+virtual VkResult	createOHOSSurfaceOpenHarmony									(VkInstance instance, const VkOHOSSurfaceCreateInfoOpenHarmony* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) const;
 virtual VkResult	createViSurfaceNN												(VkInstance instance, const VkViSurfaceCreateInfoNN* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) const;
 virtual VkResult	createWaylandSurfaceKHR											(VkInstance instance, const VkWaylandSurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) const;
 virtual VkBool32	getPhysicalDeviceWaylandPresentationSupportKHR					(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, pt::WaylandDisplayPtr display) const;
