@@ -412,6 +412,11 @@ VkResult InstanceDriver::createMetalSurfaceEXT (VkInstance instance, const VkMet
 	return m_vk.createMetalSurfaceEXT(instance, pCreateInfo, pAllocator, pSurface);
 }
 
+VkResult InstanceDriver::createOHOSSurfaceOpenHarmony (VkInstance instance, const VkOHOSSurfaceCreateInfoOpenHarmony* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) const
+{
+	return m_vk.createOHOSSurfaceOpenHarmony(instance, pCreateInfo, pAllocator, pSurface);
+}
+
 VkResult InstanceDriver::createViSurfaceNN (VkInstance instance, const VkViSurfaceCreateInfoNN* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) const
 {
 	return m_vk.createViSurfaceNN(instance, pCreateInfo, pAllocator, pSurface);

@@ -83,6 +83,7 @@ CreateStreamDescriptorSurfaceGGPFunc								createStreamDescriptorSurfaceGGP;
 CreateIOSSurfaceMVKFunc												createIOSSurfaceMVK;
 CreateMacOSSurfaceMVKFunc											createMacOSSurfaceMVK;
 CreateMetalSurfaceEXTFunc											createMetalSurfaceEXT;
+CreateOHOSSurfaceOpenHarmonyFunc									createOHOSSurfaceOpenHarmony;
 CreateViSurfaceNNFunc												createViSurfaceNN;
 CreateWaylandSurfaceKHRFunc											createWaylandSurfaceKHR;
 GetPhysicalDeviceWaylandPresentationSupportKHRFunc					getPhysicalDeviceWaylandPresentationSupportKHR;

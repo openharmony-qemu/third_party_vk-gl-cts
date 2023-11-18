@@ -58,6 +58,9 @@ void RosenContextImpl::InitProducer()
 
 bool RosenContextImpl::InitEgl()
 {
+    if(eglInited_) {
+        return true;
+    }
     eglDisplay_ = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (eglDisplay_ == EGL_NO_DISPLAY)
     {
@@ -83,7 +86,7 @@ bool RosenContextImpl::InitEgl()
     {
         ShowConfig(allConfigs_[i]);
     }
-
+    eglInited_ = true;
     return true;
 }
 
@@ -401,4 +404,38 @@ int32_t RosenContextImpl::GetAttrib(int32_t attrType)
     int32_t ret;
     eglGetConfigAttrib(eglDisplay_, config_, attrType, &ret);
     return ret;
+}
+
+uint64_t RosenContextImpl::CreateWindow(uint32_t x,uint32_t y,uint32_t width,uint32_t height)
+{
+    static uint64_t windowId = 1;
+    uint64_t wid = windowId++;
+
+    // printf("impl create window %llu\n",wid);
+    if(displayNode_==nullptr){
+        displayNode_ = RSDisplayNode::Create(RSDisplayNodeConfig());
+    }
+    vulkanWindows_[wid].surfaceNode_ = RSSurfaceNode::Create(RSSurfaceNodeConfig());
+    vulkanWindows_[wid].surfaceNode_->SetBounds(x,y,width,height);
+    displayNode_->AddChild(vulkanWindows_[wid].surfaceNode_, -1);
+
+    std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(vulkanWindows_[wid].surfaceNode_);
+    std::shared_ptr<RSSurfaceOhosGl> rsSurfaceOhosGl = std::static_pointer_cast<RSSurfaceOhosGl>(rsSurface);
+    vulkanWindows_[wid].producer_ = rsSurfaceOhosGl->GetSurface();
+
+    vulkanWindows_[wid].nativeWindow_ = CreateNativeWindowFromSurface(&vulkanWindows_[wid].producer_);
+    return wid;
+}
+
+void *RosenContextImpl::GetNativeWindow(uint64_t windowId)
+{
+    // printf("impl get native window %llu\n",windowId);
+    return vulkanWindows_[windowId].nativeWindow_;
+}
+
+void RosenContextImpl::DestoryWindow(uint64_t windowId)
+{
+    // printf("impl destory window %llu\n",windowId);
+    displayNode_->RemoveChild(vulkanWindows_[windowId].surfaceNode_);
+    vulkanWindows_.erase(windowId);
 }

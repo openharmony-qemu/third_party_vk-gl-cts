@@ -19,7 +19,10 @@ import("//third_party/vk-gl-cts/vk_gl_cts.gni")
 config("deqp_vkutil_config") {
   cflags_cc = deqp_common_cflags_cc
   defines = deqp_common_defines
-  defines += [ "_XOPEN_SOURCE=600" ]
+  defines += [
+    "_XOPEN_SOURCE=600",
+    "VK_USE_PLATFORM_OHOS_OPENHARMONY",
+  ]
 }
 
 ohos_source_set("deqp_vkutilnoshader_source") {

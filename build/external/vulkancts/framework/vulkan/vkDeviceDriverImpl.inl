@@ -1597,6 +1597,16 @@ void DeviceDriver::setDeviceMemoryPriorityEXT (VkDevice device, VkDeviceMemory m
 	m_vk.setDeviceMemoryPriorityEXT(device, memory, priority);
 }
 
+VkResult DeviceDriver::getOHOSNativeBufferPropertiesOpenHarmony (VkDevice device, const struct OH_NativeBuffer* buffer, VkOHOSNativeBufferPropertiesOpenHarmony* pProperties) const
+{
+	return m_vk.getOHOSNativeBufferPropertiesOpenHarmony(device, buffer, pProperties);
+}
+
+VkResult DeviceDriver::getMemoryOHOSNativeBufferOpenHarmony (VkDevice device, const VkMemoryGetOHOSNativeBufferInfoOpenHarmony* pInfo, struct OH_NativeBuffer** pBuffer) const
+{
+	return m_vk.getMemoryOHOSNativeBufferOpenHarmony(device, pInfo, pBuffer);
+}
+
 VkResult DeviceDriver::createAccelerationStructureKHR (VkDevice device, const VkAccelerationStructureCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkAccelerationStructureKHR* pAccelerationStructure) const
 {
 	return m_vk.createAccelerationStructureKHR(device, pCreateInfo, pAllocator, pAccelerationStructure);

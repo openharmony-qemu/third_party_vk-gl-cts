@@ -320,6 +320,8 @@ virtual void				cmdSetColorWriteEnableEXT						(VkCommandBuffer commandBuffer, u
 virtual void				cmdDrawMultiEXT									(VkCommandBuffer commandBuffer, uint32_t drawCount, const VkMultiDrawInfoEXT* pVertexInfo, uint32_t instanceCount, uint32_t firstInstance, uint32_t stride) const = 0;
 virtual void				cmdDrawMultiIndexedEXT							(VkCommandBuffer commandBuffer, uint32_t drawCount, const VkMultiDrawIndexedInfoEXT* pIndexInfo, uint32_t instanceCount, uint32_t firstInstance, uint32_t stride, const int32_t* pVertexOffset) const = 0;
 virtual void				setDeviceMemoryPriorityEXT						(VkDevice device, VkDeviceMemory memory, float priority) const = 0;
+virtual VkResult			getOHOSNativeBufferPropertiesOpenHarmony		(VkDevice device, const struct OH_NativeBuffer* buffer, VkOHOSNativeBufferPropertiesOpenHarmony* pProperties) const = 0;
+virtual VkResult			getMemoryOHOSNativeBufferOpenHarmony			(VkDevice device, const VkMemoryGetOHOSNativeBufferInfoOpenHarmony* pInfo, struct OH_NativeBuffer** pBuffer) const = 0;
 virtual VkResult			createAccelerationStructureKHR					(VkDevice device, const VkAccelerationStructureCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkAccelerationStructureKHR* pAccelerationStructure) const = 0;
 virtual void				destroyAccelerationStructureKHR					(VkDevice device, VkAccelerationStructureKHR accelerationStructure, const VkAllocationCallbacks* pAllocator) const = 0;
 virtual void				cmdBuildAccelerationStructuresKHR				(VkCommandBuffer commandBuffer, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos, const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos) const = 0;

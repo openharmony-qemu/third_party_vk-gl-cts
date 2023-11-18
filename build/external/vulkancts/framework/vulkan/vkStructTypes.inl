@@ -5643,6 +5643,56 @@ struct VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT
 	VkBool32		pageableDeviceLocalMemory;
 };
 
+struct VkOHOSNativeBufferUsageOpenHarmony
+{
+	VkStructureType	sType;
+	const void*		pNext;
+	uint64_t		OHOSNativeBufferUsage;
+};
+
+struct VkOHOSNativeBufferPropertiesOpenHarmony
+{
+	VkStructureType	sType;
+	const void*		pNext;
+	VkDeviceSize	allocationSize;
+	uint32_t		memoryTypeBits;
+};
+
+struct VkOHOSNativeBufferFormatPropertiesOpenHarmony
+{
+	VkStructureType					sType;
+	const void*						pNext;
+	VkFormat						format;
+	uint64_t						externalFormat;
+	VkFormatFeatureFlags			formatFeatures;
+	VkComponentMapping				samplerYcbcrConversionComponents;
+	VkSamplerYcbcrModelConversion	suggestedYcbcrModel;
+	VkSamplerYcbcrRange				suggestedYcbcrRange;
+	VkChromaLocation				suggestedXChromaOffset;
+	VkChromaLocation				suggestedYChromaOffset;
+};
+
+struct VkImportOHOSNativeBufferInfoOpenHarmony
+{
+	VkStructureType			sType;
+	const void*				pNext;
+	struct OH_NativeBuffer*	buffer;
+};
+
+struct VkMemoryGetOHOSNativeBufferInfoOpenHarmony
+{
+	VkStructureType	sType;
+	const void*		pNext;
+	VkDeviceMemory	memory;
+};
+
+struct VkExternalFormatOpenHarmony
+{
+	VkStructureType	sType;
+	const void*		pNext;
+	uint64_t		externalFormat;
+};
+
 union VkDeviceOrHostAddressKHR
 {
 	VkDeviceAddress	deviceAddress;
@@ -7465,6 +7515,14 @@ struct VkMetalSurfaceCreateInfoEXT
 	const void*						pNext;
 	VkMetalSurfaceCreateFlagsEXT	flags;
 	const pt::CAMetalLayer*			pLayer;
+};
+
+struct VkOHOSSurfaceCreateInfoOpenHarmony
+{
+	VkStructureType						sType;
+	const void*							pNext;
+	VkOHOSSurfaceCreateFlagsOpenHarmony	flags;
+	struct pt::OhosNativeWindowPtr		window;
 };
 
 struct VkViSurfaceCreateInfoNN

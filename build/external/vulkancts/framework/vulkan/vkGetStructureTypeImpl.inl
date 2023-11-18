@@ -2421,6 +2421,36 @@ template<> VkStructureType getStructureType<VkPhysicalDevicePageableDeviceLocalM
 	return VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PAGEABLE_DEVICE_LOCAL_MEMORY_FEATURES_EXT;
 }
 
+template<> VkStructureType getStructureType<VkOHOSNativeBufferUsageOpenHarmony> (void)
+{
+	return VK_STRUCTURE_TYPE_OHOS_NATIVE_BUFFER_USAGE_OPENHARMONY;
+}
+
+template<> VkStructureType getStructureType<VkOHOSNativeBufferPropertiesOpenHarmony> (void)
+{
+	return VK_STRUCTURE_TYPE_OHOS_NATIVE_BUFFER_PROPERTIES_OPENHARMONY;
+}
+
+template<> VkStructureType getStructureType<VkOHOSNativeBufferFormatPropertiesOpenHarmony> (void)
+{
+	return VK_STRUCTURE_TYPE_OHOS_NATIVE_BUFFER_FORMAT_PROPERTIES_OPENHARMONY;
+}
+
+template<> VkStructureType getStructureType<VkImportOHOSNativeBufferInfoOpenHarmony> (void)
+{
+	return VK_STRUCTURE_TYPE_IMPORT_OHOS_NATIVE_BUFFER_INFO_OPENHARMONY;
+}
+
+template<> VkStructureType getStructureType<VkMemoryGetOHOSNativeBufferInfoOpenHarmony> (void)
+{
+	return VK_STRUCTURE_TYPE_MEMORY_GET_OHOS_NATIVE_BUFFER_INFO_OPENHARMONY;
+}
+
+template<> VkStructureType getStructureType<VkExternalFormatOpenHarmony> (void)
+{
+	return VK_STRUCTURE_TYPE_EXTERNAL_FORMAT_OPENHARMONY;
+}
+
 template<> VkStructureType getStructureType<VkAccelerationStructureGeometryTrianglesDataKHR> (void)
 {
 	return VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
@@ -2969,6 +2999,11 @@ template<> VkStructureType getStructureType<VkMacOSSurfaceCreateInfoMVK> (void)
 template<> VkStructureType getStructureType<VkMetalSurfaceCreateInfoEXT> (void)
 {
 	return VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
+}
+
+template<> VkStructureType getStructureType<VkOHOSSurfaceCreateInfoOpenHarmony> (void)
+{
+	return VK_STRUCTURE_TYPE_OHOS_SURFACE_CREATE_INFO_OPENHARMONY;
 }
 
 template<> VkStructureType getStructureType<VkViSurfaceCreateInfoNN> (void)
