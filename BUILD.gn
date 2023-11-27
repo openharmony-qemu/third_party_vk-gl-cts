@@ -16,22 +16,25 @@
 import("//build/ohos.gni")
 
 group("deqp") {
-    deps = [
-      "//third_party/vk-gl-cts/framework/delibs/debase:libdeqp_debase",
-      "//third_party/vk-gl-cts/framework/delibs/depool:libdeqp_depool",
-      "//third_party/vk-gl-cts/framework/delibs/dethread:libdeqp_dethread",
-      "//third_party/vk-gl-cts/framework/delibs/deutil:libdeqp_deutil",
-      "//third_party/vk-gl-cts/framework/delibs/decpp:libdeqp_decpp",
-      "//third_party/vk-gl-cts/framework/delibs/destream:libdeqp_destream",
-      "//third_party/vk-gl-cts/framework/opengl/wrapper:libdeqp_glwrapper",
-      "//third_party/vk-gl-cts/framework/qphelper:libdeqp_qphelper",
-      "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",   #deps openglcts/modules/glesext
-      "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",   #deps common rr
-      "//third_party/vk-gl-cts/framework/egl/wrapper:libdeqp_eglwrapper",  #deps common
-      "//third_party/vk-gl-cts/framework/randomshaders:libdeqp_randomshaders",  #deps common
-      "//third_party/vk-gl-cts/framework/referencerenderer:libdeqp_referencerenderer",
-      "//third_party/vk-gl-cts/framework/xexml:libdeqp_xexml",
-      "//third_party/vk-gl-cts/modules:deqp_modules",
-      "//third_party/glslang:glslang",
-    ]
+  deps = [
+    "//third_party/glslang:glslang",
+    "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",  #deps
+                                                                # openglcts/modules/glesext
+    "//third_party/vk-gl-cts/framework/delibs/debase:libdeqp_debase",
+    "//third_party/vk-gl-cts/framework/delibs/decpp:libdeqp_decpp",
+    "//third_party/vk-gl-cts/framework/delibs/depool:libdeqp_depool",
+    "//third_party/vk-gl-cts/framework/delibs/destream:libdeqp_destream",
+    "//third_party/vk-gl-cts/framework/delibs/dethread:libdeqp_dethread",
+    "//third_party/vk-gl-cts/framework/delibs/deutil:libdeqp_deutil",
+    "//third_party/vk-gl-cts/framework/egl/wrapper:libdeqp_eglwrapper",  #deps
+                                                                         # common
+    "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",  #deps common rr
+    "//third_party/vk-gl-cts/framework/opengl/wrapper:libdeqp_glwrapper",
+    "//third_party/vk-gl-cts/framework/qphelper:libdeqp_qphelper",
+    "//third_party/vk-gl-cts/framework/randomshaders:libdeqp_randomshaders",  #deps
+                                                                              # common
+    "//third_party/vk-gl-cts/framework/referencerenderer:libdeqp_referencerenderer",
+    "//third_party/vk-gl-cts/framework/xexml:libdeqp_xexml",
+    "//third_party/vk-gl-cts/modules:deqp_modules",
+  ]
 }

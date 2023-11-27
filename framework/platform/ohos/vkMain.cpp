@@ -67,15 +67,6 @@ int main (int argc, char** argv)
 				break;
 			}
 		}
-        if (app->getResult().numPassed > 0) {
-            exitStatus = 0;
-        }
-        if (app->getResult().numNotSupported > 0) {
-            exitStatus = 1;
-        }
-        if (app->getResult().numFailed > 0) {
-            exitStatus = 2;
-        }
 	}
 	catch (const std::exception& e)
 	{

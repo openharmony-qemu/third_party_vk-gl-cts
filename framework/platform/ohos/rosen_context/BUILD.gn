@@ -15,7 +15,7 @@ ohos_shared_library("rosen_context") {
     "//foundation/graphic/graphic_2d/interfaces/innerkits/surface",
   ]
 
-  deps = [
+  deps = [ 
     "//commonlibrary/c_utils/base:utils",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
   ]

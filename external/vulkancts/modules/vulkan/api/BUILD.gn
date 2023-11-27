@@ -47,6 +47,7 @@ ohos_source_set("deqp_vk_api_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/api/vktApiGetMemoryCommitment.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/api/vktApiGranularityTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/api/vktApiImageClearingTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/api/vktApiImageCompressionControlTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/api/vktApiMaintenance3Check.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/api/vktApiMemoryRequirementInvarianceTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/api/vktApiNullHandleTests.cpp",

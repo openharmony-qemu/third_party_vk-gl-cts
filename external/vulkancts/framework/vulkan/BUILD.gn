@@ -22,6 +22,7 @@ config("deqp_vkutil_config") {
   defines += [
     "_XOPEN_SOURCE=600",
     "VK_USE_PLATFORM_OHOS_OPENHARMONY",
+    "DISABLE_SHADERCACHE_IPC",
   ]
 }
 
@@ -29,6 +30,7 @@ ohos_source_set("deqp_vkutilnoshader_source") {
   sources = [
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkAllocationCallbackUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkApiVersion.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkAppParamsUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkBarrierUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkBinaryRegistry.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkBufferWithMemory.cpp",
@@ -44,12 +46,15 @@ ohos_source_set("deqp_vkutilnoshader_source") {
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkMemUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkNullDriver.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkObjUtil.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkPipelineConstructionUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkPlatform.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkQueryUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkRayTracingUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkRef.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkRefUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkRenderDocUtil.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkResourceInterface.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkSafetyCriticalUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkShaderProgram.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkStrUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkTypeUtil.cpp",
@@ -88,39 +93,20 @@ ohos_source_set("deqp_vkutilnoshader_source") {
     "//third_party/vk-gl-cts/framework/xexml:libdeqp_xexml",
     "//third_party/zlib:libz",
   ]
-
-  #   lib_dirs = [
-  #     "//third_party/vk-gl-cts/outlibs"
-  #   ]
-  #   libs=[
-  #     "glslang",
-  #     "GenericCodeGen",
-  #     "MachineIndependent",
-  #     "SPIRV",
-  #     "SPVRemapper",
-  #     "HLSL",
-  #     "OGLCompiler",
-  #     "OSDependent",
-  #     "spirv-tools-link",
-  #     "spirv-tools",
-  #     "spirv-tools-lint",
-  #     "spirv-tools-reduce",
-  #     "spirv-tools-opt",
-  #     "z"
-  #   ]
-
+  part_name = "acts"
+  subsystem_name = "xts"
   configs = [ ":deqp_vkutil_config" ]
 }
 
 ohos_static_library("libdeqp_vkutilnoshader") {
   deps = [ ":deqp_vkutilnoshader_source" ]
-  part_name = "graphic_2d"
-  subsystem_name = "graphic"
+  part_name = "acts"
+  subsystem_name = "xts"
 }
 
 action("gen_ext_deps") {
   script =
-      "//third_party/vk-gl-cts/external/vulkancts/scripts/ohos_gen_ext_deps.py"
+      "//third_party/vk-gl-cts/external/vulkancts/scripts/ohos_gen_ext_deps.py -o ../../../build/external/vulkancts/framework/vulkan"
   outputs = [ "$target_out_dir/gen_ext_deps.log" ]
 
   out_path = rebase_path(
@@ -129,8 +115,7 @@ action("gen_ext_deps") {
 }
 
 action("gen_framework") {
-  script =
-      "//third_party/vk-gl-cts/external/vulkancts/scripts/ohos_gen_framework.py"
+  script = "//third_party/vk-gl-cts/external/vulkancts/scripts/ohos_gen_framework.py -o ../../../build/external/vulkancts/framework/vulkan"
   outputs = [ "$target_out_dir/gen_framework.log" ]
 
   out_path = rebase_path(
@@ -140,7 +125,7 @@ action("gen_framework") {
 }
 
 action("gen_framework_c") {
-  script = "//third_party/vk-gl-cts/external/vulkancts/scripts/ohos_gen_framework_c.py"
+  script = "//third_party/vk-gl-cts/external/vulkancts/scripts/ohos_gen_framework_c.py -o ../../../build/external/vulkancts/framework/vulkan"
   outputs = [ "$target_out_dir/gen_framework_c.log" ]
 
   out_path = rebase_path(
@@ -156,7 +141,6 @@ ohos_source_set("deqp_vkutil_source") {
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkSpirVAsm.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkSpirVProgram.cpp",
   ]
-
   include_dirs = deqp_common_include_dirs
   include_dirs += [
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
@@ -184,31 +168,12 @@ ohos_source_set("deqp_vkutil_source") {
     "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
     "//third_party/zlib:libz",
   ]
-
-  #   lib_dirs = [
-  #     "//third_party/vk-gl-cts/outlibs"
-  #   ]
-  #   libs=[
-  #     "glslang",
-  #     "GenericCodeGen",
-  #     "MachineIndependent",
-  #     "SPIRV",
-  #     "SPVRemapper",
-  #     "HLSL",
-  #     "OGLCompiler",
-  #     "OSDependent",
-  #     "spirv-tools-link",
-  #     "spirv-tools",
-  #     "spirv-tools-lint",
-  #     "spirv-tools-reduce",
-  #     "spirv-tools-opt",
-  #     "z"
-  #   ]
-
+  part_name = "acts"
+  subsystem_name = "xts"
   configs = [ ":deqp_vkutil_config" ]
 }
 ohos_static_library("libdeqp_vkutil") {
   deps = [ ":deqp_vkutil_source" ]
-  part_name = "graphic_2d"
-  subsystem_name = "graphic"
+  part_name = "acts"
+  subsystem_name = "xts"
 }
