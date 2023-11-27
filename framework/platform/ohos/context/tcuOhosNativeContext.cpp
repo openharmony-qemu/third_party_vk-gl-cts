@@ -202,12 +202,7 @@ OhosRendContext::OhosRendContext(const glu::RenderConfig &config, const tcu::Com
     OHOS::OhosContextI::GetInstance().InitEglContext();
     OHOS::OhosContextI::GetInstance().MakeCurrent();
 
-    if (config.type.getMajorVersion() == 2)
-    {
-        GLFunctionLoader loader("libGLESv2.so");
-        glu::initFunctions(&m_glFunctions, &loader, config.type.getAPI());
-    }
-    else if (config.type.getMajorVersion() == 3)
+    if (config.type.getMajorVersion() == 2 && config.type.getMajorVersion() == 3)
     {
         GLFunctionLoader loader("libGLESv3.so");
         glu::initFunctions(&m_glFunctions, &loader, config.type.getAPI());
