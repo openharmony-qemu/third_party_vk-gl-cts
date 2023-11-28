@@ -29,7 +29,7 @@ ohos_source_set("deqp_delib_dethread_source") {
     "//third_party/vk-gl-cts/framework/delibs/dethread/deSingleton.c",
     "//third_party/vk-gl-cts/framework/delibs/dethread/deThreadTest.c",
     "//third_party/vk-gl-cts/framework/delibs/dethread/unix/deMutexUnix.c",
-    "//third_party/vk-gl-cts/framework/delibs/dethread/unix/deNamedSemaphoreUnix.c",
+    "//third_party/vk-gl-cts/framework/delibs/dethread/unix/deSemaphoreMach.c",
     "//third_party/vk-gl-cts/framework/delibs/dethread/unix/deSemaphoreUnix.c",
     "//third_party/vk-gl-cts/framework/delibs/dethread/unix/deThreadLocalUnix.c",
     "//third_party/vk-gl-cts/framework/delibs/dethread/unix/deThreadUnix.c",

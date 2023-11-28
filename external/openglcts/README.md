@@ -4,8 +4,11 @@ OpenGL and OpenGL ES 2.0/3.X Conformance Test Instructions
 This document describes how to build, port, and run the OpenGL and OpenGL ES
 2.0/3.X conformance tests, and how to verify and submit test results.
 
-The Conformance Tests are built on dEQP framework. dEQP documentation is
-available at http://source.android.com/devices/graphics/testing.html
+The Conformance Tests are built on the dEQP framework.
+Up-to-date documentation for dEQP is available at:
+
+* [The VK-GL-CTS wiki for Khronos members](https://gitlab.khronos.org/Tracker/vk-gl-cts/wikis/home)
+* [The VK-GL-CTS wiki for non-Khronos members](https://github.com/KhronosGroup/VK-GL-CTS/wiki)
 
 
 Contents
@@ -257,23 +260,23 @@ command line examples in the next steps:
 
 Building GL, ES2, or ES3.x conformance tests:
 
-	cmake <path to openglcts> -DDEQP_TARGET=default -G"<Generator Name>"
-	cmake --build .
+	cmake <path to VK-GL-CTS> -DDEQP_TARGET=default -G"<Generator Name>"
+	cmake --build external/openglcts
 
 Khronos Confidential CTS doesn't support run-time selection of API context.
 If you intend to run it you need to additionally supply `GLCTS_GTF_TARGET`
 option to you cmake command, e.g.:
 
-	cmake <path to openglcts> -DDEQP_TARGET=default -DGLCTS_GTF_TARGET=<target> -G"<Generator Name>"
+	cmake <path to VK-GL-CTS> -DDEQP_TARGET=default -DGLCTS_GTF_TARGET=<target> -G"<Generator Name>"
 
 Available `<target>`s are `gles2`, `gles3`, `gles31`, `gles32`, and `gl`.
 The default `<target>` is `gles32`.
 
 It's also possible to build `GL-CTS.sln` in Visual Studio instead of running
-the `cmake --build .` command.
+the `cmake --build external/openglcts` command.
 
 **NOTE**: Do not create the build directory under the source directory
-(i.e anywhere under `<path to openglcts>`) on Windows, since it causes
+(i.e anywhere under `<path to VK-GL-CTS>`) on Windows, since it causes
 random build failures when copying data files around.
 
 **NOTE**: You can use the CMake for Windows GUI to do configuration and project
@@ -299,13 +302,13 @@ Required tools:
 
 Building ES2 or ES3.x conformance tests:
 
-	cmake <path to openglcts> -DDEQP_TARGET=null -DGLCTS_GTF_TARGET=gles32
-	cmake --build .
+	cmake <path to VK-GL-CTS> -DDEQP_TARGET=null -DGLCTS_GTF_TARGET=gles32
+	cmake --build external/openglcts
 
 Building OpenGL conformance tests:
 
-	cmake <path to openglcts> -DDEQP_TARGET=null -DGLCTS_GTF_TARGET=gl
-	cmake --build .
+	cmake <path to VK-GL-CTS> -DDEQP_TARGET=null -DGLCTS_GTF_TARGET=gl
+	cmake --build external/openglcts
 
 Khronos Confidential CTS doesn't support run-time selection of API context.
 If you intend to run it then the `GLCTS_GTF_TARGET` option is necessary.
@@ -741,7 +744,7 @@ The CTS writes test logs in XML encapsulated in a simple plain-text container
 format. Each tested configuration listed in `cts-run-summary.xml`
 
 To analyse and process the log files, run the following scripts
-- `verify_submission.py` located in [vk-gl-cts-Tools](https://github.com/KhronosGroup/vk-gl-cts-Tools): Script that verifies logs based on `cts-run-summary.xml` file.
+- `verify_submission.py` located in [VK-GL-CTS-Tools](https://github.com/KhronosGroup/VK-GL-CTS-Tools): Script that verifies logs based on `cts-run-summary.xml` file.
 - `scripts/log/log_to_csv.py`: This utility converts `.qpa` log into CSV format. This is
 useful for importing results into other systems.
 - `scripts/log/log_to_xml.py`: Converts `.qpa` into well-formed XML document. The document
@@ -783,15 +786,15 @@ identify the CTS release tag and affected tests.
 
 Creating a Submission Package
 ------------------------
-Please see the [Creating a Submission Package page](https://github.com/KhronosGroup/vk-gl-cts/wiki/Creating-a-OpenGL-and-OpenGL-ES-Submission-Package).
+Please see the [Creating a Submission Package page](https://github.com/KhronosGroup/VK-GL-CTS/wiki/Creating-a-OpenGL-and-OpenGL-ES-Submission-Package).
 
 Submission Update Package
 ------------------------
-Please see the [Submission Update Package page](https://github.com/KhronosGroup/vk-gl-cts/wiki/Submission-Update-Package).
+Please see the [Submission Update Package page](https://github.com/KhronosGroup/VK-GL-CTS/wiki/Submission-Update-Package).
 
 Passing Criteria
 ------------------------
-Please see the [Conformance Submission Passing Criteria page](https://github.com/KhronosGroup/vk-gl-cts/wiki/OpenGL-and-OpenGL-ES-Conformance-Submission-Passing-Criteria).
+Please see the [Conformance Submission Passing Criteria page](https://github.com/KhronosGroup/VK-GL-CTS/wiki/OpenGL-and-OpenGL-ES-Conformance-Submission-Passing-Criteria).
 
 Troubleshooting
 ------------------------

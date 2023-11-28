@@ -1,6 +1,6 @@
 #!/usr/bin/python3 -i
 #
-# Copyright 2013-2021 The Khronos Group Inc.
+# Copyright 2013-2022 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -16,10 +16,6 @@ class ExtensionMetaDocGeneratorOptions(GeneratorOptions):
     Represents options during extension metainformation generation for Asciidoc"""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-
-EXT_NAME_DECOMPOSE_RE = re.compile(r'[A-Z]+_(?P<tag>[A-Z]+)_(?P<name>[\w_]+)')
-
 
 @total_ordering
 class Extension:
@@ -87,10 +83,6 @@ class Extension:
                 self.supercedingExtension = supercededBy
             else:
                 self.generator.logMsg('error', 'Unrecognized ' + self.deprecationType + ' attribute value \'' + supercededBy + '\'!')
-
-        match = EXT_NAME_DECOMPOSE_RE.match(self.name)
-        self.vendor = match.group('tag')
-        self.bare_name = match.group('name')
 
     def __str__(self):
         return self.name
@@ -175,7 +167,12 @@ class Extension:
         return doc
 
     def resolveDeprecationChain(self, extensionsList, succeededBy, isRefpage, file):
-        ext = next(x for x in extensionsList if x.name == succeededBy)
+        ext = next((x for x in extensionsList if x.name == succeededBy), None)
+
+        if ext is None:
+            write(f'  ** *NOTE* The extension `{succeededBy}` is not supported for the API specification being generated', file=file)
+            self.generator.logMsg('warn', f'resolveDeprecationChain: {self.name} defines a superseding interface {succeededBy} which is not in the supported extensions list')
+            return
 
         if ext.deprecationType:
             if ext.deprecationType == 'promotion':
@@ -257,12 +254,22 @@ class Extension:
         # Only API extension dependencies are coded in XML, others are explicit
         self.writeTag('Extension and Version Dependencies', None, isRefpage, fp)
 
-        write('  * Requires ' + self.conventions.api_name() + ' ' + self.requiresCore, file=fp)
+        write('  * Requires support for {} {}'.format(
+              self.conventions.api_name(), self.requiresCore), file=fp)
+
         if self.requires:
+            # Exact meaning of 'requires' depends on extension type.
+            if self.ext_type == 'instance':
+                enableQualifier = ''
+            else:
+                # self.ext_type == 'device':
+                enableQualifier = ' for any device-level functionality'
+
             for dep in self.requires.split(','):
-                write('  * Requires', self.conventions.formatExtension(dep),
+                write('  * Requires {} to be enabled{}'.format(
+                      self.conventions.formatExtension(dep), enableQualifier),
                       file=fp)
-        if self.provisional == 'true':
+        if self.provisional == 'true' and self.conventions.provisional_extension_warning:
             write('  * *This is a _provisional_ extension and must: be used with caution.', file=fp)
             write('    See the ' +
                   self.specLink(xrefName = 'boilerplate-provisional-header',
@@ -333,7 +340,7 @@ class Extension:
                     prettyHandle = 'icon:gitlab[alt=GitLab, role="red"]' + handle.replace('gitlab:@', '')
                 elif handle.startswith('@'):
                     issuePlaceholderText = '[' + self.name + '] ' + handle
-                    issuePlaceholderText += '%0A<<Here describe the issue or question you have about the ' + self.name + ' extension>>'
+                    issuePlaceholderText += '%0A*Here describe the issue or question you have about the ' + self.name + ' extension*'
                     trackerLink = 'link:++https://github.com/KhronosGroup/Vulkan-Docs/issues/new?body=' + issuePlaceholderText + '++'
                     prettyHandle = trackerLink + '[icon:github[alt=GitHub,role="black"]' + handle[1:] + ',window=_blank,opts=nofollow]'
                 else:
@@ -346,10 +353,10 @@ class Extension:
         # current repository, and link to the same document (parameterized
         # by a URL prefix attribute) if it does.
         # The assumption is that a proposal document for an extension
-        # VK_name will be located in 'proposals/VK_name.asciidoc' relative
+        # VK_name will be located in 'proposals/VK_name.adoc' relative
         # to the repository root, and that this script will be invoked from
         # the repository root.
-        path = 'proposals/{}.asciidoc'.format(self.name)
+        path = 'proposals/{}.adoc'.format(self.name)
         if os.path.exists(path) and os.access(path, os.R_OK):
             self.writeTag('Extension Proposal',
                 'link:{{specRepositoryURL}}/{}[{}]'.format(path, self.name), isRefpage, fp)
@@ -357,7 +364,7 @@ class Extension:
         # If this is metadata to be included in a refpage, adjust the
         # leveloffset to account for the relative structure of the extension
         # appendices vs. refpages.
-        if isRefpage:
+        if isRefpage and self.conventions.include_extension_appendix_in_refpage:
             write(':leveloffset: -1', file=fp)
 
         fp.close()
@@ -438,8 +445,8 @@ class ExtensionMetaDocOutputGenerator(OutputGenerator):
 
         return doc
 
-    def makeExtensionInclude(self, ext):
-        return self.conventions.extension_include_string(ext)
+    def makeExtensionInclude(self, extname):
+        return self.conventions.extension_include_string(extname)
 
     def endFile(self):
         self.extensions.sort()
@@ -543,7 +550,7 @@ class ExtensionMetaDocOutputGenerator(OutputGenerator):
             write('endif::HAS_PROVISIONAL_EXTENSIONS[]', file=provisional_extensions_appendix_fp)
 
             for ext in self.extensions:
-                include = self.makeExtensionInclude(ext)
+                include = self.makeExtensionInclude(ext.name)
                 link = '  * ' + self.conventions.formatExtension(ext.name)
                 if ext.provisional == 'true':
                     write(self.conditionalExt(ext.name, include), file=provisional_extension_appendices_fp)
