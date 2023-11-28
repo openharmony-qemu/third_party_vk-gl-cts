@@ -35,17 +35,19 @@ namespace vk
 using std::string;
 using std::vector;
 
-// Returns the spirv-tools target environment enum for the given dEQP Spirv validator options object.
+// Returns the SPIRV-Tools target environment enum for the given dEQP Spirv validator options object.
 // Do this here instead of as a method on SpirvValidatorOptions because only this file has access to
-// the spirv-tools headers.
+// the SPIRV-Tools headers.
 static spv_target_env getSpirvToolsEnvForValidatorOptions(SpirvValidatorOptions opts)
 {
 	const bool allow_1_4 = opts.supports_VK_KHR_spirv_1_4;
 	switch (opts.vulkanVersion)
 	{
-		case VK_MAKE_VERSION(1, 0, 0): return SPV_ENV_VULKAN_1_0;
-		case VK_MAKE_VERSION(1, 1, 0): return allow_1_4 ? SPV_ENV_VULKAN_1_1_SPIRV_1_4 : SPV_ENV_VULKAN_1_1;
-		case VK_MAKE_VERSION(1, 2, 0): return SPV_ENV_VULKAN_1_2;
+		case VK_MAKE_API_VERSION(0, 1, 0, 0): return SPV_ENV_VULKAN_1_0;
+		case VK_MAKE_API_VERSION(0, 1, 1, 0): return allow_1_4 ? SPV_ENV_VULKAN_1_1_SPIRV_1_4 : SPV_ENV_VULKAN_1_1;
+		case VK_MAKE_API_VERSION(0, 1, 2, 0): return SPV_ENV_VULKAN_1_2;
+		case VK_MAKE_API_VERSION(1, 1, 0, 0): return SPV_ENV_VULKAN_1_2;
+		case VK_MAKE_API_VERSION(0, 1, 3, 0): return SPV_ENV_VULKAN_1_3;
 		default:
 			break;
 	}
@@ -65,6 +67,7 @@ static spv_target_env mapTargetSpvEnvironment(SpirvVersion spirvVersion)
 		case SPIRV_VERSION_1_3: result = SPV_ENV_UNIVERSAL_1_3; break;	//!< SPIR-V 1.3
 		case SPIRV_VERSION_1_4: result = SPV_ENV_UNIVERSAL_1_4; break;	//!< SPIR-V 1.4
 		case SPIRV_VERSION_1_5: result = SPV_ENV_UNIVERSAL_1_5; break;	//!< SPIR-V 1.5
+		case SPIRV_VERSION_1_6: result = SPV_ENV_UNIVERSAL_1_6; break;	//!< SPIR-V 1.6
 		default:				TCU_THROW(InternalError, "Unknown SPIR-V version");
 	}
 

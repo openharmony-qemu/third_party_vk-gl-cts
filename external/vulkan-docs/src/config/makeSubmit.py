@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2016-2021 The Khronos Group Inc.
+# Copyright 2016-2022 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -32,6 +32,7 @@ def makeTarget(outDir, extensionList, submitName, title, target):
           'APITITLE="' + title + '"', target)
     # Rename into submission directory
     outFile = outDir + '/html/' + submitName + '.html'
+    outFile = outFile.replace(' ', '_')
     print('mv', outDir + '/html/vkspec.html', enQuote(outFile))
     # No longer needed
     # print('mv -n', outDir + '/katex', 'out/submit/')
