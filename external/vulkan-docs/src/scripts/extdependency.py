@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2017-2021 The Khronos Group Inc.
+# Copyright 2017-2022 The Khronos Group Inc.
 # SPDX-License-Identifier: Apache-2.0
 
 """Generate a mapping of extension name -> all required extension names for
@@ -152,7 +152,7 @@ class ApiDependencies:
         return set(self.graph.descendants(extension))
 
 
-# Test script - takes about 0.05 seconds to load & process vk.xml
+# Test script
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 

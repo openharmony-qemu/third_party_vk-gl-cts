@@ -33,6 +33,7 @@ ohos_source_set("glcts-runner_source") {
     "//third_party/spirv-headers/include",
     "//third_party/vk-gl-cts/external/amber",
     "//third_party/vk-gl-cts/external/renderdoc/src",
+    "//third_party/libpng",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
     "//third_party/vk-gl-cts/external/openglcts/include",
     "//third_party/vk-gl-cts/external/openglcts/framework/egl/wrapper",
@@ -65,26 +66,6 @@ ohos_source_set("glcts-runner_source") {
   ]
 
   configs = [ ":glcts-runner_config" ]
-
-  #   lib_dirs = [
-  #     "//third_party/vk-gl-cts/outlibs"
-  #   ]
-  #   libs = [
-  #     "png",
-  #     "z",
-  #     # "glslang",
-  #     # "SPIRV",
-  #     # "SPVRemapper",
-  #     # "spirv-tools",
-  #     # "spirv-tools-link",
-  #     # "spirv-tools-lint",
-  #     # "spirv-tools-opt",
-  #     # "spirv-tools-reduce",
-  #     # "MachineIndependent",
-  #     # "OGLCompiler",
-  #     # "OSDependent",
-  #     # "GenericCodeGen",
-  #   ]
 }
 
 ohos_static_library("libdeqp_glcts-runner") {

@@ -25,10 +25,16 @@ config("deqp_vk_renderpass_config") {
 
 ohos_source_set("deqp_vk_renderpass_source") {
   sources = [
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktDynamicRenderingRandomTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktDynamicRenderingRandomTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktDynamicRenderingTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktDynamicRenderingTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassDepthStencilResolveTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassDepthStencilResolveTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassDepthStencilWriteConditionsTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassDepthStencilWriteConditionsTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassDitheringTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassDitheringTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassFragmentDensityMapTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassFragmentDensityMapTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassLoadStoreOpNoneTests.cpp",
@@ -45,6 +51,8 @@ ohos_source_set("deqp_vk_renderpass_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassSparseRenderTargetTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassSubpassDependencyTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassSubpassDependencyTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassSubpassMergeFeedbackTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassSubpassMergeFeedbackTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassTestsUtil.cpp",

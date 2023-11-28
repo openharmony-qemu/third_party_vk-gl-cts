@@ -25,6 +25,8 @@ config("deqp_vk_postmortem_config") {
 
 ohos_source_set("deqp_vk_postmortem_source") {
   sources = [
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/postmortem/vktPostmortemDeviceFaultTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/postmortem/vktPostmortemDeviceFaultTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/postmortem/vktPostmortemShaderTimeoutTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/postmortem/vktPostmortemTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/postmortem/vktPostmortemUseAfterFreeTests.cpp",
@@ -36,12 +38,9 @@ ohos_source_set("deqp_vk_postmortem_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/postmortem",
     #"//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber",
   ]
-
-  deps = [
-    #"//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
-    #"//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",
-  ]
-
+  deps = []
+  part_name = "acts"
+  subsystem_name = "xts"
   configs = [ ":deqp_vk_postmortem_config" ]
 }
 ohos_static_library("libdeqp_vk_postmortem") {

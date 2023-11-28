@@ -72,15 +72,15 @@ dEQP-GLES2.functional.shaders.random.all_features.fragment.16
 # Bug 21851700
 dEQP-GLES2.functional.shaders.random.all_features.fragment.56
 
-#vk-gl-cts 242
+#VK-GL-CTS 242
 dEQP-GLES2.functional.shaders.texture_functions.vertex.texturecubelod
 
-#vk-gl-cts 243
+#VK-GL-CTS 243
 dEQP-GLES2.functional.shaders.texture_functions.invalid.texture2d_bias_in_vertex
 dEQP-GLES2.functional.shaders.texture_functions.invalid.texturecube_bias_in_vertex
 dEQP-GLES2.functional.shaders.texture_functions.invalid.texture2dlod_in_fragment
 
-#vk-gl-cts 245
+#VK-GL-CTS 245
 dEQP-GLES2.functional.shaders.random.texture.vertex.0
 dEQP-GLES2.functional.shaders.random.texture.vertex.2
 dEQP-GLES2.functional.shaders.random.texture.vertex.3
@@ -90,14 +90,14 @@ dEQP-GLES2.functional.shaders.random.texture.vertex.28
 dEQP-GLES2.functional.shaders.random.texture.vertex.37
 dEQP-GLES2.functional.shaders.random.texture.vertex.39
 
-#vk-gl-cts 249
+#VK-GL-CTS 249
 dEQP-GLES2.functional.fragment_ops.interaction.basic_shader.61
 
-#vk-gl-cts 347
+#VK-GL-CTS 347
 dEQP-GLES2.functional.fbo.render.color_clear.rbo_rgb5_a1
 dEQP-GLES2.functional.fbo.render.color_clear.rbo_rgb5_a1_stencil_index8
 dEQP-GLES2.functional.fbo.render.color_clear.rbo_rgb5_a1_depth_component16
 dEQP-GLES2.functional.fbo.render.stencil_clear.rbo_rgb5_a1_stencil_index8
 
-#vk-gl-cts 380
+#VK-GL-CTS 380
 dEQP-GLES2.functional.negative_api.texture.copytexsubimage2d_incomplete_framebuffer

@@ -33,7 +33,6 @@ ohos_source_set("deqp-gles31-functional_source") {
     "//third_party/vk-gl-cts/modules/gles31/functional/es31fCopyImageTests.cpp",
     "//third_party/vk-gl-cts/modules/gles31/functional/es31fDebugTests.cpp",
     "//third_party/vk-gl-cts/modules/gles31/functional/es31fDefaultVertexArrayObjectTests.cpp",
-    "//third_party/vk-gl-cts/modules/gles31/functional/es31fDrawBuffersIndexedTests.cpp",
     "//third_party/vk-gl-cts/modules/gles31/functional/es31fDrawElementsBaseVertexTests.cpp",
     "//third_party/vk-gl-cts/modules/gles31/functional/es31fDrawTests.cpp",
     "//third_party/vk-gl-cts/modules/gles31/functional/es31fFboColorbufferTests.cpp",

@@ -63,7 +63,8 @@ ohos_source_set("deqp_delib_decpp_source") {
     "//third_party/vk-gl-cts/framework/delibs/dethread:libdeqp_dethread",
     "//third_party/vk-gl-cts/framework/delibs/deutil:libdeqp_deutil",
   ]
-
+  part_name = "acts"
+  subsystem_name = "xts"
   configs = [ ":deqp_delib_decpp_config" ]
 }
 

@@ -119,8 +119,10 @@ vk::wsi::Display* OhosPlatform::createWsiDisplay(vk::wsi::Type wsiType) const
     return NULL;
 }
 
-vk::Library* OhosPlatform::createLibrary(void) const
+vk::Library* OhosPlatform::createLibrary(LibraryType libraryType, const char* libraryPath) const
 {
+	DE_UNREF(libraryType);
+	DE_UNREF(libraryPath);
     return new VulkanLibrary();
 }
 
@@ -146,7 +148,7 @@ void OhosPlatform::describePlatform(std::ostream& dst) const
 	dst << "CPU: " << sysInfo.machine << "\n";
 }
 
-void OhosPlatform::getMemoryLimits(vk::PlatformMemoryLimits& limits) const
+void OhosPlatform::getMemoryLimits(tcu::PlatformMemoryLimits& limits) const
 {
 	limits.totalSystemMemory					= 256*1024*1024;
 	limits.totalDeviceLocalMemory				= 0;//128*1024*1024;
