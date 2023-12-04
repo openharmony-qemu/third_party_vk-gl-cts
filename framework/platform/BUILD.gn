@@ -124,7 +124,6 @@ ohos_shared_library("libdeqp_ohos_platform") {
   deps = [
     ":libdeqp_tcutil-platform",
     "ohos/rosen_context:rosen_context",
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
