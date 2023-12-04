@@ -91,7 +91,6 @@ ohos_source_set("glcts-common_source") {
 
     #"//third_party/vk-gl-cts/external/amber",
     #"//third_party/vk-gl-cts/external/renderdoc/src",
-    "//third_party/libpng",
 
     #"//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
     "//third_party/vk-gl-cts/external/openglcts/include",
@@ -124,6 +123,7 @@ ohos_source_set("glcts-common_source") {
     "//third_party/glslang/glslang:libdeqp_MachineIndependent",
     "//third_party/glslang/glslang:libdeqp_OSDependent",
     "//third_party/glslang/glslang:libdeqp_glslang",
+    "//third_party/libpng:libpng",
     "//third_party/spirv-tools:libdeqp_spirvtools",
     "//third_party/spirv-tools/source/link:libdeqp_spirvtools-link",
     "//third_party/spirv-tools/source/lint:libdeqp_spirvtools-lint",
@@ -154,7 +154,6 @@ ohos_source_set("glcts-common-nocontext-package_source") {
 
     #"//third_party/vk-gl-cts/external/amber",
     #"//third_party/vk-gl-cts/external/renderdoc/src",
-    "//third_party/libpng",
 
     #"//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
     "//third_party/vk-gl-cts/external/openglcts/include",
@@ -177,6 +176,7 @@ ohos_source_set("glcts-common-nocontext-package_source") {
   include_dirs += deqp_common_include_dirs
 
   deps = [
+    "//third_party/libpng:libpng",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/framework/egl:libdeqp_eglutil",
     "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",

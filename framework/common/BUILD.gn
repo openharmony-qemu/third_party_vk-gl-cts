@@ -79,7 +79,6 @@ ohos_source_set("tcutil_source") {
     "//third_party/vk-gl-cts/framework/common",
     "//third_party/vk-gl-cts/framework/qphelper",
     "//third_party/vk-gl-cts/framework/xexml",
-    "//third_party/libpng",
     "//third_party/vk-gl-cts/framework/referencerenderer",
   ]
 
