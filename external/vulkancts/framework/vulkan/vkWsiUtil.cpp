@@ -747,6 +747,7 @@ VkBool32 isDisplaySurface (Type wsiType)
 		case TYPE_WIN32:
 		case TYPE_MACOS:
 		case TYPE_HEADLESS:
+		case TYPE_OHOS:
 			return 0;
 		case TYPE_DIRECT_DRM:
 			return 1;
