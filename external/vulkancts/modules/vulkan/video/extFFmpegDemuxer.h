@@ -30,6 +30,7 @@ extern "C" {
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
 #include <libavcodec/avcodec.h>
+#include <libavcodec/bsf.h>
 }
 
 #ifdef DISABLE_DEPRECATIONS
