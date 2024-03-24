@@ -16,12 +16,13 @@
 import("//build/ohos.gni")
 
 group("deqp_modules") {
-    deps = [
-        "//third_party/vk-gl-cts/modules/egl:libdeqp-egl",
-        "//third_party/vk-gl-cts/modules/gles2:libdeqp-gles2",
-        "//third_party/vk-gl-cts/modules/gles3:libdeqp-gles3",
-        "//third_party/vk-gl-cts/modules/gles31:libdeqp-gles31",
-        "//third_party/vk-gl-cts/modules/glshared:libdeqp-gl-shared",
-        #"//third_party/vk-gl-cts/modules/internal:libdeqp-internal-tests",
-    ]
+  deps = [
+    "//third_party/vk-gl-cts/modules/egl:libdeqp-egl",
+    "//third_party/vk-gl-cts/modules/gles2:libdeqp-gles2",
+    "//third_party/vk-gl-cts/modules/gles3:libdeqp-gles3",
+    "//third_party/vk-gl-cts/modules/gles31:libdeqp-gles31",
+    "//third_party/vk-gl-cts/modules/glshared:libdeqp-gl-shared",
+
+    #"//third_party/vk-gl-cts/modules/internal:libdeqp-internal-tests",
+  ]
 }
