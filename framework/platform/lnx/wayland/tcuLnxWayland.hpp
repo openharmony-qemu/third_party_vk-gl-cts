@@ -32,7 +32,6 @@
 
 #include <wayland-client.h>
 #include <wayland-egl.h>
-#include "xdg-shell.h"
 
 namespace tcu
 {
@@ -49,10 +48,10 @@ public:
 
 	struct wl_display*		getDisplay				(void) { return m_display;		}
 	struct wl_compositor*	getCompositor			(void) { return m_compositor;	}
-	struct xdg_wm_base*		getShell				(void) { return m_shell;		}
+	struct wl_shell*		getShell				(void) { return m_shell;		}
 
 	void					processEvents			(void);
-	static bool				hasDisplay				(const char* name);
+	static bool				hasDisplay			(const char* name);
 
 	enum DisplayState
 	{
@@ -67,7 +66,7 @@ protected:
 	struct wl_display*		m_display;
 	struct wl_registry*		m_registry;
 	struct wl_compositor*	m_compositor;
-	struct xdg_wm_base*		m_shell;
+	struct wl_shell*		m_shell;
 
 private:
 							Display					(const Display&);
@@ -100,22 +99,18 @@ protected:
 	Display&					m_display;
 	struct wl_egl_window*		m_window;
 	struct wl_surface*			m_surface;
-	struct xdg_surface*			m_xdgSurface;
-	struct xdg_toplevel*		m_topLevel;
-	bool						m_configured;
+	struct wl_shell_surface*	m_shellSurface;
 	bool						m_visible;
 
 private:
 							Window					(const Window&);
 	Window&					operator=				(const Window&);
 
-	static const struct xdg_surface_listener	s_xdgSurfaceListener;
-	static const struct xdg_wm_base_listener	s_wmBaseListener;
+	static const struct wl_shell_surface_listener	s_shellSurfaceListener;
 
-	static void				handlePing				(void* data, struct xdg_wm_base* shellSurface, uint32_t serial);
-	static void				handleConfigure			(void* data, struct xdg_surface* shellSurface, uint32_t serial);
-
-	static bool				s_addWMBaseListener;
+	static void				handlePing				(void* data, struct wl_shell_surface* shellSurface, uint32_t serial);
+	static void				handleConfigure			(void* data, struct wl_shell_surface* shellSurface, uint32_t edges, int32_t width, int32_t height);
+	static void				handlePopupDone			(void* data, struct wl_shell_surface* shellSurface);
 };
 
 } // wayland

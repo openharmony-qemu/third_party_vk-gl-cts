@@ -23,7 +23,6 @@
  *//*--------------------------------------------------------------------*/
 
 #include "vktMeshShaderApiTests.hpp"
-#include "vktMeshShaderUtil.hpp"
 #include "vktTestCase.hpp"
 
 #include "vkTypeUtil.hpp"
@@ -336,12 +335,22 @@ void MeshApiCase::initPrograms (vk::SourceCollections& programCollection) const
 
 void MeshApiCase::checkSupport (Context& context) const
 {
-	checkTaskMeshShaderSupportNV(context, m_params.useTask, true);
+	context.requireDeviceFunctionality("VK_NV_mesh_shader");
+
+	const auto& meshFeatures = context.getMeshShaderFeatures();
+
+	if (!meshFeatures.meshShader)
+		TCU_THROW(NotSupportedError, "Mesh shaders not supported");
+
+	if (m_params.useTask && !meshFeatures.taskShader)
+		TCU_THROW(NotSupportedError, "Task shaders not supported");
 
 	// VUID-vkCmdDrawMeshTasksIndirectNV-drawCount-02718
 	if (m_params.drawType == DrawType::DRAW_INDIRECT && m_params.drawCount > 1u)
 	{
-		context.requireDeviceCoreFeature(DEVICE_CORE_FEATURE_MULTI_DRAW_INDIRECT);
+		const auto& features = context.getDeviceFeatures();
+		if (!features.multiDrawIndirect)
+			TCU_THROW(NotSupportedError, "Indirect multi-draws not supported");
 	}
 
 	// VUID-vkCmdDrawMeshTasksIndirectCountNV-None-04445

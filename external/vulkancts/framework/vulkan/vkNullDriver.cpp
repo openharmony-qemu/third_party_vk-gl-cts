@@ -18,7 +18,7 @@
  *
  *//*!
  * \file
- * \brief Null (do-nothing) Vulkan implementation.
+ * \brief Null (dummy) Vulkan implementation.
  *//*--------------------------------------------------------------------*/
 
 #include "vkNullDriver.hpp"
@@ -200,44 +200,18 @@ struct NAME											\
 	NAME (VkDevice, const Vk##NAME##CreateInfo*) {}	\
 }
 
-#define VK_NULL_DEFINE_OBJ_WITH_POSTFIX(DEVICE_OR_INSTANCE, NAME, POSTFIX)			\
-struct NAME##POSTFIX																\
-{																					\
-	NAME##POSTFIX (DEVICE_OR_INSTANCE, const Vk##NAME##CreateInfo##POSTFIX*) {}		\
-};
-
 VK_NULL_DEFINE_DEVICE_OBJ(Fence);
 VK_NULL_DEFINE_DEVICE_OBJ(Semaphore);
 VK_NULL_DEFINE_DEVICE_OBJ(Event);
 VK_NULL_DEFINE_DEVICE_OBJ(QueryPool);
 VK_NULL_DEFINE_DEVICE_OBJ(BufferView);
 VK_NULL_DEFINE_DEVICE_OBJ(ImageView);
+VK_NULL_DEFINE_DEVICE_OBJ(ShaderModule);
 VK_NULL_DEFINE_DEVICE_OBJ(PipelineCache);
 VK_NULL_DEFINE_DEVICE_OBJ(PipelineLayout);
 VK_NULL_DEFINE_DEVICE_OBJ(DescriptorSetLayout);
 VK_NULL_DEFINE_DEVICE_OBJ(Sampler);
 VK_NULL_DEFINE_DEVICE_OBJ(Framebuffer);
-VK_NULL_DEFINE_DEVICE_OBJ(SamplerYcbcrConversion);
-VK_NULL_DEFINE_OBJ_WITH_POSTFIX(VkDevice, Swapchain, KHR)
-VK_NULL_DEFINE_OBJ_WITH_POSTFIX(VkInstance, DebugUtilsMessenger, EXT)
-
-#ifndef CTS_USES_VULKANSC
-VK_NULL_DEFINE_DEVICE_OBJ(ShaderModule);
-VK_NULL_DEFINE_DEVICE_OBJ(DescriptorUpdateTemplate);
-VK_NULL_DEFINE_DEVICE_OBJ(PrivateDataSlot);
-VK_NULL_DEFINE_OBJ_WITH_POSTFIX(VkInstance, DebugReportCallback, EXT)
-VK_NULL_DEFINE_OBJ_WITH_POSTFIX(VkDevice, CuModule, NVX)
-VK_NULL_DEFINE_OBJ_WITH_POSTFIX(VkDevice, CuFunction, NVX)
-VK_NULL_DEFINE_OBJ_WITH_POSTFIX(VkDevice, Micromap, EXT)
-VK_NULL_DEFINE_OBJ_WITH_POSTFIX(VkDevice, OpticalFlowSession, NV)
-VK_NULL_DEFINE_OBJ_WITH_POSTFIX(VkDevice, IndirectCommandsLayout, NV)
-VK_NULL_DEFINE_OBJ_WITH_POSTFIX(VkDevice, AccelerationStructure, NV)
-VK_NULL_DEFINE_OBJ_WITH_POSTFIX(VkDevice, AccelerationStructure, KHR)
-VK_NULL_DEFINE_OBJ_WITH_POSTFIX(VkDevice, VideoSession, KHR)
-VK_NULL_DEFINE_OBJ_WITH_POSTFIX(VkDevice, VideoSessionParameters, KHR)
-VK_NULL_DEFINE_OBJ_WITH_POSTFIX(VkDevice, ValidationCache, EXT)
-VK_NULL_DEFINE_OBJ_WITH_POSTFIX(VkDevice, BufferCollection, FUCHSIA)
-#endif // CTS_USES_VULKANSC
 
 class Instance
 {
@@ -254,23 +228,20 @@ private:
 class SurfaceKHR
 {
 public:
-#ifndef CTS_USES_VULKANSC
 										SurfaceKHR		(VkInstance, const VkXlibSurfaceCreateInfoKHR*)		{}
 										SurfaceKHR		(VkInstance, const VkXcbSurfaceCreateInfoKHR*)		{}
 										SurfaceKHR		(VkInstance, const VkWaylandSurfaceCreateInfoKHR*)	{}
 										SurfaceKHR		(VkInstance, const VkAndroidSurfaceCreateInfoKHR*)	{}
 										SurfaceKHR		(VkInstance, const VkWin32SurfaceCreateInfoKHR*)	{}
+										SurfaceKHR		(VkInstance, const VkDisplaySurfaceCreateInfoKHR*)	{}
 										SurfaceKHR		(VkInstance, const VkViSurfaceCreateInfoNN*)		{}
 										SurfaceKHR		(VkInstance, const VkIOSSurfaceCreateInfoMVK*)		{}
 										SurfaceKHR		(VkInstance, const VkMacOSSurfaceCreateInfoMVK*)	{}
 										SurfaceKHR		(VkInstance, const VkImagePipeSurfaceCreateInfoFUCHSIA*)	{}
+										SurfaceKHR		(VkInstance, const VkHeadlessSurfaceCreateInfoEXT*)	{}
 										SurfaceKHR		(VkInstance, const VkStreamDescriptorSurfaceCreateInfoGGP*)	{}
 										SurfaceKHR		(VkInstance, const VkMetalSurfaceCreateInfoEXT*)	{}
-                                        SurfaceKHR		(VkInstance, const VkOHOSSurfaceCreateInfoOpenHarmony*)	{}
-										SurfaceKHR		(VkInstance, const VkScreenSurfaceCreateInfoQNX*)	{}
-#endif // CTS_USES_VULKANSC
-										SurfaceKHR		(VkInstance, const VkDisplaySurfaceCreateInfoKHR*)	{}
-										SurfaceKHR		(VkInstance, const VkHeadlessSurfaceCreateInfoEXT*)	{}
+										SurfaceKHR		(VkInstance, const VkOHOSSurfaceCreateInfoOpenHarmony*)	{}
 										~SurfaceKHR		(void)												{}
 };
 
@@ -279,6 +250,27 @@ class DisplayModeKHR
 public:
 										DisplayModeKHR	(VkDisplayKHR, const VkDisplayModeCreateInfoKHR*) {}
 										~DisplayModeKHR	(void) {}
+};
+
+class DebugReportCallbackEXT
+{
+public:
+										DebugReportCallbackEXT	(VkInstance, const VkDebugReportCallbackCreateInfoEXT*) {}
+										~DebugReportCallbackEXT	(void) {}
+};
+
+class CuModuleNVX
+{
+public:
+										CuModuleNVX	(VkDevice, const VkCuModuleCreateInfoNVX*) {}
+										~CuModuleNVX(void) {}
+};
+
+class CuFunctionNVX
+{
+public:
+										CuFunctionNVX(VkDevice, const VkCuFunctionCreateInfoNVX*) {}
+										~CuFunctionNVX(void) {}
 };
 
 class Device
@@ -298,10 +290,8 @@ class Pipeline
 public:
 	Pipeline (VkDevice, const VkGraphicsPipelineCreateInfo*) {}
 	Pipeline (VkDevice, const VkComputePipelineCreateInfo*) {}
-#ifndef CTS_USES_VULKANSC
 	Pipeline (VkDevice, const VkRayTracingPipelineCreateInfoNV*) {}
 	Pipeline (VkDevice, const VkRayTracingPipelineCreateInfoKHR*) {}
-#endif // CTS_USES_VULKANSC
 };
 
 class RenderPass
@@ -309,6 +299,19 @@ class RenderPass
 public:
 	RenderPass (VkDevice, const VkRenderPassCreateInfo*)		{}
 	RenderPass (VkDevice, const VkRenderPassCreateInfo2*)		{}
+};
+
+class SwapchainKHR
+{
+public:
+										SwapchainKHR	(VkDevice, const VkSwapchainCreateInfoKHR*) {}
+										~SwapchainKHR	(void) {}
+};
+
+class SamplerYcbcrConversion
+{
+public:
+	SamplerYcbcrConversion (VkDevice, const VkSamplerYcbcrConversionCreateInfo*) {}
 };
 
 class Buffer
@@ -418,8 +421,6 @@ private:
 	void* const			m_memory;
 };
 
-#ifndef CTS_USES_VULKANSC
-
 #if defined(USE_ANDROID_O_HARDWARE_BUFFER)
 AHardwareBuffer* findOrCreateHwBuffer (const VkMemoryAllocateInfo* pAllocInfo)
 {
@@ -524,12 +525,59 @@ private:
 };
 #endif // defined(USE_ANDROID_O_HARDWARE_BUFFER)
 
-#endif // CTS_USES_VULKANSC
+class IndirectCommandsLayoutNV
+{
+public:
+						IndirectCommandsLayoutNV	(VkDevice, const VkIndirectCommandsLayoutCreateInfoNV*)
+						{}
+};
+
+class DebugUtilsMessengerEXT
+{
+public:
+						DebugUtilsMessengerEXT		(VkInstance, const VkDebugUtilsMessengerCreateInfoEXT*)
+						{}
+};
+
+class AccelerationStructureNV
+{
+public:
+						AccelerationStructureNV		(VkDevice, const VkAccelerationStructureCreateInfoNV*)
+						{}
+};
+
+class AccelerationStructureKHR
+{
+public:
+						AccelerationStructureKHR	(VkDevice, const VkAccelerationStructureCreateInfoKHR*)
+						{}
+};
 
 class DeferredOperationKHR
 {
 public:
 						DeferredOperationKHR		(VkDevice)
+						{}
+};
+
+class VideoSessionKHR
+{
+public:
+						VideoSessionKHR				(VkDevice, const VkVideoSessionCreateInfoKHR*)
+						{}
+};
+
+class VideoSessionParametersKHR
+{
+public:
+						VideoSessionParametersKHR	(VkDevice, const VkVideoSessionParametersCreateInfoKHR*)
+						{}
+};
+
+class ValidationCacheEXT
+{
+public:
+						ValidationCacheEXT			(VkDevice, const VkValidationCacheCreateInfoEXT*)
 						{}
 };
 
@@ -540,15 +588,34 @@ public:
 						{}
 };
 
+class DescriptorUpdateTemplate
+{
+public:
+						DescriptorUpdateTemplate	(VkDevice, const VkDescriptorUpdateTemplateCreateInfo*)
+						{}
+};
+
+class PrivateDataSlotEXT
+{
+public:
+						PrivateDataSlotEXT			(VkDevice, const VkPrivateDataSlotCreateInfoEXT*)
+						{}
+};
+
+class BufferCollectionFUCHSIA
+{
+public:
+						BufferCollectionFUCHSIA		(VkDevice, const VkBufferCollectionCreateInfoFUCHSIA*)
+						{}
+};
+
 class CommandPool
 {
 public:
 										CommandPool		(VkDevice device, const VkCommandPoolCreateInfo*)
 											: m_device(device)
 										{}
-#ifndef CTS_USES_VULKANSC
 										~CommandPool	(void);
-#endif // CTS_USES_VULKANSC
 
 	VkCommandBuffer						allocate		(VkCommandBufferLevel level);
 	void								free			(VkCommandBuffer buffer);
@@ -559,15 +626,11 @@ private:
 	vector<CommandBuffer*>				m_buffers;
 };
 
-#ifndef CTS_USES_VULKANSC
-
 CommandPool::~CommandPool (void)
 {
 	for (size_t ndx = 0; ndx < m_buffers.size(); ++ndx)
 		delete m_buffers[ndx];
 }
-
-#endif // CTS_USES_VULKANSC
 
 VkCommandBuffer CommandPool::allocate (VkCommandBufferLevel level)
 {
@@ -741,8 +804,6 @@ VKAPI_ATTR VkResult VKAPI_CALL createComputePipelines (VkDevice device, VkPipeli
 	}
 }
 
-#ifndef CTS_USES_VULKANSC
-
 VKAPI_ATTR VkResult VKAPI_CALL createRayTracingPipelinesNV (VkDevice device, VkPipelineCache, deUint32 count, const VkRayTracingPipelineCreateInfoKHR* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines)
 {
 	deUint32 allocNdx;
@@ -794,8 +855,6 @@ VKAPI_ATTR VkResult VKAPI_CALL createRayTracingPipelinesKHR (VkDevice device, Vk
 		return err;
 	}
 }
-
-#endif // CTS_USES_VULKANSC
 
 VKAPI_ATTR VkResult VKAPI_CALL enumeratePhysicalDevices (VkInstance, deUint32* pPhysicalDeviceCount, VkPhysicalDevice* pDevices)
 {
@@ -1211,7 +1270,6 @@ VKAPI_ATTR void VKAPI_CALL getImageMemoryRequirements (VkDevice, VkImage imageHa
 
 VKAPI_ATTR VkResult VKAPI_CALL allocateMemory (VkDevice device, const VkMemoryAllocateInfo* pAllocateInfo, const VkAllocationCallbacks* pAllocator, VkDeviceMemory* pMemory)
 {
-#ifndef CTS_USES_VULKANSC
 	const VkExportMemoryAllocateInfo* const					exportInfo	= findStructure<VkExportMemoryAllocateInfo>(pAllocateInfo->pNext);
 	const VkImportAndroidHardwareBufferInfoANDROID* const	importInfo	= findStructure<VkImportAndroidHardwareBufferInfoANDROID>(pAllocateInfo->pNext);
 
@@ -1228,9 +1286,6 @@ VKAPI_ATTR VkResult VKAPI_CALL allocateMemory (VkDevice device, const VkMemoryAl
 	{
 		VK_NULL_RETURN((*pMemory = allocateNonDispHandle<PrivateDeviceMemory, DeviceMemory, VkDeviceMemory>(device, pAllocateInfo, pAllocator)));
 	}
-#else // CTS_USES_VULKANSC
-	VK_NULL_RETURN((*pMemory = allocateNonDispHandle<PrivateDeviceMemory, DeviceMemory, VkDeviceMemory>(device, pAllocateInfo, pAllocator)));
-#endif // CTS_USES_VULKANSC
 }
 
 VKAPI_ATTR VkResult VKAPI_CALL mapMemory (VkDevice, VkDeviceMemory memHandle, VkDeviceSize offset, VkDeviceSize size, VkMemoryMapFlags flags, void** ppData)
@@ -1254,8 +1309,6 @@ VKAPI_ATTR void VKAPI_CALL unmapMemory (VkDevice device, VkDeviceMemory memHandl
 	memory->unmap();
 }
 
-#ifndef CTS_USES_VULKANSC
-
 VKAPI_ATTR VkResult VKAPI_CALL getMemoryAndroidHardwareBufferANDROID (VkDevice device, const VkMemoryGetAndroidHardwareBufferInfoANDROID* pInfo, pt::AndroidHardwareBufferPtr* pBuffer)
 {
 	DE_UNREF(device);
@@ -1274,8 +1327,6 @@ VKAPI_ATTR VkResult VKAPI_CALL getMemoryAndroidHardwareBufferANDROID (VkDevice d
 
 	return VK_SUCCESS;
 }
-
-#endif // CTS_USES_VULKANSC
 
 VKAPI_ATTR VkResult VKAPI_CALL allocateDescriptorSets (VkDevice, const VkDescriptorSetAllocateInfo* pAllocateInfo, VkDescriptorSet* pDescriptorSets)
 {
@@ -1374,19 +1425,16 @@ VKAPI_ATTR void VKAPI_CALL getPhysicalDeviceExternalBufferPropertiesKHR (VkPhysi
 	pExternalBufferProperties->externalMemoryProperties.exportFromImportedHandleTypes = 0;
 	pExternalBufferProperties->externalMemoryProperties.compatibleHandleTypes = 0;
 
-#ifndef CTS_USES_VULKANSC
 	if (pExternalBufferInfo->handleType == VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID)
 	{
 		pExternalBufferProperties->externalMemoryProperties.externalMemoryFeatures = VK_EXTERNAL_MEMORY_FEATURE_EXPORTABLE_BIT | VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT;
 		pExternalBufferProperties->externalMemoryProperties.exportFromImportedHandleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID;
 		pExternalBufferProperties->externalMemoryProperties.compatibleHandleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID;
 	}
-#endif // CTS_USES_VULKANSC
 }
 
 VKAPI_ATTR VkResult VKAPI_CALL getPhysicalDeviceImageFormatProperties2KHR (VkPhysicalDevice physicalDevice, const VkPhysicalDeviceImageFormatInfo2* pImageFormatInfo, VkImageFormatProperties2* pImageFormatProperties)
 {
-#ifndef CTS_USES_VULKANSC
 	const VkPhysicalDeviceExternalImageFormatInfo* const	externalInfo		= findStructure<VkPhysicalDeviceExternalImageFormatInfo>(pImageFormatInfo->pNext);
 	VkExternalImageFormatProperties*	const				externalProperties	= findStructure<VkExternalImageFormatProperties>(pImageFormatProperties->pNext);
 	VkResult												result;
@@ -1440,9 +1488,6 @@ VKAPI_ATTR VkResult VKAPI_CALL getPhysicalDeviceImageFormatProperties2KHR (VkPhy
 	}
 
 	return VK_SUCCESS;
-#else // CTS_USES_VULKANSC
-	return getPhysicalDeviceImageFormatProperties(physicalDevice, pImageFormatInfo->format, pImageFormatInfo->type, pImageFormatInfo->tiling, pImageFormatInfo->usage, pImageFormatInfo->flags, &pImageFormatProperties->imageFormatProperties);
-#endif // CTS_USES_VULKANSC
 }
 
 // \note getInstanceProcAddr is a little bit special:

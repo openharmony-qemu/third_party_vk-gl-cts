@@ -28,6 +28,7 @@
 #include "tcuPlatform.hpp"
 #include "tcuRenderTarget.hpp"
 #include "tcuVectorUtil.hpp"
+#include "vkPlatform.hpp"
 #include <assert.h>
 #include <climits>
 #include <cmath>
@@ -189,8 +190,8 @@ public:
 
 	void scaleDimensionsToMemory(int& width, int& height, int devLayers, int sysLayers, int devBPP, int sysBPP)
 	{
-		tcu::PlatformMemoryLimits memoryLimits;
-		m_context.getTestContext().getPlatform().getMemoryLimits(memoryLimits);
+		vk::PlatformMemoryLimits memoryLimits;
+		m_context.getTestContext().getPlatform().getVulkanPlatform().getMemoryLimits(memoryLimits);
 		GLsizeiptr sysSpace		  = memoryLimits.totalSystemMemory;
 		GLsizeiptr devSpace		  = memoryLimits.totalDeviceLocalMemory;
 		int		   devInSysLayers = 0;

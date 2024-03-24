@@ -71,11 +71,7 @@ vk::Move<vk::VkDevice>				makeProtectedMemDevice				(const vk::PlatformInterface
 																		 const deUint32						queueFamilyIndex,
 																		 const deUint32						apiVersion,
 																		 const std::vector<std::string>&	extraExtensions,
-#ifdef CTS_USES_VULKANSC
-																		 de::SharedPtr<vk::ResourceInterface> resourceInterface,
-#endif // CTS_USES_VULKANSC
-																		 const tcu::CommandLine&			cmdLine);
-
+																		 bool								validationEnabled);
 vk::VkQueue							getProtectedQueue					(const vk::DeviceInterface&			vk,
 																		 vk::VkDevice						device,
 																		 const deUint32						queueFamilyIndex,
@@ -127,6 +123,12 @@ vk::VkResult						queueSubmit							(ProtectedContext&					context,
 																		 vk::VkFence						fence,
 																		 deUint64							timeout);
 
+vk::Move<vk::VkPipeline>			makeComputePipeline					(const vk::DeviceInterface&			vk,
+																		 const vk::VkDevice					device,
+																		 const vk::VkPipelineLayout			pipelineLayout,
+																		 const vk::VkShaderModule			shaderModule,
+																		 const vk::VkSpecializationInfo*	specInfo);
+
 vk::Move<vk::VkSampler>				makeSampler							(const vk::DeviceInterface&			vk,
 																		 const vk::VkDevice&				device);
 vk::Move<vk::VkCommandPool>			makeCommandPool						(const vk::DeviceInterface&			vk,
@@ -143,8 +145,18 @@ vk::Move<vk::VkPipeline>			makeGraphicsPipeline				(const vk::DeviceInterface&		
 																		 const VertexBindings&				vertexBindings,
 																		 const VertexAttribs&				vertexAttribs,
 																		 const tcu::UVec2&					renderSize,
-																		 const vk::VkPrimitiveTopology		topology,
-																		 const vk::VkPipelineCreateFlags	flags = 0);
+																		 const vk::VkPrimitiveTopology		topology);
+
+vk::Move<vk::VkPipeline>			makeGraphicsPipeline				(const vk::DeviceInterface&			vk,
+																		 const vk::VkDevice					device,
+																		 const vk::VkPipelineLayout			pipelineLayout,
+																		 const vk::VkRenderPass				renderPass,
+																		 const vk::VkShaderModule			vertexShaderModule,
+																		 const vk::VkShaderModule			fragmentShaderModule,
+																		 const VertexBindings&				vertexBindings,
+																		 const VertexAttribs&				vertexAttribs,
+																		 const tcu::UVec2&					renderSize,
+																		 const vk::VkPrimitiveTopology		topology);
 
 void								clearImage							(ProtectedContext&					ctx,
 																		 vk::VkImage						image);
@@ -158,8 +170,7 @@ void								copyToProtectedImage				(ProtectedContext&					ctx,
 																		 vk::VkImage						dstImage,
 																		 vk::VkImageLayout					dstImageLayout,
 																		 deUint32							width,
-																		 deUint32							height,
-																		 ProtectionMode						protectionMode = PROTECTION_ENABLED);
+																		 deUint32							height);
 
 void								fillWithRandomColorTiles			(const tcu::PixelBufferAccess&		dst,
 																		 const tcu::Vec4&					minVal,

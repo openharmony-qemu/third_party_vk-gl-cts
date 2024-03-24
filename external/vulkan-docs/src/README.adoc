@@ -1,4 +1,4 @@
-// Copyright 2017-2022 The Khronos Group Inc.
+// Copyright 2017-2021 The Khronos Group Inc.
 // SPDX-License-Identifier: CC-BY-4.0
 
 ifdef::env-github[]
@@ -11,14 +11,14 @@ This repository contains sources for the formal documentation of the Vulkan
 API. This includes:
 
 [options="compact"]
-  * The Vulkan API Specification
-  * Specification of Vulkan extensions
-  * API reference ("`man`") pages
-  * The XML API Registry (also mirrored at
-    link:https://github.com/KhronosGroup/Vulkan-Headers[Vulkan-Headers])
-  * Vulkan header files (also mirrored at
-    link:https://github.com/KhronosGroup/Vulkan-Headers[Vulkan-Headers])
-  * Related tools and scripts.
+ * The Vulkan API Specification
+ * Specification of Vulkan extensions
+ * API reference ("`man`") pages
+ * The XML API Registry (also mirrored at
+   link:https://github.com/KhronosGroup/Vulkan-Headers[Vulkan-Headers])
+ * Vulkan header files (also mirrored at
+   link:https://github.com/KhronosGroup/Vulkan-Headers[Vulkan-Headers])
+ * Related tools and scripts.
 
 The authoritative public repository is located at
 link:https://github.com/KhronosGroup/Vulkan-Docs/[Vulkan-Docs].
@@ -27,13 +27,13 @@ changes (Pull Requests) against the Specification, subject to approval by
 Khronos.
 
 If in doubt where to submit your Issue, consult the
-link:https://github.com/KhronosGroup/Vulkan-Web-Registry/blob/main/Vulkan-Projects.adoc[Vulkan-Projects] list on the link:https://github.com/KhronosGroup/Vulkan-Web-Registry[Vulkan-Web-Registry]
+link:https://github.com/KhronosGroup/Vulkan-Web-Registry/blob/main/Vulkan-Projects.adoc[Vulkan-Projects] list on the link:https://github.com/KhronosGroup/Vulkan-Web-Registry[Vulkan-Web-Registry] 
 repository.
 
 
 == External Contributions
 
-Khronos welcomes feedback in GitHub Issues, and proposed changes in GitHub
+Khronos welcomes feedback in Github Issues, and proposed changes in Github
 Pull Requests (PRs), but will not necessarily accept all such changes.
 
 Please keep your issues and pull requests focused on solving a single
@@ -47,16 +47,16 @@ Group to review in a timely fashion.
 The current Specification is maintained in the default branch (currently
 `main`) of the repository.
 From this branch it is possible to generate Specifications for any published
-version of Vulkan (1.3, 1.2, 1.1, and 1.0), and incorporating any desired set of
+version of Vulkan (1.2, 1.1, and 1.0), and incorporating any desired set of
 extensions.
-Each published update is tagged in the form `1.3.*release*` where *release*
-is a constantly incrementing release number and `1.3` is the latest
+Each published update is tagged in the form `1.2.*release*` where *release*
+is a constantly incrementing release number and `1.2` is the latest
 published version of the API.
-The last public spec update prior to Vulkan 1.3 is tagged `v1.2.???`.
+The last public spec update prior to Vulkan 1.2 is tagged `v1.1.130`.
 
-The last state of the default branch in Khronos' internal GitLab server,
-before 1.3 content was merged into it, is tagged `1.2-archive` (this tag is
-not in GitHub).
+The last state of the default branch in Khronos' internal gitlab server,
+before 1.2 content was merged into it, is tagged `1.1-archive` (this tag is
+not in github).
 
 
 == Directory Structure
@@ -70,7 +70,7 @@ CONTRIBUTING.adoc     Requirements for external contributions to the repository
 COPYING.adoc          Copyright and licensing information
 CODE_OF_CONDUCT.adoc  Code of Conduct
 LICENSE.adoc          Summary of licenses used by files in the repository
-ChangeLog.adoc        Change log summary for each public spec update
+ChangeLog.txt         Change log summary for each public spec update
 Makefile, make*       Makefile and helper build scripts (see BUILD.adoc)
 appendices/           Specification appendices
 chapters/             Specification chapters
@@ -80,9 +80,8 @@ images/               Images (figures, diagrams, icons)
 gen/out/              Default directory for the generated documents
 scripts/              Helper scripts used in specification, header, and reference page generation
 style/                Sources for "styleguide" (Vulkan Documentation and Extensions: Procedures and Conventions)
-xml/                  XML API Registry (`vk.xml`) as well as XML for non-Vulkan
-                      data structures used with Video extensions (`video.xml`)
-registry.adoc         Source for documentation of the XML format
+xml/                  XML API Registry (vk.xml)
+registry.txt          Sources for documentation of the vk.xml format
 ```
 
 

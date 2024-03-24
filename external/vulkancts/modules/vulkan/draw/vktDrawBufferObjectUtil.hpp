@@ -44,16 +44,14 @@ public:
 												 vk::VkDevice					device,
 												 const vk::VkBufferCreateInfo&	createInfo,
 												 vk::Allocator&					allocator,
-												 vk::MemoryRequirement			allocationMemoryProperties = vk::MemoryRequirement::Any,
-												 vk::VkDeviceSize				allocationOffset = 0ull);
+												 vk::MemoryRequirement			allocationMemoryProperties = vk::MemoryRequirement::Any);
 
 								Buffer			(const vk::DeviceInterface &vk, vk::VkDevice device, vk::Move<vk::VkBuffer> object);
 
-	void						bindMemory		(de::MovePtr<vk::Allocation> allocation, vk::VkDeviceSize allocOffset = 0ull);
+	void						bindMemory		(de::MovePtr<vk::Allocation> allocation);
 
 	vk::VkBuffer				object			(void) const								{ return *m_object;		}
 	vk::Allocation				getBoundMemory	(void) const								{ return *m_allocation;	}
-	void*						getHostPtr		(void) const;
 
 private:
 
@@ -61,7 +59,6 @@ private:
 	Buffer&						operator=		(const Buffer& other);	// Not allowed!
 
 	de::MovePtr<vk::Allocation>		m_allocation;
-	vk::VkDeviceSize				m_allocOffset;
 	vk::Unique<vk::VkBuffer>		m_object;
 
 	const vk::DeviceInterface&		m_vk;

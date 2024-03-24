@@ -422,7 +422,7 @@ std::string getShaderImageType (const VkFormat format, const VkImageType imageTy
 
 		default:
 			DE_FATAL("Unknown image type");
-			return "";
+			return DE_NULL;
 	}
 }
 
@@ -911,11 +911,9 @@ public:
 		flushAlloc(vk, device, alloc);
 
 		// Staging image
-		const auto& imgResource = m_resource.getImage();
 		m_image = de::MovePtr<Image>(new Image(
 			vk, device, allocator,
-			makeImageCreateInfo(imgResource.imageType, imgResource.extent, imgResource.format,
-								(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL),
+			makeImageCreateInfo(m_resource.getImage().imageType, m_resource.getImage().extent, m_resource.getImage().format, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT),
 			MemoryRequirement::Any));
 	}
 
@@ -1101,13 +1099,11 @@ public:
 	{
 		const InstanceInterface&	vki				= m_context.getInstanceInterface();
 		const VkPhysicalDevice		physDevice		= m_context.getPhysicalDevice();
-		const auto&					imgResource		= m_resource.getImage();
-		const VkFormatProperties	formatProps		= getPhysicalDeviceFormatProperties(vki, physDevice, imgResource.format);
-		const auto&					features		= ((imgResource.tiling == VK_IMAGE_TILING_LINEAR) ? formatProps.linearTilingFeatures : formatProps.optimalTilingFeatures);
+		const VkFormatProperties	formatProps		= getPhysicalDeviceFormatProperties(vki, physDevice, m_resource.getImage().format);
 		const VkFormatFeatureFlags	requiredFlags	= (VK_FORMAT_FEATURE_BLIT_SRC_BIT | VK_FORMAT_FEATURE_BLIT_DST_BIT);
 
 		// SRC and DST blit is required because both images are using the same format.
-		if ((features & requiredFlags) != requiredFlags)
+		if ((formatProps.optimalTilingFeatures & requiredFlags) != requiredFlags)
 			TCU_THROW(NotSupportedError, "Format doesn't support blits");
 	}
 
@@ -1288,13 +1284,11 @@ public:
 
 		const InstanceInterface&	vki				= m_context.getInstanceInterface();
 		const VkPhysicalDevice		physDevice		= m_context.getPhysicalDevice();
-		const auto&					imgResource		= m_inResource.getImage();
-		const VkFormatProperties	formatProps		= getPhysicalDeviceFormatProperties(vki, physDevice, imgResource.format);
-		const auto&					features		= ((imgResource.tiling == VK_IMAGE_TILING_LINEAR) ? formatProps.linearTilingFeatures : formatProps.optimalTilingFeatures);
+		const VkFormatProperties	formatProps		= getPhysicalDeviceFormatProperties(vki, physDevice, m_inResource.getImage().format);
 		const VkFormatFeatureFlags	requiredFlags	= (VK_FORMAT_FEATURE_BLIT_SRC_BIT | VK_FORMAT_FEATURE_BLIT_DST_BIT);
 
 		// SRC and DST blit is required because both images are using the same format.
-		if ((features & requiredFlags) != requiredFlags)
+		if ((formatProps.optimalTilingFeatures & requiredFlags) != requiredFlags)
 			TCU_THROW(NotSupportedError, "Format doesn't support blits");
 	}
 
@@ -1521,8 +1515,7 @@ public:
 		m_colorImageSubresourceRange	= makeImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT, 0u, 1u, 0u, 1u);
 		m_colorImageExtent				= makeExtent3D(16u, 16u, 1u);
 		m_colorAttachmentImage			= de::MovePtr<Image>(new Image(vk, device, allocator,
-			makeImageCreateInfo(VK_IMAGE_TYPE_2D, m_colorImageExtent, m_colorFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-								VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL),
+			makeImageCreateInfo(VK_IMAGE_TYPE_2D, m_colorImageExtent, m_colorFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT),
 			MemoryRequirement::Any));
 
 		// Pipeline
@@ -1549,7 +1542,7 @@ public:
 			pipelineBuilder
 				.setShader	(vk, device, VK_SHADER_STAGE_GEOMETRY_BIT,	context.getBinaryCollection().get(shaderPrefix + "geom"), DE_NULL);
 
-		m_pipeline = pipelineBuilder.build(vk, device, *m_pipelineLayout, *m_renderPass, context.getPipelineCacheData(), context.getResourceInterface());
+		m_pipeline = pipelineBuilder.build(vk, device, *m_pipelineLayout, *m_renderPass, context.getPipelineCacheData());
 	}
 
 	void recordCommands (OperationContext& context, const VkCommandBuffer cmdBuffer, const VkDescriptorSet descriptorSet)
@@ -1633,7 +1626,7 @@ public:
 		const Unique<VkShaderModule> shaderModule(createShaderModule(vk, device, context.getBinaryCollection().get(shaderPrefix + "comp"), (VkShaderModuleCreateFlags)0));
 
 		m_pipelineLayout = makePipelineLayout(vk, device, descriptorSetLayout);
-		m_pipeline		 = makeComputePipeline(vk, device, *m_pipelineLayout, *shaderModule, DE_NULL, context.getPipelineCacheData(), context.getResourceInterface());
+		m_pipeline		 = makeComputePipeline(vk, device, *m_pipelineLayout, *shaderModule, DE_NULL, context.getPipelineCacheData());
 	}
 
 	void recordCommands (OperationContext& context, const VkCommandBuffer cmdBuffer, const VkDescriptorSet descriptorSet)
@@ -1841,8 +1834,7 @@ public:
 		requireFeaturesForSSBOAccess(m_context, m_stage);
 
 		// Some storage image formats may not be supported
-		const auto& imgResource = m_resource.getImage();
-		requireStorageImageSupport(vki, physDevice, imgResource.format, imgResource.tiling);
+		requireStorageImageSupport(vki, physDevice, m_resource.getImage().format);
 
 		m_hostBuffer = de::MovePtr<Buffer>(new Buffer(
 			vk, device, allocator, makeBufferCreateInfo(m_hostBufferSizeBytes, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT),
@@ -1862,8 +1854,7 @@ public:
 		{
 			m_image = de::MovePtr<Image>(new Image(vk, device, allocator,
 				makeImageCreateInfo(m_resource.getImage().imageType, m_resource.getImage().extent, m_resource.getImage().format,
-									(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT),
-									VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL),
+									VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT),
 				MemoryRequirement::Any));
 
 			if (m_mode == ACCESS_MODE_READ)
@@ -2617,8 +2608,7 @@ public:
 		requireFeaturesForSSBOAccess(m_context, m_stage);
 
 		// Some storage image formats may not be supported
-		const auto& imgResource = m_inResource.getImage();
-		requireStorageImageSupport(vki, physDevice, imgResource.format, imgResource.tiling);
+		requireStorageImageSupport(vki, physDevice, m_inResource.getImage().format);
 
 		// Image resources
 		{
@@ -2837,8 +2827,7 @@ public:
 		const VkPhysicalDeviceFeatures	features	= getPhysicalDeviceFeatures(vki, physDevice);
 		Allocator&						allocator	= m_context.getAllocator();
 
-		const auto& imgResource = m_resource.getImage();
-		requireStorageImageSupport(vki, physDevice, imgResource.format, imgResource.tiling);
+		requireStorageImageSupport(vki, physDevice, m_resource.getImage().format);
 		if (!features.shaderStorageImageMultisample)
 			TCU_THROW(NotSupportedError, "Using multisample images as storage is not supported");
 
@@ -2878,7 +2867,7 @@ public:
 		// Create pipeline
 		const Unique<VkShaderModule> shaderModule(createShaderModule(vk, device, context.getBinaryCollection().get("comp"), (VkShaderModuleCreateFlags)0));
 		m_pipelineLayout	= makePipelineLayout (vk, device, *m_descriptorSetLayout);
-		m_pipeline			= makeComputePipeline(vk, device, *m_pipelineLayout, *shaderModule, DE_NULL, context.getPipelineCacheData(), context.getResourceInterface());
+		m_pipeline			= makeComputePipeline(vk, device, *m_pipelineLayout, *shaderModule, DE_NULL, context.getPipelineCacheData());
 	}
 
 	void recordCommands(const VkCommandBuffer cmdBuffer)
@@ -3115,11 +3104,7 @@ public:
 
 		// Copy destination image.
 		m_image = de::MovePtr<Image>(new Image(
-			vk, device, allocator,
-			makeImageCreateInfo(VK_IMAGE_TYPE_2D, m_imageExtent, format,
-								(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT),
-								VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL),
-			MemoryRequirement::Any));
+			vk, device, allocator, makeImageCreateInfo(VK_IMAGE_TYPE_2D, m_imageExtent, format, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT), MemoryRequirement::Any));
 
 		// Image data will be copied here, so it can be read on the host.
 		m_hostBuffer = de::MovePtr<Buffer>(new Buffer(
@@ -3439,10 +3424,7 @@ public:
 
 		// Source data image
 		m_image = de::MovePtr<Image>(new Image(
-			vk, device, allocator,
-			makeImageCreateInfo(VK_IMAGE_TYPE_2D, m_imageExtent, format, (VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT),
-								VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL),
-			MemoryRequirement::Any));
+			vk, device, allocator, makeImageCreateInfo(VK_IMAGE_TYPE_2D, m_imageExtent, format, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT), MemoryRequirement::Any));
 	}
 
 	void recordCommands (const VkCommandBuffer cmdBuffer)
@@ -3968,7 +3950,7 @@ public:
 			.setShader						(vk, device, VK_SHADER_STAGE_VERTEX_BIT,	context.getBinaryCollection().get("draw_vert"), DE_NULL)
 			.setShader						(vk, device, VK_SHADER_STAGE_FRAGMENT_BIT,	context.getBinaryCollection().get("draw_frag"), DE_NULL);
 
-		m_pipeline = pipelineBuilder.build(vk, device, *m_pipelineLayout, *m_renderPass, context.getPipelineCacheData(), context.getResourceInterface() );
+		m_pipeline = pipelineBuilder.build(vk, device, *m_pipelineLayout, *m_renderPass, context.getPipelineCacheData());
 
 		// Set expected draw values
 
@@ -4397,8 +4379,7 @@ public:
 		m_colorImageSubresourceRange	= makeImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT, 0u, 1u, 0u, 1u);
 		m_colorImageExtent				= makeExtent3D(16u, 16u, 1u);
 		m_colorAttachmentImage			= de::MovePtr<Image>(new Image(vk, device, allocator,
-			makeImageCreateInfo(VK_IMAGE_TYPE_2D, m_colorImageExtent, m_colorFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-								VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL),
+			makeImageCreateInfo(VK_IMAGE_TYPE_2D, m_colorImageExtent, m_colorFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT),
 			MemoryRequirement::Any));
 
 		// Pipeline
@@ -4415,7 +4396,7 @@ public:
 			.setShader						(vk, device, VK_SHADER_STAGE_VERTEX_BIT,	context.getBinaryCollection().get(shaderPrefix + "vert"), DE_NULL)
 			.setShader						(vk, device, VK_SHADER_STAGE_FRAGMENT_BIT,	context.getBinaryCollection().get(shaderPrefix + "frag"), DE_NULL);
 
-		m_pipeline = pipelineBuilder.build(vk, device, *m_pipelineLayout, *m_renderPass, context.getPipelineCacheData(), context.getResourceInterface());
+		m_pipeline = pipelineBuilder.build(vk, device, *m_pipelineLayout, *m_renderPass, context.getPipelineCacheData());
 	}
 
 	void recordCommands (OperationContext& context, const VkCommandBuffer cmdBuffer, const VkDescriptorSet descriptorSet)
@@ -4502,7 +4483,7 @@ public:
 		const Unique<VkShaderModule> shaderModule(createShaderModule(vk, device, context.getBinaryCollection().get(shaderPrefix + "comp"), (VkShaderModuleCreateFlags)0));
 
 		m_pipelineLayout = makePipelineLayout(vk, device, descriptorSetLayout);
-		m_pipeline		 = makeComputePipeline(vk, device, *m_pipelineLayout, *shaderModule, DE_NULL, context.getPipelineCacheData(), context.getResourceInterface());
+		m_pipeline		 = makeComputePipeline(vk, device, *m_pipelineLayout, *shaderModule, DE_NULL, context.getPipelineCacheData());
 	}
 
 	void recordCommands (OperationContext& context, const VkCommandBuffer cmdBuffer, const VkDescriptorSet descriptorSet)
@@ -4943,8 +4924,7 @@ public:
 		m_colorImageSubresourceRange		= makeImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT, 0u, 1u, 0u, 1u);
 		m_colorImageExtent					= makeExtent3D(16u, 16u, 1u);
 		m_colorAttachmentImage				= de::MovePtr<Image>(new Image(vk, device, allocator,
-			makeImageCreateInfo(VK_IMAGE_TYPE_2D, m_colorImageExtent, m_colorFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-								VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL),
+			makeImageCreateInfo(VK_IMAGE_TYPE_2D, m_colorImageExtent, m_colorFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT),
 			MemoryRequirement::Any));
 
 		// Pipeline
@@ -4959,7 +4939,7 @@ public:
 			.setVertexInputSingleAttribute	(attributeFormat, tcu::getPixelSize(mapVkFormat(attributeFormat)))
 			.setShader						(vk, device, VK_SHADER_STAGE_VERTEX_BIT,	context.getBinaryCollection().get("input_vert"), DE_NULL)
 			.setShader						(vk, device, VK_SHADER_STAGE_FRAGMENT_BIT,	context.getBinaryCollection().get("input_frag"), DE_NULL)
-			.build							(vk, device, *m_pipelineLayout, *m_renderPass, context.getPipelineCacheData(), context.getResourceInterface());
+			.build							(vk, device, *m_pipelineLayout, *m_renderPass, context.getPipelineCacheData());
 	}
 
 	void recordCommands (const VkCommandBuffer cmdBuffer)
@@ -5040,7 +5020,7 @@ public:
 			// with this operation we can test pre_rasterization, index_input and attribute_input flags;
 			// since this operation is executed for three buffers of different size we use diferent flags depending on the size
 			if (m_resource.getBuffer().size > MAX_UPDATE_BUFFER_SIZE)
-				stageMask = VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT_KHR;
+				stageMask = VK_PIPELINE_STAGE_2_PRE_RASTERIZATION_SHADERS_BIT_KHR;
 			else
 				stageMask = usingIndexedDraw ? VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT_KHR
 											 : VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT_KHR;
@@ -5248,29 +5228,26 @@ Resource::Resource (OperationContext& context, const ResourceDescription& desc, 
 
 	if (m_type == RESOURCE_TYPE_BUFFER || m_type == RESOURCE_TYPE_INDEX_BUFFER || isIndirectBuffer(m_type))
 	{
-		m_bufferData = de::MovePtr<BufferResource>(new BufferResource(DE_NULL, 0u, static_cast<VkDeviceSize>(desc.size.x())));
-		VkBufferCreateInfo bufferCreateInfo = makeBufferCreateInfo(m_bufferData->size, usage);
+		m_bufferData.offset					= 0u;
+		m_bufferData.size					= static_cast<VkDeviceSize>(desc.size.x());
+		VkBufferCreateInfo bufferCreateInfo = makeBufferCreateInfo(m_bufferData.size, usage);
 		bufferCreateInfo.sharingMode		= sharingMode;
 		if (queueFamilyIndex.size() > 0)
 		{
 			bufferCreateInfo.queueFamilyIndexCount	= static_cast<deUint32>(queueFamilyIndex.size());
 			bufferCreateInfo.pQueueFamilyIndices	= &queueFamilyIndex[0];
 		}
-		m_buffer				= de::MovePtr<Buffer>(new Buffer(vk, device, allocator, bufferCreateInfo, MemoryRequirement::Any));
-		m_bufferData->handle	= **m_buffer;
+		m_buffer			= de::MovePtr<Buffer>(new Buffer(vk, device, allocator, bufferCreateInfo, MemoryRequirement::Any));
+		m_bufferData.handle	= **m_buffer;
 	}
 	else if (m_type == RESOURCE_TYPE_IMAGE)
 	{
-		m_imageData = de::MovePtr<ImageResource>(new ImageResource(
-			DE_NULL,
-			makeExtent3D(desc.size.x(), std::max(1, desc.size.y()), std::max(1, desc.size.z())),
-			desc.imageType,
-			desc.imageFormat,
-			makeImageSubresourceRange(desc.imageAspect, 0u, 1u, 0u, 1u),
-			makeImageSubresourceLayers(desc.imageAspect, 0u, 0u, 1u),
-			vk::VK_IMAGE_TILING_OPTIMAL
-		));
-		VkImageCreateInfo imageInfo		= makeImageCreateInfo(m_imageData->imageType, m_imageData->extent, m_imageData->format, usage, desc.imageSamples, m_imageData->tiling);
+		m_imageData.extent				= makeExtent3D(desc.size.x(), std::max(1, desc.size.y()), std::max(1, desc.size.z()));
+		m_imageData.imageType			= desc.imageType;
+		m_imageData.format				= desc.imageFormat;
+		m_imageData.subresourceRange	= makeImageSubresourceRange(desc.imageAspect, 0u, 1u, 0u, 1u);
+		m_imageData.subresourceLayers	= makeImageSubresourceLayers(desc.imageAspect, 0u, 0u, 1u);
+		VkImageCreateInfo imageInfo		= makeImageCreateInfo(m_imageData.imageType, m_imageData.extent, m_imageData.format, usage, desc.imageSamples);
 		imageInfo.sharingMode			= sharingMode;
 		if (queueFamilyIndex.size() > 0)
 		{
@@ -5288,7 +5265,7 @@ Resource::Resource (OperationContext& context, const ResourceDescription& desc, 
 			TCU_THROW(NotSupportedError, "Requested sample count is not supported");
 
 		m_image							= de::MovePtr<Image>(new Image(vk, device, allocator, imageInfo, MemoryRequirement::Any));
-		m_imageData->handle				= **m_image;
+		m_imageData.handle				= **m_image;
 	}
 	else
 		DE_ASSERT(0);
@@ -5299,11 +5276,14 @@ Resource::Resource (ResourceType				type,
 					de::MovePtr<vk::Allocation>	allocation,
 					vk::VkDeviceSize			offset,
 					vk::VkDeviceSize			size)
-	: m_type		(type)
-	, m_buffer		(new Buffer(buffer, allocation))
-	, m_bufferData	(de::MovePtr<BufferResource>(new BufferResource(m_buffer->get(), offset, size)))
+	: m_type	(type)
+	, m_buffer	(new Buffer(buffer, allocation))
 {
 	DE_ASSERT(type != RESOURCE_TYPE_IMAGE);
+
+	m_bufferData.handle	= m_buffer->get();
+	m_bufferData.offset	= offset;
+	m_bufferData.size	= size;
 }
 
 Resource::Resource (vk::Move<vk::VkImage>			image,
@@ -5312,12 +5292,16 @@ Resource::Resource (vk::Move<vk::VkImage>			image,
 					vk::VkImageType					imageType,
 					vk::VkFormat					format,
 					vk::VkImageSubresourceRange		subresourceRange,
-					vk::VkImageSubresourceLayers	subresourceLayers,
-					vk::VkImageTiling				tiling)
-	: m_type		(RESOURCE_TYPE_IMAGE)
-	, m_image		(new Image(image, allocation))
-	, m_imageData	(de::MovePtr<ImageResource>(new ImageResource(m_image->get(), extent, imageType, format, subresourceRange, subresourceLayers, tiling)))
+					vk::VkImageSubresourceLayers	subresourceLayers)
+	: m_type	(RESOURCE_TYPE_IMAGE)
+	, m_image	(new Image(image, allocation))
 {
+	m_imageData.handle				= m_image->get();
+	m_imageData.extent				= extent;
+	m_imageData.imageType			= imageType;
+	m_imageData.format				= format;
+	m_imageData.subresourceRange	= subresourceRange;
+	m_imageData.subresourceLayers	= subresourceLayers;
 }
 
 vk::VkDeviceMemory Resource::getMemory (void) const

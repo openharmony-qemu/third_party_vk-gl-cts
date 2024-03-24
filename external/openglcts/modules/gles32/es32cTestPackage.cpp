@@ -31,7 +31,6 @@
 #include "glcInternalformatTests.hpp"
 #include "glcSeparableProgramsTransformFeedbackTests.hpp"
 #include "glcShaderConstExprTests.hpp"
-#include "glcShaderFunctionTests.hpp"
 #include "glcShaderIndexingTests.hpp"
 #include "glcShaderIntegerMixTests.hpp"
 #include "glcShaderLibrary.hpp"
@@ -160,10 +159,8 @@ void ES32TestPackage::init(void)
 		addChild(new deqp::InfoTests(getContext()));
 
 		tcu::TestCaseGroup* shadersGroup = new tcu::TestCaseGroup(getTestContext(), "shaders", "");
-		shadersGroup->addChild(new deqp::ShaderFunctionTests(getContext(), glu::GLSL_VERSION_320_ES));
 		shadersGroup->addChild(new deqp::ShaderIntegerMixTests(getContext(), glu::GLSL_VERSION_320_ES));
 		shadersGroup->addChild(new deqp::ShaderNegativeTests(getContext(), glu::GLSL_VERSION_320_ES));
-		shadersGroup->addChild(new deqp::ShaderStructTests(getContext(), glu::GLSL_VERSION_320_ES));
 		shadersGroup->addChild(new glcts::AggressiveShaderOptimizationsTests(getContext()));
 		addChild(shadersGroup);
 

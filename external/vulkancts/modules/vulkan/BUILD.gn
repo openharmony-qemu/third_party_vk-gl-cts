@@ -19,10 +19,7 @@ import("//third_party/vk-gl-cts/vk_gl_cts.gni")
 config("deqp_vk_package_config") {
   cflags_cc = deqp_common_cflags_cc
   defines = deqp_common_defines
-  defines += [
-    "_XOPEN_SOURCE=600",
-    "CTS_USES_VULKAN",
-  ]
+  defines += [ "_XOPEN_SOURCE=600" ]
 }
 
 vk_common_include_dirs = deqp_vk_common_include_dirs
@@ -72,9 +69,6 @@ vk_common_include_dirs += [
   "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/postmortem",
   "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/reconvergence",
   "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader",
-  "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_shading_barycentric",
-  "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/video",
-
   "//third_party/zlib",
   "//third_party/spirv-headers/include",
   "//third_party/vk-gl-cts/external/amber",
@@ -111,7 +105,6 @@ vk_common_deps = [
   "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/dynamic_state:libdeqp_vk_dynamic_state",
   "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_ops:libdeqp_vk_fragment_ops",
   "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_shader_interlock:libdeqp_vk_fragment_shader_interlock",
-  "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_shading_barycentric:libdeqp_vk_fragment_shading_barycentric",
   "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_shading_rate:libdeqp_vk_fragment_shading_rate",
   "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry:libdeqp_vk_geometry",
   "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image:libdeqp_vk_image",
@@ -143,7 +136,6 @@ vk_common_deps = [
   "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback:libdeqp_vk_transform_feedback",
   "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ubo:libdeqp_vk_ubo",
   "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util:libdeqp_vk_util",
-  "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/video:libdeqp_vk_video",
   "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/wsi:libdeqp_vk_wsi",
   "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ycbcr:libdeqp_vk_ycbcr",
   "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",

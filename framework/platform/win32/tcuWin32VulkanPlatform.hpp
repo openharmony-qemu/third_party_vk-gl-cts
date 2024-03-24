@@ -38,9 +38,11 @@ public:
 						VulkanPlatform		(HINSTANCE instance);
 						~VulkanPlatform		(void);
 
-	vk::Library*		createLibrary		(LibraryType libraryType = LIBRARY_TYPE_VULKAN, const char* libraryPat = DE_NULL) const;
+	vk::Library*		createLibrary		(void) const;
 	vk::wsi::Display*	createWsiDisplay	(vk::wsi::Type wsiType) const;
-	bool				hasDisplay			(vk::wsi::Type wsiType) const;
+	bool				hasDisplay	(vk::wsi::Type wsiType) const;
+
+	void				getMemoryLimits		(vk::PlatformMemoryLimits& limits) const;
 	void				describePlatform	(std::ostream& dst) const;
 
 private:

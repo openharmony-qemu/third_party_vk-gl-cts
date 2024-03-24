@@ -75,7 +75,7 @@ void checkAllSupported (const Extensions& supportedExtensions, const vector<stri
 		 requiredExtName != requiredExtensions.end();
 		 ++requiredExtName)
 	{
-		if (!isExtensionStructSupported(supportedExtensions, vk::RequiredExtension(*requiredExtName)))
+		if (!isExtensionSupported(supportedExtensions, vk::RequiredExtension(*requiredExtName)))
 			TCU_THROW(NotSupportedError, (*requiredExtName + " is not supported").c_str());
 	}
 }
@@ -88,8 +88,6 @@ CustomInstance createInstanceWithWsi (Context&							context,
 
 	extensions.push_back("VK_KHR_surface");
 	extensions.push_back(getExtensionName(wsiType));
-	if (isDisplaySurface(wsiType))
-		extensions.push_back("VK_KHR_display");
 
 	checkAllSupported(supportedExtensions, extensions);
 
@@ -148,7 +146,7 @@ vk::Move<vk::VkDevice> createDeviceWithWsi (const vk::PlatformInterface&		vkp,
 
 	for (int ndx = 0; ndx < DE_LENGTH_OF_ARRAY(extensions); ++ndx)
 	{
-		if (!isExtensionStructSupported(supportedExtensions, vk::RequiredExtension(extensions[ndx])))
+		if (!isExtensionSupported(supportedExtensions, vk::RequiredExtension(extensions[ndx])))
 			TCU_THROW(NotSupportedError, (string(extensions[ndx]) + " is not supported").c_str());
 	}
 
@@ -165,7 +163,7 @@ de::MovePtr<vk::wsi::Display> createDisplay (const vk::Platform&	platform,
 	}
 	catch (const tcu::NotSupportedError& e)
 	{
-		if (isExtensionStructSupported(supportedExtensions, vk::RequiredExtension(getExtensionName(wsiType))) &&
+		if (isExtensionSupported(supportedExtensions, vk::RequiredExtension(getExtensionName(wsiType))) &&
 		    platform.hasDisplay(wsiType))
 		{
 			// If VK_KHR_{platform}_surface was supported, vk::Platform implementation
@@ -714,7 +712,7 @@ std::vector<vk::VkSwapchainCreateInfoKHR> generateSwapchainConfigs (vk::VkSurfac
 													? de::max(31u, properties.minImageExtent.height)
 													: de::min(deSmallestGreaterOrEquallPowerOfTwoU32(currentHeight+1), properties.maxImageExtent.height));
 	const vk::VkExtent2D		imageSize		= { imageWidth, imageHeight };
-	const vk::VkExtent2D		unusedSize		= { de::max(31u, properties.minImageExtent.width), de::max(31u, properties.minImageExtent.height) };
+	const vk::VkExtent2D		dummySize		= { de::max(31u, properties.minImageExtent.width), de::max(31u, properties.minImageExtent.height) };
 
 	{
 		size_t presentModeNdx;
@@ -766,8 +764,8 @@ std::vector<vk::VkSwapchainCreateInfoKHR> generateSwapchainConfigs (vk::VkSurfac
 
 		createInfos.push_back(createInfo);
 
-		// add an extra unused swapchain
-		const vk::VkSwapchainCreateInfoKHR		unusedInfo		=
+		// add an extra dummy swapchain
+		const vk::VkSwapchainCreateInfoKHR		dummyInfo		=
 		{
 			vk::VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 			DE_NULL,
@@ -776,7 +774,7 @@ std::vector<vk::VkSwapchainCreateInfoKHR> generateSwapchainConfigs (vk::VkSurfac
 			properties.minImageCount,
 			imageFormat,
 			imageColorSpace,
-			unusedSize,
+			dummySize,
 			imageLayers,
 			imageUsage,
 			vk::VK_SHARING_MODE_EXCLUSIVE,
@@ -789,7 +787,7 @@ std::vector<vk::VkSwapchainCreateInfoKHR> generateSwapchainConfigs (vk::VkSurfac
 			(vk::VkSwapchainKHR)0
 		};
 
-		createInfos.push_back(unusedInfo);
+		createInfos.push_back(dummyInfo);
 	}
 
 	return createInfos;
@@ -806,7 +804,7 @@ IncrementalPresentTestInstance::IncrementalPresentTestInstance (Context& context
 	, m_physicalDevice			(vk::chooseDevice(m_vki, m_instance, context.getTestContext().getCommandLine()))
 	, m_nativeDisplay			(createDisplay(context.getTestContext().getPlatform().getVulkanPlatform(), m_instanceExtensions, testConfig.wsiType))
 	, m_nativeWindow			(createWindow(*m_nativeDisplay, tcu::Nothing))
-	, m_surface					(vk::wsi::createSurface(m_vki, m_instance, testConfig.wsiType, *m_nativeDisplay, *m_nativeWindow, context.getTestContext().getCommandLine()))
+	, m_surface					(vk::wsi::createSurface(m_vki, m_instance, testConfig.wsiType, *m_nativeDisplay, *m_nativeWindow))
 
 	, m_queueFamilyIndex		(vk::wsi::chooseQueueFamilyIndex(m_vki, m_physicalDevice, *m_surface))
 	, m_deviceExtensions		(vk::enumerateDeviceExtensionProperties(m_vki, m_physicalDevice, DE_NULL))

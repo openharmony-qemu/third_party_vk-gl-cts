@@ -116,7 +116,6 @@ class TestCaseResultHeader
 public:
 						TestCaseResultHeader	(void) : caseType(TESTCASETYPE_LAST), statusCode(TESTSTATUSCODE_LAST) {}
 
-	std::string			caseVersion;			//!< Test case version.
 	std::string			casePath;				//!< Full test case path.
 	TestCaseType		caseType;				//!< Test case type.
 	TestStatusCode		statusCode;				//!< Test status code.

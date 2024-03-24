@@ -53,9 +53,12 @@ ohos_source_set("deqp_vk_protected_memory_source") {
 
     #"//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber",
   ]
-  deps = []
-  part_name = "acts"
-  subsystem_name = "xts"
+
+  deps = [
+    #"//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
+    #"//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",
+  ]
+
   configs = [ ":deqp_vk_protected_memory_config" ]
 }
 ohos_static_library("libdeqp_vk_protected_memory") {

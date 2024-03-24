@@ -3,8 +3,7 @@ include_directories(
 	${DEQP_INL_DIR}
 )
 
-set(DEQP_VK_VKSC_DRAW_SRCS
-	vktDrawGroupParams.hpp
+set(DEQP_VK_DRAW_SRCS
 	vktDrawTests.hpp
 	vktDrawTests.cpp
 	vktDrawIndexedTest.hpp
@@ -15,10 +14,10 @@ set(DEQP_VK_VKSC_DRAW_SRCS
 	vktDrawInstancedTests.cpp
 	vktDrawInvertedDepthRangesTests.hpp
 	vktDrawInvertedDepthRangesTests.cpp
+	vktDrawMultiExtTests.hpp
+	vktDrawMultiExtTests.cpp
 	vktDrawShaderDrawParametersTests.hpp
 	vktDrawShaderDrawParametersTests.cpp
-	vktDrawShaderInvocationTests.hpp
-	vktDrawShaderInvocationTests.cpp
 	vktDrawShaderLayerTests.hpp
 	vktDrawShaderLayerTests.cpp
 	vktDrawShaderViewportIndexTests.hpp
@@ -46,34 +45,26 @@ set(DEQP_VK_VKSC_DRAW_SRCS
 	vktDrawScissorTests.cpp
 	vktDrawMultipleInterpolationTests.hpp
 	vktDrawMultipleInterpolationTests.cpp
-	vktDrawMultisampleLinearInterpolationTests.hpp
-	vktDrawMultisampleLinearInterpolationTests.cpp
 	vktDrawDiscardRectanglesTests.hpp
 	vktDrawDiscardRectanglesTests.cpp
 	vktDrawExplicitVertexParameterTests.cpp
 	vktDrawExplicitVertexParameterTests.hpp
+	vktDrawOutputLocationTests.cpp
+	vktDrawOutputLocationTests.hpp
 	vktDrawDepthClampTests.cpp
 	vktDrawDepthClampTests.hpp
+	vktDrawAhbTests.cpp
+	vktDrawAhbTests.hpp
 	vktDrawMultipleClearsWithinRenderPass.cpp
 	vktDrawMultipleClearsWithinRenderPass.hpp
 )
 
-set(DEQP_VK_DRAW_SRCS
-	vktDrawOutputLocationTests.cpp
-	vktDrawOutputLocationTests.hpp
-	vktDrawDepthBiasTests.cpp
-	vktDrawDepthBiasTests.hpp
-	vktDrawAhbTests.cpp
-	vktDrawAhbTests.hpp
-	vktDrawMultiExtTests.hpp
-	vktDrawMultiExtTests.cpp
+set(DEQP_VK_DRAW_LIBS
+	tcutil
+	vkutil
 )
 
 PCH(DEQP_VK_DRAW_SRCS ../pch.cpp)
 
-add_library(deqp-vk-draw STATIC ${DEQP_VK_VKSC_DRAW_SRCS} ${DEQP_VK_DRAW_SRCS})
-target_link_libraries(deqp-vk-draw tcutil vkutil)
-
-add_library(deqp-vksc-draw STATIC ${DEQP_VK_VKSC_DRAW_SRCS})
-target_include_directories(deqp-vksc-draw BEFORE PUBLIC ${CMAKE_SOURCE_DIR}/external/vulkancts/framework/vulkan/generated/vulkansc)
-target_link_libraries(deqp-vksc-draw PUBLIC deqp-vksc-util tcutil vkscutil)
+add_library(deqp-vk-draw STATIC ${DEQP_VK_DRAW_SRCS})
+target_link_libraries(deqp-vk-draw ${DEQP_VK_DRAW_LIBS})

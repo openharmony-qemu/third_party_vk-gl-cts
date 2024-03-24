@@ -122,17 +122,12 @@ bool isMinMaxFilteringSupported (const InstanceInterface& vki, VkPhysicalDevice 
 													? formatProperties.linearTilingFeatures
 													: formatProperties.optimalTilingFeatures;
 
-	return (formatFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_MINMAX_BIT) != 0;
+	return (formatFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_MINMAX_BIT_EXT) != 0;
 }
 
-static bool isBorderColorInt (VkFormat format, bool useStencilAspect)
+VkBorderColor getFormatBorderColor (BorderColor color, VkFormat format)
 {
-	return (!isCompressedFormat(format) && (isIntFormat(format) || isUintFormat(format) || (isDepthStencilFormat(format) && useStencilAspect)));
-}
-
-VkBorderColor getFormatBorderColor (BorderColor color, VkFormat format, bool useStencilAspect)
-{
-	if (isBorderColorInt(format, useStencilAspect))
+	if (!isCompressedFormat(format) && (isIntFormat(format) || isUintFormat(format)))
 	{
 		switch (color)
 		{
@@ -161,9 +156,9 @@ VkBorderColor getFormatBorderColor (BorderColor color, VkFormat format, bool use
 	return VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
 }
 
-rr::GenericVec4 getFormatCustomBorderColor	(tcu::Vec4 floatValue, tcu::IVec4 intValue, vk::VkFormat format, bool useStencilAspect)
+rr::GenericVec4 getFormatCustomBorderColor	(tcu::Vec4 floatValue, tcu::IVec4 intValue, vk::VkFormat format)
 {
-	if (isBorderColorInt(format, useStencilAspect))
+	if (!isCompressedFormat(format) && (isIntFormat(format) || isUintFormat(format)))
 	{
 		return rr::GenericVec4(intValue);
 	}
@@ -173,26 +168,15 @@ rr::GenericVec4 getFormatCustomBorderColor	(tcu::Vec4 floatValue, tcu::IVec4 int
 	}
 }
 
-void getLookupScaleBias (vk::VkFormat format, tcu::Vec4& lookupScale, tcu::Vec4& lookupBias, bool useStencilAspect)
+void getLookupScaleBias (vk::VkFormat format, tcu::Vec4& lookupScale, tcu::Vec4& lookupBias)
 {
 	if (!isCompressedFormat(format))
 	{
-		const auto tcuFormat = mapVkFormat(format);
+		const tcu::TextureFormatInfo	fmtInfo	= tcu::getTextureFormatInfo(mapVkFormat(format));
 
-		if (useStencilAspect)
-		{
-			DE_ASSERT(tcu::hasStencilComponent(tcuFormat.order));
-			lookupScale = tcu::Vec4(1.0f / 255.0f, 1.0f, 1.0f, 1.0f);
-			lookupBias = tcu::Vec4(0.0f, 0.0f, 0.0f, 0.0f);
-		}
-		else
-		{
-			const tcu::TextureFormatInfo	fmtInfo	= tcu::getTextureFormatInfo(tcuFormat);
-
-			// Needed to normalize various formats to 0..1 range for writing into RT
-			lookupScale	= fmtInfo.lookupScale;
-			lookupBias	= fmtInfo.lookupBias;
-		}
+		// Needed to normalize various formats to 0..1 range for writing into RT
+		lookupScale	= fmtInfo.lookupScale;
+		lookupBias	= fmtInfo.lookupBias;
 	}
 	else
 	{
@@ -422,8 +406,7 @@ void uploadTestTextureInternal (const DeviceInterface&	vk,
 								const TestTexture&		srcTexture,
 								const TestTexture*		srcStencilTexture,
 								tcu::TextureFormat		format,
-								VkImage					destImage,
-								VkImageLayout			destImageLayout)
+								VkImage					destImage)
 {
 	Move<VkBuffer>					buffer;
 	de::MovePtr<Allocation>			bufferAlloc;
@@ -485,24 +468,17 @@ void uploadTestTextureInternal (const DeviceInterface&	vk,
 		flushAlloc(vk, device, *bufferAlloc);
 	}
 
-	copyBufferToImage(vk, device, queue, queueFamilyIndex, *buffer, bufferSize, copyRegions, DE_NULL, imageAspectFlags, srcTexture.getNumLevels(), srcTexture.getArraySize(), destImage, destImageLayout);
+	copyBufferToImage(vk, device, queue, queueFamilyIndex, *buffer, bufferSize, copyRegions, DE_NULL, imageAspectFlags, srcTexture.getNumLevels(), srcTexture.getArraySize(), destImage);
 }
 
 bool checkSparseImageFormatSupport (const VkPhysicalDevice		physicalDevice,
 									const InstanceInterface&	instance,
 									const VkImageCreateInfo&	imageCreateInfo)
 {
-#ifndef CTS_USES_VULKANSC
 	const std::vector<VkSparseImageFormatProperties> sparseImageFormatPropVec =
 		getPhysicalDeviceSparseImageFormatProperties(instance, physicalDevice, imageCreateInfo.format, imageCreateInfo.imageType, imageCreateInfo.samples, imageCreateInfo.usage, imageCreateInfo.tiling);
 
 	return (sparseImageFormatPropVec.size() != 0);
-#else
-	DE_UNREF(physicalDevice);
-	DE_UNREF(instance);
-	DE_UNREF(imageCreateInfo);
-	return false;
-#endif // CTS_USES_VULKANSC
 }
 
 void uploadTestTextureInternalSparse (const DeviceInterface&					vk,
@@ -540,14 +516,7 @@ void uploadTestTextureInternalSparse (const DeviceInterface&					vk,
 		bufferSize		= stencilOffset + srcStencilTexture->getSize();
 	}
 
-#ifndef CTS_USES_VULKANSC
 	allocateAndBindSparseImage (vk, device, physicalDevice, instance, imageCreateInfo, imageMemoryBindSemaphore.get(), sparseQueue, allocator, allocations, format, destImage);
-#else
-	DE_UNREF(physicalDevice);
-	DE_UNREF(instance);
-	DE_UNREF(sparseQueue);
-	DE_UNREF(allocations);
-#endif // CTS_USES_VULKANSC
 
 	{
 		// Create source buffer
@@ -601,8 +570,7 @@ void uploadTestTexture (const DeviceInterface&			vk,
 						deUint32						queueFamilyIndex,
 						Allocator&						allocator,
 						const TestTexture&				srcTexture,
-						VkImage							destImage,
-						VkImageLayout					destImageLayout)
+						VkImage							destImage)
 {
 	if (tcu::isCombinedDepthStencilType(srcTexture.getTextureFormat().type))
 	{
@@ -633,10 +601,10 @@ void uploadTestTexture (const DeviceInterface&			vk,
 		if (tcu::hasStencilComponent(srcTexture.getTextureFormat().order))
 			srcStencilTexture = srcTexture.copy(tcu::getEffectiveDepthStencilTextureFormat(srcTexture.getTextureFormat(), tcu::Sampler::MODE_STENCIL));
 
-		uploadTestTextureInternal(vk, device, queue, queueFamilyIndex, allocator, *srcDepthTexture, srcStencilTexture.get(), srcTexture.getTextureFormat(), destImage, destImageLayout);
+		uploadTestTextureInternal(vk, device, queue, queueFamilyIndex, allocator, *srcDepthTexture, srcStencilTexture.get(), srcTexture.getTextureFormat(), destImage);
 	}
 	else
-		uploadTestTextureInternal(vk, device, queue, queueFamilyIndex, allocator, srcTexture, DE_NULL, srcTexture.getTextureFormat(), destImage, destImageLayout);
+		uploadTestTextureInternal(vk, device, queue, queueFamilyIndex, allocator, srcTexture, DE_NULL, srcTexture.getTextureFormat(), destImage);
 }
 
 void uploadTestTextureSparse (const DeviceInterface&					vk,
@@ -1008,16 +976,6 @@ void TestTexture::populateCompressedLevels (tcu::CompressedTexFormat format, con
 			if (format != tcu::COMPRESSEDTEXFORMAT_ETC1_RGB8)
 				for (int byteNdx = 0; byteNdx < compressedLevel->getDataSize(); byteNdx++)
 					compressedData[byteNdx] = 0xFF & random.getUint32();
-
-			// BC7 mode 8 (LSB==0x00) should not be tested as it is underspecified
-			if (format == tcu::COMPRESSEDTEXFORMAT_BC7_UNORM_BLOCK || format == tcu::COMPRESSEDTEXFORMAT_BC7_SRGB_BLOCK)
-			{
-				const int blockSize = tcu::getBlockSize(format);
-
-				for (int byteNdx = 0; byteNdx < compressedLevel->getDataSize(); byteNdx += blockSize)
-					while (compressedData[byteNdx] == 0x00)
-						compressedData[byteNdx] = 0xFF & random.getUint32();
-			}
 		}
 
 		m_compressedLevels.push_back(compressedLevel);

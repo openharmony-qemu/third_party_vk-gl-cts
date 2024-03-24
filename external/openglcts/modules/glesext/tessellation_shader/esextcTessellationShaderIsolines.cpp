@@ -704,10 +704,7 @@ tcu::TestNode::IterateResult TessellationShadersIsolines::iterate(void)
 			{
 				memcpy(&result.rendered_data[0], &rendered_data[0], rendered_data.size());
 			}
-			if (result.rendered_data.size() > 0)
-			{
-				countIsolines(result);
-			}
+			countIsolines(result);
 
 			/* Store the test run descriptor. */
 			m_test_results[test.vertex_spacing_mode].push_back(result);

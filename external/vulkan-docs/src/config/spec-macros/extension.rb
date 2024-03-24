@@ -1,4 +1,4 @@
-# Copyright 2016-2022 The Khronos Group Inc.
+# Copyright 2016-2021 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -7,7 +7,7 @@ require 'asciidoctor/extensions' unless RUBY_ENGINE == 'opal'
 include ::Asciidoctor
 
 # This is the generated map of API interfaces in this spec build
-require 'apimap.rb'
+require 'api.rb'
 $apiNames = APInames.new
 
 class SpecInlineMacroBase < Extensions::InlineMacroProcessor
@@ -270,13 +270,9 @@ class TlinkInlineMacro < LinkInlineMacroBase
     end
 end
 
-class BasetypeInlineMacro < LinkInlineMacroBase
+class BasetypeInlineMacro < CodeInlineMacroBase
     named :basetype
     match /basetype:(\w+)/
-
-    def exists? target
-        $apiNames.basetypes.has_key? target
-    end
 end
 
 # This does not include the full range of code: use
@@ -288,7 +284,7 @@ class CodeInlineMacro < CodeInlineMacroBase
     match /code:(\w+([.*]\w+)*\**)/
 end
 
-# The tag: and attr: macros are only used in registry.adoc
+# The tag: and attr: macros are only used in registry.txt
 
 class TagInlineMacro < StrongInlineMacroBase
     named :tag

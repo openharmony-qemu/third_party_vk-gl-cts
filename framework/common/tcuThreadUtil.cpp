@@ -61,7 +61,7 @@ Event::Result Event::waitReady (void)
 	m_lock.lock();
 
 	if (m_result == RESULT_NOT_READY)
-		m_waiterCount = m_waiterCount + 1;
+		m_waiterCount++;
 	else
 	{
 		m_lock.unlock();
@@ -177,14 +177,14 @@ Thread::~Thread (void)
 	m_operations.clear();
 }
 
-deUint8* Thread::getUnusedData (size_t size)
+deUint8* Thread::getDummyData (size_t size)
 {
-	if (m_unusedData.size() < size)
+	if (m_dummyData.size() < size)
 	{
-		m_unusedData.resize(size);
+		m_dummyData.resize(size);
 	}
 
-	return &(m_unusedData[0]);
+	return &(m_dummyData[0]);
 }
 
 void Thread::addOperation (Operation* operation)

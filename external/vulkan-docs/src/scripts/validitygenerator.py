@@ -1,6 +1,6 @@
 #!/usr/bin/python3 -i
 #
-# Copyright 2013-2022 The Khronos Group Inc.
+# Copyright 2013-2021 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -9,7 +9,7 @@ from collections import OrderedDict, namedtuple
 from functools import reduce
 from pathlib import Path
 
-from spec_tools.conventions import ProseListFormats as plf
+from conventions import ProseListFormats as plf
 from generator import OutputGenerator, write
 from spec_tools.attributes import ExternSyncEntry, LengthEntry
 from spec_tools.util import (findNamedElem, findNamedObject, findTypedElem,
@@ -249,7 +249,7 @@ class ValidityOutputGenerator(OutputGenerator):
         self.makeDir(str(directory))
 
         # Create validity file
-        filename = str(directory / f'{basename}{self.file_suffix}')
+        filename = str(directory / (basename + '.txt'))
         self.logMsg('diag', '# Generating include file:', filename)
 
         with open(filename, 'w', encoding='utf-8') as fp:
@@ -278,7 +278,7 @@ class ValidityOutputGenerator(OutputGenerator):
                 write('****', file=fp)
                 write('[options="header", width="100%"]', file=fp)
                 write('|====', file=fp)
-                write(self.makeCommandPropertiesTableHeader(), file=fp)
+                write('|<<VkCommandBufferLevel,Command Buffer Levels>>|<<vkCmdBeginRenderPass,Render Pass Scope>>|<<VkQueueFlagBits,Supported Queue Types>>', file=fp)
                 write(commandpropertiesentry, file=fp)
                 write('|====', file=fp)
                 write('****', file=fp)
@@ -307,6 +307,11 @@ class ValidityOutputGenerator(OutputGenerator):
                 write('****', file=fp)
                 write('', file=fp)
 
+    def paramIsPointer(self, param):
+        """Check if the parameter passed in is a pointer."""
+        tail = param.find('type').tail
+        return tail is not None and '*' in tail
+
     def paramIsStaticArray(self, param):
         """Check if the parameter passed in is a static array."""
         tail = param.find('name').tail
@@ -325,6 +330,10 @@ class ValidityOutputGenerator(OutputGenerator):
             # return self.makeEnumerantName(paramenumsize.text)
 
         return param.find('name').tail[1:-1]
+
+    def paramIsArray(self, param):
+        """Check if the parameter passed in is a pointer to an array."""
+        return param.get('len') is not None
 
     def getHandleDispatchableAncestors(self, typename):
         """Get the ancestors of a handle object."""
@@ -738,10 +747,7 @@ class ValidityOutputGenerator(OutputGenerator):
 
         elif self.paramIsArray(param) or self.paramIsPointer(param):
             # TODO sync cosmetic changes from OpenXR?
-            if typecategory is None:
-                typetext = f'code:{paramtype} value'
-            else:
-                typetext = '{} value'.format(self.makeBaseTypeName(paramtype))
+            typetext = '{} value'.format(self.makeBaseTypeName(paramtype))
 
         elif typecategory is None:
             if not self.isStructAlwaysValid(paramtype):
@@ -1050,19 +1056,6 @@ class ValidityOutputGenerator(OutputGenerator):
         vk11 = re.match(self.registry.genOpts.emitversions, 'VK_VERSION_1_1') is not None
         return vk11
 
-    def videocodingRequired(self):
-        """Returns true if VK_KHR_video_queue is being emitted and thus validity
-        with respect to the videocoding attribute should be generated."""
-        return 'VK_KHR_video_queue' in self.registry.requiredextensions
-
-    def getVideocoding(self, cmd):
-        """Returns the value of the videocoding attribute, also considering the
-        default value when the attribute is not present."""
-        videocoding = cmd.get('videocoding')
-        if videocoding is None:
-            videocoding = 'outside'
-        return videocoding
-
     def makeStructOrCommandValidity(self, cmd, blockname, params):
         """Generate all the valid usage information for a given struct or command."""
         validity = self.makeValidityCollection(blockname)
@@ -1162,16 +1155,6 @@ class ValidityOutputGenerator(OutputGenerator):
                 entry += renderpass
                 entry += ' of a render pass instance'
                 validity += entry
-
-            # Must be called inside/outside a video coding scope appropriately
-            if self.videocodingRequired():
-                videocoding = self.getVideocoding(cmd)
-                if videocoding != 'both':
-                    entry = ValidityEntry(anchor=('videocoding',))
-                    entry += 'This command must: only be called '
-                    entry += videocoding
-                    entry += ' of a video coding scope'
-                    validity += entry
 
             # Must be in the right level command buffer
             cmdbufferlevel = cmd.get('cmdbufferlevel')
@@ -1322,33 +1305,15 @@ class ValidityOutputGenerator(OutputGenerator):
 
         return validity
 
-    def makeCommandPropertiesTableHeader(self):
-        header  = '|<<VkCommandBufferLevel,Command Buffer Levels>>'
-        header += '|<<vkCmdBeginRenderPass,Render Pass Scope>>'
-        if self.videocodingRequired():
-            header += '|<<vkCmdBeginVideoCodingKHR,Video Coding Scope>>'
-        header += '|<<VkQueueFlagBits,Supported Queue Types>>'
-        header += '|<<fundamentals-queueoperation-command-types,Command Type>>'
-        return header
-
     def makeCommandPropertiesTableEntry(self, cmd, name):
 
         if 'vkCmd' in name:
-            # Must be called in primary/secondary command buffers appropriately
+            # Must be called inside/outside a render pass appropriately
             cmdbufferlevel = cmd.get('cmdbufferlevel')
             cmdbufferlevel = (' + \n').join(cmdbufferlevel.title().split(','))
-            entry = '|' + cmdbufferlevel
 
-            # Must be called inside/outside a render pass appropriately
             renderpass = cmd.get('renderpass')
             renderpass = renderpass.capitalize()
-            entry += '|' + renderpass
-
-            # Must be called inside/outside a video coding scope appropriately
-            if self.videocodingRequired():
-                videocoding = self.getVideocoding(cmd)
-                videocoding = videocoding.capitalize()
-                entry += '|' + videocoding
 
             #
             # This test for vkCmdFillBuffer is a hack, since we have no path
@@ -1363,21 +1328,9 @@ class ValidityOutputGenerator(OutputGenerator):
                 queues = cmd.get('queues')
                 queues = (' + \n').join(queues.title().split(','))
 
-            entry += '|' + queues
-
-            # Print the task type
-            tasks = cmd.get('tasks')
-            tasks = (' + \n').join(tasks.title().split(','))
-            entry += '|' + tasks
-
-            return entry
+            return '|' + cmdbufferlevel + '|' + renderpass + '|' + queues
         elif 'vkQueue' in name:
-            # For queue commands there are no command buffer level, render
-            # pass, or video coding scope specific restrictions, but the
-            # queue types are considered
-            entry = '|-|-|'
-            if self.videocodingRequired():
-                entry += '-|'
+            # Must be called inside/outside a render pass appropriately
 
             queues = cmd.get('queues')
             if queues is None:
@@ -1385,7 +1338,7 @@ class ValidityOutputGenerator(OutputGenerator):
             else:
                 queues = (' + \n').join(queues.upper().split(','))
 
-            return entry + queues
+            return '|-|-|' + queues
 
         return None
 
@@ -1535,10 +1488,6 @@ class ValidityOutputGenerator(OutputGenerator):
         for elem in groupElem.findall('enum'):
             name = elem.get('name')
             ei = self.registry.lookupElementInfo(name, self.registry.enumdict)
-
-            if ei is None:
-                self.logMsg('error',
-                    f'genGroup({groupName}) - no element found for enum {name}')
 
             # Tag enumerant as required or not
             ei.required = self.isEnumRequired(elem)

@@ -173,40 +173,26 @@ void static addBufferCopyCmd (const vk::DeviceInterface&	vk,
 
 }
 
-ProtectionMode getProtectionMode(const vk::VkPipelineCreateFlags flags) {
-#ifndef CTS_USES_VULKANSC
-	if ((flags & vk::VK_PIPELINE_CREATE_NO_PROTECTED_ACCESS_BIT_EXT) != 0) {
-		return ProtectionMode::PROTECTION_DISABLED;
-	}
-#endif
-	DE_UNREF(flags);
-	return ProtectionMode::PROTECTION_ENABLED;
-}
-
 template<typename T>
 class StorageBufferTestInstance : public ProtectedTestInstance
 {
 public:
-								StorageBufferTestInstance	(Context&							ctx,
-															 const SSBOTestType					testType,
-															 const glu::ShaderType				shaderType,
-															 const tcu::UVec4					testInput,
-															 const BufferValidator<T>&			validator,
-															 const bool							pipelineProtectedAccess,
-															 const vk::VkPipelineCreateFlags	pipelineFlags);
+								StorageBufferTestInstance	(Context&					ctx,
+															 const SSBOTestType			testType,
+															 const glu::ShaderType		shaderType,
+															 const tcu::UVec4			testInput,
+															 const BufferValidator<T>&	validator);
 	virtual tcu::TestStatus		iterate						(void);
 
 private:
 	tcu::TestStatus				executeFragmentTest			(void);
 	tcu::TestStatus				executeComputeTest			(void);
 
-	const SSBOTestType				m_testType;
-	const glu::ShaderType			m_shaderType;
-	const tcu::UVec4				m_testInput;
-	const BufferValidator<T>&		m_validator;
-	const vk::VkFormat				m_imageFormat;
-	const vk::VkPipelineCreateFlags m_pipelineFlags;
-	const ProtectionMode			m_protectionMode;
+	const SSBOTestType			m_testType;
+	const glu::ShaderType		m_shaderType;
+	const tcu::UVec4			m_testInput;
+	const BufferValidator<T>&	m_validator;
+	const vk::VkFormat			m_imageFormat;
 };
 
 template<typename T>
@@ -220,23 +206,18 @@ public:
 														 const tcu::UVec4			testInput,
 														 ValidationDataStorage<T>	validationData,
 														 vk::VkFormat				format,
-														 bool						pipelineProtectedAccess,
-														 vk::VkPipelineCreateFlags	pipelineFlags,
 														 const std::string&			extraShader = "")
-									: TestCase					(testctx, name, getSSBOTestDescription(testType))
-									, m_testType				(testType)
-									, m_shaderType				(shaderType)
-									, m_testInput				(testInput)
-									, m_validator				(validationData, format)
-									, m_pipelineProtectedAccess (pipelineProtectedAccess)
-									, m_pipelineFlags			(pipelineFlags)
-									, m_extraShader				(extraShader)
-									, m_protectionMode			(getProtectionMode(m_pipelineFlags))
+									: TestCase		(testctx, name, getSSBOTestDescription(testType))
+									, m_testType	(testType)
+									, m_shaderType	(shaderType)
+									, m_testInput	(testInput)
+									, m_validator	(validationData, format)
+									, m_extraShader	(extraShader)
 								{
 								}
 	virtual TestInstance*		createInstance			(Context& ctx) const
 								{
-									return new StorageBufferTestInstance<T>(ctx, m_testType, m_shaderType, m_testInput, m_validator, m_pipelineProtectedAccess, m_pipelineFlags);
+									return new StorageBufferTestInstance<T>(ctx, m_testType, m_shaderType, m_testInput, m_validator);
 								}
 	virtual void				initPrograms			(vk::SourceCollections& programCollection) const;
 	virtual void				checkSupport			(Context& context) const
@@ -247,32 +228,25 @@ public:
 	virtual						~StorageBufferTestCase	(void) {}
 
 private:
-	const SSBOTestType				m_testType;
-	const glu::ShaderType			m_shaderType;
-	const tcu::UVec4				m_testInput;
-	const BufferValidator<T>		m_validator;
-	const bool						m_pipelineProtectedAccess;
-	const vk::VkPipelineCreateFlags	m_pipelineFlags;
-	const std::string				m_extraShader;
-	const ProtectionMode			m_protectionMode;
+	const SSBOTestType			m_testType;
+	const glu::ShaderType		m_shaderType;
+	const tcu::UVec4			m_testInput;
+	const BufferValidator<T>	m_validator;
+	const std::string			m_extraShader;
 };
 
 template<typename T>
-StorageBufferTestInstance<T>::StorageBufferTestInstance	 (Context&							ctx,
-														  const SSBOTestType				testType,
-														  const glu::ShaderType				shaderType,
-														  const tcu::UVec4					testInput,
-														  const BufferValidator<T>&			validator,
-														  const bool						pipelineProtectedAccess,
-														  const vk::VkPipelineCreateFlags	pipelineFlags)
-	: ProtectedTestInstance	(ctx, pipelineProtectedAccess ? std::vector<std::string>({ "VK_EXT_pipeline_protected_access" }) : std::vector<std::string>())
+StorageBufferTestInstance<T>::StorageBufferTestInstance	 (Context&					ctx,
+														  const SSBOTestType		testType,
+														  const glu::ShaderType		shaderType,
+														  const tcu::UVec4			testInput,
+														  const BufferValidator<T>&	validator)
+	: ProtectedTestInstance	(ctx)
 	, m_testType			(testType)
 	, m_shaderType			(shaderType)
 	, m_testInput			(testInput)
 	, m_validator			(validator)
 	, m_imageFormat			(vk::VK_FORMAT_R8G8B8A8_UNORM)
-	, m_pipelineFlags		(pipelineFlags)
-	, m_protectionMode		(getProtectionMode(m_pipelineFlags))
 {
 }
 
@@ -409,27 +383,21 @@ tcu::TestStatus StorageBufferTestInstance<T>::executeFragmentTest(void)
 		deMemcpy(testUniform->getAllocation().getHostPtr(), &m_testInput, testUniformSize);
 		vk::flushAlloc(vk, device, testUniform->getAllocation());
 	}
-
-	const vk::MemoryRequirement* memoryRequirement = &vk::MemoryRequirement::Any;
-	if (m_protectionMode == PROTECTION_ENABLED) {
-		memoryRequirement = &vk::MemoryRequirement::Protected;
-	}
-
 	const deUint32							testBufferSize		= sizeof(ValidationDataStorage<T>);
 	de::MovePtr<vk::BufferWithMemory>		testBuffer			(makeBuffer(ctx,
-																			m_protectionMode,
+																			PROTECTION_ENABLED,
 																			queueFamilyIndex,
 																			testBufferSize,
 																			vk::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
 																			 | vk::VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-																			*memoryRequirement));
+																			vk::MemoryRequirement::Protected));
     de::MovePtr<vk::BufferWithMemory>		testBufferSource			(makeBuffer(ctx,
-																			m_protectionMode,
+																			PROTECTION_ENABLED,
 																			queueFamilyIndex,
 																			testBufferSize,
 																			vk::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
 																			 | vk::VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-																			*memoryRequirement));
+																			vk::MemoryRequirement::Protected));
 
 	vk::Move<vk::VkShaderModule>			vertexShader		(vk::createShaderModule(vk, device, ctx.getBinaryCollection().get("vert"), 0));
 	vk::Unique<vk::VkShaderModule>			testShader			(vk::createShaderModule(vk, device, ctx.getBinaryCollection().get("TestShader"), 0));
@@ -461,7 +429,7 @@ tcu::TestStatus StorageBufferTestInstance<T>::executeFragmentTest(void)
 	}
 
 	// Create output image
-	de::MovePtr<vk::ImageWithMemory>		colorImage			(createImage2D(ctx, m_protectionMode, queueFamilyIndex,
+	de::MovePtr<vk::ImageWithMemory>		colorImage			(createImage2D(ctx, PROTECTION_ENABLED, queueFamilyIndex,
 																			   RENDER_WIDTH, RENDER_HEIGHT,
 																			   m_imageFormat,
 																			   vk::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT|vk::VK_IMAGE_USAGE_SAMPLED_BIT));
@@ -471,7 +439,7 @@ tcu::TestStatus StorageBufferTestInstance<T>::executeFragmentTest(void)
 
 	// Build pipeline
 	vk::Unique<vk::VkPipelineLayout>		pipelineLayout		(makePipelineLayout(vk, device, *descriptorSetLayout));
-	vk::Unique<vk::VkCommandPool>			cmdPool				(makeCommandPool(vk, device, m_protectionMode, queueFamilyIndex));
+	vk::Unique<vk::VkCommandPool>			cmdPool				(makeCommandPool(vk, device, PROTECTION_ENABLED, queueFamilyIndex));
 	vk::Unique<vk::VkCommandBuffer>			cmdBuffer			(vk::allocateCommandBuffer(vk, device, *cmdPool, vk::VK_COMMAND_BUFFER_LEVEL_PRIMARY));
 
 	// Create pipeline
@@ -480,8 +448,7 @@ tcu::TestStatus StorageBufferTestInstance<T>::executeFragmentTest(void)
 																					  std::vector<vk::VkVertexInputBindingDescription>(),
 																					  std::vector<vk::VkVertexInputAttributeDescription>(),
 																					  tcu::UVec2(RENDER_WIDTH, RENDER_HEIGHT),
-																					  vk::VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
-																					  m_pipelineFlags));
+																					  vk::VK_PRIMITIVE_TOPOLOGY_POINT_LIST));
 
 	beginCommandBuffer(vk, *cmdBuffer);
 
@@ -564,7 +531,7 @@ tcu::TestStatus StorageBufferTestInstance<T>::executeFragmentTest(void)
 	{
 		const vk::Unique<vk::VkFence> fence (vk::createFence(vk, device));
 		VK_CHECK(vk.resetFences(device, 1, &fence.get()));
-		VK_CHECK(queueSubmit(ctx, m_protectionMode, queue, *cmdBuffer, *fence, ~0ull));
+		VK_CHECK(queueSubmit(ctx, PROTECTION_ENABLED, queue, *cmdBuffer, *fence, ~0ull));
 	}
 
 	// Log inputs
@@ -604,26 +571,21 @@ tcu::TestStatus StorageBufferTestInstance<T>::executeComputeTest(void)
 		vk::flushAlloc(vk, device, testUniform->getAllocation());
 	}
 
-	const vk::MemoryRequirement* memoryRequirement = &vk::MemoryRequirement::Any;
-	if (m_protectionMode == PROTECTION_ENABLED) {
-		memoryRequirement = &vk::MemoryRequirement::Protected;
-	}
-
 	const deUint32							testBufferSize		= sizeof(ValidationDataStorage<T>);
 	de::MovePtr<vk::BufferWithMemory>		testBuffer			(makeBuffer(ctx,
-																			m_protectionMode,
+																			PROTECTION_ENABLED,
 																			queueFamilyIndex,
 																			testBufferSize,
 																			vk::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
 																			 | vk::VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-																			*memoryRequirement));
+																			vk::MemoryRequirement::Protected));
 	de::MovePtr<vk::BufferWithMemory>		testBufferSource	(makeBuffer(ctx,
-																			m_protectionMode,
+																			PROTECTION_ENABLED,
 																			queueFamilyIndex,
 																			testBufferSize,
 																			vk::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
 																			 | vk::VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-																			*memoryRequirement));
+																			vk::MemoryRequirement::Protected));
 
 	vk::Unique<vk::VkShaderModule>			testShader			(vk::createShaderModule(vk, device, ctx.getBinaryCollection().get("TestShader"), 0));
 
@@ -657,8 +619,8 @@ tcu::TestStatus StorageBufferTestInstance<T>::executeComputeTest(void)
 	{
 		const vk::Unique<vk::VkFence>		fence				(vk::createFence(vk, device));
 		vk::Unique<vk::VkPipelineLayout>	pipelineLayout		(makePipelineLayout(vk, device, *descriptorSetLayout));
-		vk::Unique<vk::VkPipeline>			SSBOPipeline		(makeComputePipeline(vk, device, *pipelineLayout, m_pipelineFlags, *testShader, (vk::VkPipelineShaderStageCreateFlags)0u));
-		vk::Unique<vk::VkCommandPool>		cmdPool				(makeCommandPool(vk, device, m_protectionMode, queueFamilyIndex));
+		vk::Unique<vk::VkPipeline>			SSBOPipeline		(makeComputePipeline(vk, device, *pipelineLayout, *testShader, DE_NULL));
+		vk::Unique<vk::VkCommandPool>		cmdPool				(makeCommandPool(vk, device, PROTECTION_ENABLED, queueFamilyIndex));
 		vk::Unique<vk::VkCommandBuffer>		cmdBuffer			(vk::allocateCommandBuffer(vk, device, *cmdPool, vk::VK_COMMAND_BUFFER_LEVEL_PRIMARY));
 		deUint32							dispatchCount		= (m_testType == SSBO_ATOMIC) ? 4u : 1u;
 
@@ -676,7 +638,7 @@ tcu::TestStatus StorageBufferTestInstance<T>::executeComputeTest(void)
 		vk.cmdDispatch(*cmdBuffer, dispatchCount, 1u, 1u);
 
 		endCommandBuffer(vk, *cmdBuffer);
-		VK_CHECK(queueSubmit(ctx, m_protectionMode, queue, *cmdBuffer, *fence, ~0ull));
+		VK_CHECK(queueSubmit(ctx, PROTECTION_ENABLED, queue, *cmdBuffer, *fence, ~0ull));
 	}
 
 	ctx.getTestContext().getLog()
@@ -708,9 +670,7 @@ tcu::TestCaseGroup* createSpecifiedStorageBufferTests (tcu::TestContext&						te
 													   SSBOTestType								testType,
 													   const glu::ShaderType					shaderType,
 													   const ValidationDataStorage<tcu::UVec4>	testData[],
-													   size_t									testCount,
-													   bool										pipelineProtectedAccess,
-													   vk::VkPipelineCreateFlags				pipelineFlags)
+													   size_t									testCount)
 {
 	const std::string				testTypeStr		= getSSBOTypeString(testType);
 	const std::string				description		= "Storage buffer " + testTypeStr + " tests";
@@ -719,13 +679,13 @@ tcu::TestCaseGroup* createSpecifiedStorageBufferTests (tcu::TestContext&						te
 	for (size_t ndx = 0; ndx < testCount; ++ndx)
 	{
 		const std::string name = testTypeStr + "_" + de::toString(ndx + 1);
-		testGroup->addChild(new StorageBufferTestCase<tcu::UVec4>(testCtx, testType, shaderType, name.c_str(), testData[ndx].values, testData[ndx], vk::VK_FORMAT_R32G32B32A32_UINT, pipelineProtectedAccess, pipelineFlags));
+		testGroup->addChild(new StorageBufferTestCase<tcu::UVec4>(testCtx, testType, shaderType, name.c_str(), testData[ndx].values, testData[ndx], vk::VK_FORMAT_R32G32B32A32_UINT));
 	}
 
 	return testGroup.release();
 }
 
-tcu::TestCaseGroup* createRandomizedBufferTests (tcu::TestContext& testCtx, SSBOTestType testType, const glu::ShaderType shaderType, size_t testCount, bool pipelineProtectedAccess, vk::VkPipelineCreateFlags pipelineFlags)
+tcu::TestCaseGroup* createRandomizedBufferTests (tcu::TestContext& testCtx, SSBOTestType testType, const glu::ShaderType shaderType, size_t testCount)
 {
 	de::Random											rnd				(testCtx.getCommandLine().getBaseSeed());
 	std::vector<ValidationDataStorage<tcu::UVec4> >		testData;
@@ -735,33 +695,8 @@ tcu::TestCaseGroup* createRandomizedBufferTests (tcu::TestContext& testCtx, SSBO
 		for (deUint32 compIdx = 0; compIdx < 4; ++compIdx)
 			testData[ndx].values[compIdx] = rnd.getUint32();
 
-	return createSpecifiedStorageBufferTests(testCtx, "random", testType, shaderType, testData.data(), testData.size(), pipelineProtectedAccess, pipelineFlags);
+	return createSpecifiedStorageBufferTests(testCtx, "random", testType, shaderType, testData.data(), testData.size());
 }
-
-struct
-{
-	bool			pipelineProtectedAccess;
-	const char* name;
-} protectedAccess[] =
-{
-	{ false,	"default"},
-#ifndef CTS_USES_VULKANSC
-	{ true,		"protected_access"},
-#endif
-};
-struct
-{
-	vk::VkPipelineCreateFlags	pipelineFlags;
-	const char* name;
-} flags[] =
-{
-	{
-		(vk::VkPipelineCreateFlagBits)0u,						"none"},
-#ifndef CTS_USES_VULKANSC
-		{ vk::VK_PIPELINE_CREATE_PROTECTED_ACCESS_ONLY_BIT_EXT, "protected_access_only"},
-		{ vk::VK_PIPELINE_CREATE_NO_PROTECTED_ACCESS_BIT_EXT,	"no_protected_access"},
-#endif
-};
 
 tcu::TestCaseGroup* createRWStorageBufferTests (tcu::TestContext&							testCtx,
 												const std::string							groupName,
@@ -777,26 +712,16 @@ tcu::TestCaseGroup* createRWStorageBufferTests (tcu::TestContext&							testCtx,
 		glu::SHADERTYPE_COMPUTE
 	};
 
-	for (int protectedAccessNdx = 0; protectedAccessNdx < DE_LENGTH_OF_ARRAY(protectedAccess); ++protectedAccessNdx) {
-		de::MovePtr<tcu::TestCaseGroup>		protectedAccessGroup(new tcu::TestCaseGroup(testCtx, protectedAccess[protectedAccessNdx].name, ""));
-		for (int flagsNdx = 0; flagsNdx < DE_LENGTH_OF_ARRAY(flags); ++flagsNdx) {
-			de::MovePtr<tcu::TestCaseGroup>		flagsGroup(new tcu::TestCaseGroup(testCtx, flags[flagsNdx].name, ""));
-			if (!protectedAccess[protectedAccessNdx].pipelineProtectedAccess && flags[flagsNdx].pipelineFlags != 0u) continue;
+	for (int shaderNdx = 0; shaderNdx < DE_LENGTH_OF_ARRAY(shaderTypes); ++shaderNdx)
+	{
+		const glu::ShaderType				shaderType			= shaderTypes[shaderNdx];
+		const std::string					shaderName			= glu::getShaderTypeName(shaderType);
+		const std::string					shaderGroupDesc		= "Storage buffer tests for shader type: " + shaderName;
+		de::MovePtr<tcu::TestCaseGroup>		testShaderGroup		(new tcu::TestCaseGroup(testCtx, shaderName.c_str(), shaderGroupDesc.c_str()));
 
-			for (int shaderNdx = 0; shaderNdx < DE_LENGTH_OF_ARRAY(shaderTypes); ++shaderNdx)
-			{
-				const glu::ShaderType				shaderType = shaderTypes[shaderNdx];
-				const std::string					shaderName = glu::getShaderTypeName(shaderType);
-				const std::string					shaderGroupDesc = "Storage buffer tests for shader type: " + shaderName;
-				de::MovePtr<tcu::TestCaseGroup>		testShaderGroup(new tcu::TestCaseGroup(testCtx, shaderName.c_str(), shaderGroupDesc.c_str()));
-
-				testShaderGroup->addChild(createSpecifiedStorageBufferTests(testCtx, "static", testType, shaderType, testData, testCount, protectedAccess[protectedAccessNdx].pipelineProtectedAccess, flags[flagsNdx].pipelineFlags));
-				testShaderGroup->addChild(createRandomizedBufferTests(testCtx, testType, shaderType, RANDOM_TEST_COUNT, protectedAccess[protectedAccessNdx].pipelineProtectedAccess, flags[flagsNdx].pipelineFlags));
-				flagsGroup->addChild(testShaderGroup.release());
-			}
-			protectedAccessGroup->addChild(flagsGroup.release());
-		}
-		ssboRWTestGroup->addChild(protectedAccessGroup.release());
+		testShaderGroup->addChild(createSpecifiedStorageBufferTests(testCtx, "static", testType, shaderType, testData, testCount));
+		testShaderGroup->addChild(createRandomizedBufferTests(testCtx, testType, shaderType, RANDOM_TEST_COUNT));
+		ssboRWTestGroup->addChild(testShaderGroup.release());
 	}
 
 	return ssboRWTestGroup.release();
@@ -892,7 +817,7 @@ tcu::TestCaseGroup* createWriteStorageBufferTests (tcu::TestContext& testCtx)
 	return createRWStorageBufferTests(testCtx, "ssbo_write", "Storage Buffer Write Tests", SSBO_WRITE, testData, DE_LENGTH_OF_ARRAY(testData));
 }
 
-tcu::TestCaseGroup* createAtomicStorageBufferTests (tcu::TestContext& testCtx)
+tcu::TestCaseGroup* createAtomicStorageBufferTests (tcu::TestContext& testctx)
 {
 	struct {
 		const tcu::UVec4	input;
@@ -921,70 +846,60 @@ tcu::TestCaseGroup* createAtomicStorageBufferTests (tcu::TestContext& testCtx)
 		glu::SHADERTYPE_COMPUTE
 	};
 
-	de::Random						rnd				(testCtx.getCommandLine().getBaseSeed());
-	de::MovePtr<tcu::TestCaseGroup>	ssboAtomicTests (new tcu::TestCaseGroup(testCtx, "ssbo_atomic", "Storage Buffer Atomic Tests"));
+	de::Random						rnd				(testctx.getCommandLine().getBaseSeed());
+	de::MovePtr<tcu::TestCaseGroup>	ssboAtomicTests (new tcu::TestCaseGroup(testctx, "ssbo_atomic", "Storage Buffer Atomic Tests"));
 
 	for (int shaderNdx = 0; shaderNdx < DE_LENGTH_OF_ARRAY(shaderTypes); ++shaderNdx)
 	{
 		const glu::ShaderType				shaderType			= shaderTypes[shaderNdx];
 		const std::string					shaderName			= glu::getShaderTypeName(shaderType);
 		const std::string					shaderDesc			= "Storage Buffer Atomic Tests for shader type: " + shaderName;
-		de::MovePtr<tcu::TestCaseGroup>		atomicShaderGroup	(new tcu::TestCaseGroup(testCtx, shaderName.c_str(), shaderDesc.c_str()));
+		de::MovePtr<tcu::TestCaseGroup>		atomicShaderGroup	(new tcu::TestCaseGroup(testctx, shaderName.c_str(), shaderDesc.c_str()));
 
-		for (int protectedAccessNdx = 0; protectedAccessNdx < DE_LENGTH_OF_ARRAY(protectedAccess); ++protectedAccessNdx) {
-			de::MovePtr<tcu::TestCaseGroup>		protectedAccessGroup(new tcu::TestCaseGroup(testCtx, protectedAccess[protectedAccessNdx].name, ""));
-			for (int flagsNdx = 0; flagsNdx < DE_LENGTH_OF_ARRAY(flags); ++flagsNdx) {
-				de::MovePtr<tcu::TestCaseGroup>		flagsGroup(new tcu::TestCaseGroup(testCtx, flags[flagsNdx].name, ""));
-				if (!protectedAccess[protectedAccessNdx].pipelineProtectedAccess && flags[flagsNdx].pipelineFlags != 0u) continue;
+		for (int typeNdx = 0; typeNdx < DE_LENGTH_OF_ARRAY(testTypes); ++typeNdx)
+		{
+			SSBOAtomicType					atomicType		= testTypes[typeNdx];
+			const std::string				atomicTypeStr	= getSSBOAtomicTypeString(atomicType);
+			const std::string				atomicDesc		= "Storage Buffer Atomic Tests: " + atomicTypeStr;
 
-				for (int typeNdx = 0; typeNdx < DE_LENGTH_OF_ARRAY(testTypes); ++typeNdx)
-				{
-					SSBOAtomicType					atomicType = testTypes[typeNdx];
-					const std::string				atomicTypeStr = getSSBOAtomicTypeString(atomicType);
-					const std::string				atomicDesc = "Storage Buffer Atomic Tests: " + atomicTypeStr;
+			de::MovePtr<tcu::TestCaseGroup>	staticTests		(new tcu::TestCaseGroup(testctx, "static", (atomicDesc + " with static input").c_str()));
+			for (int ndx = 0; ndx < DE_LENGTH_OF_ARRAY(testData); ++ndx)
+			{
+				const std::string	name		= "atomic_" + atomicTypeStr + "_" + de::toString(ndx + 1);
+				const tcu::UVec4&	inputValue	= testData[ndx].input;
+				const deUint32&		atomicArg	= testData[ndx].atomicArg;
+				std::string			atomicCall;
+				tcu::UVec4			refValue;
 
-					de::MovePtr<tcu::TestCaseGroup>	staticTests(new tcu::TestCaseGroup(testCtx, "static", (atomicDesc + " with static input").c_str()));
-					for (int ndx = 0; ndx < DE_LENGTH_OF_ARRAY(testData); ++ndx)
-					{
-						const std::string	name = "atomic_" + atomicTypeStr + "_" + de::toString(ndx + 1);
-						const tcu::UVec4& inputValue = testData[ndx].input;
-						const deUint32& atomicArg = testData[ndx].atomicArg;
-						std::string			atomicCall;
-						tcu::UVec4			refValue;
+				calculateAtomicOpData(atomicType, inputValue, atomicArg, atomicCall, refValue, testData[ndx].swapNdx);
 
-						calculateAtomicOpData(atomicType, inputValue, atomicArg, atomicCall, refValue, testData[ndx].swapNdx);
-
-						ValidationDataStorage<tcu::UVec4>	validationData = { refValue };
-						staticTests->addChild(new StorageBufferTestCase<tcu::UVec4>(testCtx, SSBO_ATOMIC, shaderType, name.c_str(), inputValue, validationData, vk::VK_FORMAT_R32G32B32A32_UINT, protectedAccess[protectedAccessNdx].pipelineProtectedAccess, flags[flagsNdx].pipelineFlags, atomicCall));
-					}
-
-					de::MovePtr<tcu::TestCaseGroup>	randomTests(new tcu::TestCaseGroup(testCtx, "random", (atomicDesc + " with random input").c_str()));
-					for (int ndx = 0; ndx < RANDOM_TEST_COUNT; ndx++)
-					{
-						const std::string					name = "atomic_" + atomicTypeStr + "_" + de::toString(ndx + 1);
-						deUint32							atomicArg = rnd.getUint16();
-						tcu::UVec4							inputValue;
-						tcu::UVec4							refValue;
-						std::string							atomicCall;
-
-						for (int i = 0; i < 4; i++)
-							inputValue[i] = rnd.getUint16();
-
-						calculateAtomicOpData(atomicType, inputValue, atomicArg, atomicCall, refValue, ndx);
-
-						ValidationDataStorage<tcu::UVec4>	validationData = { refValue };
-						randomTests->addChild(new StorageBufferTestCase<tcu::UVec4>(testCtx, SSBO_ATOMIC, shaderType, name.c_str(), inputValue, validationData, vk::VK_FORMAT_R32G32B32A32_UINT, protectedAccess[protectedAccessNdx].pipelineProtectedAccess, flags[flagsNdx].pipelineFlags, atomicCall));
-
-					}
-
-					de::MovePtr<tcu::TestCaseGroup>	atomicTests(new tcu::TestCaseGroup(testCtx, atomicTypeStr.c_str(), atomicDesc.c_str()));
-					atomicTests->addChild(staticTests.release());
-					atomicTests->addChild(randomTests.release());
-					flagsGroup->addChild(atomicTests.release());
-				}
-				protectedAccessGroup->addChild(flagsGroup.release());
+				ValidationDataStorage<tcu::UVec4>	validationData	= { refValue };
+				staticTests->addChild(new StorageBufferTestCase<tcu::UVec4>(testctx, SSBO_ATOMIC, shaderType, name.c_str(), inputValue, validationData, vk::VK_FORMAT_R32G32B32A32_UINT, atomicCall));
 			}
-			atomicShaderGroup->addChild(protectedAccessGroup.release());
+
+			de::MovePtr<tcu::TestCaseGroup>	randomTests		(new tcu::TestCaseGroup(testctx, "random", (atomicDesc + " with random input").c_str()));
+			for (int ndx = 0; ndx < RANDOM_TEST_COUNT; ndx++)
+			{
+				const std::string					name			= "atomic_" + atomicTypeStr + "_" + de::toString(ndx + 1);
+				deUint32							atomicArg		= rnd.getUint16();
+				tcu::UVec4							inputValue;
+				tcu::UVec4							refValue;
+				std::string							atomicCall;
+
+				for (int i = 0; i < 4; i++)
+					inputValue[i] = rnd.getUint16();
+
+				calculateAtomicOpData(atomicType, inputValue, atomicArg, atomicCall, refValue, ndx);
+
+				ValidationDataStorage<tcu::UVec4>	validationData	= { refValue };
+				randomTests->addChild(new StorageBufferTestCase<tcu::UVec4>(testctx, SSBO_ATOMIC, shaderType, name.c_str(), inputValue, validationData, vk::VK_FORMAT_R32G32B32A32_UINT, atomicCall));
+
+			}
+
+			de::MovePtr<tcu::TestCaseGroup>	atomicTests		(new tcu::TestCaseGroup(testctx, atomicTypeStr.c_str(), atomicDesc.c_str()));
+			atomicTests->addChild(staticTests.release());
+			atomicTests->addChild(randomTests.release());
+			atomicShaderGroup->addChild(atomicTests.release());
 		}
 		ssboAtomicTests->addChild(atomicShaderGroup.release());
 	}

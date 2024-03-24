@@ -67,7 +67,6 @@ enum class AtomicMemoryType
 	BUFFER = 0,	// Normal buffer.
 	SHARED,		// Shared global struct in a compute workgroup.
 	REFERENCE,	// Buffer passed as a reference.
-	PAYLOAD,	// Task payload.
 };
 
 // Helper struct to indicate the shader type and if it should use shared global memory.
@@ -78,20 +77,12 @@ public:
 		: m_type				(type)
 		, m_atomicMemoryType	(memoryType)
 	{
-		// Shared global memory can only be set to true with compute, task and mesh shaders.
-		DE_ASSERT(memoryType != AtomicMemoryType::SHARED
-					|| type == glu::SHADERTYPE_COMPUTE
-					|| type == glu::SHADERTYPE_TASK
-					|| type == glu::SHADERTYPE_MESH);
-
-		// Task payload memory can only be tested in task shaders.
-		DE_ASSERT(memoryType != AtomicMemoryType::PAYLOAD || type == glu::SHADERTYPE_TASK);
+		// Shared global memory can only be set to true with compute shaders.
+		DE_ASSERT(memoryType != AtomicMemoryType::SHARED || type == glu::SHADERTYPE_COMPUTE);
 	}
 
 	glu::ShaderType		getType					(void) const	{ return m_type; }
 	AtomicMemoryType	getMemoryType			(void) const	{ return m_atomicMemoryType; }
-	bool				isSharedLike			(void) const	{ return m_atomicMemoryType == AtomicMemoryType::SHARED || m_atomicMemoryType == AtomicMemoryType::PAYLOAD; }
-	bool				isMeshShadingStage		(void) const	{ return (m_type == glu::SHADERTYPE_TASK || m_type == glu::SHADERTYPE_MESH); }
 
 private:
 	glu::ShaderType		m_type;
@@ -1004,7 +995,7 @@ tcu::TestStatus AtomicOperationCaseInstance::iterate(void)
 		outputPtr[i] = &outputs[i];
 	}
 
-	const int					numWorkGroups	= (m_shaderType.isSharedLike() ? 1 : static_cast<int>(NUM_ELEMENTS));
+	const int					numWorkGroups	= ((m_shaderType.getMemoryType() == AtomicMemoryType::SHARED) ? 1 : static_cast<int>(NUM_ELEMENTS));
 	UniquePtr<ShaderExecutor>	executor		(createExecutor(m_context, m_shaderType.getType(), m_shaderSpec, *extraResourcesLayout));
 
 	executor->execute(numWorkGroups, DE_NULL, &outputPtr[0], *extraResourcesSet);
@@ -1033,13 +1024,7 @@ public:
 	virtual void			checkSupport			(Context& ctx) const;
 	virtual void			initPrograms			(vk::SourceCollections& programCollection) const
 	{
-		const bool					useSpv14		= m_shaderType.isMeshShadingStage();
-		const auto					spvVersion		= (useSpv14 ? vk::SPIRV_VERSION_1_4 : vk::SPIRV_VERSION_1_0);
-		const ShaderBuildOptions	buildOptions	(programCollection.usedVulkanVersion, spvVersion, 0u, useSpv14);
-		ShaderSpec					sourcesSpec		(m_shaderSpec);
-
-		sourcesSpec.buildOptions = buildOptions;
-		generateSources(m_shaderType.getType(), sourcesSpec, programCollection);
+		generateSources(m_shaderType.getType(), m_shaderSpec, programCollection);
 	}
 
 private:
@@ -1082,7 +1067,7 @@ void AtomicOperationCase::checkSupport (Context& ctx) const
 		ctx.requireDeviceFunctionality("VK_KHR_shader_atomic_int64");
 
 		const auto atomicInt64Features	= ctx.getShaderAtomicInt64Features();
-		const bool isSharedMemory		= m_shaderType.isSharedLike();
+		const bool isSharedMemory		= (m_shaderType.getMemoryType() == AtomicMemoryType::SHARED);
 
 		if (!isSharedMemory && atomicInt64Features.shaderBufferInt64Atomics == VK_FALSE)
 		{
@@ -1097,10 +1082,9 @@ void AtomicOperationCase::checkSupport (Context& ctx) const
 	if (m_dataType == DATA_TYPE_FLOAT16)
 	{
 		ctx.requireDeviceFunctionality("VK_EXT_shader_atomic_float2");
-#ifndef CTS_USES_VULKANSC
 		if (m_atomicOp == ATOMIC_OP_ADD)
 		{
-			if (m_shaderType.isSharedLike())
+			if (m_shaderType.getMemoryType() == AtomicMemoryType::SHARED)
 			{
 				if (!ctx.getShaderAtomicFloat2FeaturesEXT().shaderSharedFloat16AtomicAdd)
 				{
@@ -1117,7 +1101,7 @@ void AtomicOperationCase::checkSupport (Context& ctx) const
 		}
 		if (m_atomicOp == ATOMIC_OP_MIN || m_atomicOp == ATOMIC_OP_MAX)
 		{
-			if (m_shaderType.isSharedLike())
+			if (m_shaderType.getMemoryType() == AtomicMemoryType::SHARED)
 			{
 				if (!ctx.getShaderAtomicFloat2FeaturesEXT().shaderSharedFloat16AtomicMinMax)
 				{
@@ -1134,7 +1118,7 @@ void AtomicOperationCase::checkSupport (Context& ctx) const
 		}
 		if (m_atomicOp == ATOMIC_OP_EXCHANGE)
 		{
-			if (m_shaderType.isSharedLike())
+			if (m_shaderType.getMemoryType() == AtomicMemoryType::SHARED)
 			{
 				if (!ctx.getShaderAtomicFloat2FeaturesEXT().shaderSharedFloat16Atomics)
 				{
@@ -1149,7 +1133,6 @@ void AtomicOperationCase::checkSupport (Context& ctx) const
 				}
 			}
 		}
-#endif // CTS_USES_VULKANSC
 	}
 
 	if (m_dataType == DATA_TYPE_FLOAT32)
@@ -1157,7 +1140,7 @@ void AtomicOperationCase::checkSupport (Context& ctx) const
 		ctx.requireDeviceFunctionality("VK_EXT_shader_atomic_float");
 		if (m_atomicOp == ATOMIC_OP_ADD)
 		{
-			if (m_shaderType.isSharedLike())
+			if (m_shaderType.getMemoryType() == AtomicMemoryType::SHARED)
 			{
 				if (!ctx.getShaderAtomicFloatFeaturesEXT().shaderSharedFloat32AtomicAdd)
 				{
@@ -1175,8 +1158,7 @@ void AtomicOperationCase::checkSupport (Context& ctx) const
 		if (m_atomicOp == ATOMIC_OP_MIN || m_atomicOp == ATOMIC_OP_MAX)
 		{
 			ctx.requireDeviceFunctionality("VK_EXT_shader_atomic_float2");
-#ifndef CTS_USES_VULKANSC
-			if (m_shaderType.isSharedLike())
+			if (m_shaderType.getMemoryType() == AtomicMemoryType::SHARED)
 			{
 				if (!ctx.getShaderAtomicFloat2FeaturesEXT().shaderSharedFloat32AtomicMinMax)
 				{
@@ -1190,11 +1172,10 @@ void AtomicOperationCase::checkSupport (Context& ctx) const
 					TCU_THROW(NotSupportedError, "VkShaderAtomicFloat32: 32-bit floating point buffer min/max atomic operation not supported");
 				}
 			}
-#endif // CTS_USES_VULKANSC
 		}
 		if (m_atomicOp == ATOMIC_OP_EXCHANGE)
 		{
-			if (m_shaderType.isSharedLike())
+			if (m_shaderType.getMemoryType() == AtomicMemoryType::SHARED)
 			{
 				if (!ctx.getShaderAtomicFloatFeaturesEXT().shaderSharedFloat32Atomics)
 				{
@@ -1216,7 +1197,7 @@ void AtomicOperationCase::checkSupport (Context& ctx) const
 		ctx.requireDeviceFunctionality("VK_EXT_shader_atomic_float");
 		if (m_atomicOp == ATOMIC_OP_ADD)
 		{
-			if (m_shaderType.isSharedLike())
+			if (m_shaderType.getMemoryType() == AtomicMemoryType::SHARED)
 			{
 				if (!ctx.getShaderAtomicFloatFeaturesEXT().shaderSharedFloat64AtomicAdd)
 				{
@@ -1234,8 +1215,7 @@ void AtomicOperationCase::checkSupport (Context& ctx) const
 		if (m_atomicOp == ATOMIC_OP_MIN || m_atomicOp == ATOMIC_OP_MAX)
 		{
 			ctx.requireDeviceFunctionality("VK_EXT_shader_atomic_float2");
-#ifndef CTS_USES_VULKANSC
-			if (m_shaderType.isSharedLike())
+			if (m_shaderType.getMemoryType() == AtomicMemoryType::SHARED)
 			{
 				if (!ctx.getShaderAtomicFloat2FeaturesEXT().shaderSharedFloat64AtomicMinMax)
 				{
@@ -1249,11 +1229,10 @@ void AtomicOperationCase::checkSupport (Context& ctx) const
 					TCU_THROW(NotSupportedError, "VkShaderAtomicFloat64: 64-bit floating point buffer min/max atomic operation not supported");
 				}
 			}
-#endif // CTS_USES_VULKANSC
 		}
 		if (m_atomicOp == ATOMIC_OP_EXCHANGE)
 		{
-			if (m_shaderType.isSharedLike())
+			if (m_shaderType.getMemoryType() == AtomicMemoryType::SHARED)
 			{
 				if (!ctx.getShaderAtomicFloatFeaturesEXT().shaderSharedFloat64Atomics)
 				{
@@ -1275,13 +1254,32 @@ void AtomicOperationCase::checkSupport (Context& ctx) const
 		ctx.requireDeviceFunctionality("VK_KHR_buffer_device_address");
 	}
 
+	// Check stores and atomic operation support.
+	switch (m_shaderType.getType())
+	{
+	case glu::SHADERTYPE_VERTEX:
+	case glu::SHADERTYPE_TESSELLATION_CONTROL:
+	case glu::SHADERTYPE_TESSELLATION_EVALUATION:
+	case glu::SHADERTYPE_GEOMETRY:
+		if (!ctx.getDeviceFeatures().vertexPipelineStoresAndAtomics)
+			TCU_THROW(NotSupportedError, "Stores and atomic operations are not supported in Vertex, Tessellation, and Geometry shader.");
+		break;
+	case glu::SHADERTYPE_FRAGMENT:
+		if (!ctx.getDeviceFeatures().fragmentStoresAndAtomics)
+			TCU_THROW(NotSupportedError, "Stores and atomic operations are not supported in fragment shader.");
+		break;
+	case glu::SHADERTYPE_COMPUTE:
+		break;
+	default:
+		DE_FATAL("Unsupported shader type");
+	}
+
 	checkSupportShader(ctx, m_shaderType.getType());
 }
 
 void AtomicOperationCase::createShaderSpec (void)
 {
-	const AtomicMemoryType	memoryType		= m_shaderType.getMemoryType();
-	const bool				isSharedLike	= m_shaderType.isSharedLike();
+	const AtomicMemoryType memoryType = m_shaderType.getMemoryType();
 
 	// Global declarations.
 	std::ostringstream shaderTemplateGlobalStream;
@@ -1318,20 +1316,13 @@ void AtomicOperationCase::createShaderSpec (void)
 			<< "\n"
 			;
 
-		// When using global shared memory in the compute, task or mesh variants, invocations will use a shared global structure
-		// instead of a descriptor set as the sources and results of each tested operation.
+		// When using global shared memory in the compute variant, invocations will use a shared global structure instead of a
+		// descriptor set as the sources and results of each tested operation.
 		if (memoryType == AtomicMemoryType::SHARED)
 		{
 			shaderTemplateGlobalStream
 				<< "shared struct { AtomicStruct data; } buf;\n"
 				<< "\n"
-				;
-		}
-		else if (memoryType == AtomicMemoryType::PAYLOAD)
-		{
-			shaderTemplateGlobalStream
-				<< "struct TaskData { AtomicStruct data; };\n"
-				<< "taskPayloadSharedEXT TaskData buf;\n"
 				;
 		}
 	}
@@ -1355,7 +1346,7 @@ void AtomicOperationCase::createShaderSpec (void)
 	// Shader body for the non-vertex case.
 	std::ostringstream nonVertexShaderTemplateStream;
 
-	if (isSharedLike)
+	if (memoryType == AtomicMemoryType::SHARED)
 	{
 		// Invocation zero will initialize the shared structure from the descriptor set.
 		nonVertexShaderTemplateStream
@@ -1387,7 +1378,7 @@ void AtomicOperationCase::createShaderSpec (void)
 			;
 	}
 
-	if (isSharedLike)
+	if (memoryType == AtomicMemoryType::SHARED)
 	{
 		// Invocation zero will copy results back to the descriptor set.
 		nonVertexShaderTemplateStream
@@ -1444,7 +1435,7 @@ void AtomicOperationCase::createShaderSpec (void)
 	specializations["SETIDX"]				= de::toString((int)EXTRA_RESOURCES_DESCRIPTOR_SET_INDEX);
 	specializations["N"]					= de::toString((int)NUM_ELEMENTS);
 	specializations["COMPARE_ARG"]			= ((m_atomicOp == ATOMIC_OP_COMP_SWAP) ? "buf.data.compareValues[idx], " : "");
-	specializations["RESULT_BUFFER_NAME"]	= (isSharedLike ? "result" : "buf");
+	specializations["RESULT_BUFFER_NAME"]	= ((memoryType == AtomicMemoryType::SHARED) ? "result" : "buf");
 
 	// Shader spec.
 	m_shaderSpec.outputs.push_back(Symbol("outData", glu::VarType(glu::TYPE_UINT, glu::PRECISION_HIGHP)));
@@ -1454,7 +1445,7 @@ void AtomicOperationCase::createShaderSpec (void)
 										? vertexShaderTemplateSrc.specialize(specializations)
 										: nonVertexShaderTemplateSrc.specialize(specializations));
 
-	if (isSharedLike)
+	if (memoryType == AtomicMemoryType::SHARED)
 	{
 		// When using global shared memory, use a single workgroup and an appropriate number of local invocations.
 		m_shaderSpec.localSizeX = static_cast<int>(NUM_ELEMENTS);
@@ -1477,8 +1468,6 @@ void addAtomicOperationTests (tcu::TestCaseGroup* atomicOperationTestsGroup)
 		{ glu::SHADERTYPE_TESSELLATION_CONTROL,				"tess_ctrl"			},
 		{ glu::SHADERTYPE_TESSELLATION_EVALUATION,			"tess_eval"			},
 		{ glu::SHADERTYPE_COMPUTE,							"compute"			},
-		{ glu::SHADERTYPE_TASK,								"task"				},
-		{ glu::SHADERTYPE_MESH,								"mesh"				},
 	};
 
 	static const struct
@@ -1490,7 +1479,6 @@ void addAtomicOperationTests (tcu::TestCaseGroup* atomicOperationTestsGroup)
 		{ AtomicMemoryType::BUFFER,		""				},
 		{ AtomicMemoryType::SHARED,		"_shared"		},
 		{ AtomicMemoryType::REFERENCE,	"_reference"	},
-		{ AtomicMemoryType::PAYLOAD,	"_payload"		},
 	};
 
 	static const struct
@@ -1500,9 +1488,7 @@ void addAtomicOperationTests (tcu::TestCaseGroup* atomicOperationTestsGroup)
 		const char*		description;
 	} dataSign[] =
 	{
-#ifndef CTS_USES_VULKANSC
 		{ DATA_TYPE_FLOAT16,"float16",			"Tests using 16-bit float data"				},
-#endif // CTS_USES_VULKANSC
 		{ DATA_TYPE_INT32,	"signed",			"Tests using signed data (int)"				},
 		{ DATA_TYPE_UINT32,	"unsigned",			"Tests using unsigned data (uint)"			},
 		{ DATA_TYPE_FLOAT32,"float32",			"Tests using 32-bit float data"				},
@@ -1537,11 +1523,9 @@ void addAtomicOperationTests (tcu::TestCaseGroup* atomicOperationTestsGroup)
 				if (dataSign[signNdx].dataType == DATA_TYPE_FLOAT16 || dataSign[signNdx].dataType == DATA_TYPE_FLOAT32 || dataSign[signNdx].dataType == DATA_TYPE_FLOAT64)
 				{
 					if (atomicOp[opNdx].value != ATOMIC_OP_ADD &&
-#ifndef CTS_USES_VULKANSC
 					    atomicOp[opNdx].value != ATOMIC_OP_MIN &&
 					    atomicOp[opNdx].value != ATOMIC_OP_MAX &&
-#endif // CTS_USES_VULKANSC
-						atomicOp[opNdx].value != ATOMIC_OP_EXCHANGE)
+					    atomicOp[opNdx].value != ATOMIC_OP_EXCHANGE)
 					{
 						continue;
 					}
@@ -1549,15 +1533,8 @@ void addAtomicOperationTests (tcu::TestCaseGroup* atomicOperationTestsGroup)
 
 				for (int memoryTypeNdx = 0; memoryTypeNdx < DE_LENGTH_OF_ARRAY(kMemoryTypes); ++memoryTypeNdx)
 				{
-					// Shared memory only available in compute, task and mesh shaders.
-					if (kMemoryTypes[memoryTypeNdx].type == AtomicMemoryType::SHARED
-						&& shaderTypes[shaderTypeNdx].type != glu::SHADERTYPE_COMPUTE
-						&& shaderTypes[shaderTypeNdx].type != glu::SHADERTYPE_TASK
-						&& shaderTypes[shaderTypeNdx].type != glu::SHADERTYPE_MESH)
-						continue;
-
-					// Payload memory is only available for atomics in task shaders (in mesh shaders it's read-only)
-					if (kMemoryTypes[memoryTypeNdx].type == AtomicMemoryType::PAYLOAD && shaderTypes[shaderTypeNdx].type != glu::SHADERTYPE_TASK)
+					// Shared memory only available in compute shaders.
+					if (kMemoryTypes[memoryTypeNdx].type == AtomicMemoryType::SHARED && shaderTypes[shaderTypeNdx].type != glu::SHADERTYPE_COMPUTE)
 						continue;
 
 					const std::string description	= std::string("Tests atomic operation ") + atomicOp2Str(atomicOp[opNdx].value) + std::string(".");

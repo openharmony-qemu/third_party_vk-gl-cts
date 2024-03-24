@@ -78,13 +78,13 @@ VkMemoryRequirements getBufferMemoryRequirements2 (const DeviceInterface& vk, co
 	const Unique<VkBuffer>				buffer		(makeBuffer(vk, device, size, flags, usage));
 	VkBufferMemoryRequirementsInfo2		info	=
 	{
-		VK_STRUCTURE_TYPE_BUFFER_MEMORY_REQUIREMENTS_INFO_2,		// VkStructureType	sType
+		VK_STRUCTURE_TYPE_BUFFER_MEMORY_REQUIREMENTS_INFO_2_KHR,	// VkStructureType	sType
 		DE_NULL,													// const void*		pNext
 		*buffer														// VkBuffer			buffer
 	};
 	VkMemoryRequirements2				req2	=
 	{
-		VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2,					// VkStructureType		sType
+		VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2_KHR,				// VkStructureType		sType
 		next,														// void*				pNext
 		{0, 0, 0}													// VkMemoryRequirements	memoryRequirements
 	};
@@ -94,7 +94,6 @@ VkMemoryRequirements getBufferMemoryRequirements2 (const DeviceInterface& vk, co
 	return req2.memoryRequirements;
 }
 
-#ifndef CTS_USES_VULKANSC
 VkMemoryRequirements getBufferCreateInfoMemoryRequirementsKHR (const DeviceInterface& vk, const VkDevice device, const VkDeviceSize size, const VkBufferCreateFlags flags, const VkBufferUsageFlags usage, void* next = DE_NULL)
 {
 	const VkBufferCreateInfo createInfo =
@@ -121,11 +120,10 @@ VkMemoryRequirements getBufferCreateInfoMemoryRequirementsKHR (const DeviceInter
 		{0, 0, 0}													// VkMemoryRequirements	memoryRequirements
 	};
 
-	vk.getDeviceBufferMemoryRequirements(device, &memoryInfo, &req2);
+	vk.getDeviceBufferMemoryRequirementsKHR(device, &memoryInfo, &req2);
 
 	return req2.memoryRequirements;
 }
-#endif // CTS_USES_VULKANSC
 
 VkMemoryRequirements getImageMemoryRequirements2 (const DeviceInterface& vk, const VkDevice device, const VkImageCreateInfo& createInfo, void* next = DE_NULL)
 {
@@ -133,13 +131,13 @@ VkMemoryRequirements getImageMemoryRequirements2 (const DeviceInterface& vk, con
 
 	VkImageMemoryRequirementsInfo2		info	=
 	{
-		VK_STRUCTURE_TYPE_IMAGE_MEMORY_REQUIREMENTS_INFO_2,			// VkStructureType	sType
+		VK_STRUCTURE_TYPE_IMAGE_MEMORY_REQUIREMENTS_INFO_2_KHR,		// VkStructureType	sType
 		DE_NULL,													// const void*		pNext
 		*image														// VkImage			image
 	};
 	VkMemoryRequirements2				req2	=
 	{
-		VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2,					// VkStructureType		sType
+		VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2_KHR,				// VkStructureType		sType
 		next,														// void*				pNext
 		{0, 0, 0}													// VkMemoryRequirements	memoryRequirements
 	};
@@ -149,8 +147,7 @@ VkMemoryRequirements getImageMemoryRequirements2 (const DeviceInterface& vk, con
 	return req2.memoryRequirements;
 }
 
-#ifndef CTS_USES_VULKANSC
-VkMemoryRequirements getDeviceImageMemoryRequirements (const DeviceInterface& vk, const VkDevice device, const VkImageCreateInfo& createInfo, void* next = DE_NULL)
+VkMemoryRequirements getDeviceImageMemoryRequirementsKHR (const DeviceInterface& vk, const VkDevice device, const VkImageCreateInfo& createInfo, void* next = DE_NULL)
 {
 	VkDeviceImageMemoryRequirementsKHR info =
 	{
@@ -166,13 +163,11 @@ VkMemoryRequirements getDeviceImageMemoryRequirements (const DeviceInterface& vk
 		{0, 0, 0}													// VkMemoryRequirements	memoryRequirements
 	};
 
-	vk.getDeviceImageMemoryRequirements(device, &info, &req2);
+	vk.getDeviceImageMemoryRequirementsKHR(device, &info, &req2);
 
 	return req2.memoryRequirements;
 }
-#endif // CTS_USES_VULKANSC
 
-#ifndef CTS_USES_VULKANSC
 std::vector<VkSparseImageMemoryRequirements> getImageCreateInfoSparseMemoryRequirements (const DeviceInterface& vk, VkDevice device, const VkImageCreateInfo& createInfo)
 {
 	VkDeviceImageMemoryRequirementsKHR info =
@@ -186,7 +181,7 @@ std::vector<VkSparseImageMemoryRequirements> getImageCreateInfoSparseMemoryRequi
 	std::vector<VkSparseImageMemoryRequirements>	requirements;
 	std::vector<VkSparseImageMemoryRequirements2>	requirements2;
 
-	vk.getDeviceImageSparseMemoryRequirements(device, &info, &requirementsCount, DE_NULL);
+	vk.getDeviceImageSparseMemoryRequirementsKHR(device, &info, &requirementsCount, DE_NULL);
 
 	if (requirementsCount > 0)
 	{
@@ -197,7 +192,7 @@ std::vector<VkSparseImageMemoryRequirements> getImageCreateInfoSparseMemoryRequi
 			requirements2[ndx].pNext = DE_NULL;
 		}
 
-		vk.getDeviceImageSparseMemoryRequirements(device, &info, &requirementsCount, &requirements2[0]);
+		vk.getDeviceImageSparseMemoryRequirementsKHR(device, &info, &requirementsCount, &requirements2[0]);
 
 		if ((size_t)requirementsCount != requirements2.size())
 			TCU_FAIL("Returned sparse image memory requirements count changes between queries");
@@ -209,7 +204,6 @@ std::vector<VkSparseImageMemoryRequirements> getImageCreateInfoSparseMemoryRequi
 
 	return requirements;
 }
-#endif // CTS_USES_VULKANSC
 
 //! Get an index of each set bit, starting from the least significant bit.
 std::vector<deUint32> bitsToIndices (deUint32 bits)
@@ -331,12 +325,10 @@ void BufferMemoryRequirementsOriginal::populateTestGroup (tcu::TestCaseGroup* gr
 	} bufferCases[] =
 	{
 		{ (VkBufferCreateFlags)0,																								"regular"					},
-#ifndef CTS_USES_VULKANSC
 		{ VK_BUFFER_CREATE_SPARSE_BINDING_BIT,																					"sparse"					},
 		{ VK_BUFFER_CREATE_SPARSE_BINDING_BIT | VK_BUFFER_CREATE_SPARSE_RESIDENCY_BIT,											"sparse_residency"			},
 		{ VK_BUFFER_CREATE_SPARSE_BINDING_BIT											| VK_BUFFER_CREATE_SPARSE_ALIASED_BIT,	"sparse_aliased"			},
 		{ VK_BUFFER_CREATE_SPARSE_BINDING_BIT | VK_BUFFER_CREATE_SPARSE_RESIDENCY_BIT	| VK_BUFFER_CREATE_SPARSE_ALIASED_BIT,	"sparse_residency_aliased"	},
-#endif // CTS_USES_VULKANSC
 	};
 
 	de::MovePtr<tcu::TestCaseGroup> bufferGroup(new tcu::TestCaseGroup(group->getTestContext(), "buffer", ""));
@@ -645,7 +637,7 @@ void BufferMemoryRequirementsDedicatedAllocation::updateMemoryRequirements (cons
 
 	VkMemoryDedicatedRequirements	dedicatedRequirements	=
 	{
-		VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS,		// VkStructureType	sType
+		VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS_KHR,	// VkStructureType	sType
 		DE_NULL,												// void*			pNext
 		invalidVkBool32,										// VkBool32			prefersDedicatedAllocation
 		invalidVkBool32											// VkBool32			requiresDedicatedAllocation
@@ -684,7 +676,6 @@ void BufferMemoryRequirementsDedicatedAllocation::verifyMemoryRequirements (tcu:
 		"Regular (non-shared) objects must not require dedicated allocations");
 }
 
-#ifndef CTS_USES_VULKANSC
 class BufferMemoryRequirementsCreateInfo : public BufferMemoryRequirementsOriginal
 {
 	static tcu::TestStatus testEntryPoint	(Context&									context,
@@ -777,7 +768,7 @@ void BufferMemoryRequirementsCreateInfo::verifyMemoryRequirements	(tcu::ResultCo
 	result.check(m_currentTestRequirements.size >= m_currentTestHalfRequirements.size,
 			"VkMemoryRequirements size queried from vkBufferCreateInfo is larger for a smaller buffer");
 }
-#endif // CTS_USES_VULKANSC
+
 
 struct ImageTestParams
 {
@@ -858,9 +849,7 @@ private:
 protected:
 	VkImageCreateInfo								m_currentTestImageInfo;
 	VkMemoryRequirements							m_currentTestRequirements;
-#ifndef CTS_USES_VULKANSC
 	std::vector<VkSparseImageMemoryRequirements>	m_currentTestSparseRequirements;
-#endif // CTS_USES_VULKANSC
 };
 
 
@@ -882,12 +871,10 @@ void ImageMemoryRequirementsOriginal::populateTestGroup (tcu::TestCaseGroup* gro
 	{
 		{ (VkImageCreateFlags)0,																								false,	"regular"					},
 		{ (VkImageCreateFlags)0,																								true,	"transient"					},
-#ifndef CTS_USES_VULKANSC
 		{ VK_IMAGE_CREATE_SPARSE_BINDING_BIT,																					false,	"sparse"					},
 		{ VK_IMAGE_CREATE_SPARSE_BINDING_BIT | VK_IMAGE_CREATE_SPARSE_RESIDENCY_BIT,											false,	"sparse_residency"			},
 		{ VK_IMAGE_CREATE_SPARSE_BINDING_BIT											| VK_IMAGE_CREATE_SPARSE_ALIASED_BIT,	false,	"sparse_aliased"			},
 		{ VK_IMAGE_CREATE_SPARSE_BINDING_BIT | VK_IMAGE_CREATE_SPARSE_RESIDENCY_BIT		| VK_IMAGE_CREATE_SPARSE_ALIASED_BIT,	false,	"sparse_residency_aliased"	},
-#endif // CTS_USES_VULKANSC
 	};
 
 	de::MovePtr<tcu::TestCaseGroup> imageGroup(new tcu::TestCaseGroup(group->getTestContext(), "image", ""));
@@ -952,10 +939,8 @@ void ImageMemoryRequirementsOriginal::updateMemoryRequirements	(const DeviceInte
 
 	m_currentTestRequirements = getImageMemoryRequirements(vk, device, *image);
 
-#ifndef CTS_USES_VULKANSC
 	if (m_currentTestImageInfo.flags & VK_IMAGE_CREATE_SPARSE_BINDING_BIT)
 		m_currentTestSparseRequirements = getImageSparseMemoryRequirements(vk, device, *image);
-#endif // CTS_USES_VULKANSC
 }
 
 void ImageMemoryRequirementsOriginal::verifyMemoryRequirements (tcu::ResultCollector&					result,
@@ -1000,7 +985,6 @@ void ImageMemoryRequirementsOriginal::verifyMemoryRequirements (tcu::ResultColle
 		result.check(m_currentTestImageInfo.tiling == VK_IMAGE_TILING_OPTIMAL || hostVisibleCoherentMemoryFound,
 			"Required memory type doesn't include VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT and VK_MEMORY_PROPERTY_HOST_COHERENT_BIT");
 
-#ifndef CTS_USES_VULKANSC
 		if (m_currentTestImageInfo.flags & VK_IMAGE_CREATE_SPARSE_BINDING_BIT)
 		{
 			for (const VkSparseImageMemoryRequirements &sparseRequirements : m_currentTestSparseRequirements)
@@ -1009,7 +993,6 @@ void ImageMemoryRequirementsOriginal::verifyMemoryRequirements (tcu::ResultColle
 					"VkSparseImageMemoryRequirements imageMipTailSize is not aligned with sparse block size");
 			}
 		}
-#endif // CTS_USES_VULKANSC
 	}
 }
 
@@ -1032,12 +1015,18 @@ bool ImageMemoryRequirementsOriginal::isImageSupported (const Context& context, 
 {
 	DE_ASSERT(info.extent.width >= 1u && info.extent.height >= 1u && info.extent.depth >= 1u);
 
-	if (isYCbCrFormat(info.format)
+	if ((isYCbCrFormat(info.format)
 		&& (info.imageType != VK_IMAGE_TYPE_2D
 			|| info.mipLevels != 1
 			|| info.arrayLayers != 1
-			|| info.samples != VK_SAMPLE_COUNT_1_BIT
-			|| !context.isDeviceFunctionalitySupported("VK_KHR_sampler_ycbcr_conversion")))
+			|| info.samples != VK_SAMPLE_COUNT_1_BIT))
+			|| !context.isDeviceFunctionalitySupported("VK_KHR_sampler_ycbcr_conversion"))
+	{
+		return false;
+	}
+
+	if (isYCbCrExtensionFormat(info.format)
+		&& !context.isDeviceFunctionalitySupported("VK_EXT_ycbcr_2plane_444_formats"))
 	{
 		return false;
 	}
@@ -1189,10 +1178,8 @@ bool ImageMemoryRequirementsOriginal::isImageSupported (const Context& context, 
 			return false;
 	}
 
-#ifndef CTS_USES_VULKANSC
 	if ((info.flags & VK_IMAGE_CREATE_SPARSE_BINDING_BIT) && !checkSparseImageFormatSupport(physDevice, vki, info))
 		return false;
-#endif // CTS_USES_VULKANSC
 
 	return result == VK_SUCCESS;
 }
@@ -1209,7 +1196,6 @@ VkExtent3D makeExtentForImage (const VkImageType imageType)
 	return extent;
 }
 
-#ifndef CTS_USES_VULKANSC
 VkExtent3D halfExtentForImage (const VkImageType imageType, VkExtent3D extent)
 {
 	VkExtent3D halfExtent = extent;
@@ -1223,7 +1209,6 @@ VkExtent3D halfExtentForImage (const VkImageType imageType, VkExtent3D extent)
 
 	return halfExtent;
 }
-#endif // CTS_USES_VULKANSC
 
 bool ImageMemoryRequirementsOriginal::isFormatMatchingAspect (const VkFormat format, const VkImageAspectFlags aspect)
 {
@@ -1451,40 +1436,40 @@ tcu::TestStatus ImageMemoryRequirementsOriginal::execTest (Context& context, con
 		VK_FORMAT_ASTC_12x10_SRGB_BLOCK,
 		VK_FORMAT_ASTC_12x12_UNORM_BLOCK,
 		VK_FORMAT_ASTC_12x12_SRGB_BLOCK,
-		VK_FORMAT_G8B8G8R8_422_UNORM,
-		VK_FORMAT_B8G8R8G8_422_UNORM,
-		VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM,
-		VK_FORMAT_G8_B8R8_2PLANE_420_UNORM,
-		VK_FORMAT_G8_B8_R8_3PLANE_422_UNORM,
-		VK_FORMAT_G8_B8R8_2PLANE_422_UNORM,
-		VK_FORMAT_G8_B8_R8_3PLANE_444_UNORM,
-		VK_FORMAT_R10X6_UNORM_PACK16,
-		VK_FORMAT_R10X6G10X6_UNORM_2PACK16,
-		VK_FORMAT_R10X6G10X6B10X6A10X6_UNORM_4PACK16,
-		VK_FORMAT_G10X6B10X6G10X6R10X6_422_UNORM_4PACK16,
-		VK_FORMAT_B10X6G10X6R10X6G10X6_422_UNORM_4PACK16,
-		VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_420_UNORM_3PACK16,
-		VK_FORMAT_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16,
-		VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_422_UNORM_3PACK16,
-		VK_FORMAT_G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16,
-		VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_444_UNORM_3PACK16,
-		VK_FORMAT_R12X4_UNORM_PACK16,
-		VK_FORMAT_R12X4G12X4_UNORM_2PACK16,
-		VK_FORMAT_R12X4G12X4B12X4A12X4_UNORM_4PACK16,
-		VK_FORMAT_G12X4B12X4G12X4R12X4_422_UNORM_4PACK16,
-		VK_FORMAT_B12X4G12X4R12X4G12X4_422_UNORM_4PACK16,
-		VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_420_UNORM_3PACK16,
-		VK_FORMAT_G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16,
-		VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_422_UNORM_3PACK16,
-		VK_FORMAT_G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16,
-		VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_444_UNORM_3PACK16,
-		VK_FORMAT_G16B16G16R16_422_UNORM,
-		VK_FORMAT_B16G16R16G16_422_UNORM,
-		VK_FORMAT_G16_B16_R16_3PLANE_420_UNORM,
-		VK_FORMAT_G16_B16R16_2PLANE_420_UNORM,
-		VK_FORMAT_G16_B16_R16_3PLANE_422_UNORM,
-		VK_FORMAT_G16_B16R16_2PLANE_422_UNORM,
-		VK_FORMAT_G16_B16_R16_3PLANE_444_UNORM,
+		VK_FORMAT_G8B8G8R8_422_UNORM_KHR,
+		VK_FORMAT_B8G8R8G8_422_UNORM_KHR,
+		VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM_KHR,
+		VK_FORMAT_G8_B8R8_2PLANE_420_UNORM_KHR,
+		VK_FORMAT_G8_B8_R8_3PLANE_422_UNORM_KHR,
+		VK_FORMAT_G8_B8R8_2PLANE_422_UNORM_KHR,
+		VK_FORMAT_G8_B8_R8_3PLANE_444_UNORM_KHR,
+		VK_FORMAT_R10X6_UNORM_PACK16_KHR,
+		VK_FORMAT_R10X6G10X6_UNORM_2PACK16_KHR,
+		VK_FORMAT_R10X6G10X6B10X6A10X6_UNORM_4PACK16_KHR,
+		VK_FORMAT_G10X6B10X6G10X6R10X6_422_UNORM_4PACK16_KHR,
+		VK_FORMAT_B10X6G10X6R10X6G10X6_422_UNORM_4PACK16_KHR,
+		VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_420_UNORM_3PACK16_KHR,
+		VK_FORMAT_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16_KHR,
+		VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_422_UNORM_3PACK16_KHR,
+		VK_FORMAT_G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16_KHR,
+		VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_444_UNORM_3PACK16_KHR,
+		VK_FORMAT_R12X4_UNORM_PACK16_KHR,
+		VK_FORMAT_R12X4G12X4_UNORM_2PACK16_KHR,
+		VK_FORMAT_R12X4G12X4B12X4A12X4_UNORM_4PACK16_KHR,
+		VK_FORMAT_G12X4B12X4G12X4R12X4_422_UNORM_4PACK16_KHR,
+		VK_FORMAT_B12X4G12X4R12X4G12X4_422_UNORM_4PACK16_KHR,
+		VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_420_UNORM_3PACK16_KHR,
+		VK_FORMAT_G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16_KHR,
+		VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_422_UNORM_3PACK16_KHR,
+		VK_FORMAT_G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16_KHR,
+		VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_444_UNORM_3PACK16_KHR,
+		VK_FORMAT_G16B16G16R16_422_UNORM_KHR,
+		VK_FORMAT_B16G16R16G16_422_UNORM_KHR,
+		VK_FORMAT_G16_B16_R16_3PLANE_420_UNORM_KHR,
+		VK_FORMAT_G16_B16R16_2PLANE_420_UNORM_KHR,
+		VK_FORMAT_G16_B16_R16_3PLANE_422_UNORM_KHR,
+		VK_FORMAT_G16_B16R16_2PLANE_422_UNORM_KHR,
+		VK_FORMAT_G16_B16_R16_3PLANE_444_UNORM_KHR,
 		VK_FORMAT_A4R4G4B4_UNORM_PACK16_EXT,
 		VK_FORMAT_A4B4G4R4_UNORM_PACK16_EXT,
 		VK_FORMAT_G8_B8R8_2PLANE_444_UNORM_EXT,
@@ -1685,7 +1670,7 @@ void ImageMemoryRequirementsDedicatedAllocation::updateMemoryRequirements (const
 
 	VkMemoryDedicatedRequirements	dedicatedRequirements	=
 	{
-		VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS,		// VkStructureType	sType
+		VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS_KHR,	// VkStructureType	sType
 		DE_NULL,												// void*			pNext
 		invalidVkBool32,										// VkBool32			prefersDedicatedAllocation
 		invalidVkBool32											// VkBool32			requiresDedicatedAllocation
@@ -1708,7 +1693,6 @@ void ImageMemoryRequirementsDedicatedAllocation::verifyMemoryRequirements (tcu::
 		"Test design expects m_currentTestRequiresDedicatedAllocation to be false");
 }
 
-#ifndef CTS_USES_VULKANSC
 class ImageMemoryRequirementsCreateInfo : public ImageMemoryRequirementsExtended
 {
 public:
@@ -1758,14 +1742,14 @@ void ImageMemoryRequirementsCreateInfo::addFunctionTestCase (tcu::TestCaseGroup*
 void ImageMemoryRequirementsCreateInfo::updateMemoryRequirements (const DeviceInterface&	vk,
 																  const VkDevice			device)
 {
-	m_currentTestRequirements = getDeviceImageMemoryRequirements(vk, device, m_currentTestImageInfo);
+	m_currentTestRequirements = getDeviceImageMemoryRequirementsKHR(vk, device, m_currentTestImageInfo);
 
 	const Unique<VkImage> image(createImage(vk, device, &m_currentTestImageInfo));
 	m_currentTestOriginalRequirements = getImageMemoryRequirements(vk, device, *image);
 
 	VkImageCreateInfo halfImageCreateInfo = m_currentTestImageInfo;
 	halfImageCreateInfo.extent = halfExtentForImage(m_currentTestImageInfo.imageType, m_currentTestImageInfo.extent);
-	m_currentTestHalfRequirements = getDeviceImageMemoryRequirements(vk, device, halfImageCreateInfo);
+	m_currentTestHalfRequirements = getDeviceImageMemoryRequirementsKHR(vk, device, halfImageCreateInfo);
 
 	if (m_currentTestImageInfo.flags & VK_IMAGE_CREATE_SPARSE_BINDING_BIT)
 	{
@@ -1828,7 +1812,6 @@ void ImageMemoryRequirementsCreateInfo::verifyMemoryRequirements (tcu::ResultCol
 		}
 	}
 }
-#endif // CTS_USES_VULKANSC
 
 void populateCoreTestGroup (tcu::TestCaseGroup* group)
 {
@@ -1907,25 +1890,25 @@ tcu::TestStatus testMultiplaneImages (Context& context, ImageTestParams params)
 {
 	const VkFormat multiplaneFormats[] =
 	{
-		VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM,
-		VK_FORMAT_G8_B8R8_2PLANE_420_UNORM,
-		VK_FORMAT_G8_B8_R8_3PLANE_422_UNORM,
-		VK_FORMAT_G8_B8R8_2PLANE_422_UNORM,
-		VK_FORMAT_G8_B8_R8_3PLANE_444_UNORM,
-		VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_420_UNORM_3PACK16,
-		VK_FORMAT_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16,
-		VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_422_UNORM_3PACK16,
-		VK_FORMAT_G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16,
-		VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_444_UNORM_3PACK16,
-		VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_420_UNORM_3PACK16,
-		VK_FORMAT_G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16,
-		VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_422_UNORM_3PACK16,
-		VK_FORMAT_G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16,
-		VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_444_UNORM_3PACK16,
-		VK_FORMAT_G16_B16_R16_3PLANE_420_UNORM,
-		VK_FORMAT_G16_B16R16_2PLANE_420_UNORM,
-		VK_FORMAT_G16_B16_R16_3PLANE_422_UNORM,
-		VK_FORMAT_G16_B16R16_2PLANE_422_UNORM
+		VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM_KHR,
+		VK_FORMAT_G8_B8R8_2PLANE_420_UNORM_KHR,
+		VK_FORMAT_G8_B8_R8_3PLANE_422_UNORM_KHR,
+		VK_FORMAT_G8_B8R8_2PLANE_422_UNORM_KHR,
+		VK_FORMAT_G8_B8_R8_3PLANE_444_UNORM_KHR,
+		VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_420_UNORM_3PACK16_KHR,
+		VK_FORMAT_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16_KHR,
+		VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_422_UNORM_3PACK16_KHR,
+		VK_FORMAT_G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16_KHR,
+		VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_444_UNORM_3PACK16_KHR,
+		VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_420_UNORM_3PACK16_KHR,
+		VK_FORMAT_G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16_KHR,
+		VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_422_UNORM_3PACK16_KHR,
+		VK_FORMAT_G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16_KHR,
+		VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_444_UNORM_3PACK16_KHR,
+		VK_FORMAT_G16_B16_R16_3PLANE_420_UNORM_KHR,
+		VK_FORMAT_G16_B16R16_2PLANE_420_UNORM_KHR,
+		VK_FORMAT_G16_B16_R16_3PLANE_422_UNORM_KHR,
+		VK_FORMAT_G16_B16R16_2PLANE_422_UNORM_KHR
 	};
 
 	const InstanceInterface&				vki					= context.getInstanceInterface();
@@ -1977,13 +1960,12 @@ tcu::TestStatus testMultiplaneImages (Context& context, ImageTestParams params)
 				{
 					VkMemoryRequirements2						requirements	=
 					{
-						VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2,
+						VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2_KHR,
 						DE_NULL,
 						{ 0u, 0u, 0u }
 					};
 					const VkImageAspectFlagBits					aspect		= getPlaneAspect(planeNdx);
 
-#ifndef CTS_USES_VULKANSC
 					if (params.useMaint4)
 					{
 						const VkDeviceImageMemoryRequirementsKHR	info	=
@@ -1993,28 +1975,25 @@ tcu::TestStatus testMultiplaneImages (Context& context, ImageTestParams params)
 							&imageInfo,
 							aspect
 						};
-						vk.getDeviceImageMemoryRequirements(device, &info, &requirements);
+						vk.getDeviceImageMemoryRequirementsKHR(device, &info, &requirements);
 					}
 					else
 					{
-#endif // CTS_USES_VULKANSC
 						const VkImagePlaneMemoryRequirementsInfo	aspectInfo	=
 						{
-							VK_STRUCTURE_TYPE_IMAGE_PLANE_MEMORY_REQUIREMENTS_INFO,
+							VK_STRUCTURE_TYPE_IMAGE_PLANE_MEMORY_REQUIREMENTS_INFO_KHR,
 							DE_NULL,
 							aspect
 						};
 						const VkImageMemoryRequirementsInfo2		info		=
 						{
-							VK_STRUCTURE_TYPE_IMAGE_MEMORY_REQUIREMENTS_INFO_2,
-							(actualCreateFlags & VK_IMAGE_CREATE_DISJOINT_BIT) == 0 ? DE_NULL : &aspectInfo,
+							VK_STRUCTURE_TYPE_IMAGE_MEMORY_REQUIREMENTS_INFO_2_KHR,
+							(actualCreateFlags & VK_IMAGE_CREATE_DISJOINT_BIT_KHR) == 0 ? DE_NULL : &aspectInfo,
 							*image
 						};
 
 						vk.getImageMemoryRequirements2(device, &info, &requirements);
-#ifndef CTS_USES_VULKANSC
-				}
-#endif // CTS_USES_VULKANSC
+					}
 
 					log << TestLog::Message << "Aspect: " << getImageAspectFlagsStr(aspect) << ", Requirements: " << requirements << TestLog::EndMessage;
 
@@ -2022,15 +2001,13 @@ tcu::TestStatus testMultiplaneImages (Context& context, ImageTestParams params)
 
 					if (result.check(requirements.memoryRequirements.memoryTypeBits != 0, "No supported memory types"))
 					{
-						typedef std::vector<deUint32>::const_iterator	IndexIterator;
-						const std::vector<deUint32>						usedMemoryTypeIndices	= bitsToIndices(requirements.memoryRequirements.memoryTypeBits);
-						bool											hasHostVisibleType		= false;
+						bool	hasHostVisibleType	= false;
 
-						for (IndexIterator memoryTypeNdx = usedMemoryTypeIndices.begin(); memoryTypeNdx != usedMemoryTypeIndices.end(); ++memoryTypeNdx)
+						for (deUint32 memoryTypeIndex = 0; (0x1u << memoryTypeIndex) <= requirements.memoryRequirements.memoryTypeBits; memoryTypeIndex++)
 						{
-							if (result.check(*memoryTypeNdx < memoryProperties.memoryTypeCount, "Unknown memory type bits set in memory requirements"))
+							if (result.check(memoryTypeIndex < memoryProperties.memoryTypeCount, "Unknown memory type bits set in memory requirements"))
 							{
-								const VkMemoryPropertyFlags	propertyFlags	(memoryProperties.memoryTypes[*memoryTypeNdx].propertyFlags);
+								const VkMemoryPropertyFlags	propertyFlags	(memoryProperties.memoryTypes[memoryTypeIndex].propertyFlags);
 
 								if (propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
 									hasHostVisibleType = true;
@@ -2123,7 +2100,6 @@ tcu::TestStatus testVkMemoryPropertyFlags(Context& context)
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT	| VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT,
 		VK_MEMORY_PROPERTY_PROTECTED_BIT,
 		VK_MEMORY_PROPERTY_PROTECTED_BIT	| VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-#ifndef CTS_USES_VULKANSC
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT	| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT			| VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT	| VK_MEMORY_PROPERTY_HOST_CACHED_BIT			| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT			| VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT	| VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD,
@@ -2135,7 +2111,6 @@ tcu::TestStatus testVkMemoryPropertyFlags(Context& context)
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT	| VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT			| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT			| VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD	| VK_MEMORY_PROPERTY_DEVICE_UNCACHED_BIT_AMD,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT	| VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT			| VK_MEMORY_PROPERTY_HOST_CACHED_BIT			| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT			| VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD	| VK_MEMORY_PROPERTY_DEVICE_UNCACHED_BIT_AMD,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT	| VK_MEMORY_PROPERTY_RDMA_CAPABLE_BIT_NV
-#endif // CTS_USES_VULKANSC
 	};
 
 	const InstanceInterface&				vki					= context.getInstanceInterface();
@@ -2172,8 +2147,6 @@ void populateMultiplaneTestGroup (tcu::TestCaseGroup* group)
 	populateMultiplaneTestGroup(group, false);
 }
 
-
-#ifndef CTS_USES_VULKANSC
 void populateCreateInfoTestGroup (tcu::TestCaseGroup* group)
 {
 	BufferMemoryRequirementsCreateInfo			bufferTest;
@@ -2186,7 +2159,6 @@ void populateCreateInfoTestGroup (tcu::TestCaseGroup* group)
 	populateMultiplaneTestGroup(multiplaneGroup.get(), true);
 	group->addChild(multiplaneGroup.release());
 }
-#endif // CTS_USES_VULKANSC
 
 } // anonymous
 
@@ -2200,9 +2172,7 @@ tcu::TestCaseGroup* createRequirementsTests (tcu::TestContext& testCtx)
 	requirementsGroup->addChild(createTestGroup(testCtx, "dedicated_allocation",	"Memory requirements tests with extension VK_KHR_dedicated_allocation",		populateDedicatedAllocationTestGroup));
 	requirementsGroup->addChild(createTestGroup(testCtx, "multiplane_image",		"Memory requirements tests with vkGetImagePlaneMemoryRequirements",			populateMultiplaneTestGroup));
 	requirementsGroup->addChild(createTestGroup(testCtx, "memory_property_flags",	"Memory requirements tests with vkGetPhysicalDeviceMemoryProperties",		populateMemoryPropertyFlagsTestGroup));
-#ifndef CTS_USES_VULKANSC
 	requirementsGroup->addChild(createTestGroup(testCtx, "create_info",				"Memory requirements tests with extension VK_KHR_maintenance4",				populateCreateInfoTestGroup));
-#endif // CTS_USES_VULKANSC
 
 	return requirementsGroup.release();
 }

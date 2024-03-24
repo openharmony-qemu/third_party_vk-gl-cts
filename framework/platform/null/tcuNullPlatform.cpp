@@ -81,13 +81,12 @@ Platform::~Platform (void)
 {
 }
 
-vk::Library* Platform::createLibrary (vk::Platform::LibraryType, const char* libraryPath) const
+vk::Library* Platform::createLibrary (void) const
 {
-	DE_UNREF(libraryPath);
 	return vk::createNullDriver();
 }
 
-void Platform::getMemoryLimits (tcu::PlatformMemoryLimits& limits) const
+void Platform::getMemoryLimits (vk::PlatformMemoryLimits& limits) const
 {
 	limits.totalSystemMemory					= 256*1024*1024;
 	limits.totalDeviceLocalMemory				= 0;

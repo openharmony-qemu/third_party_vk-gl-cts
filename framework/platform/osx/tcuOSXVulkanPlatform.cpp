@@ -79,8 +79,8 @@ public:
 class VulkanLibrary : public vk::Library
 {
 public:
-	VulkanLibrary (const char* libraryPath)
-		: m_library	(libraryPath != DE_NULL ? libraryPath : "libvulkan.dylib")
+	VulkanLibrary (void)
+		: m_library	("libvulkan.dylib")
 		, m_driver	(m_library)
 	{
 	}
@@ -119,9 +119,9 @@ bool VulkanPlatform::hasDisplay (vk::wsi::Type wsiType)  const
 
 	return true;
 }
-vk::Library* VulkanPlatform::createLibrary (const char* libraryPath) const
+vk::Library* VulkanPlatform::createLibrary (void) const
 {
-	return new VulkanLibrary(libraryPath);
+	return new VulkanLibrary();
 }
 
 void VulkanPlatform::describePlatform (std::ostream& dst) const
@@ -134,6 +134,16 @@ void VulkanPlatform::describePlatform (std::ostream& dst) const
 
 	dst << "OS: " << sysInfo.sysname << " " << sysInfo.release << " " << sysInfo.version << "\n";
 	dst << "CPU: " << sysInfo.machine << "\n";
+}
+
+void VulkanPlatform::getMemoryLimits (vk::PlatformMemoryLimits& limits) const
+{
+	limits.totalSystemMemory					= 256*1024*1024;
+	limits.totalDeviceLocalMemory				= 128*1024*1024;
+	limits.deviceMemoryAllocationGranularity	= 64*1024;
+	limits.devicePageSize						= 4096;
+	limits.devicePageTableEntrySize				= 8;
+	limits.devicePageTableHierarchyLevels		= 3;
 }
 
 } // osx

@@ -174,7 +174,6 @@ private:
 													 const VkPrimitiveTopology						primitiveTopology);
 
 	bool					checkImage				(VkImage										image,
-													 VkCommandPool									cmdPool,
 													 VkCommandBuffer								cmdBuffer,
 													 const string&									description,
 													 const tcu::Texture2DArray&						referenceFrame);
@@ -328,7 +327,6 @@ tcu::TestStatus CrossStageTestInstance::iterate (void)
 		endCommandBuffer(vk, *cmdBuffer);
 
 		submitCommandsAndWait(vk, vkDevice, m_context.getUniversalQueue(), *cmdBuffer);
-		m_context.resetCommandPoolForVKSC(vkDevice, *cmdPool);
 
 		{
 			const string geometry		= (VK_SHADER_STAGE_GEOMETRY_BIT & (VkShaderStageFlagBits)shadersStagesFlagsBits[stagesNdx]) ? "Geometry->" : "";
@@ -343,26 +341,23 @@ tcu::TestStatus CrossStageTestInstance::iterate (void)
 		if (DECORATION_IN_ALL_SHADERS == m_parameters.testOptions[optionNdx])
 			imageDescription+= "decoration in all shaders | ";
 
-		bool resultComparison = false;
-		if (TEST_TYPE_RELAXEDPRECISION == m_parameters.qualifier)
 		{
-			resultComparison = checkImage(*colorAttachmentImage, *cmdPool, *cmdBuffer, imageDescription+" Expected Pass", *referenceImage1);
-		}
-		else
-		{
-			if (DECORATION_IN_VERTEX == m_parameters.testOptions[optionNdx])
-				resultComparison = checkImage(*colorAttachmentImage, *cmdPool, *cmdBuffer, imageDescription+" Expected Pass", *referenceImage1);
-			else if ((VkShaderStageFlagBits)(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT) == (VkShaderStageFlagBits)shadersStagesFlagsBits[stagesNdx])
-				resultComparison = checkImage(*colorAttachmentImage, *cmdPool, *cmdBuffer, imageDescription+" Expected Pass", *referenceImage2);
+			bool resultComparison = false;
+			if (TEST_TYPE_RELAXEDPRECISION == m_parameters.qualifier)
+			{
+				resultComparison = checkImage(*colorAttachmentImage, *cmdBuffer, imageDescription+" Expected Pass", *referenceImage1);
+			}
 			else
-				resultComparison = !checkImage(*colorAttachmentImage, *cmdPool, *cmdBuffer, imageDescription+" Expected Fail", *referenceImage1);
-		}
+			{
+				if (DECORATION_IN_VERTEX == m_parameters.testOptions[optionNdx])
+					resultComparison = checkImage(*colorAttachmentImage, *cmdBuffer, imageDescription+" Expected Pass", *referenceImage1);
+				else if ((VkShaderStageFlagBits)(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT) == (VkShaderStageFlagBits)shadersStagesFlagsBits[stagesNdx])
+					resultComparison = checkImage(*colorAttachmentImage, *cmdBuffer, imageDescription+" Expected Pass", *referenceImage2);
+				else
+					resultComparison = !checkImage(*colorAttachmentImage, *cmdBuffer, imageDescription+" Expected Fail", *referenceImage1);
+			}
 
-#ifdef CTS_USES_VULKANSC
-		if (m_context.getTestContext().getCommandLine().isSubProcess())
-#endif // CTS_USES_VULKANSC
-		{
-			if (!resultComparison)
+			if(!resultComparison)
 				return tcu::TestStatus::fail("Fail");
 		}
 	}
@@ -525,7 +520,7 @@ Move<VkPipeline> CrossStageTestInstance::makeGraphicsPipeline (const VkRenderPas
 									&depthStencilStateParams);	// const VkPipelineDepthStencilStateCreateInfo*  depthStencilStateCreateInfo
 }
 
-bool CrossStageTestInstance::checkImage (VkImage image, VkCommandPool cmdPool, VkCommandBuffer cmdBuffer, const string& description, const tcu::Texture2DArray& referenceFrame)
+bool CrossStageTestInstance::checkImage (VkImage image, VkCommandBuffer cmdBuffer, const string& description, const tcu::Texture2DArray& referenceFrame)
 {
 	const DeviceInterface&		vk				= m_context.getDeviceInterface();
 	const VkDevice				vkDevice		= m_context.getDevice();
@@ -562,7 +557,6 @@ bool CrossStageTestInstance::checkImage (VkImage image, VkCommandPool cmdPool, V
 	copyImageToBuffer(vk, cmdBuffer, image, *buffer, tcu::IVec2(m_extent.width, m_extent.height), 0u, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, m_extent.depth);
 	endCommandBuffer(vk, cmdBuffer);
 	submitCommandsAndWait(vk, vkDevice, m_context.getUniversalQueue(), cmdBuffer);
-	m_context.resetCommandPoolForVKSC(vkDevice, cmdPool);
 
 	// Read buffer data
 	invalidateAlloc(vk, vkDevice, *bufferAlloc);
@@ -670,6 +664,7 @@ void CrossStageBasicTestsCase::initPrograms (SourceCollections& programCollectio
 		decorations.push_back(Decorations("",
 								//Vertex
 								"OpDecorate %color_out Flat\n"
+								"OpDecorate %color_in Flat\n"
 								"OpDecorate %r_float_out Flat\n"
 								"OpDecorate %rg_float_out Flat\n"
 								"OpDecorate %rgb_float_out Flat\n"
@@ -692,6 +687,7 @@ void CrossStageBasicTestsCase::initPrograms (SourceCollections& programCollectio
 								"OpDecorate %rgba_float_in Flat\n",
 								//Vertex
 								"OpDecorate %color_out Flat\n"
+								"OpDecorate %color_in Flat\n"
 								"OpDecorate %r_float_out Flat\n"
 								"OpDecorate %rg_float_out Flat\n"
 								"OpDecorate %rgb_float_out Flat\n"
@@ -703,6 +699,7 @@ void CrossStageBasicTestsCase::initPrograms (SourceCollections& programCollectio
 		decorations.push_back(Decorations("",
 								//Vertex
 								"OpDecorate %color_out NoPerspective\n"
+								"OpDecorate %color_in NoPerspective\n"
 								"OpDecorate %r_float_out NoPerspective\n"
 								"OpDecorate %rg_float_out NoPerspective\n"
 								"OpDecorate %rgb_float_out NoPerspective\n"
@@ -726,6 +723,7 @@ void CrossStageBasicTestsCase::initPrograms (SourceCollections& programCollectio
 								"OpDecorate %rgba_float_in NoPerspective\n",
 								//Vertex
 								"OpDecorate %color_out NoPerspective\n"
+								"OpDecorate %color_in NoPerspective\n"
 								"OpDecorate %r_float_out NoPerspective\n"
 								"OpDecorate %rg_float_out NoPerspective\n"
 								"OpDecorate %rgb_float_out NoPerspective\n"
@@ -1789,6 +1787,7 @@ void CrossStageInterfaceTestsCase::initPrograms (SourceCollections& programColle
 		decorations.push_back(Decorations("",
 								//Vertex
 								"OpDecorate %color_out Flat\n"
+								"OpDecorate %color_in Flat\n"
 								"OpMemberDecorate %block_out 0 Flat\n"
 								"OpMemberDecorate %block_out 1 Flat\n",
 								""));
@@ -1805,6 +1804,7 @@ void CrossStageInterfaceTestsCase::initPrograms (SourceCollections& programColle
 								"OpMemberDecorate %block_in 1 Flat\n",
 								//Vertex
 								"OpDecorate %color_out Flat\n"
+								"OpDecorate %color_in Flat\n"
 								"OpMemberDecorate %block_out 0 Flat\n"
 								"OpMemberDecorate %block_out 1 Flat\n",
 								""));
@@ -1814,6 +1814,7 @@ void CrossStageInterfaceTestsCase::initPrograms (SourceCollections& programColle
 		decorations.push_back(Decorations("",
 								//Vertex
 								"OpDecorate %color_out NoPerspective\n"
+								"OpDecorate %color_in NoPerspective\n"
 								"OpMemberDecorate %block_out 0 NoPerspective\n"
 								"OpMemberDecorate %block_out 1 NoPerspective\n",
 								""));
@@ -1831,6 +1832,7 @@ void CrossStageInterfaceTestsCase::initPrograms (SourceCollections& programColle
 								"OpMemberDecorate %block_in 1 NoPerspective\n",
 								//Vertex
 								"OpDecorate %color_out NoPerspective\n"
+								"OpDecorate %color_in NoPerspective\n"
 								"OpMemberDecorate %block_out 0 NoPerspective\n"
 								"OpMemberDecorate %block_out 1 NoPerspective\n",
 								""));

@@ -24,33 +24,18 @@
  *//*--------------------------------------------------------------------*/
 
 #include <vector>
-#include <memory>
 #include "vkRef.hpp"
 #include "vkRefUtil.hpp"
 
 namespace vk
 {
-
-struct CommandPoolWithBuffer {
-	Move<VkCommandPool>		cmdPool;
-	Move<VkCommandBuffer>	cmdBuffer;
-
-	CommandPoolWithBuffer(const DeviceInterface& vkd, const VkDevice device, const deUint32 queueFamilyIndex);
-};
-
 Move<VkPipeline> makeComputePipeline (const DeviceInterface&					vk,
 									  const VkDevice							device,
 									  const VkPipelineLayout					pipelineLayout,
 									  const VkPipelineCreateFlags				pipelineFlags,
 									  const VkShaderModule						shaderModule,
 									  const VkPipelineShaderStageCreateFlags	shaderFlags,
-									  const VkSpecializationInfo*				specializationInfo = DE_NULL,
-									  const VkPipelineCache						pipelineCache = DE_NULL);
-
-Move<VkPipeline> makeComputePipeline (const DeviceInterface&	vk,
-									  VkDevice					device,
-									  VkPipelineLayout			pipelineLayout,
-									  VkShaderModule			shaderModule);
+									  const VkSpecializationInfo*				specializationInfo);
 
 Move<VkPipeline> makeGraphicsPipeline (const DeviceInterface&							vk,
 									   const VkDevice									device,
@@ -72,8 +57,7 @@ Move<VkPipeline> makeGraphicsPipeline (const DeviceInterface&							vk,
 									   const VkPipelineDepthStencilStateCreateInfo*		depthStencilStateCreateInfo = DE_NULL,
 									   const VkPipelineColorBlendStateCreateInfo*		colorBlendStateCreateInfo = DE_NULL,
 									   const VkPipelineDynamicStateCreateInfo*			dynamicStateCreateInfo = DE_NULL,
-									   const void*										pNext = DE_NULL,
-									   const VkPipelineCreateFlags						pipelineCreateFlags = 0u);
+									   const void*										pNext = DE_NULL);
 
 Move<VkPipeline> makeGraphicsPipeline (const DeviceInterface&							vk,
 									   const VkDevice									device,
@@ -94,10 +78,8 @@ Move<VkPipeline> makeGraphicsPipeline (const DeviceInterface&							vk,
 									   const VkPipelineDepthStencilStateCreateInfo*		depthStencilStateCreateInfo = DE_NULL,
 									   const VkPipelineColorBlendStateCreateInfo*		colorBlendStateCreateInfo = DE_NULL,
 									   const VkPipelineDynamicStateCreateInfo*			dynamicStateCreateInfo = DE_NULL,
-									   const void*										pNext = DE_NULL,
-									   const VkPipelineCreateFlags						pipelineCreateFlags = 0u);
+									   const void*										pNext = DE_NULL);
 
-#ifndef CTS_USES_VULKANSC
 Move<VkPipeline> makeGraphicsPipeline (const DeviceInterface&							vk,
 									   const VkDevice									device,
 									   const VkPipelineLayout							pipelineLayout,
@@ -112,27 +94,7 @@ Move<VkPipeline> makeGraphicsPipeline (const DeviceInterface&							vk,
 									   const VkPipelineMultisampleStateCreateInfo*		multisampleStateCreateInfo = nullptr,
 									   const VkPipelineDepthStencilStateCreateInfo*		depthStencilStateCreateInfo = nullptr,
 									   const VkPipelineColorBlendStateCreateInfo*		colorBlendStateCreateInfo = nullptr,
-									   const VkPipelineDynamicStateCreateInfo*			dynamicStateCreateInfo = nullptr,
-									   const VkPipelineCreateFlags						pipelineCreateFlags = 0u,
-									   const void*										pNext = nullptr);
-#endif // CTS_USES_VULKANSC
-
-Move<VkPipeline> makeGraphicsPipeline (const DeviceInterface&								vk,
-									   const VkDevice										device,
-									   const VkPipeline										basePipelineHandle,
-									   const VkPipelineLayout								pipelineLayout,
-									   const VkPipelineCreateFlags							pipelineCreateFlags,
-									   const std::vector<VkPipelineShaderStageCreateInfo>&	shaderCreateInfos,
-									   const VkRenderPass									renderPass,
-									   const std::vector<VkViewport>&						viewports,
-									   const std::vector<VkRect2D>&							scissors,
-									   const deUint32										subpass = 0u,
-									   const VkPipelineRasterizationStateCreateInfo*		rasterizationStateCreateInfo = nullptr,
-									   const VkPipelineMultisampleStateCreateInfo*			multisampleStateCreateInfo = nullptr,
-									   const VkPipelineDepthStencilStateCreateInfo*			depthStencilStateCreateInfo = nullptr,
-									   const VkPipelineColorBlendStateCreateInfo*			colorBlendStateCreateInfo = nullptr,
-									   const VkPipelineDynamicStateCreateInfo*				dynamicStateCreateInfo = nullptr,
-									   const void*											pNext = nullptr);
+									   const VkPipelineDynamicStateCreateInfo*			dynamicStateCreateInfo = nullptr);
 
 Move<VkRenderPass> makeRenderPass (const DeviceInterface&				vk,
 								   const VkDevice						device,
@@ -171,35 +133,27 @@ VkBufferCreateInfo makeBufferCreateInfo (const VkDeviceSize			size,
 
 VkBufferCreateInfo makeBufferCreateInfo (const VkDeviceSize				size,
 										 const VkBufferUsageFlags		usage,
-										 const std::vector<deUint32>&	queueFamilyIndices,
-										 const VkBufferCreateFlags		createFlags = 0);
+										 const std::vector<deUint32>&	queueFamilyIndices);
 
 Move<VkPipelineLayout> makePipelineLayout (const DeviceInterface&		vk,
 										   const VkDevice				device,
-										   const VkDescriptorSetLayout	descriptorSetLayout = DE_NULL,
-										   const VkPushConstantRange*	pushConstantRange = nullptr);
-
-Move<VkPipelineLayout> makePipelineLayout (const DeviceInterface&					vk,
-										   const VkDevice							device,
-										   const std::vector<VkDescriptorSetLayout>	&descriptorSetLayouts);
+										   const VkDescriptorSetLayout	descriptorSetLayout = DE_NULL);
 
 Move<VkPipelineLayout> makePipelineLayout (const DeviceInterface&								vk,
 										   const VkDevice										device,
 										   const std::vector<vk::Move<VkDescriptorSetLayout>>	&descriptorSetLayouts);
 
-Move<VkPipelineLayout> makePipelineLayout (const DeviceInterface&				vk,
-										   const VkDevice						device,
-										   const deUint32						setLayoutCount,
-										   const VkDescriptorSetLayout*			descriptorSetLayout,
-										   const VkPipelineLayoutCreateFlags	flags = 0u);
+Move<VkPipelineLayout> makePipelineLayout (const DeviceInterface&		vk,
+										   const VkDevice				device,
+										   const deUint32				setLayoutCount,
+										   const VkDescriptorSetLayout*	descriptorSetLayout);
 
-Move<VkPipelineLayout> makePipelineLayout (const DeviceInterface&				vk,
-										   const VkDevice						device,
-										   const deUint32						setLayoutCount,
-										   const VkDescriptorSetLayout*			descriptorSetLayout,
-										   const deUint32						pushConstantRangeCount,
-										   const VkPushConstantRange*			pPushConstantRanges,
-										   const VkPipelineLayoutCreateFlags	flags = 0u);
+Move<VkPipelineLayout> makePipelineLayout (const DeviceInterface&		vk,
+										   const VkDevice				device,
+										   const deUint32				setLayoutCount,
+										   const VkDescriptorSetLayout*	descriptorSetLayout,
+										   const deUint32               pushConstantRangeCount,
+										   const VkPushConstantRange*   pPushConstantRanges);
 
 Move<VkFramebuffer> makeFramebuffer (const DeviceInterface&	vk,
 									 const VkDevice			device,

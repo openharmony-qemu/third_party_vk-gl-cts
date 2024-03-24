@@ -696,10 +696,9 @@ tcu::TestStatus SamplerIndexingCaseInstance::iterate (void)
 	const tcu::Sampler				refSampler			= isShadowSampler(m_samplerType)
 																? tcu::Sampler(tcu::Sampler::CLAMP_TO_EDGE, tcu::Sampler::CLAMP_TO_EDGE, tcu::Sampler::CLAMP_TO_EDGE,
 																				filterMode, filterMode, 0.0f, false /* non-normalized */,
-																				tcu::Sampler::COMPAREMODE_LESS, 0, tcu::Vec4(0.0f), true)
+																				tcu::Sampler::COMPAREMODE_LESS)
 																: tcu::Sampler(tcu::Sampler::CLAMP_TO_EDGE, tcu::Sampler::CLAMP_TO_EDGE, tcu::Sampler::CLAMP_TO_EDGE,
-																				filterMode, filterMode, 0.0f, true,
-																				tcu::Sampler::COMPAREMODE_NONE, 0, tcu::Vec4(0.0f), true);
+																				filterMode, filterMode);
 
 	const DeviceInterface&			vkd					= m_context.getDeviceInterface();
 	const VkDevice					device				= m_context.getDevice();
