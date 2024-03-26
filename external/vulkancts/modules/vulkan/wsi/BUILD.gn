@@ -27,8 +27,6 @@ ohos_source_set("deqp_vk_wsi_source") {
   sources = [
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/wsi/vktNativeObjectsUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/wsi/vktNativeObjectsUtil.hpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/wsi/vktWsiAcquireDrmDisplayTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/wsi/vktWsiAcquireDrmDisplayTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/wsi/vktWsiColorSpaceTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/wsi/vktWsiColorSpaceTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/wsi/vktWsiDisplayControlTests.cpp",

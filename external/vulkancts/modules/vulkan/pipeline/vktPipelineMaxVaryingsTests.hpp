@@ -25,14 +25,13 @@
  *//*--------------------------------------------------------------------*/
 
 #include "vktTestCase.hpp"
-#include "vkPipelineConstructionUtil.hpp"
 
 namespace vkt
 {
 namespace pipeline
 {
 
-tcu::TestCaseGroup* createMaxVaryingsTests (tcu::TestContext& testCtx, vk::PipelineConstructionType pipelineConstructionType);
+tcu::TestCaseGroup* createMaxVaryingsTests (tcu::TestContext& testCtx);
 
 } // pipeline
 } // vkt

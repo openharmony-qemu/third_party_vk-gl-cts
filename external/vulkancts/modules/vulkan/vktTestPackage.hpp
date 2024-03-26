@@ -40,8 +40,6 @@ public:
 	tcu::TestCaseExecutor*		createExecutor		(void) const;
 };
 
-#ifdef CTS_USES_VULKAN
-
 class TestPackage : public BaseTestPackage
 {
 public:
@@ -59,21 +57,6 @@ public:
 
 	virtual void				init					 (void);
 };
-
-#endif
-
-#ifdef CTS_USES_VULKANSC
-
-class TestPackageSC : public BaseTestPackage
-{
-public:
-								TestPackageSC		(tcu::TestContext& testCtx);
-	virtual						~TestPackageSC		(void);
-
-	virtual void				init				(void);
-};
-
-#endif // CTS_USES_VULKANSC
 
 } // vkt
 

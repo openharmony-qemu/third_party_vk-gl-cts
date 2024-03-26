@@ -258,10 +258,9 @@ Result Compile(Pipeline::ShaderInfo* shader_info,
   for (const auto& option : shader_info->GetCompileOptions()) {
     options += option + " ";
   }
-  std::string error_log;
   if (clspv::CompileFromSourceString(src_str, /* sampler map */ "", options,
-                                     generated_binary, &error_log)) {
-    return Result("Clspv compile error: " + error_log);
+                                     generated_binary)) {
+    return Result("Clspv compile failed");
   }
 
   // Parse the reflection instructions.

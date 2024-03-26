@@ -89,12 +89,7 @@ static const VkExtent3D RESOLUTION = { RESOLUTION_width, RESOLUTION_height, 1 };
 
 static const VkExtent3D			smallImageExtent				= { 4, 4, 1 };
 static const VkExtent3D			bigImageExtent					= { 32, 32, 1 };
-
-#ifndef CTS_USES_VULKANSC
-static const VkDescriptorType	VK_DESCRIPTOR_TYPE_UNDEFINED	= VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK_EXT;
-#else
-static const VkDescriptorType	VK_DESCRIPTOR_TYPE_UNDEFINED	= VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
-#endif
+static const VkDescriptorType	VK_DESCRIPTOR_TYPE_UNDEFINED = VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK_EXT;
 
 template<deUint32 BindingNumber>
 struct Binding
@@ -559,23 +554,20 @@ Move<VkDescriptorSetLayout>	CommonDescriptorInstance::createDescriptorSetLayout 
 
 	bool optional = (m_testParams.additionalDescriptorBinding != BINDING_Undefined) && (m_testParams.additionalDescriptorType != VK_DESCRIPTOR_TYPE_UNDEFINED);
 
-	const VkShaderStageFlags bindingStageFlags = (m_testParams.descriptorType == VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT) ?
-													VkShaderStageFlags{VK_SHADER_STAGE_FRAGMENT_BIT} : m_testParams.stageFlags;
-
 	const VkDescriptorSetLayoutBinding	bindings[] =
 	{
 		{
 			m_testParams.descriptorBinding,				// binding
 			m_testParams.descriptorType,				// descriptorType
 			descriptorCount,							// descriptorCount
-			bindingStageFlags,							// stageFlags
+			m_testParams.stageFlags,					// stageFlags
 			DE_NULL,									// pImmutableSamplers
 		},
 		{
 			m_testParams.additionalDescriptorBinding,	// binding
 			m_testParams.additionalDescriptorType,		// descriptorType
 			1,											// descriptorCount
-			bindingStageFlags,							// stageFlags
+			m_testParams.stageFlags,					// stageFlags
 			DE_NULL,									// pImmutableSamplers
 		}
 	};
@@ -1430,7 +1422,6 @@ void CommonDescriptorInstance::iterateCommandEnd					(IterateCommonVariables&			
 		iterateCollectResults(programResult, variables, true);
 		iterateCollectResults(referenceResult, variables, false);
 	}
-	m_context.resetCommandPoolForVKSC(m_vkd, *m_commandPool);
 }
 
 bool CommonDescriptorInstance::iterateVerifyResults			(IterateCommonVariables&					variables,
@@ -3632,11 +3623,7 @@ void SamplerInstance::createAndPopulateDescriptors					(IterateCommonVariables&	
 		m_testParams.usesMipMaps ? tcu::Sampler::LINEAR_MIPMAP_NEAREST : tcu::Sampler::NEAREST,	// minFilter
 		m_testParams.usesMipMaps ? tcu::Sampler::LINEAR_MIPMAP_NEAREST : tcu::Sampler::NEAREST,	// magFilter
 		0.0f,																					// lodTreshold
-		true,																					// normalizeCoords
-		tcu::Sampler::COMPAREMODE_NONE,															// compare
-		0,																						// compareChannel
-		tcu::Vec4(0.0f, 0.0f, 0.0f, 0.0f),														// borderColor
-		true);																					// seamlessCubeMap
+		true);																					// normalizeCoords
 	const VkSamplerCreateInfo createInfo = vk::mapSampler(sampler, vk::mapVkFormat(m_colorFormat));
 	variables.descriptorSamplers.resize(variables.validDescriptorCount);
 
@@ -3723,11 +3710,7 @@ void SampledImageInstance::createAndPopulateDescriptors				(IterateCommonVariabl
 			m_testParams.usesMipMaps ? tcu::Sampler::NEAREST_MIPMAP_NEAREST : tcu::Sampler::NEAREST,	// minFilter
 			m_testParams.usesMipMaps ? tcu::Sampler::NEAREST_MIPMAP_NEAREST : tcu::Sampler::NEAREST,	// magFilter
 			0.0f,																						// lodTreshold
-			true,																						// normalizeCoords
-			tcu::Sampler::COMPAREMODE_NONE,																// compare
-			0,																							// compareChannel
-			tcu::Vec4(0.0f, 0.0f, 0.0f, 0.0f),															// borderColor
-			true);																						// seamlessCubeMap
+			true);																						// normalizeCoords
 		const VkSamplerCreateInfo createInfo = vk::mapSampler(sampler, vk::mapVkFormat(m_colorFormat));
 		variables.descriptorSamplers.push_back(ut::SamplerSp(new Move<VkSampler>(vk::createSampler(m_vki, m_vkd, &createInfo))));
 	}
@@ -3841,11 +3824,7 @@ void CombinedImageInstance::createAndPopulateDescriptors			(IterateCommonVariabl
 		m_testParams.usesMipMaps ? tcu::Sampler::NEAREST_MIPMAP_NEAREST : tcu::Sampler::NEAREST,	// minFilter
 		m_testParams.usesMipMaps ? tcu::Sampler::NEAREST_MIPMAP_NEAREST : tcu::Sampler::NEAREST,	// magFilter
 		0.0f,																						// lodTreshold
-		true,																						// normalizeCoords
-		tcu::Sampler::COMPAREMODE_NONE,																// compare
-		0,																							// compareChannel
-		tcu::Vec4(0.0f, 0.0f, 0.0f, 0.0f),															// borderColor
-		true);																						// seamlessCubeMap
+		true);																						// normalizeCoords
 	const VkSamplerCreateInfo	createInfo = vk::mapSampler(sampler, vk::mapVkFormat(m_colorFormat));
 	variables.descriptorSamplers.push_back(ut::SamplerSp(new Move<VkSampler>(vk::createSampler(m_vki, m_vkd, &createInfo))));
 
@@ -4108,7 +4087,7 @@ public:
 	{
 		context.requireDeviceFunctionality("VK_EXT_descriptor_indexing");
 
-		const vk::VkPhysicalDeviceDescriptorIndexingFeatures& feats = context.getDescriptorIndexingFeatures();
+		const vk::VkPhysicalDeviceDescriptorIndexingFeaturesEXT& feats = context.getDescriptorIndexingFeatures();
 
 		switch (m_testCaseParams.descriptorType)
 		{
@@ -4200,7 +4179,7 @@ public:
 
 		std::string(*genShaderSource)(VkShaderStageFlagBits, const TestCaseParams&, bool) = &CommonDescriptorInstance::getShaderAsm;
 
-		deUint32 vulkan_version = VK_MAKE_API_VERSION(0, 1, 2, 0);
+		deUint32 vulkan_version = VK_MAKE_VERSION(1, 2, 0);
 		vk::SpirvVersion spirv_version = vk::SPIRV_VERSION_1_4;
 		vk::SpirVAsmBuildOptions asm_options(vulkan_version, spirv_version);
 

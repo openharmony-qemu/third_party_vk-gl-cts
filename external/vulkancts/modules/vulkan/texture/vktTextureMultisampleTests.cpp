@@ -38,7 +38,6 @@ namespace
 tcu::TestCaseGroup* createAtomicTests (tcu::TestContext& testCtx)
 {
 	de::MovePtr<tcu::TestCaseGroup> atomic		(new tcu::TestCaseGroup(testCtx, "atomic", "Test atomic oprerations on multisample textures"));
-#ifndef CTS_USES_VULKANSC
 	static const char				dataDir[]	= "texture/multisample/atomic";
 
 	static const std::string		cases[]		=
@@ -58,7 +57,6 @@ tcu::TestCaseGroup* createAtomicTests (tcu::TestContext& testCtx)
 
 		atomic->addChild(testCase);
 	}
-#endif
 
 	return atomic.release();
 }

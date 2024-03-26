@@ -27,7 +27,7 @@ ohos_source_set("deqp-gles31_source") {
     "//third_party/vk-gl-cts/modules/gles31/tes31InfoTests.cpp",
     "//third_party/vk-gl-cts/modules/gles31/tes31TestCase.cpp",
     "//third_party/vk-gl-cts/modules/gles31/tes31TestPackage.cpp",
-    "//third_party/vk-gl-cts/modules/gles31/tgl45es31TestPackage.cpp",
+    "//third_party/vk-gl-cts/modules/gles31/tgl45TestPackage.cpp",
   ]
   include_dirs = [
     "//third_party/vk-gl-cts/modules/glshared",
@@ -47,6 +47,26 @@ ohos_source_set("deqp-gles31_source") {
   ]
 
   configs = [ ":deqp-gles31_config" ]
+
+  #   lib_dirs = [
+  #     "//third_party/vk-gl-cts/outlibs"
+  #   ]
+  #   libs = [
+  #     "png",
+  #     "z",
+  #     # "glslang",
+  #     # "SPIRV",
+  #     # "SPVRemapper",
+  #     # "spirv-tools",
+  #     # "spirv-tools-link",
+  #     # "spirv-tools-lint",
+  #     # "spirv-tools-opt",
+  #     # "spirv-tools-reduce",
+  #     # "MachineIndependent",
+  #     # "OGLCompiler",
+  #     # "OSDependent",
+  #     # "GenericCodeGen",
+  #   ]
 }
 
 ohos_static_library("libdeqp-gles31") {

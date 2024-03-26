@@ -25,14 +25,14 @@
  *//*--------------------------------------------------------------------*/
 
 #include "vktTestCase.hpp"
-#include "vktRenderPassGroupParams.hpp"
+#include "vktRenderPassTestsUtil.hpp"
 
 namespace vkt
 {
 namespace renderpass
 {
 
-tcu::TestCaseGroup* createRenderPassLoadStoreOpNoneTests (tcu::TestContext& testCtx, const SharedGroupParams groupParams);
+tcu::TestCaseGroup* createRenderPassLoadStoreOpNoneTests (tcu::TestContext& testCtx, const RenderingType renderingType);
 
 } // renderpass
 } // vkt

@@ -415,26 +415,6 @@ tcu::TestNode::IterateResult StandardPageSizesTestCase::iterate()
 			const PageSizePair&   format = *formIter;
 			const PageSizeStruct& page   = format.second;
 
-			if (target == GL_TEXTURE_BUFFER) {
-				/* filter out invalid texture buffer formats according to ARB_texture_buffer_object */
-				switch (format.first) {
-				case GL_RGB10_A2:
-				case GL_RGB10_A2UI:
-				case GL_R11F_G11F_B10F:
-				case GL_RGB9_E5:
-				case GL_RGB565:
-				case GL_R8_SNORM:
-				case GL_RG8_SNORM:
-				case GL_RGBA8_SNORM:
-				case GL_R16_SNORM:
-				case GL_RG16_SNORM:
-				case GL_RGBA16_SNORM:
-					continue;
-				default:
-					break;
-				}
-			}
-
 			GLint pageSizeX;
 			GLint pageSizeY;
 			GLint pageSizeZ;
@@ -596,7 +576,7 @@ tcu::TestNode::IterateResult SparseTexture2CommitmentTestCase::iterate()
  * @return target    Structure of token strings
  */
 SparseTexture2CommitmentTestCase::TokenStrings SparseTexture2CommitmentTestCase::createShaderTokens(
-	GLint target, GLint verifyTarget, GLint format, GLint sample, const std::string outputBase, const std::string inputBase)
+	GLint target, GLint format, GLint sample, const std::string outputBase, const std::string inputBase)
 {
 	TokenStrings s;
 	std::string  prefix;
@@ -867,18 +847,21 @@ SparseTexture2CommitmentTestCase::TokenStrings SparseTexture2CommitmentTestCase:
 
 	if (target == GL_TEXTURE_1D)
 	{
+		s.outputType = "u" + outputBase + "2D";
 		s.inputType  = prefix + inputBase + "1D";
 		s.pointType  = "int";
 		s.pointDef   = "gl_WorkGroupID.x";
 	}
 	else if (target == GL_TEXTURE_1D_ARRAY)
 	{
+		s.outputType = "u" + outputBase + "2D_ARRAY";
 		s.inputType  = prefix + inputBase + "1DArray";
 		s.pointType  = "ivec2";
 		s.pointDef   = "gl_WorkGroupID.x, gl_WorkGroupID.z";
 	}
 	else if (target == GL_TEXTURE_2D_ARRAY)
 	{
+		s.outputType = "u" + outputBase + "2DArray";
 		s.inputType  = prefix + inputBase + "2DArray";
 		s.pointType  = "ivec3";
 		s.pointDef   = "gl_WorkGroupID.x, gl_WorkGroupID.y, gl_WorkGroupID.z";
@@ -892,12 +875,14 @@ SparseTexture2CommitmentTestCase::TokenStrings SparseTexture2CommitmentTestCase:
 	}
 	else if (target == GL_TEXTURE_CUBE_MAP)
 	{
+		s.outputType = "u" + outputBase + "2DArray";
 		s.inputType  = prefix + inputBase + "Cube";
 		s.pointType  = "ivec3";
 		s.pointDef   = "gl_WorkGroupID.x, gl_WorkGroupID.y, gl_WorkGroupID.z % 6";
 	}
 	else if (target == GL_TEXTURE_CUBE_MAP_ARRAY)
 	{
+		s.outputType = "u" + outputBase + "2DArray";
 		s.inputType  = prefix + inputBase + "CubeArray";
 		s.pointType  = "ivec3";
 		s.pointDef   = "gl_WorkGroupID.x, gl_WorkGroupID.y, gl_WorkGroupID.z";
@@ -913,18 +898,11 @@ SparseTexture2CommitmentTestCase::TokenStrings SparseTexture2CommitmentTestCase:
 	}
 	else if (target == GL_TEXTURE_2D_MULTISAMPLE_ARRAY)
 	{
+		s.outputType = "u" + outputBase + "2DArray";
 		s.inputType  = prefix + inputBase + "2DMSArray";
 		s.pointType  = "ivec3";
 		s.pointDef   = "gl_WorkGroupID.x, gl_WorkGroupID.y, gl_WorkGroupID.z";
 		s.sampleDef  = ", " + de::toString(sample);
-	}
-	if (verifyTarget == GL_TEXTURE_2D)
-	{
-		s.outputType = "u" + outputBase + "2D";
-	}
-	else
-	{
-		s.outputType = "u" + outputBase + "2DArray";
 	}
 
 	return s;
@@ -967,8 +945,13 @@ bool SparseTexture2CommitmentTestCase::sparseAllocateTexture(const Functions& gl
 
 	prepareTexture(gl, target, format, texture);
 
+	GLint maxLevels;
 	gl.texParameteri(target, GL_TEXTURE_SPARSE_ARB, GL_TRUE);
 	GLU_EXPECT_NO_ERROR(gl.getError(), "texParameteri error occurred for GL_TEXTURE_SPARSE_ARB");
+	gl.getTexParameteriv(target, GL_NUM_SPARSE_LEVELS_ARB, &maxLevels);
+	GLU_EXPECT_NO_ERROR(gl.getError(), "glGetTexParameteriv");
+	if (levels > maxLevels)
+		levels = maxLevels;
 
 	//GL_TEXTURE_RECTANGLE, GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_2D_MULTISAMPLE_ARRAY can have only one level
 	if (target != GL_TEXTURE_RECTANGLE && target != GL_TEXTURE_2D_MULTISAMPLE &&
@@ -1085,12 +1068,7 @@ bool SparseTexture2CommitmentTestCase::writeDataToTexture(const Functions& gl, G
 				std::string shader = st2_compute_textureFill;
 
 				// Adjust shader source to texture format
-				GLint verifyTarget;
-				if (target == GL_TEXTURE_2D_MULTISAMPLE || target == GL_TEXTURE_2D || target == GL_TEXTURE_RECTANGLE)
-					verifyTarget = GL_TEXTURE_2D;
-				else
-					verifyTarget = GL_TEXTURE_2D_ARRAY;
-				TokenStrings s = createShaderTokens(target, verifyTarget, format, sample);
+				TokenStrings s = createShaderTokens(target, format, sample);
 
 				replaceToken("<INPUT_TYPE>", s.inputType.c_str(), shader);
 				replaceToken("<POINT_TYPE>", s.pointType.c_str(), shader);
@@ -1108,7 +1086,7 @@ bool SparseTexture2CommitmentTestCase::writeDataToTexture(const Functions& gl, G
 				{
 					gl.useProgram(program.getProgram());
 					GLU_EXPECT_NO_ERROR(gl.getError(), "glUseProgram");
-					gl.bindImageTexture(0 /* unit */, texture, level /* level */, depth > 1 /* layered */, 0 /* layer */,
+					gl.bindImageTexture(0 /* unit */, texture, level /* level */, GL_FALSE /* layered */, 0 /* layer */,
 										GL_WRITE_ONLY, format);
 					GLU_EXPECT_NO_ERROR(gl.getError(), "glBindImageTexture");
 					gl.uniform1i(1, 0 /* image_unit */);
@@ -1260,7 +1238,7 @@ bool SparseTexture2CommitmentTestCase::verifyTextureData(const Functions& gl, GL
 
 		// Create verifying texture
 		GLint verifyTarget;
-		if (target == GL_TEXTURE_2D_MULTISAMPLE || target == GL_TEXTURE_2D || target == GL_TEXTURE_RECTANGLE)
+		if (target == GL_TEXTURE_2D_MULTISAMPLE)
 			verifyTarget = GL_TEXTURE_2D;
 		else
 			verifyTarget = GL_TEXTURE_2D_ARRAY;
@@ -1283,7 +1261,7 @@ bool SparseTexture2CommitmentTestCase::verifyTextureData(const Functions& gl, GL
 			std::string shader = st2_compute_textureVerify;
 
 			// Adjust shader source to texture format
-			TokenStrings s = createShaderTokens(target, verifyTarget, format, sample);
+			TokenStrings s = createShaderTokens(target, format, sample);
 
 			replaceToken("<OUTPUT_TYPE>", s.outputType.c_str(), shader);
 			replaceToken("<FORMAT>", s.format.c_str(), shader);
@@ -1337,14 +1315,8 @@ bool SparseTexture2CommitmentTestCase::verifyTextureData(const Functions& gl, GL
 						{
 							GLubyte* dataRegion	= exp_data + ((x + y * width) + z * width * height);
 							GLubyte* outDataRegion = out_data + ((x + y * width) + z * width * height);
-							if (dataRegion[0] != outDataRegion[0]) {
-								m_testCtx.getLog() << tcu::TestLog::Message << mLog.str() <<
-									"Error detected at " << x << "," << y << "," << z << " for sample " << sample <<
-									": expected [" << (unsigned)dataRegion[0] << "] got [" <<
-									(unsigned)outDataRegion[0] << "]" << tcu::TestLog::EndMessage;
+							if (dataRegion[0] != outDataRegion[0])
 								result = false;
-								goto out;
-							}
 						}
 			}
 			else
@@ -1356,7 +1328,7 @@ bool SparseTexture2CommitmentTestCase::verifyTextureData(const Functions& gl, GL
 				result = false;
 			}
 		}
-out:
+
 		Texture::Delete(gl, verifyTexture);
 	}
 
@@ -1544,31 +1516,6 @@ bool UncommittedRegionsAccessTestCase::UncommittedReads(const Functions& gl, GLi
 	if (result && level == 0 && target != GL_TEXTURE_RECTANGLE && target != GL_TEXTURE_2D_MULTISAMPLE &&
 		target != GL_TEXTURE_2D_MULTISAMPLE_ARRAY)
 	{
-		/* Khronos bugzilla #9471 states that mipmap generation with integer formats
-		 * is unsupported, so skip this test
-		 */
-		switch (format) {
-		case GL_RGB10_A2UI:
-		case GL_R8I:
-		case GL_R8UI:
-		case GL_R16I:
-		case GL_R16UI:
-		case GL_R32I:
-		case GL_R32UI:
-		case GL_RG8I:
-		case GL_RG8UI:
-		case GL_RG16I:
-		case GL_RG16UI:
-		case GL_RG32I:
-		case GL_RG32UI:
-		case GL_RGBA8I:
-		case GL_RGBA8UI:
-		case GL_RGBA16I:
-		case GL_RGBA16UI:
-		case GL_RGBA32I:
-		case GL_RGBA32UI:
-		   return result;
-		}
 		mLog << "Mipmap Generate - ";
 		Texture::Bind(gl, texture, target);
 		gl.generateMipmap(target);
@@ -1780,25 +1727,15 @@ bool UncommittedRegionsAccessTestCase::verifyTextureDataExtended(const Functions
 		GLU_EXPECT_NO_ERROR(gl.getError(), "Texture::GetData");
 
 		//Verify only uncommitted region
-		for (GLint x = widthCommitted; result && x < width; ++x)
-			for (GLint y = 0; result && y < height; ++y)
-				for (GLint z = 0; result && z < depth; ++z)
+		for (GLint x = widthCommitted; x < width; ++x)
+			for (GLint y = 0; y < height; ++y)
+				for (GLint z = 0; z < depth; ++z)
 				{
 					int		 pixelSize	 = mState.format.getPixelSize();
 					GLubyte* dataRegion	= exp_data + ((x + y * width) * pixelSize);
 					GLubyte* outDataRegion = out_data + ((x + y * width) * pixelSize);
-					if (deMemCmp(dataRegion, outDataRegion, pixelSize) != 0) {
-						mLog <<
-							"Error detected at " << x << "," << y << "," << z <<
-							": expected [ ";
-						for (int e = 0; e < pixelSize; e++)
-							mLog << (unsigned)dataRegion[e] << " ";
-						mLog << "] got [ ";
-						for (int e = 0; e < pixelSize; e++)
-							mLog <<(unsigned)outDataRegion[e] << " ";
-						mLog << "] ";
+					if (deMemCmp(dataRegion, outDataRegion, pixelSize) != 0)
 						result = false;
-					}
 				}
 	}
 	// Verify texture using API glGetTexImage* (Only cube map as it has to be verified for subtargets)
@@ -1836,25 +1773,15 @@ bool UncommittedRegionsAccessTestCase::verifyTextureDataExtended(const Functions
 			GLU_EXPECT_NO_ERROR(gl.getError(), "Texture::GetData");
 
 			//Verify only uncommitted region
-			for (GLint x = widthCommitted; result && x < width; ++x)
-				for (GLint y = 0; result && y < height; ++y)
-					for (GLint z = 0; result && z < depth; ++z)
+			for (GLint x = widthCommitted; x < width; ++x)
+				for (GLint y = 0; y < height; ++y)
+					for (GLint z = 0; z < depth; ++z)
 					{
 						int		 pixelSize	 = mState.format.getPixelSize();
 						GLubyte* dataRegion	= exp_data + ((x + y * width) * pixelSize);
 						GLubyte* outDataRegion = out_data + ((x + y * width) * pixelSize);
-						if (deMemCmp(dataRegion, outDataRegion, pixelSize) != 0) {
-							mLog <<
-								"Error detected at " << x << "," << y << "," << z <<
-								": expected [ ";
-							for (int e = 0; e < pixelSize; e++)
-								mLog << (unsigned)dataRegion[e] << " ";
-							mLog << "] got [ ";
-							for (int e = 0; e < pixelSize; e++)
-								mLog <<(unsigned)outDataRegion[e] << " ";
-							mLog << "] ";
+						if (deMemCmp(dataRegion, outDataRegion, pixelSize) != 0)
 							result = false;
-						}
 					}
 
 			if (!result)
@@ -1866,15 +1793,13 @@ bool UncommittedRegionsAccessTestCase::verifyTextureDataExtended(const Functions
 	{
 		// Create verifying texture
 		GLint verifyTarget;
-		if (target == GL_TEXTURE_2D_MULTISAMPLE || target == GL_TEXTURE_2D || target == GL_TEXTURE_RECTANGLE)
+		if (target == GL_TEXTURE_2D_MULTISAMPLE)
 			verifyTarget = GL_TEXTURE_2D;
 		else
 			verifyTarget = GL_TEXTURE_2D_ARRAY;
 
 		if (target == GL_TEXTURE_CUBE_MAP)
 			depth = depth * 6;
-		if (depth == 1 && mState.samples == 1)
-			target = GL_TEXTURE_2D;
 
 		GLint texSize = width * height * depth;
 
@@ -1906,7 +1831,7 @@ bool UncommittedRegionsAccessTestCase::verifyTextureDataExtended(const Functions
 			std::string shader = st2_compute_textureVerify;
 
 			// Adjust shader source to texture format
-			TokenStrings s = createShaderTokens(target, verifyTarget, format, sample);
+			TokenStrings s = createShaderTokens(target, format, sample);
 
 			replaceToken("<OUTPUT_TYPE>", s.outputType.c_str(), shader);
 			replaceToken("<FORMAT>", s.format.c_str(), shader);
@@ -1930,14 +1855,14 @@ bool UncommittedRegionsAccessTestCase::verifyTextureDataExtended(const Functions
 				gl.bindImageTexture(0, //unit
 									verifyTexture,
 									0,		  //level
-									depth > 1, //layered
+									GL_FALSE, //layered
 									0,		  //layer
 									GL_WRITE_ONLY, GL_R8UI);
 				GLU_EXPECT_NO_ERROR(gl.getError(), "glBindImageTexture");
 				gl.bindImageTexture(1, //unit
 									texture,
 									level,	//level
-									depth > 1, //layered
+									GL_FALSE, //layered
 									0,		  //layer
 									GL_READ_ONLY, format);
 				GLU_EXPECT_NO_ERROR(gl.getError(), "glBindImageTexture");
@@ -1960,14 +1885,8 @@ bool UncommittedRegionsAccessTestCase::verifyTextureDataExtended(const Functions
 						{
 							GLubyte* dataRegion	= exp_data + ((x + y * width) + z * width * height);
 							GLubyte* outDataRegion = out_data + ((x + y * width) + z * width * height);
-							if (dataRegion[0] != outDataRegion[0]) {
-								m_testCtx.getLog() << tcu::TestLog::Message << mLog.str() <<
-									"Error detected at " << x << "," << y << "," << z << " for sample " << sample <<
-									": expected [" << (unsigned)dataRegion[0] << "] got [" <<
-									(unsigned)outDataRegion[0] << "]" << tcu::TestLog::EndMessage;
+							if (dataRegion[0] != outDataRegion[0])
 								result = false;
-								goto out;
-							}
 						}
 			}
 			else
@@ -1979,7 +1898,7 @@ bool UncommittedRegionsAccessTestCase::verifyTextureDataExtended(const Functions
 				result = false;
 			}
 		}
-out:
+
 		Texture::Delete(gl, verifyTexture);
 	}
 
@@ -2019,14 +1938,10 @@ bool UncommittedRegionsAccessTestCase::verifyAtomicOperations(const Functions& g
 
 	// Create verifying texture
 	GLint verifyTarget;
-	if (target == GL_TEXTURE_2D_MULTISAMPLE || target == GL_TEXTURE_2D || target == GL_TEXTURE_RECTANGLE)
+	if (target == GL_TEXTURE_2D_MULTISAMPLE)
 		verifyTarget = GL_TEXTURE_2D;
 	else
 		verifyTarget = GL_TEXTURE_2D_ARRAY;
-	if (target == GL_TEXTURE_CUBE_MAP)
-		depth = depth * 6;
-	if (depth == 1 && mState.samples == 1)
-		target = GL_TEXTURE_2D;
 
 	GLint texSize = width * height * depth;
 
@@ -2058,7 +1973,7 @@ bool UncommittedRegionsAccessTestCase::verifyAtomicOperations(const Functions& g
 		std::string shader = st2_compute_atomicVerify;
 
 		// Adjust shader source to texture format
-		TokenStrings s		  = createShaderTokens(target, verifyTarget, format, sample);
+		TokenStrings s		  = createShaderTokens(target, format, sample);
 		std::string  dataType = (s.returnType == "ivec4" ? "int" : "uint");
 
 		replaceToken("<OUTPUT_TYPE>", s.outputType.c_str(), shader);
@@ -2082,14 +1997,14 @@ bool UncommittedRegionsAccessTestCase::verifyAtomicOperations(const Functions& g
 			gl.bindImageTexture(0, //unit
 								verifyTexture,
 								0,		  //level
-								depth > 1, //layered
+								GL_FALSE, //layered
 								0,		  //layer
 								GL_WRITE_ONLY, GL_R8UI);
 			GLU_EXPECT_NO_ERROR(gl.getError(), "glBindImageTexture");
 			gl.bindImageTexture(1, //unit
 								texture,
 								level,	//level
-								depth > 1, //layered
+								GL_FALSE, //layered
 								0,		  //layer
 								GL_READ_ONLY, format);
 			GLU_EXPECT_NO_ERROR(gl.getError(), "glBindImageTexture");
@@ -2114,14 +2029,11 @@ bool UncommittedRegionsAccessTestCase::verifyAtomicOperations(const Functions& g
 					{
 						GLubyte* dataRegion	= exp_data + ((x + y * width) + z * width * height);
 						GLubyte* outDataRegion = out_data + ((x + y * width) + z * width * height);
-							if (dataRegion[0] != outDataRegion[0]) {
-								m_testCtx.getLog() << tcu::TestLog::Message << mLog.str() <<
-									"Error detected at " << x << "," << y << "," << z << " for sample " << sample <<
-									": expected [" << (unsigned)dataRegion[0] << "] got [" <<
-									(unsigned)outDataRegion[0] << "]" << tcu::TestLog::EndMessage;
-								result = false;
-								goto out;
-							}
+						if (dataRegion[0] != outDataRegion[0])
+						{
+							printf("%d:%d ", dataRegion[0], outDataRegion[0]);
+							result = false;
+						}
 					}
 		}
 		else
@@ -2133,7 +2045,7 @@ bool UncommittedRegionsAccessTestCase::verifyAtomicOperations(const Functions& g
 			result = false;
 		}
 	}
-out:
+
 	Texture::Delete(gl, verifyTexture);
 
 	return result;
@@ -2381,7 +2293,7 @@ void SparseTexture2LookupTestCase::init()
 	f.allowedTargets.insert(GL_TEXTURE_RECTANGLE);
 	mFunctions.push_back(f);
 
-	f = FunctionToken("sparseTextureGatherOffsetsARB", "<REFZ_DEF>, <OFFSET_TYPE><OFFSET_DIM>[4](<OFFSET_TYPE><OFFSET_DIM>(0),<OFFSET_TYPE><OFFSET_DIM>(0),<OFFSET_TYPE><OFFSET_DIM>(0),<OFFSET_TYPE><OFFSET_DIM>(0))");
+	f = FunctionToken("sparseTextureGatherOffsetsARB", "<REFZ_DEF>, offsetsArray");
 	f.allowedTargets.insert(GL_TEXTURE_2D);
 	f.allowedTargets.insert(GL_TEXTURE_2D_ARRAY);
 	f.allowedTargets.insert(GL_TEXTURE_RECTANGLE);
@@ -2485,7 +2397,7 @@ tcu::TestNode::IterateResult SparseTexture2LookupTestCase::iterate()
  * @return Returns extended token strings structure.
  */
 SparseTexture2LookupTestCase::TokenStringsExt SparseTexture2LookupTestCase::createLookupShaderTokens(
-	GLint target, GLint verifyTarget, GLint format, GLint level, GLint sample, FunctionToken& funcToken)
+	GLint target, GLint format, GLint level, GLint sample, FunctionToken& funcToken)
 {
 	std::string funcName = funcToken.name;
 
@@ -2500,7 +2412,7 @@ SparseTexture2LookupTestCase::TokenStringsExt SparseTexture2LookupTestCase::crea
 		inputType = "sampler";
 
 	// Copy data from TokenStrings to TokenStringsExt
-	TokenStrings ss  = createShaderTokens(target, verifyTarget, format, sample, "image", inputType);
+	TokenStrings ss  = createShaderTokens(target, format, sample, "image", inputType);
 	s.epsilon		 = ss.epsilon;
 	s.format		 = ss.format;
 	s.inputType		 = ss.inputType;
@@ -2590,6 +2502,15 @@ SparseTexture2LookupTestCase::TokenStringsExt SparseTexture2LookupTestCase::crea
 	// Set expected result vector, component definition and offset array definition for gather functions
 	if (funcName.find("Gather", 0) != std::string::npos)
 	{
+		if (funcName.find("GatherOffsets", 0) != std::string::npos)
+		{
+			s.offsetArrayDef = "    <OFFSET_TYPE><OFFSET_DIM> offsetsArray[4];\n"
+							   "    offsetsArray[0] = <OFFSET_TYPE><OFFSET_DIM>(0);\n"
+							   "    offsetsArray[1] = <OFFSET_TYPE><OFFSET_DIM>(0);\n"
+							   "    offsetsArray[2] = <OFFSET_TYPE><OFFSET_DIM>(0);\n"
+							   "    offsetsArray[3] = <OFFSET_TYPE><OFFSET_DIM>(0);\n";
+		}
+
 		if (format != GL_DEPTH_COMPONENT16)
 			s.componentDef = ", 0";
 		s.resultExpected   = "(1, 1, 1, 1)";
@@ -2779,12 +2700,7 @@ bool SparseTexture2LookupTestCase::writeDataToTexture(const Functions& gl, GLint
 			std::string shader = st2_compute_textureFill;
 
 			// Adjust shader source to texture format
-			GLint verifyTarget;
-			if (target == GL_TEXTURE_2D_MULTISAMPLE || target == GL_TEXTURE_2D || target == GL_TEXTURE_RECTANGLE)
-				verifyTarget = GL_TEXTURE_2D;
-			else
-				verifyTarget = GL_TEXTURE_2D_ARRAY;
-			TokenStrings s = createShaderTokens(target, verifyTarget, format, sample);
+			TokenStrings s = createShaderTokens(target, format, sample);
 
 			replaceToken("<INPUT_TYPE>", s.inputType.c_str(), shader);
 			replaceToken("<POINT_TYPE>", s.pointType.c_str(), shader);
@@ -2806,7 +2722,7 @@ bool SparseTexture2LookupTestCase::writeDataToTexture(const Functions& gl, GLint
 			{
 				gl.useProgram(program.getProgram());
 				GLU_EXPECT_NO_ERROR(gl.getError(), "glUseProgram");
-				gl.bindImageTexture(0 /* unit */, texture, level /* level */, depth > 1 /* layered */, 0 /* layer */,
+				gl.bindImageTexture(0 /* unit */, texture, level /* level */, GL_FALSE /* layered */, 0 /* layer */,
 									GL_WRITE_ONLY, convFormat);
 				GLU_EXPECT_NO_ERROR(gl.getError(), "glBindImageTexture");
 				gl.uniform1i(1, 0 /* image_unit */);
@@ -2895,7 +2811,7 @@ bool SparseTexture2LookupTestCase::verifyLookupTextureData(const Functions& gl, 
 
 	// Create verifying texture
 	GLint verifyTarget;
-	if (target == GL_TEXTURE_2D_MULTISAMPLE || target == GL_TEXTURE_2D || target == GL_TEXTURE_RECTANGLE)
+	if (target == GL_TEXTURE_2D_MULTISAMPLE)
 		verifyTarget = GL_TEXTURE_2D;
 	else
 		verifyTarget = GL_TEXTURE_2D_ARRAY;
@@ -2918,7 +2834,7 @@ bool SparseTexture2LookupTestCase::verifyLookupTextureData(const Functions& gl, 
 		std::string shader = st2_compute_lookupVerify;
 
 		// Adjust shader source to texture format
-		TokenStringsExt s = createLookupShaderTokens(target, verifyTarget, format, level, sample, f);
+		TokenStringsExt s = createLookupShaderTokens(target, format, level, sample, f);
 
 		replaceToken("<FUNCTION>", f.name.c_str(), shader);
 		replaceToken("<ARGUMENTS>", f.arguments.c_str(), shader);
@@ -3015,14 +2931,8 @@ bool SparseTexture2LookupTestCase::verifyLookupTextureData(const Functions& gl, 
 					{
 						GLubyte* dataRegion	= exp_data + x + y * width + z * width * height;
 						GLubyte* outDataRegion = out_data + x + y * width + z * width * height;
-						if (dataRegion[0] != outDataRegion[0]) {
-							m_testCtx.getLog() << tcu::TestLog::Message << mLog.str() <<
-								"Error detected at " << x << "," << y << "," << z << " for sample " << sample <<
-								": expected [" << (unsigned)dataRegion[0] << "] got [" <<
-								(unsigned)outDataRegion[0] << "]" << tcu::TestLog::EndMessage;
+						if (dataRegion[0] != outDataRegion[0])
 							result = false;
-							goto out;
-						}
 					}
 		}
 		else
@@ -3035,7 +2945,7 @@ bool SparseTexture2LookupTestCase::verifyLookupTextureData(const Functions& gl, 
 			result = false;
 		}
 	}
-out:
+
 	Texture::Delete(gl, verifyTexture);
 
 	return result;

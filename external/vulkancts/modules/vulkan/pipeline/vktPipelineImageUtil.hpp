@@ -64,14 +64,13 @@ bool							isMinMaxFilteringSupported	(const vk::InstanceInterface&	instanceInte
 															 vk::VkFormat					format,
 															 vk::VkImageTiling				tiling);
 
-vk::VkBorderColor				getFormatBorderColor		(BorderColor color, vk::VkFormat format, bool useStencilAspect);
+vk::VkBorderColor				getFormatBorderColor		(BorderColor color, vk::VkFormat format);
 
-rr::GenericVec4					getFormatCustomBorderColor	(tcu::Vec4 floatValue, tcu::IVec4 intValue, vk::VkFormat format, bool useStencilAspect);
+rr::GenericVec4					getFormatCustomBorderColor	(tcu::Vec4 floatValue, tcu::IVec4 intValue, vk::VkFormat format);
 
 void							getLookupScaleBias			(vk::VkFormat					format,
 															 tcu::Vec4&						lookupScale,
-															 tcu::Vec4&						lookupBias,
-															 bool							useStencilAspect = false);
+															 tcu::Vec4&						lookupBias);
 
 /*--------------------------------------------------------------------*//*!
  * Gets a tcu::TextureLevel initialized with data from a VK color
@@ -138,8 +137,7 @@ void							uploadTestTexture			(const vk::DeviceInterface&		vk,
 															 deUint32						queueFamilyIndex,
 															 vk::Allocator&					allocator,
 															 const TestTexture&				testTexture,
-															 vk::VkImage					destImage,
-															 vk::VkImageLayout				destImageLayout = vk::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+															 vk::VkImage					destImage);
 
 /*--------------------------------------------------------------------*//*!
  * Uploads data from a test texture to a destination VK image using sparse

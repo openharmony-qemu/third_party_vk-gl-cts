@@ -53,7 +53,7 @@ namespace
 
 struct StateObjects
 {
-			StateObjects	(const vk::DeviceInterface&vk, vkt::Context &context, const int numVertices, vk::VkPrimitiveTopology primitive, const bool noColorAttachments);
+			StateObjects	(const vk::DeviceInterface&vk, vkt::Context &context, const int numVertices, vk::VkPrimitiveTopology primitive);
 	void	setVertices		(const vk::DeviceInterface&vk, std::vector<tcu::Vec4> vertices);
 
 	enum
@@ -69,7 +69,7 @@ struct StateObjects
 
 	de::SharedPtr<Image>			m_colorAttachmentImage, m_DepthImage;
 	vk::Move<vk::VkImageView>		m_attachmentView;
-	vk::Move<vk::VkImageView>		m_depthView;
+	vk::Move<vk::VkImageView>		m_depthiew;
 
 	vk::Move<vk::VkRenderPass>		m_renderPass;
 	vk::Move<vk::VkFramebuffer>		m_framebuffer;
@@ -79,7 +79,7 @@ struct StateObjects
 	vk::VkFormat					m_colorAttachmentFormat;
 };
 
-StateObjects::StateObjects (const vk::DeviceInterface&vk, vkt::Context &context, const int numVertices, vk::VkPrimitiveTopology primitive, const bool noColorAttachments)
+StateObjects::StateObjects (const vk::DeviceInterface&vk, vkt::Context &context, const int numVertices, vk::VkPrimitiveTopology primitive)
 	: m_context(context)
 	, m_colorAttachmentFormat(vk::VK_FORMAT_R8G8B8A8_UNORM)
 
@@ -87,70 +87,35 @@ StateObjects::StateObjects (const vk::DeviceInterface&vk, vkt::Context &context,
 	vk::VkFormat		depthFormat = vk::VK_FORMAT_D16_UNORM;
 	const vk::VkDevice	device		= m_context.getDevice();
 
-	vk::VkExtent3D imageExtent =
+	//attachment images and views
 	{
-		WIDTH,	// width;
-		HEIGHT,	// height;
-		1		// depth;
-	};
-
-	ImageCreateInfo depthImageCreateInfo(vk::VK_IMAGE_TYPE_2D, depthFormat, imageExtent, 1, 1, vk::VK_SAMPLE_COUNT_1_BIT, vk::VK_IMAGE_TILING_OPTIMAL,
-		vk::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
-
-	m_DepthImage			= Image::createAndAlloc(vk, device, depthImageCreateInfo, m_context.getDefaultAllocator(), m_context.getUniversalQueueFamilyIndex());
-
-	// Construct a depth  view from depth image
-	const ImageViewCreateInfo depthViewInfo(m_DepthImage->object(), vk::VK_IMAGE_VIEW_TYPE_2D, depthFormat);
-	m_depthView				= vk::createImageView(vk, device, &depthViewInfo);
-
-	// Renderpass and Framebuffer
-	if (noColorAttachments)
-	{
-		RenderPassCreateInfo renderPassCreateInfo;
-
-		renderPassCreateInfo.addAttachment(AttachmentDescription(depthFormat,												// format
-																 vk::VK_SAMPLE_COUNT_1_BIT,									// samples
-																 vk::VK_ATTACHMENT_LOAD_OP_CLEAR,							// loadOp
-																 vk::VK_ATTACHMENT_STORE_OP_DONT_CARE,						// storeOp
-																 vk::VK_ATTACHMENT_LOAD_OP_DONT_CARE,						// stencilLoadOp
-																 vk::VK_ATTACHMENT_STORE_OP_DONT_CARE,						// stencilLoadOp
-																 vk::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,		// initialLauout
-																 vk::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL));	// finalLayout
-
-		const vk::VkAttachmentReference depthAttachmentReference =
+		vk::VkExtent3D imageExtent =
 		{
-			0,															// attachment
-			vk::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL		// layout
+			WIDTH,	// width;
+			HEIGHT,	// height;
+			1		// depth;
 		};
 
-		renderPassCreateInfo.addSubpass(SubpassDescription(vk::VK_PIPELINE_BIND_POINT_GRAPHICS,					// pipelineBindPoint
-														   0,													// flags
-														   0,													// inputCount
-														   DE_NULL,												// pInputAttachments
-														   0,													// colorCount
-														   DE_NULL,												// pColorAttachments
-														   DE_NULL,												// pResolveAttachments
-														   depthAttachmentReference,							// depthStencilAttachment
-														   0,													// preserveCount
-														   DE_NULL));											// preserveAttachments
-
-		m_renderPass = vk::createRenderPass(vk, device, &renderPassCreateInfo);
-
-		std::vector<vk::VkImageView> attachments(1);
-		attachments[0] = *m_depthView;
-		FramebufferCreateInfo framebufferCreateInfo(*m_renderPass, attachments, WIDTH, HEIGHT, 1);
-		m_framebuffer = vk::createFramebuffer(vk, device, &framebufferCreateInfo);
-	}
-	else
-	{
 		const ImageCreateInfo colorImageCreateInfo(vk::VK_IMAGE_TYPE_2D, m_colorAttachmentFormat, imageExtent, 1, 1, vk::VK_SAMPLE_COUNT_1_BIT, vk::VK_IMAGE_TILING_OPTIMAL,
 												   vk::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | vk::VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
 
 		m_colorAttachmentImage	= Image::createAndAlloc(vk, device, colorImageCreateInfo, m_context.getDefaultAllocator(), m_context.getUniversalQueueFamilyIndex());
 
 		const ImageViewCreateInfo attachmentViewInfo(m_colorAttachmentImage->object(), vk::VK_IMAGE_VIEW_TYPE_2D, m_colorAttachmentFormat);
-
 		m_attachmentView		= vk::createImageView(vk, device, &attachmentViewInfo);
+
+		ImageCreateInfo depthImageCreateInfo(vk::VK_IMAGE_TYPE_2D, depthFormat, imageExtent, 1, 1, vk::VK_SAMPLE_COUNT_1_BIT, vk::VK_IMAGE_TILING_OPTIMAL,
+			vk::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+
+		m_DepthImage			= Image::createAndAlloc(vk, device, depthImageCreateInfo, m_context.getDefaultAllocator(), m_context.getUniversalQueueFamilyIndex());
+
+		// Construct a depth  view from depth image
+		const ImageViewCreateInfo depthViewInfo(m_DepthImage->object(), vk::VK_IMAGE_VIEW_TYPE_2D, depthFormat);
+		m_depthiew				= vk::createImageView(vk, device, &depthViewInfo);
+	}
+
+	{
+		// Renderpass and Framebuffer
 
 		RenderPassCreateInfo renderPassCreateInfo;
 		renderPassCreateInfo.addAttachment(AttachmentDescription(m_colorAttachmentFormat,									// format
@@ -198,7 +163,7 @@ StateObjects::StateObjects (const vk::DeviceInterface&vk, vkt::Context &context,
 
 		std::vector<vk::VkImageView> attachments(2);
 		attachments[0] = *m_attachmentView;
-		attachments[1] = *m_depthView;
+		attachments[1] = *m_depthiew;
 
 		FramebufferCreateInfo framebufferCreateInfo(*m_renderPass, attachments, WIDTH, HEIGHT, 1);
 		m_framebuffer = vk::createFramebuffer(vk, device, &framebufferCreateInfo);
@@ -294,13 +259,6 @@ enum OcclusionQueryResultsMode
 	RESULTS_MODE_COPY_RESET
 };
 
-enum OcculusionQueryClearOp
-{
-	CLEAR_NOOP,
-	CLEAR_COLOR,
-	CLEAR_DEPTH
-};
-
 struct OcclusionQueryTestVector
 {
 	vk::VkQueryControlFlags		queryControlFlags;
@@ -312,8 +270,6 @@ struct OcclusionQueryTestVector
 	vk::VkPrimitiveTopology		primitiveTopology;
 	bool						discardHalf;
 	deBool						queryResultsDstOffset;
-	OcculusionQueryClearOp		clearOp;
-	bool						noColorAttachments;
 };
 
 class BasicOcclusionQueryTestInstance : public vkt::TestInstance
@@ -351,7 +307,7 @@ BasicOcclusionQueryTestInstance::BasicOcclusionQueryTestInstance (vkt::Context &
 	if ((m_testVector.queryControlFlags & vk::VK_QUERY_CONTROL_PRECISE_BIT) && !m_context.getDeviceFeatures().occlusionQueryPrecise)
 		throw tcu::NotSupportedError("Precise occlusion queries are not supported");
 
-	m_stateObjects = new StateObjects(m_context.getDeviceInterface(), m_context, NUM_VERTICES_IN_DRAWCALL, m_testVector.primitiveTopology, m_testVector.noColorAttachments);
+	m_stateObjects = new StateObjects(m_context.getDeviceInterface(), m_context, NUM_VERTICES_IN_DRAWCALL, m_testVector.primitiveTopology);
 
 	const vk::VkDevice			device	= m_context.getDevice();
 	const vk::DeviceInterface&	vk		= m_context.getDeviceInterface();
@@ -381,11 +337,10 @@ BasicOcclusionQueryTestInstance::~BasicOcclusionQueryTestInstance (void)
 
 	if (m_queryPool != DE_NULL)
 	{
-#ifndef CTS_USES_VULKANSC
 		const vk::VkDevice device		= m_context.getDevice();
 		const vk::DeviceInterface& vk	= m_context.getDeviceInterface();
+
 		vk.destroyQueryPool(device, m_queryPool, /*pAllocator*/ DE_NULL);
-#endif
 	}
 }
 
@@ -411,9 +366,8 @@ tcu::TestStatus	BasicOcclusionQueryTestInstance::iterate (void)
 
 	beginCommandBuffer(vk, *cmdBuffer);
 
-	if (!m_testVector.noColorAttachments)
-		initialTransitionColor2DImage(vk, *cmdBuffer, m_stateObjects->m_colorAttachmentImage->object(), vk::VK_IMAGE_LAYOUT_GENERAL,
-									  vk::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, vk::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+	initialTransitionColor2DImage(vk, *cmdBuffer, m_stateObjects->m_colorAttachmentImage->object(), vk::VK_IMAGE_LAYOUT_GENERAL,
+								  vk::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, vk::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 	initialTransitionDepth2DImage(vk, *cmdBuffer, m_stateObjects->m_DepthImage->object(), vk::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
 								  vk::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, vk::VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | vk::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT);
 
@@ -440,10 +394,9 @@ tcu::TestStatus	BasicOcclusionQueryTestInstance::iterate (void)
 
 	endRenderPass(vk, *cmdBuffer);
 
-	if (!m_testVector.noColorAttachments)
-		transition2DImage(vk, *cmdBuffer, m_stateObjects->m_colorAttachmentImage->object(), vk::VK_IMAGE_ASPECT_COLOR_BIT,
-						  vk::VK_IMAGE_LAYOUT_GENERAL, vk::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, vk::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-						  vk::VK_ACCESS_TRANSFER_READ_BIT, vk::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, vk::VK_PIPELINE_STAGE_TRANSFER_BIT);
+	transition2DImage(vk, *cmdBuffer, m_stateObjects->m_colorAttachmentImage->object(), vk::VK_IMAGE_ASPECT_COLOR_BIT,
+					  vk::VK_IMAGE_LAYOUT_GENERAL, vk::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, vk::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+					  vk::VK_ACCESS_TRANSFER_READ_BIT, vk::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, vk::VK_PIPELINE_STAGE_TRANSFER_BIT);
 
 	endCommandBuffer(vk, *cmdBuffer);
 
@@ -533,7 +486,6 @@ private:
 
 	bool							hasSeparateResetCmdBuf			(void) const;
 	bool							hasSeparateCopyCmdBuf			(void) const;
-	void							commandClearAttachment			(const vk::DeviceInterface&	vk, const vk::VkCommandBuffer commandBuffer);
 
 	vk::Move<vk::VkCommandBuffer>	recordQueryPoolReset			(vk::VkCommandPool commandPool);
 	vk::Move<vk::VkCommandBuffer>	recordRender					(vk::VkCommandPool commandPool);
@@ -591,7 +543,7 @@ OcclusionQueryTestInstance::OcclusionQueryTestInstance (vkt::Context &context, c
 	if ((m_testVector.queryControlFlags & vk::VK_QUERY_CONTROL_PRECISE_BIT) && !m_context.getDeviceFeatures().occlusionQueryPrecise)
 		throw tcu::NotSupportedError("Precise occlusion queries are not supported");
 
-	m_stateObjects  = new StateObjects(m_context.getDeviceInterface(), m_context, NUM_VERTICES_IN_DRAWCALL + NUM_VERTICES_IN_PARTIALLY_OCCLUDED_DRAWCALL + NUM_VERTICES_IN_OCCLUDER_DRAWCALL, m_testVector.primitiveTopology, m_testVector.noColorAttachments);
+	m_stateObjects  = new StateObjects(m_context.getDeviceInterface(), m_context, NUM_VERTICES_IN_DRAWCALL + NUM_VERTICES_IN_PARTIALLY_OCCLUDED_DRAWCALL + NUM_VERTICES_IN_OCCLUDER_DRAWCALL, m_testVector.primitiveTopology);
 
 	const vk::VkQueryPoolCreateInfo queryPoolCreateInfo	=
 	{
@@ -632,17 +584,15 @@ OcclusionQueryTestInstance::OcclusionQueryTestInstance (vkt::Context &context, c
 
 OcclusionQueryTestInstance::~OcclusionQueryTestInstance (void)
 {
+	const vk::VkDevice device = m_context.getDevice();
 
 	if (m_stateObjects)
 		delete m_stateObjects;
 
 	if (m_queryPool != DE_NULL)
 	{
-#ifndef CTS_USES_VULKANSC
-		const vk::VkDevice device		= m_context.getDevice();
-		const vk::DeviceInterface& vk	= m_context.getDeviceInterface();
+		const vk::DeviceInterface& vk = m_context.getDeviceInterface();
 		vk.destroyQueryPool(device, m_queryPool, /*pAllocator*/ DE_NULL);
-#endif
 	}
 }
 
@@ -825,33 +775,6 @@ vk::Move<vk::VkCommandBuffer> OcclusionQueryTestInstance::recordQueryPoolReset (
 	return cmdBuffer;
 }
 
-void OcclusionQueryTestInstance::commandClearAttachment (const vk::DeviceInterface&	vk,
-														 const vk::VkCommandBuffer	commandBuffer)
-{
-	if (m_testVector.clearOp == CLEAR_NOOP)
-		return;
-
-	const vk::VkOffset2D offset = vk::makeOffset2D(0, 0);
-	const vk::VkExtent2D extent = vk::makeExtent2D(StateObjects::WIDTH, StateObjects::HEIGHT);
-
-	const vk::VkClearAttachment	attachment =
-	{
-		m_testVector.clearOp == CLEAR_COLOR ? vk::VK_IMAGE_ASPECT_COLOR_BIT	: vk::VK_IMAGE_ASPECT_DEPTH_BIT, // VkImageAspectFlags	aspectMask;
-		m_testVector.clearOp == CLEAR_COLOR ? 0u : 1u,														 // uint32_t			colorAttachment;
-		m_testVector.clearOp == CLEAR_COLOR ? vk::makeClearValueColor(tcu::Vec4(0.0f, 0.0f, 0.0f, 0.0f)) :
-											  vk::makeClearValueDepthStencil(0.0f, 0u)						 // VkClearValue		clearValue;
-	};
-
-	const vk::VkClearRect rect =
-	{
-		{ offset, extent },		// VkRect2D		rect;
-		0u,						// uint32_t		baseArrayLayer;
-		1u,						// uint32_t		layerCount;
-	};
-
-	vk.cmdClearAttachments(commandBuffer, 1u, &attachment, 1u, &rect);
-}
-
 vk::Move<vk::VkCommandBuffer> OcclusionQueryTestInstance::recordRender (vk::VkCommandPool cmdPool)
 {
 	const vk::VkDevice				device		= m_context.getDevice();
@@ -861,10 +784,8 @@ vk::Move<vk::VkCommandBuffer> OcclusionQueryTestInstance::recordRender (vk::VkCo
 
 	beginCommandBuffer(vk, *cmdBuffer);
 
-	if (!m_testVector.noColorAttachments)
-		initialTransitionColor2DImage(vk, *cmdBuffer, m_stateObjects->m_colorAttachmentImage->object(), vk::VK_IMAGE_LAYOUT_GENERAL,
-									  vk::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, vk::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
-
+	initialTransitionColor2DImage(vk, *cmdBuffer, m_stateObjects->m_colorAttachmentImage->object(), vk::VK_IMAGE_LAYOUT_GENERAL,
+								  vk::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, vk::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 	initialTransitionDepth2DImage(vk, *cmdBuffer, m_stateObjects->m_DepthImage->object(), vk::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
 								  vk::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, vk::VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | vk::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT);
 
@@ -887,7 +808,6 @@ vk::Move<vk::VkCommandBuffer> OcclusionQueryTestInstance::recordRender (vk::VkCo
 	// Draw un-occluded geometry
 	vk.cmdBeginQuery(*cmdBuffer, m_queryPool, QUERY_INDEX_CAPTURE_ALL, m_testVector.queryControlFlags);
 	vk.cmdDraw(*cmdBuffer, NUM_VERTICES_IN_DRAWCALL, 1, START_VERTEX, 0);
-	commandClearAttachment(vk, *cmdBuffer);
 	vk.cmdEndQuery(*cmdBuffer, m_queryPool,	QUERY_INDEX_CAPTURE_ALL);
 
 	endRenderPass(vk, *cmdBuffer);
@@ -905,7 +825,6 @@ vk::Move<vk::VkCommandBuffer> OcclusionQueryTestInstance::recordRender (vk::VkCo
 	// Draw partially-occluded geometry
 	vk.cmdBeginQuery(*cmdBuffer, m_queryPool, QUERY_INDEX_CAPTURE_PARTIALLY_OCCLUDED, m_testVector.queryControlFlags);
 	vk.cmdDraw(*cmdBuffer, NUM_VERTICES_IN_DRAWCALL, 1, START_VERTEX, 0);
-	commandClearAttachment(vk, *cmdBuffer);
 	vk.cmdEndQuery(*cmdBuffer, m_queryPool, QUERY_INDEX_CAPTURE_PARTIALLY_OCCLUDED);
 
 	endRenderPass(vk, *cmdBuffer);
@@ -926,7 +845,6 @@ vk::Move<vk::VkCommandBuffer> OcclusionQueryTestInstance::recordRender (vk::VkCo
 	// Draw occluded geometry
 	vk.cmdBeginQuery(*cmdBuffer, m_queryPool, QUERY_INDEX_CAPTURE_OCCLUDED, m_testVector.queryControlFlags);
 	vk.cmdDraw(*cmdBuffer, NUM_VERTICES_IN_DRAWCALL, 1, START_VERTEX, 0);
-	commandClearAttachment(vk, *cmdBuffer);
 	vk.cmdEndQuery(*cmdBuffer, m_queryPool,	QUERY_INDEX_CAPTURE_OCCLUDED);
 
 	endRenderPass(vk, *cmdBuffer);
@@ -959,10 +877,9 @@ vk::Move<vk::VkCommandBuffer> OcclusionQueryTestInstance::recordRender (vk::VkCo
 		bufferBarrier(vk, *cmdBuffer, m_queryPoolResultsBuffer->object(), vk::VK_ACCESS_TRANSFER_WRITE_BIT, vk::VK_ACCESS_HOST_READ_BIT, vk::VK_PIPELINE_STAGE_TRANSFER_BIT, vk::VK_PIPELINE_STAGE_HOST_BIT);
 	}
 
-	if (!m_testVector.noColorAttachments)
-		transition2DImage(vk, *cmdBuffer, m_stateObjects->m_colorAttachmentImage->object(), vk::VK_IMAGE_ASPECT_COLOR_BIT, vk::VK_IMAGE_LAYOUT_GENERAL,
-						  vk::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, vk::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, vk::VK_ACCESS_TRANSFER_READ_BIT,
-						  vk::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, vk::VK_PIPELINE_STAGE_TRANSFER_BIT);
+	transition2DImage(vk, *cmdBuffer, m_stateObjects->m_colorAttachmentImage->object(), vk::VK_IMAGE_ASPECT_COLOR_BIT, vk::VK_IMAGE_LAYOUT_GENERAL,
+					  vk::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, vk::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, vk::VK_ACCESS_TRANSFER_READ_BIT,
+					  vk::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, vk::VK_PIPELINE_STAGE_TRANSFER_BIT);
 
 	endCommandBuffer(vk, *cmdBuffer);
 
@@ -1320,8 +1237,6 @@ void QueryPoolOcclusionTests::init (void)
 	baseTestVector.queryResultsAvailability = false;
 	baseTestVector.primitiveTopology		= vk::VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
 	baseTestVector.discardHalf				= false;
-	baseTestVector.clearOp					= CLEAR_NOOP;
-	baseTestVector.noColorAttachments		= false;
 
 	//Basic tests
 	{
@@ -1429,75 +1344,6 @@ void QueryPoolOcclusionTests::init (void)
 									addChild(new QueryPoolOcclusionTest<OcclusionQueryTestInstance>(m_testCtx, testName.str().c_str(), testDescr.str().c_str(), testVector));
 								}
 							}
-						}
-
-						/* Tests for clear operation within a occulusion query activated.
-						 * The query shouldn't count internal driver operations relevant to the clear operations.
-						 */
-						const OcculusionQueryClearOp		clearOp[]		= { CLEAR_COLOR,  CLEAR_DEPTH };
-						const char* const					clearOpStr[]	= { "clear_color", "clear_depth" };
-
-						for (int clearOpIdx = 0; clearOpIdx < DE_LENGTH_OF_ARRAY(clearOp); ++clearOpIdx)
-						{
-							OcclusionQueryTestVector testVector			= baseTestVector;
-							testVector.queryControlFlags				= controlFlags[controlFlagIdx];
-							testVector.queryResultSize					= resultSize[resultSizeIdx];
-							testVector.queryWait						= wait[waitIdx];
-							testVector.queryResultsMode					= RESULTS_MODE_GET;
-							testVector.queryResultsStride				= testVector.queryResultSize == RESULT_SIZE_32_BIT ? sizeof(deUint32) : sizeof(deUint64);
-							testVector.primitiveTopology				= primitiveTopology[primitiveTopologyIdx];
-							testVector.clearOp							= clearOp[clearOpIdx];
-
-							std::ostringstream testName;
-							std::ostringstream testDescr;
-
-							testName << "get_results"
-									 << "_" << controlFlagsStr[controlFlagIdx]
-									 << "_size_" << resultSizeStr[resultSizeIdx]
-									 << "_wait_" << waitStr[waitIdx]
-									 << "_without_availability"
-									 << "_draw_" <<  primitiveTopologyStr[primitiveTopologyIdx]
-									 << "_" << clearOpStr[clearOpIdx];
-
-							testDescr << "draw occluded " << primitiveTopologyStr[primitiveTopologyIdx]
-									  << "with " << controlFlagsStr[controlFlagIdx] << ", "
-									  << "get results without availability bit "
-									  << "with " << clearOpStr[clearOpIdx] << " as "
-									  << resultSizeStr[resultSizeIdx] << "bit variables,"
-									  << "wait for results on" << waitStr[waitIdx];
-
-							addChild(new QueryPoolOcclusionTest<OcclusionQueryTestInstance>(m_testCtx, testName.str().c_str(), testDescr.str().c_str(), testVector));
-						}
-
-						// Tests with no color attachments.
-						{
-							OcclusionQueryTestVector testVector			= baseTestVector;
-							testVector.queryControlFlags				= controlFlags[controlFlagIdx];
-							testVector.queryResultSize					= resultSize[resultSizeIdx];
-							testVector.queryWait						= wait[waitIdx];
-							testVector.queryResultsMode					= RESULTS_MODE_GET;
-							testVector.queryResultsStride				= testVector.queryResultSize == RESULT_SIZE_32_BIT ? sizeof(deUint32) : sizeof(deUint64);
-							testVector.primitiveTopology				= primitiveTopology[primitiveTopologyIdx];
-							testVector.noColorAttachments				= true;
-
-							std::ostringstream testName;
-							std::ostringstream testDescr;
-
-							testName << "get_results"
-									 << "_" << controlFlagsStr[controlFlagIdx]
-									 << "_size_" << resultSizeStr[resultSizeIdx]
-									 << "_wait_" << waitStr[waitIdx]
-									 << "_without_availability"
-									 << "_draw_" <<  primitiveTopologyStr[primitiveTopologyIdx]
-									 << "_no_color_attachments";
-
-							testDescr << "draw occluded " << primitiveTopologyStr[primitiveTopologyIdx]
-									  << "with " << controlFlagsStr[controlFlagIdx] << ", "
-									  << "get results without availability bit and attachments as "
-									  << resultSizeStr[resultSizeIdx] << "bit variables,"
-									  << "wait for results on" << waitStr[waitIdx];
-
-							addChild(new QueryPoolOcclusionTest<OcclusionQueryTestInstance>(m_testCtx, testName.str().c_str(), testDescr.str().c_str(), testVector));
 						}
 					}
 				}

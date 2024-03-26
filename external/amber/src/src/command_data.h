@@ -104,8 +104,7 @@ enum class LogicOp : uint8_t {
 };
 
 enum class BlendOp : uint8_t {
-  kUnknown = 0,
-  kAdd,
+  kAdd = 0,
   kSubtract,
   kReverseSubtract,
   kMin,
@@ -159,8 +158,7 @@ enum class BlendOp : uint8_t {
 };
 
 enum class BlendFactor : uint8_t {
-  kUnknown = 0,
-  kZero,
+  kZero = 0,
   kOne,
   kSrcColor,
   kOneMinusSrcColor,
@@ -182,8 +180,6 @@ enum class BlendFactor : uint8_t {
 };
 
 Topology NameToTopology(const std::string& name);
-BlendFactor NameToBlendFactor(const std::string& name);
-BlendOp NameToBlendOp(const std::string& name);
 
 }  // namespace amber
 

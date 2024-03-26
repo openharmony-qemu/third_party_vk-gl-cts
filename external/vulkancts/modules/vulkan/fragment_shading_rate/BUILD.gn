@@ -38,8 +38,7 @@ ohos_source_set("deqp_vk_fragment_shading_rate_source") {
     #  "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     #  "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",
   ]
-  part_name = "acts"
-  subsystem_name = "xts"
+
   configs = [ ":deqp_vk_fragment_shading_rate_config" ]
 }
 ohos_static_library("libdeqp_vk_fragment_shading_rate") {

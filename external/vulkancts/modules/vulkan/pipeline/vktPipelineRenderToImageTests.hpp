@@ -24,14 +24,13 @@
  *//*--------------------------------------------------------------------*/
 
 #include "vktTestCase.hpp"
-#include "vkPipelineConstructionUtil.hpp"
 
 namespace vkt
 {
 namespace pipeline
 {
 
-tcu::TestCaseGroup* createRenderToImageTests (tcu::TestContext& testCtx, vk::PipelineConstructionType pipelineConstructionType);
+tcu::TestCaseGroup* createRenderToImageTests (tcu::TestContext& testCtx);
 
 } // pipeline
 } // vkt

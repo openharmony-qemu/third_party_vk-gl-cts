@@ -37,7 +37,6 @@ namespace
 
 void createSignedIntCompareTests (tcu::TestCaseGroup* tests, const char* data_dir)
 {
-#ifndef CTS_USES_VULKANSC
 	tcu::TestContext& testCtx = tests->getTestContext();
 
 	// Shader test files are saved in <path>/external/vulkancts/data/vulkan/amber/<data_dir>/<basename>.amber
@@ -62,10 +61,6 @@ void createSignedIntCompareTests (tcu::TestCaseGroup* tests, const char* data_di
 
 		tests->addChild(testCase);
 	}
-#else
-	DE_UNREF(tests);
-	DE_UNREF(data_dir);
-#endif
 }
 
 } // anonymous

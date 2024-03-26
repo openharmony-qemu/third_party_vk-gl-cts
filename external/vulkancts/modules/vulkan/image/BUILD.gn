@@ -35,8 +35,6 @@ ohos_source_set("deqp_vk_image_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageCompressionTranscodingSupport.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageDepthStencilDescriptorTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageDepthStencilDescriptorTests.hpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageExtendedUsageBitTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageExtendedUsageBitTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageLoadStoreTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageLoadStoreTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageLoadStoreUtil.cpp",
@@ -69,8 +67,6 @@ ohos_source_set("deqp_vk_image_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageTexture.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageTranscodingSupportTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageTranscodingSupportTests.hpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageTransfer.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageTransfer.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs

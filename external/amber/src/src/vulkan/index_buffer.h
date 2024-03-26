@@ -46,7 +46,6 @@ class IndexBuffer {
  private:
   Device* device_ = nullptr;
   std::unique_ptr<TransferBuffer> transfer_buffer_;
-  VkIndexType index_type_;
 };
 
 }  // namespace vulkan

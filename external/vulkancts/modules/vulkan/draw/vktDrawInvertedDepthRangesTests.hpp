@@ -26,14 +26,13 @@
 
 #include "vkDefs.hpp"
 #include "vktTestCase.hpp"
-#include "vktDrawGroupParams.hpp"
 
 namespace vkt
 {
 namespace Draw
 {
 
-tcu::TestCaseGroup*	createInvertedDepthRangesTests (tcu::TestContext& testCtx, const SharedGroupParams groupParams);
+tcu::TestCaseGroup*	createInvertedDepthRangesTests (tcu::TestContext& testCtx, bool useDynamicRendering);
 
 }	// Draw
 }	// vkt

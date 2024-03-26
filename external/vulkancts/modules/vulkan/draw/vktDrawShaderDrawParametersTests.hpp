@@ -24,7 +24,6 @@
  *//*--------------------------------------------------------------------*/
 
 #include "vktTestCase.hpp"
-#include "vktDrawGroupParams.hpp"
 
 namespace vkt
 {
@@ -34,7 +33,7 @@ namespace Draw
 class ShaderDrawParametersTests : public tcu::TestCaseGroup
 {
 public:
-								ShaderDrawParametersTests	(tcu::TestContext& testCtx, const SharedGroupParams groupParams);
+								ShaderDrawParametersTests	(tcu::TestContext& testCtx, bool useDynamicRendering);
 	void						init						(void);
 
 private:
@@ -42,7 +41,7 @@ private:
 	ShaderDrawParametersTests&	operator=					(const ShaderDrawParametersTests& other);
 
 private:
-	const SharedGroupParams	m_groupParams;
+	const bool m_useDynamicRendering;
 };
 
 } // Draw

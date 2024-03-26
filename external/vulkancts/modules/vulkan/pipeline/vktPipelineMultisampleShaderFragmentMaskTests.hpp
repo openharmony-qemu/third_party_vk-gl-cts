@@ -25,14 +25,13 @@
  *//*--------------------------------------------------------------------*/
 
 #include "vktTestCase.hpp"
-#include "vkPipelineConstructionUtil.hpp"
 
 namespace vkt
 {
 namespace pipeline
 {
 
-tcu::TestCaseGroup* createMultisampleShaderFragmentMaskTests (tcu::TestContext& testCtx, vk::PipelineConstructionType pipelineConstructionType);
+tcu::TestCaseGroup* createMultisampleShaderFragmentMaskTests (tcu::TestContext& testCtx);
 
 } // pipeline
 } // vkt

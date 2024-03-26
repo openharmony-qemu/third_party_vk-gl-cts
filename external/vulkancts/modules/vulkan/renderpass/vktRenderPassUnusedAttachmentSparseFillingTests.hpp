@@ -26,7 +26,7 @@
  *//*--------------------------------------------------------------------*/
 
 #include "vktTestCase.hpp"
-#include "vktRenderPassGroupParams.hpp"
+#include "vktRenderPassTestsUtil.hpp"
 
 namespace vkt
 {

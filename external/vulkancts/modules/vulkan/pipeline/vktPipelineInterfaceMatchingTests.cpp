@@ -111,17 +111,16 @@ enum class DefinitionType
 
 struct TestParams
 {
-	PipelineConstructionType	pipelineConstructionType;
-	TestType					testType;
+	TestType		testType;
 
-	VecType						outVecType;
-	VecType						inVecType;
+	VecType			outVecType;
+	VecType			inVecType;
 
-	DecorationType				outDeclDecoration;
-	DecorationType				inDeclDecoration;
+	DecorationType	outDeclDecoration;
+	DecorationType	inDeclDecoration;
 
-	PipelineType				pipelineType;
-	DefinitionType				definitionType;
+	PipelineType	pipelineType;
+	DefinitionType	definitionType;
 };
 
 typedef de::SharedPtr<TestParams> TestParamsSp;
@@ -163,7 +162,7 @@ private:
 	Move<VkShaderModule>		m_fragShaderModule;
 
 	Move<VkPipelineLayout>		m_pipelineLayout;
-	GraphicsPipelineWrapper		m_graphicsPipeline;
+	Move<VkPipeline>			m_graphicsPipeline;
 
 	Move<VkCommandPool>			m_cmdPool;
 	Move<VkCommandBuffer>		m_cmdBuffer;
@@ -174,7 +173,6 @@ InterfaceMatchingTestInstance::InterfaceMatchingTestInstance(Context& context, c
 	, m_params(params)
 	, m_alloc(context.getDeviceInterface(), context.getDevice(),
 			  getPhysicalDeviceMemoryProperties(context.getInstanceInterface(), context.getPhysicalDevice()))
-	, m_graphicsPipeline(context.getDeviceInterface(), context.getDevice(), params->pipelineConstructionType)
 {
 }
 
@@ -300,30 +298,21 @@ tcu::TestStatus InterfaceMatchingTestInstance::iterate(void)
 	{
 		m_geomShaderModule = createShaderModule(vk, device, m_context.getBinaryCollection().get("geom"), 0);
 	}
-
-	const std::vector<VkViewport>	viewports	{ makeViewport(renderSize) };
-	const std::vector<VkRect2D>		scissors	{ makeRect2D(renderSize) };
-
-	m_graphicsPipeline.setDefaultTopology(useTess ? VK_PRIMITIVE_TOPOLOGY_PATCH_LIST : VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP)
-					  .setDefaultRasterizationState()
-					  .setDefaultDepthStencilState()
-					  .setDefaultMultisampleState()
-					  .setDefaultColorBlendState()
-					  .setupVertexInputState()
-					  .setupPreRasterizationShaderState(viewports,
-														scissors,
-														*m_pipelineLayout,
-														*m_renderPass,
-														0u,
-														*m_vertShaderModule,
-														DE_NULL,
-														*m_tescShaderModule,
-														*m_teseShaderModule,
-														*m_geomShaderModule)
-					  .setupFragmentShaderState(*m_pipelineLayout, *m_renderPass, 0u, *m_fragShaderModule)
-					  .setupFragmentOutputState(*m_renderPass)
-					  .setMonolithicPipelineLayout(*m_pipelineLayout)
-					  .buildPipeline();
+	m_graphicsPipeline = makeGraphicsPipeline(
+		vk,																					// DeviceInterface&					vk
+		device,																				// VkDevice							device
+		*m_pipelineLayout,																	// VkPipelineLayout					pipelineLayout
+		*m_vertShaderModule,																// VkShaderModule					vertexShaderModule
+		*m_tescShaderModule,																// VkShaderModule					tessellationControlModule
+		*m_teseShaderModule,																// VkShaderModule					tessellationEvalModule
+		*m_geomShaderModule,																// VkShaderModule					geometryShaderModule
+		*m_fragShaderModule,																// VkShaderModule					fragmentShaderModule
+		*m_renderPass,																		// VkRenderPass						renderPass
+		{ makeViewport(renderSize) },														// std::vector<VkViewport>&			viewports
+		{ makeRect2D(renderSize) },															// std::vector<VkRect2D>&			scissors
+		useTess ? VK_PRIMITIVE_TOPOLOGY_PATCH_LIST  : VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,	// VkPrimitiveTopology				topology
+		0u,																					// const deUint32					subpass
+		useTess ? 1u : 0u);																	// const deUint32					patchControlPoints
 
 	// create vertex buffer
 	{
@@ -370,7 +359,7 @@ tcu::TestStatus InterfaceMatchingTestInstance::iterate(void)
 	// render single triangle
 	beginRenderPass(vk, *m_cmdBuffer, *m_renderPass, *m_framebuffer, makeRect2D(renderSize), Vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
-	vk.cmdBindPipeline(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline.getPipeline());
+	vk.cmdBindPipeline(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_graphicsPipeline);
 	vk.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &*m_vertexBuffer, &vertexBufferOffset);
 	vk.cmdDraw(*m_cmdBuffer, 4, 1, 0, 0);
 
@@ -875,24 +864,6 @@ std::string InterfaceMatchingTestCase::genInVerification(const std::string& vari
 
 void InterfaceMatchingTestCase::checkSupport(Context& context) const
 {
-	if (m_params->pipelineConstructionType != PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC)
-	{
-		checkPipelineLibraryRequirements(context.getInstanceInterface(), context.getPhysicalDevice(), m_params->pipelineConstructionType);
-
-		// if graphicsPipelineLibraryIndependentInterpolationDecoration is VK_FALSE then interface mismatch
-		// tests involving the Flat or NoPerspective qualifiers should be skipped for pipeline library tests
-#ifndef CTS_USES_VULKANSC
-		if (!context.getGraphicsPipelineLibraryPropertiesEXT().graphicsPipelineLibraryIndependentInterpolationDecoration)
-		{
-			if ((m_params->inDeclDecoration == DecorationType::FLAT) ||
-				(m_params->inDeclDecoration == DecorationType::NO_PERSPECTIVE) ||
-				(m_params->outDeclDecoration == DecorationType::FLAT) ||
-				(m_params->outDeclDecoration == DecorationType::NO_PERSPECTIVE))
-				TCU_THROW(NotSupportedError, "graphicsPipelineLibraryIndependentInterpolationDecoration is not supported");
-		}
-#endif // CTS_USES_VULKANSC
-	}
-
 	// when outputs from earlier stage are matched with smaller
 	// inputs in future stage request VK_KHR_maintenance4
 	if ((m_params->testType == TestType::VECTOR_LENGTH) &&
@@ -1033,7 +1004,7 @@ std::string InterfaceMatchingTestCase::generateName(const TestParams& testParams
 
 } // anonymous
 
-tcu::TestCaseGroup* createInterfaceMatchingTests(tcu::TestContext& testCtx, PipelineConstructionType pipelineConstructionType)
+tcu::TestCaseGroup* createInterfaceMatchingTests(tcu::TestContext& testCtx)
 {
 	VecType vecTypeList[3][3]
 	{
@@ -1087,7 +1058,6 @@ tcu::TestCaseGroup* createInterfaceMatchingTests(tcu::TestContext& testCtx, Pipe
 
 						auto testParams = new TestParams
 						{
-							pipelineConstructionType,
 							TestType::VECTOR_LENGTH,
 							outVecType,
 							inVecType,
@@ -1130,7 +1100,6 @@ tcu::TestCaseGroup* createInterfaceMatchingTests(tcu::TestContext& testCtx, Pipe
 
 				auto testParams = new TestParams
 				{
-					pipelineConstructionType,
 					TestType::DECORATION_MISMATCH,
 					VecType::VEC4,
 					VecType::VEC4,

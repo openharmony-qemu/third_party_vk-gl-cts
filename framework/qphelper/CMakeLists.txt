@@ -2,8 +2,6 @@
 
 # PNG support enabled by default.
 add_definitions(-DQP_SUPPORT_PNG)
-remove_definitions(-DDE_OS=DE_OS_UNIX)
-add_definitions(-DDE_OS=DE_OS_QNX)
 
 set(QPHELPER_SRCS
 	qpCrashHandler.c

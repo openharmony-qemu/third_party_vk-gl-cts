@@ -30,7 +30,6 @@
 #include <utility>
 #include <iterator>
 #include <vector>
-#include <limits>
 
 namespace de
 {
@@ -135,15 +134,6 @@ template <typename T>
 const T* dataOrNull (const std::vector<T>& container)
 {
 	return (container.empty() ? nullptr : container.data());
-}
-
-// Returns the container size() as an uint32_t value.
-template <typename T>
-uint32_t sizeU32 (const T& container)
-{
-	const size_t sz = container.size();
-	DE_ASSERT(sz <= static_cast<size_t>(std::numeric_limits<uint32_t>::max()));
-	return static_cast<uint32_t>(sz);
 }
 
 } // de

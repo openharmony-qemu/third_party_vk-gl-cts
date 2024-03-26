@@ -30,7 +30,6 @@
 #include "vkImageUtil.hpp"
 #include "vkPrograms.hpp"
 #include "vkQueryUtil.hpp"
-#include "vkDeviceUtil.hpp"
 #include "vkRef.hpp"
 #include "vkRefUtil.hpp"
 #include "vkTypeUtil.hpp"
@@ -79,8 +78,7 @@ public:
 															 const std::string&		description,
 															 VkShaderStageFlags		shaderStage,
 															 ShaderType				shaderType,
-															 VkFormat				bufferFormat,
-															 bool					testPipelineRobustness);
+															 VkFormat				bufferFormat);
 
 	virtual						~RobustBufferAccessTest		(void) {}
 
@@ -99,10 +97,6 @@ private:
 															 bool					readFromStorage);
 
 protected:
-	bool						is64BitsTest				(void) const;
-	bool						isVertexTest				(void) const;
-	bool						isFragmentTest				(void) const;
-
 	static void					initBufferAccessPrograms	(SourceCollections&		programCollection,
 															 VkShaderStageFlags		shaderStage,
 															 ShaderType				shaderType,
@@ -112,7 +106,6 @@ protected:
 	const VkShaderStageFlags	m_shaderStage;
 	const ShaderType			m_shaderType;
 	const VkFormat				m_bufferFormat;
-	const bool m_testPipelineRobustness;
 };
 
 class RobustBufferReadTest : public RobustBufferAccessTest
@@ -124,7 +117,6 @@ public:
 															 VkShaderStageFlags		shaderStage,
 															 ShaderType				shaderType,
 															 VkFormat				bufferFormat,
-															 bool					testPipelineRobustness,
 															 VkDeviceSize			readAccessRange,
 															 bool					readFromStorage,
 															 bool					accessOutOfBackingMemory);
@@ -149,7 +141,6 @@ public:
 															 VkShaderStageFlags		shaderStage,
 															 ShaderType				shaderType,
 															 VkFormat				bufferFormat,
-															 bool					testPipelineRobustness,
 															 VkDeviceSize			writeAccessRange,
 															 bool					accessOutOfBackingMemory);
 
@@ -168,21 +159,15 @@ class BufferAccessInstance : public vkt::TestInstance
 public:
 									BufferAccessInstance			(Context&			context,
 																	 Move<VkDevice>		device,
-#ifndef CTS_USES_VULKANSC
-																	 de::MovePtr<vk::DeviceDriver>	deviceDriver,
-#else
-																	 de::MovePtr<vk::DeviceDriverSC,vk::DeinitDeviceDeleter>	deviceDriver,
-#endif // CTS_USES_VULKANSC
 																	 ShaderType			shaderType,
 																	 VkShaderStageFlags	shaderStage,
 																	 VkFormat			bufferFormat,
 																	 BufferAccessType	bufferAccessType,
 																	 VkDeviceSize		inBufferAccessRange,
 																	 VkDeviceSize		outBufferAccessRange,
-																	 bool				accessOutOfBackingMemory,
-																	 bool				testPipelineRobustness);
+																	 bool				accessOutOfBackingMemory);
 
-	virtual							~BufferAccessInstance			(void);
+	virtual							~BufferAccessInstance			(void) {}
 
 	virtual tcu::TestStatus			iterate							(void);
 
@@ -194,11 +179,6 @@ private:
 
 protected:
 	Move<VkDevice>					m_device;
-#ifndef CTS_USES_VULKANSC
-	de::MovePtr<vk::DeviceDriver>	m_deviceDriver;
-#else
-	de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	m_deviceDriver;
-#endif // CTS_USES_VULKANSC
 	de::MovePtr<TestEnvironment>	m_testEnvironment;
 
 	const ShaderType				m_shaderType;
@@ -238,7 +218,6 @@ protected:
 	Move<VkBufferView>				m_outTexelBufferView;
 
 	const bool						m_accessOutOfBackingMemory;
-	const bool						m_testPipelineRobustness;
 };
 
 class BufferReadInstance: public BufferAccessInstance
@@ -246,18 +225,12 @@ class BufferReadInstance: public BufferAccessInstance
 public:
 									BufferReadInstance			(Context&				context,
 																 Move<VkDevice>			device,
-#ifndef CTS_USES_VULKANSC
-																 de::MovePtr<vk::DeviceDriver>		deviceDriver,
-#else
-																 de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	deviceDriver,
-#endif // CTS_USES_VULKANSC
 																 ShaderType				shaderType,
 																 VkShaderStageFlags		shaderStage,
 																 VkFormat				bufferFormat,
 																 bool					readFromStorage,
 																 VkDeviceSize			inBufferAccessRange,
-																 bool					accessOutOfBackingMemory,
-																 bool					testPipelineRobustness);
+																 bool					accessOutOfBackingMemory);
 
 	virtual							~BufferReadInstance			(void) {}
 
@@ -269,24 +242,18 @@ class BufferWriteInstance: public BufferAccessInstance
 public:
 									BufferWriteInstance			(Context&				context,
 																 Move<VkDevice>			device,
-#ifndef CTS_USES_VULKANSC
-																 de::MovePtr<vk::DeviceDriver>		deviceDriver,
-#else
-																 de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	deviceDriver,
-#endif // CTS_USES_VULKANSC
 																 ShaderType				shaderType,
 																 VkShaderStageFlags		shaderStage,
 																 VkFormat				bufferFormat,
 																 VkDeviceSize			writeBufferAccessRange,
-																 bool					accessOutOfBackingMemory,
-																 bool					testPipelineRobustness);
+																 bool					accessOutOfBackingMemory);
 
 	virtual							~BufferWriteInstance		(void) {}
 };
 
 // RobustBufferAccessTest
 
-const deUint32 RobustBufferAccessTest::s_testArraySize = 128; // Fit within minimum required maxUniformBufferRange
+const deUint32 RobustBufferAccessTest::s_testArraySize = 1024;
 const deUint32 RobustBufferAccessTest::s_numberOfBytesAccessed	= (deUint32)(16 * sizeof(float)); // size of mat4
 
 RobustBufferAccessTest::RobustBufferAccessTest (tcu::TestContext&		testContext,
@@ -294,13 +261,11 @@ RobustBufferAccessTest::RobustBufferAccessTest (tcu::TestContext&		testContext,
 												const std::string&		description,
 												VkShaderStageFlags		shaderStage,
 												ShaderType				shaderType,
-												VkFormat				bufferFormat,
-												bool					testPipelineRobustness)
+												VkFormat				bufferFormat)
 	: vkt::TestCase		(testContext, name, description)
 	, m_shaderStage		(shaderStage)
 	, m_shaderType		(shaderType)
 	, m_bufferFormat	(bufferFormat)
-	, m_testPipelineRobustness (testPipelineRobustness)
 {
 	DE_ASSERT(m_shaderStage == VK_SHADER_STAGE_VERTEX_BIT || m_shaderStage == VK_SHADER_STAGE_FRAGMENT_BIT || m_shaderStage == VK_SHADER_STAGE_COMPUTE_BIT);
 }
@@ -309,15 +274,6 @@ void RobustBufferAccessTest::checkSupport(Context& context) const
 {
 	if (context.isDeviceFunctionalitySupported("VK_KHR_portability_subset") && !context.getDeviceFeatures().robustBufferAccess)
 		TCU_THROW(NotSupportedError, "VK_KHR_portability_subset: robustBufferAccess not supported by this implementation");
-
-	if (is64BitsTest())
-		context.requireDeviceCoreFeature(DEVICE_CORE_FEATURE_SHADER_INT64);
-
-	if (isVertexTest())
-		context.requireDeviceCoreFeature(DEVICE_CORE_FEATURE_VERTEX_PIPELINE_STORES_AND_ATOMICS);
-
-	if (isFragmentTest())
-		context.requireDeviceCoreFeature(DEVICE_CORE_FEATURE_FRAGMENT_STORES_AND_ATOMICS);
 }
 
 void RobustBufferAccessTest::genBufferShaderAccess (ShaderType			shaderType,
@@ -529,21 +485,6 @@ void RobustBufferAccessTest::genTexelBufferShaderAccess (VkFormat				bufferForma
 			  << "	}\n";
 }
 
-bool RobustBufferAccessTest::is64BitsTest (void) const
-{
-	return (m_bufferFormat == VK_FORMAT_R64_SINT || m_bufferFormat == VK_FORMAT_R64_UINT);
-}
-
-bool RobustBufferAccessTest::isVertexTest (void) const
-{
-	return ((m_shaderStage & VK_SHADER_STAGE_VERTEX_BIT) != 0u);
-}
-
-bool RobustBufferAccessTest::isFragmentTest (void) const
-{
-	return ((m_shaderStage & VK_SHADER_STAGE_FRAGMENT_BIT) != 0u);
-}
-
 void RobustBufferAccessTest::initBufferAccessPrograms (SourceCollections&	programCollection,
 													   VkShaderStageFlags	shaderStage,
 													   ShaderType			shaderType,
@@ -670,11 +611,10 @@ RobustBufferReadTest::RobustBufferReadTest (tcu::TestContext&	testContext,
 											VkShaderStageFlags	shaderStage,
 											ShaderType			shaderType,
 											VkFormat			bufferFormat,
-											bool				testPipelineRobustness,
 											VkDeviceSize		readAccessRange,
 											bool				readFromStorage,
 											bool				accessOutOfBackingMemory)
-	: RobustBufferAccessTest		(testContext, name, description, shaderStage, shaderType, bufferFormat, testPipelineRobustness)
+	: RobustBufferAccessTest		(testContext, name, description, shaderStage, shaderType, bufferFormat)
 	, m_readFromStorage				(readFromStorage)
 	, m_readAccessRange				(readAccessRange)
 	, m_accessOutOfBackingMemory	(accessOutOfBackingMemory)
@@ -688,47 +628,9 @@ void RobustBufferReadTest::initPrograms (SourceCollections& programCollection) c
 
 TestInstance* RobustBufferReadTest::createInstance (Context& context) const
 {
-	const bool is64BitsTest_	= is64BitsTest();
-	const bool isVertexTest_	= isVertexTest();
-	const bool isFragmentTest_	= isFragmentTest();
+	Move<VkDevice>	device			= createRobustBufferAccessDevice(context);
 
-	VkPhysicalDeviceFeatures2							features2					= initVulkanStructure();
-
-	if (!m_testPipelineRobustness)
-		features2.features.robustBufferAccess = VK_TRUE;
-
-	if (is64BitsTest_)
-		features2.features.shaderInt64 = VK_TRUE;
-
-	if (isVertexTest_)
-		features2.features.vertexPipelineStoresAndAtomics = VK_TRUE;
-
-	if (isFragmentTest_)
-		features2.features.fragmentStoresAndAtomics = VK_TRUE;
-
-#ifndef CTS_USES_VULKANSC
-	VkPhysicalDevicePipelineRobustnessFeaturesEXT		pipelineRobustnessFeatures	= initVulkanStructure();
-	if (m_testPipelineRobustness)
-	{
-		context.requireDeviceFunctionality("VK_EXT_pipeline_robustness");
-
-		pipelineRobustnessFeatures.pipelineRobustness = VK_TRUE;
-
-		pipelineRobustnessFeatures.pNext = features2.pNext;
-		features2.pNext = &pipelineRobustnessFeatures;
-	}
-#endif
-
-	const bool useFeatures2 = (m_testPipelineRobustness || is64BitsTest_ || isVertexTest_ || isFragmentTest_);
-
-	Move<VkDevice>	device			= createRobustBufferAccessDevice(context, (useFeatures2 ? &features2 : nullptr));
-#ifndef CTS_USES_VULKANSC
-	de::MovePtr<vk::DeviceDriver>	deviceDriver = de::MovePtr<DeviceDriver>(new DeviceDriver(context.getPlatformInterface(), context.getInstance(), *device));
-#else
-	de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	deviceDriver = de::MovePtr<DeviceDriverSC, DeinitDeviceDeleter>(new DeviceDriverSC(context.getPlatformInterface(), context.getInstance(), *device, context.getTestContext().getCommandLine(), context.getResourceInterface(), context.getDeviceVulkanSC10Properties(), context.getDeviceProperties()), vk::DeinitDeviceDeleter( context.getResourceInterface().get(), *device ));
-#endif // CTS_USES_VULKANSC
-
-	return new BufferReadInstance(context, device, deviceDriver, m_shaderType, m_shaderStage, m_bufferFormat, m_readFromStorage, m_readAccessRange, m_accessOutOfBackingMemory, m_testPipelineRobustness);
+	return new BufferReadInstance(context, device, m_shaderType, m_shaderStage, m_bufferFormat, m_readFromStorage, m_readAccessRange, m_accessOutOfBackingMemory);
 }
 
 // RobustBufferWriteTest
@@ -739,11 +641,10 @@ RobustBufferWriteTest::RobustBufferWriteTest (tcu::TestContext&		testContext,
 											  VkShaderStageFlags	shaderStage,
 											  ShaderType			shaderType,
 											  VkFormat				bufferFormat,
-											  bool					testPipelineRobustness,
 											  VkDeviceSize			writeAccessRange,
 											  bool					accessOutOfBackingMemory)
 
-	: RobustBufferAccessTest		(testContext, name, description, shaderStage, shaderType, bufferFormat, testPipelineRobustness)
+	: RobustBufferAccessTest		(testContext, name, description, shaderStage, shaderType, bufferFormat)
 	, m_writeAccessRange			(writeAccessRange)
 	, m_accessOutOfBackingMemory	(accessOutOfBackingMemory)
 {
@@ -756,72 +657,24 @@ void RobustBufferWriteTest::initPrograms (SourceCollections& programCollection) 
 
 TestInstance* RobustBufferWriteTest::createInstance (Context& context) const
 {
-	const bool is64BitsTest_	= is64BitsTest();
-	const bool isVertexTest_	= isVertexTest();
-	const bool isFragmentTest_	= isFragmentTest();
+	Move<VkDevice>	device			= createRobustBufferAccessDevice(context);
 
-	VkPhysicalDeviceFeatures2							features2					= initVulkanStructure();
-
-	if (!m_testPipelineRobustness)
-		features2.features.robustBufferAccess = VK_TRUE;
-
-	if (is64BitsTest_)
-		features2.features.shaderInt64 = VK_TRUE;
-
-	if (isVertexTest_)
-		features2.features.vertexPipelineStoresAndAtomics = VK_TRUE;
-
-	if (isFragmentTest_)
-		features2.features.fragmentStoresAndAtomics = VK_TRUE;
-
-#ifndef CTS_USES_VULKANSC
-	VkPhysicalDevicePipelineRobustnessFeaturesEXT		pipelineRobustnessFeatures	= initVulkanStructure();
-	if (m_testPipelineRobustness)
-	{
-		context.requireDeviceFunctionality("VK_EXT_pipeline_robustness");
-
-		const auto&	vki				= context.getInstanceInterface();
-		const auto	physicalDevice	= context.getPhysicalDevice();
-
-		pipelineRobustnessFeatures.pNext = features2.pNext;
-		features2.pNext = &pipelineRobustnessFeatures;
-
-		vki.getPhysicalDeviceFeatures2(physicalDevice, &features2);
-	}
-#endif
-
-	const bool useFeatures2 = (m_testPipelineRobustness || is64BitsTest_ || isVertexTest_ || isFragmentTest_);
-
-	Move<VkDevice>	device = createRobustBufferAccessDevice(context, (useFeatures2 ? &features2 : nullptr));
-#ifndef CTS_USES_VULKANSC
-	de::MovePtr<vk::DeviceDriver>	deviceDriver = de::MovePtr<DeviceDriver>(new DeviceDriver(context.getPlatformInterface(), context.getInstance(), *device));
-#else
-	de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	deviceDriver = de::MovePtr<DeviceDriverSC,DeinitDeviceDeleter>(new DeviceDriverSC(context.getPlatformInterface(), context.getInstance(), *device, context.getTestContext().getCommandLine(), context.getResourceInterface(), context.getDeviceVulkanSC10Properties(), context.getDeviceProperties()), DeinitDeviceDeleter(context.getResourceInterface().get(), *device));
-#endif // CTS_USES_VULKANSC
-
-	return new BufferWriteInstance(context, device, deviceDriver, m_shaderType, m_shaderStage, m_bufferFormat, m_writeAccessRange, m_accessOutOfBackingMemory, m_testPipelineRobustness);
+	return new BufferWriteInstance(context, device, m_shaderType, m_shaderStage, m_bufferFormat, m_writeAccessRange, m_accessOutOfBackingMemory);
 }
 
 // BufferAccessInstance
 
 BufferAccessInstance::BufferAccessInstance (Context&			context,
 											Move<VkDevice>		device,
-#ifndef CTS_USES_VULKANSC
-											de::MovePtr<vk::DeviceDriver>	deviceDriver,
-#else
-											de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	deviceDriver,
-#endif // CTS_USES_VULKANSC
 											ShaderType			shaderType,
 											VkShaderStageFlags	shaderStage,
 											VkFormat			bufferFormat,
 											BufferAccessType	bufferAccessType,
 											VkDeviceSize		inBufferAccessRange,
 											VkDeviceSize		outBufferAccessRange,
-											bool				accessOutOfBackingMemory,
-											bool				testPipelineRobustness)
+											bool				accessOutOfBackingMemory)
 	: vkt::TestInstance				(context)
 	, m_device						(device)
-	, m_deviceDriver				(deviceDriver)
 	, m_shaderType					(shaderType)
 	, m_shaderStage					(shaderStage)
 	, m_bufferFormat				(bufferFormat)
@@ -829,16 +682,12 @@ BufferAccessInstance::BufferAccessInstance (Context&			context,
 	, m_inBufferAccessRange			(inBufferAccessRange)
 	, m_outBufferAccessRange		(outBufferAccessRange)
 	, m_accessOutOfBackingMemory	(accessOutOfBackingMemory)
-	, m_testPipelineRobustness		(testPipelineRobustness)
 {
-	const DeviceInterface&		vk						= *m_deviceDriver;
-	const auto&					vki						= context.getInstanceInterface();
-	const auto					instance				= context.getInstance();
+	const DeviceInterface&		vk						= context.getDeviceInterface();
 	const deUint32				queueFamilyIndex		= context.getUniversalQueueFamilyIndex();
 	const bool					isTexelAccess			= !!(m_shaderType == SHADER_TYPE_TEXEL_COPY);
 	const bool					readFromStorage			= !!(m_bufferAccessType == BUFFER_ACCESS_TYPE_READ_FROM_STORAGE);
-	const VkPhysicalDevice		physicalDevice			= chooseDevice(vki, instance, context.getTestContext().getCommandLine());
-	SimpleAllocator				memAlloc				(vk, *m_device, getPhysicalDeviceMemoryProperties(vki, physicalDevice));
+	SimpleAllocator				memAlloc				(vk, *m_device, getPhysicalDeviceMemoryProperties(m_context.getInstanceInterface(), m_context.getPhysicalDevice()));
 	tcu::TestLog&				log						= m_context.getTestContext().getLog();
 
 	DE_ASSERT(RobustBufferAccessTest::s_numberOfBytesAccessed % sizeof(deUint32) == 0);
@@ -869,7 +718,7 @@ BufferAccessInstance::BufferAccessInstance (Context&			context,
 	// Check format support
 	{
 		VkFormatFeatureFlags		requiredFormatFeatures	= 0;
-		const VkFormatProperties	formatProperties		= getPhysicalDeviceFormatProperties(vki, physicalDevice, m_bufferFormat);
+		const VkFormatProperties	formatProperties		= getPhysicalDeviceFormatProperties(context.getInstanceInterface(), context.getPhysicalDevice(), m_bufferFormat);
 
 		if (isTexelAccess)
 		{
@@ -950,17 +799,12 @@ BufferAccessInstance::BufferAccessInstance (Context&			context,
 		m_outBufferAllocSize		= outBufferMemoryReqs.size;
 		m_outBufferAlloc			= memAlloc.allocate(outBufferMemoryReqs, MemoryRequirement::HostVisible);
 
-#ifdef CTS_USES_VULKANSC
-		if (m_context.getTestContext().getCommandLine().isSubProcess())
-#endif // CTS_USES_VULKANSC
+		// If we are requesting access out of the memory that backs the buffer, make sure the test is able to do so.
+		if (m_accessOutOfBackingMemory)
 		{
-			// If we are requesting access out of the memory that backs the buffer, make sure the test is able to do so.
-			if (m_accessOutOfBackingMemory)
+			if (m_outBufferAllocSize >= ((RobustBufferAccessTest::s_testArraySize + 1) * RobustBufferAccessTest::s_numberOfBytesAccessed))
 			{
-				if (m_outBufferAllocSize >= ((RobustBufferAccessTest::s_testArraySize + 1) * RobustBufferAccessTest::s_numberOfBytesAccessed))
-				{
-					TCU_THROW(NotSupportedError, "Cannot access beyond the end of the memory that backs the buffer");
-				}
+				TCU_THROW(NotSupportedError, "Cannot access beyond the end of the memory that backs the buffer");
 			}
 		}
 
@@ -1124,7 +968,7 @@ BufferAccessInstance::BufferAccessInstance (Context&			context,
 
 	if (m_shaderStage == VK_SHADER_STAGE_COMPUTE_BIT)
 	{
-		m_testEnvironment = de::MovePtr<TestEnvironment>(new ComputeEnvironment(m_context, *m_deviceDriver, *m_device, *m_descriptorSetLayout, *m_descriptorSet, m_testPipelineRobustness));
+		m_testEnvironment = de::MovePtr<TestEnvironment>(new ComputeEnvironment(m_context, *m_device, *m_descriptorSetLayout, *m_descriptorSet));
 	}
 	else
 	{
@@ -1189,19 +1033,13 @@ BufferAccessInstance::BufferAccessInstance (Context&			context,
 		};
 
 		m_testEnvironment = de::MovePtr<TestEnvironment>(new GraphicsEnvironment(m_context,
-																				 *m_deviceDriver,
 																				 *m_device,
 																				 *m_descriptorSetLayout,
 																				 *m_descriptorSet,
 																				 GraphicsEnvironment::VertexBindings(1, vertexInputBindingDescription),
 																				 GraphicsEnvironment::VertexAttributes(1, vertexInputAttributeDescription),
-																				 drawWithOneVertexBuffer,
-																				 m_testPipelineRobustness));
+																				 drawWithOneVertexBuffer));
 	}
-}
-
-BufferAccessInstance::~BufferAccessInstance(void)
-{
 }
 
 // Verifies if the buffer has the value initialized by BufferAccessInstance::populateReadBuffer at a given offset.
@@ -1253,7 +1091,7 @@ bool BufferAccessInstance::isOutBufferValueUnchanged (VkDeviceSize offsetInBytes
 
 tcu::TestStatus BufferAccessInstance::iterate (void)
 {
-	const DeviceInterface&		vk			= *m_deviceDriver;
+	const DeviceInterface&		vk			= m_context.getDeviceInterface();
 	const vk::VkCommandBuffer	cmdBuffer	= m_testEnvironment->getCommandBuffer();
 
 	// Submit command buffer
@@ -1494,25 +1332,18 @@ bool BufferAccessInstance::verifyResult (void)
 
 BufferReadInstance::BufferReadInstance (Context&			context,
 										Move<VkDevice>		device,
-#ifndef CTS_USES_VULKANSC
-										de::MovePtr<vk::DeviceDriver>	deviceDriver,
-#else
-										de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	deviceDriver,
-#endif // CTS_USES_VULKANSC
 										ShaderType			shaderType,
 										VkShaderStageFlags	shaderStage,
 										VkFormat			bufferFormat,
 										bool				readFromStorage,
 										VkDeviceSize		inBufferAccessRange,
-										bool				accessOutOfBackingMemory,
-										bool				testPipelineRobustness)
+										bool				accessOutOfBackingMemory)
 
-	: BufferAccessInstance	(context, device, deviceDriver, shaderType, shaderStage, bufferFormat,
+	: BufferAccessInstance	(context, device, shaderType, shaderStage, bufferFormat,
 							 readFromStorage ? BUFFER_ACCESS_TYPE_READ_FROM_STORAGE : BUFFER_ACCESS_TYPE_READ,
 							 inBufferAccessRange,
 							 RobustBufferAccessTest::s_numberOfBytesAccessed,	// outBufferAccessRange
-							 accessOutOfBackingMemory,
-							 testPipelineRobustness)
+							 accessOutOfBackingMemory)
 {
 }
 
@@ -1520,24 +1351,17 @@ BufferReadInstance::BufferReadInstance (Context&			context,
 
 BufferWriteInstance::BufferWriteInstance (Context&				context,
 										  Move<VkDevice>		device,
-#ifndef CTS_USES_VULKANSC
-										  de::MovePtr<vk::DeviceDriver>		deviceDriver,
-#else
-										  de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	deviceDriver,
-#endif // CTS_USES_VULKANSC
 										  ShaderType			shaderType,
 										  VkShaderStageFlags	shaderStage,
 										  VkFormat				bufferFormat,
 										  VkDeviceSize			writeBufferAccessRange,
-										  bool					accessOutOfBackingMemory,
-										  bool					testPipelineRobustness)
+										  bool					accessOutOfBackingMemory)
 
-	: BufferAccessInstance	(context, device, deviceDriver, shaderType, shaderStage, bufferFormat,
+	: BufferAccessInstance	(context, device, shaderType, shaderStage, bufferFormat,
 							 BUFFER_ACCESS_TYPE_WRITE,
 							 RobustBufferAccessTest::s_numberOfBytesAccessed,	// inBufferAccessRange
 							 writeBufferAccessRange,
-							 accessOutOfBackingMemory,
-							 testPipelineRobustness)
+							 accessOutOfBackingMemory)
 {
 }
 
@@ -1561,7 +1385,7 @@ static const char* getShaderStageName (VkShaderStageFlagBits shaderStage)
 	return DE_NULL;
 }
 
-static void addBufferAccessTests (tcu::TestContext& testCtx, tcu::TestCaseGroup* parentNode, bool testPipelineRobustness)
+static void addBufferAccessTests (tcu::TestContext& testCtx, tcu::TestCaseGroup* parentNode)
 {
 	struct BufferRangeConfig
 	{
@@ -1659,13 +1483,6 @@ static void addBufferAccessTests (tcu::TestContext& testCtx, tcu::TestCaseGroup*
 					break;
 				}
 
-				// Avoid too much duplication by excluding certain test cases
-				if (testPipelineRobustness &&
-					!(bufferFormat == VK_FORMAT_R32_UINT || bufferFormat == VK_FORMAT_R64_SINT || bufferFormat == VK_FORMAT_R32_SFLOAT || bufferFormat == VK_FORMAT_A2B10G10R10_UNORM_PACK32))
-				{
-					continue;
-				}
-
 				const std::string				formatName		= getFormatName(bufferFormat);
 				de::MovePtr<tcu::TestCaseGroup>	formatTests		(new tcu::TestCaseGroup(testCtx, de::toLower(formatName.substr(10)).c_str(), ""));
 
@@ -1678,13 +1495,9 @@ static void addBufferAccessTests (tcu::TestContext& testCtx, tcu::TestCaseGroup*
 					const BufferRangeConfig&	rangeConfig			= ranges[rangeNdx];
 					const VkDeviceSize			rangeInBytes		= rangeConfig.range * rangeMultiplier;
 
-					uboReadTests->addChild(new RobustBufferReadTest(testCtx, rangeConfig.name, "", stage, (ShaderType)shaderTypeNdx, bufferFormat, testPipelineRobustness, rangeInBytes, false, false));
-
-					// Avoid too much duplication by excluding certain test cases
-					if (!testPipelineRobustness)
-						ssboReadTests->addChild(new RobustBufferReadTest(testCtx, rangeConfig.name, "", stage, (ShaderType)shaderTypeNdx, bufferFormat, testPipelineRobustness, rangeInBytes, true, false));
-
-					ssboWriteTests->addChild(new RobustBufferWriteTest(testCtx, rangeConfig.name, "", stage, (ShaderType)shaderTypeNdx, bufferFormat, testPipelineRobustness, rangeInBytes, false));
+					uboReadTests->addChild(new RobustBufferReadTest(testCtx, rangeConfig.name, "", stage, (ShaderType)shaderTypeNdx, bufferFormat, rangeInBytes, false, false));
+					ssboReadTests->addChild(new RobustBufferReadTest(testCtx, rangeConfig.name, "", stage, (ShaderType)shaderTypeNdx, bufferFormat, rangeInBytes, true, false));
+					ssboWriteTests->addChild(new RobustBufferWriteTest(testCtx, rangeConfig.name, "", stage, (ShaderType)shaderTypeNdx, bufferFormat, rangeInBytes, false));
 
 				}
 
@@ -1701,13 +1514,9 @@ static void addBufferAccessTests (tcu::TestContext& testCtx, tcu::TestCaseGroup*
 
 				const VkFormat format = (((ShaderType)shaderTypeNdx == SHADER_TYPE_TEXEL_COPY ) ? VK_FORMAT_R32G32B32A32_SFLOAT : VK_FORMAT_R32_SFLOAT);
 
-				outOfAllocTests->addChild(new RobustBufferReadTest(testCtx, "oob_uniform_read", "", stage, (ShaderType)shaderTypeNdx, format, testPipelineRobustness, 16, false, true));
-
-				// Avoid too much duplication by excluding certain test cases
-				if (!testPipelineRobustness)
-					outOfAllocTests->addChild(new RobustBufferReadTest(testCtx, "oob_storage_read", "", stage, (ShaderType)shaderTypeNdx, format, testPipelineRobustness, 16, true, true));
-
-				outOfAllocTests->addChild(new RobustBufferWriteTest(testCtx, "oob_storage_write", "", stage, (ShaderType)shaderTypeNdx, format, testPipelineRobustness, 16, true));
+				outOfAllocTests->addChild(new RobustBufferReadTest(testCtx, "oob_uniform_read", "", stage, (ShaderType)shaderTypeNdx, format, 16, false, true));
+				outOfAllocTests->addChild(new RobustBufferReadTest(testCtx, "oob_storage_read", "", stage, (ShaderType)shaderTypeNdx, format, 16, true, true));
+				outOfAllocTests->addChild(new RobustBufferWriteTest(testCtx, "oob_storage_write", "", stage, (ShaderType)shaderTypeNdx, format, 16, true));
 
 				shaderTypeTests->addChild(outOfAllocTests.release());
 			}
@@ -1722,20 +1531,10 @@ tcu::TestCaseGroup* createBufferAccessTests (tcu::TestContext& testCtx)
 {
 	de::MovePtr<tcu::TestCaseGroup> bufferAccessTests	(new tcu::TestCaseGroup(testCtx, "buffer_access", ""));
 
-	addBufferAccessTests(testCtx, bufferAccessTests.get(), false);
+	addBufferAccessTests(testCtx, bufferAccessTests.get());
 
 	return bufferAccessTests.release();
 }
-
-#ifndef CTS_USES_VULKANSC
-tcu::TestCaseGroup* createPipelineRobustnessBufferAccessTests (tcu::TestContext& testCtx)
-{
-	de::MovePtr<tcu::TestCaseGroup> bufferAccessTests	(new tcu::TestCaseGroup(testCtx, "pipeline_robustness_buffer_access", ""));
-	addBufferAccessTests(testCtx, bufferAccessTests.get(), true);
-
-	return bufferAccessTests.release();
-}
-#endif
 
 } // robustness
 } // vkt

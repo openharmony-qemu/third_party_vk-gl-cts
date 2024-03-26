@@ -173,16 +173,11 @@ tcu::TestStatus BufferSuballocation::createTestBuffer					(VkDeviceSize				size,
 
 	vk.getBufferMemoryRequirements(vkDevice, *testBuffer, &memReqs);
 
-#ifdef CTS_USES_VULKANSC
-	if (context.getTestContext().getCommandLine().isSubProcess())
-#endif // CTS_USES_VULKANSC
+	if (size > memReqs.size)
 	{
-		if (size > memReqs.size)
-		{
-			std::ostringstream errorMsg;
-			errorMsg << "Required memory size (" << memReqs.size << " bytes) smaller than the buffer's size (" << size << " bytes)!";
-			return tcu::TestStatus::fail(errorMsg.str());
-		}
+		std::ostringstream errorMsg;
+		errorMsg << "Requied memory size (" << memReqs.size << " bytes) smaller than the buffer's size (" << size << " bytes)!";
+		return tcu::TestStatus::fail(errorMsg.str());
 	}
 
 	const VkMemoryAllocateInfo			memAlloc						=
@@ -280,9 +275,6 @@ tcu::TestStatus BufferDedicatedAllocation::createTestBuffer				(VkDeviceSize				
 
 	deMemset(&memoryProperties, 0, sizeof(memoryProperties));
 	vkInstance.getPhysicalDeviceMemoryProperties(vkPhysicalDevice, &memoryProperties);
-
-	if (memReqs.memoryRequirements.memoryTypeBits == 0)
-		return tcu::TestStatus::fail("memoryTypeBits is 0");
 
 	const deUint32						heapTypeIndex					= static_cast<deUint32>(deCtz32(memReqs.memoryRequirements.memoryTypeBits));
 

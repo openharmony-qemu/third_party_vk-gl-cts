@@ -33,7 +33,6 @@
 #include "vkObjUtil.hpp"
 #include "vkImageUtil.hpp"
 #include "vkQueryUtil.hpp"
-#include "vkDeviceUtil.hpp"
 #include "vkPlatform.hpp"
 
 #include "vktTestGroupUtil.hpp"
@@ -88,9 +87,10 @@ Vertex basicTriangles[6] =
 	{ 1.0f,  1.0f},
 };
 
-Move<VkDevice> createImageRobustnessDevice(Context& context, const vk::VkInstance& instance, const InstanceInterface& vki)
+Move<VkDevice> createImageRobustnessDevice(Context& context)
 {
-	const VkPhysicalDevice		physicalDevice	= chooseDevice(vki, instance, context.getTestContext().getCommandLine());
+	const InstanceInterface&	instance		= context.getInstanceInterface();
+	const vk::VkPhysicalDevice	physicalDevice	= context.getPhysicalDevice();
 	const float					queuePriority	= 1.0f;
 
 	// Create a universal queue
@@ -127,7 +127,7 @@ Move<VkDevice> createImageRobustnessDevice(Context& context, const vk::VkInstanc
 	enabledFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 	enabledFeatures.pNext = &fsrFeatures;
 
-	vki.getPhysicalDeviceFeatures2(physicalDevice, &enabledFeatures);
+	instance.getPhysicalDeviceFeatures2(physicalDevice, &enabledFeatures);
 
 	const VkDeviceCreateInfo deviceParams =
 	{
@@ -144,7 +144,7 @@ Move<VkDevice> createImageRobustnessDevice(Context& context, const vk::VkInstanc
 	};
 
 	return createCustomDevice(context.getTestContext().getCommandLine().isValidationEnabled(), context.getPlatformInterface(),
-							  instance, vki, context.getPhysicalDevice(), &deviceParams);
+							  context.getInstance(), context.getInstanceInterface(), context.getPhysicalDevice(), &deviceParams);
 }
 
 class FSRPixelConsistencyInstance : public TestInstance
@@ -481,19 +481,12 @@ tcu::TestStatus FSRPixelConsistencyInstance::iterate (void)
 {
 	const VkPhysicalDeviceMemoryProperties memoryProperties = vk::getPhysicalDeviceMemoryProperties(m_context.getInstanceInterface(), m_context.getPhysicalDevice());
 
-	const CustomInstance		instance			(createCustomInstanceFromContext(m_context));
-	const InstanceDriver&		instanceDriver		(instance.getDriver());
-
-	Move<VkDevice>				vkd					= createImageRobustnessDevice(m_context, instance, instanceDriver);
-	const VkDevice				device				= *vkd;
-#ifndef CTS_USES_VULKANSC
-	de::MovePtr<vk::DeviceDriver>	deviceDriver	= de::MovePtr<DeviceDriver>(new DeviceDriver(m_context.getPlatformInterface(), m_context.getInstance(), device));
-#else
-	de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	deviceDriver = de::MovePtr<DeviceDriverSC, DeinitDeviceDeleter>(new DeviceDriverSC(m_context.getPlatformInterface(), m_context.getInstance(), device, m_context.getTestContext().getCommandLine(), m_context.getResourceInterface(), m_context.getDeviceVulkanSC10Properties(), m_context.getDeviceProperties()), vk::DeinitDeviceDeleter(m_context.getResourceInterface().get(), device));
-#endif // CTS_USES_VULKANSC
-	const DeviceInterface&		vk					= *deviceDriver;
-	const VkQueue				queue				= getDeviceQueue(vk, device, m_context.getUniversalQueueFamilyIndex(), 0);
-	de::MovePtr<Allocator>		allocator			= de::MovePtr<Allocator>(new SimpleAllocator(vk, device, memoryProperties));
+	Move<VkDevice>				vkd			 = createImageRobustnessDevice(m_context);
+	const VkDevice				device		 = *vkd;
+	de::MovePtr<DeviceDriver>	deviceDriver = de::MovePtr<DeviceDriver>(new DeviceDriver(m_context.getPlatformInterface(), m_context.getInstance(), device));
+	const DeviceInterface&		vk			 = *deviceDriver.get();
+	const VkQueue				queue		 = getDeviceQueue(vk, device, m_context.getUniversalQueueFamilyIndex(), 0);
+	de::MovePtr<Allocator>		allocator	 = de::MovePtr<Allocator>(new SimpleAllocator(vk, device, memoryProperties));
 
 	// Create vertex buffer
 	const VkDeviceSize vertexBufferSize = sizeof(basicTriangles);

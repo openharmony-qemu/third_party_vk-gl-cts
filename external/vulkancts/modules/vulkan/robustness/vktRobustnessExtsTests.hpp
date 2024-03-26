@@ -33,7 +33,6 @@ namespace robustness
 
 tcu::TestCaseGroup* createRobustness2Tests(tcu::TestContext& testCtx);
 tcu::TestCaseGroup* createImageRobustnessTests(tcu::TestContext& testCtx);
-tcu::TestCaseGroup* createPipelineRobustnessTests(tcu::TestContext& testCtx);
 
 } // robustness
 } // vkt

@@ -3068,8 +3068,8 @@ tcu::TestStatus verifyIndependenceSettings(Context& context)
 	if (!context.isDeviceFunctionalitySupported("VK_KHR_shader_float_controls"))
 		TCU_THROW(NotSupportedError, "VK_KHR_shader_float_controls not supported");
 
-	vk::VkPhysicalDeviceFloatControlsProperties	fcProperties;
-	fcProperties.sType	= VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FLOAT_CONTROLS_PROPERTIES;
+	vk::VkPhysicalDeviceFloatControlsPropertiesKHR	fcProperties;
+	fcProperties.sType	= VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FLOAT_CONTROLS_PROPERTIES_KHR;
 	fcProperties.pNext	= DE_NULL;
 
 	vk::VkPhysicalDeviceProperties2 deviceProperties;
@@ -3085,7 +3085,7 @@ tcu::TestStatus verifyIndependenceSettings(Context& context)
 	const vk::InstanceInterface&	instanceInterface	= context.getInstanceInterface();
 	instanceInterface.getPhysicalDeviceProperties2(physicalDevice, &deviceProperties);
 
-	if (fcProperties.roundingModeIndependence == VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_NONE)
+	if (fcProperties.roundingModeIndependence == VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_NONE_KHR)
 	{
 		vk::VkBool32 fp16rte = fcProperties.shaderRoundingModeRTEFloat16;
 		vk::VkBool32 fp32rte = fcProperties.shaderRoundingModeRTEFloat32;
@@ -3099,7 +3099,7 @@ tcu::TestStatus verifyIndependenceSettings(Context& context)
 		if ((fp16rtz != fp32rtz) || (fp32rtz != fp64rtz))
 			return fail("shaderRoundingModeRTZFloat*");
 	}
-	else if (fcProperties.roundingModeIndependence == VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_32_BIT_ONLY)
+	else if (fcProperties.roundingModeIndependence == VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_32_BIT_ONLY_KHR)
 	{
 		vk::VkBool32 fp16rte = fcProperties.shaderRoundingModeRTEFloat16;
 		vk::VkBool32 fp64rte = fcProperties.shaderRoundingModeRTEFloat64;
@@ -3112,7 +3112,7 @@ tcu::TestStatus verifyIndependenceSettings(Context& context)
 			return fail("shaderRoundingModeRTZFloat16 and 64");
 	}
 
-	if (fcProperties.denormBehaviorIndependence == VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_NONE)
+	if (fcProperties.denormBehaviorIndependence == VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_NONE_KHR)
 	{
 		vk::VkBool32 fp16flush = fcProperties.shaderDenormFlushToZeroFloat16;
 		vk::VkBool32 fp32flush = fcProperties.shaderDenormFlushToZeroFloat32;
@@ -3126,7 +3126,7 @@ tcu::TestStatus verifyIndependenceSettings(Context& context)
 		if ((fp16preserve != fp32preserve) || (fp32preserve != fp64preserve))
 			return fail("shaderDenormPreserveFloat*");
 	}
-	else if (fcProperties.denormBehaviorIndependence == VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_32_BIT_ONLY)
+	else if (fcProperties.denormBehaviorIndependence == VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_32_BIT_ONLY_KHR)
 	{
 		vk::VkBool32 fp16flush = fcProperties.shaderDenormFlushToZeroFloat16;
 		vk::VkBool32 fp64flush = fcProperties.shaderDenormFlushToZeroFloat64;
@@ -3351,8 +3351,8 @@ void ComputeTestGroupBuilder::createSettingsTests(TestCaseGroup* parentGroup)
 	parentGroup->addChild(group);
 
 	using SFCI = VkShaderFloatControlsIndependence;
-	const SFCI independence32	= VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_32_BIT_ONLY;
-	const SFCI independenceAll	= VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_ALL;
+	const SFCI independence32	= VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_32_BIT_ONLY_KHR;
+	const SFCI independenceAll	= VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_ALL_KHR;
 
 	vector<SettingsTestCaseInfo> testCases =
 	{
@@ -3682,7 +3682,7 @@ void ComputeTestGroupBuilder::fillShaderSpec(const SettingsTestCaseInfo&	testCas
 								  "OpCapability " + rtz + "\n";
 
 		floatControls.roundingModeIndependence		= testCaseInfo.independenceSetting;
-		floatControls.denormBehaviorIndependence	= VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_NONE;
+		floatControls.denormBehaviorIndependence	= VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_NONE_KHR;
 		floatControls.shaderRoundingModeRTEFloat16	= fp16RteRounding;
 		floatControls.shaderRoundingModeRTZFloat16	= fp16Required && !fp16RteRounding;
 		floatControls.shaderRoundingModeRTEFloat32	= fp32RteRounding;
@@ -3721,7 +3721,7 @@ void ComputeTestGroupBuilder::fillShaderSpec(const SettingsTestCaseInfo&	testCas
 									  "OpCapability " + flush + "\n";
 
 		floatControls.denormBehaviorIndependence		= testCaseInfo.independenceSetting;
-		floatControls.roundingModeIndependence			= VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_NONE;
+		floatControls.roundingModeIndependence			= VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_NONE_KHR;
 		floatControls.shaderDenormPreserveFloat16		= fp16DenormPreserve;
 		floatControls.shaderDenormFlushToZeroFloat16	= fp16Required && !fp16DenormPreserve;
 		floatControls.shaderDenormPreserveFloat32		= fp32DenormPreserve;
@@ -4383,8 +4383,8 @@ InstanceContext GraphicsTestGroupBuilder::createInstanceContext(const OperationT
 		}
 
 		// varying is not used but it needs to be specified so lets use type_i32 for it
-		string unusedVertVarying = "%BP_vertex_result     = OpVariable %type_i32_optr Output\n";
-		string unusedFragVarying = "%BP_vertex_result     = OpVariable %type_i32_iptr Input\n";
+		string dummyVertVarying = "%BP_vertex_result     = OpVariable %type_i32_optr Output\n";
+		string dummyFragVarying = "%BP_vertex_result     = OpVariable %type_i32_iptr Input\n";
 
 		vertCapabilities	= "";
 		vertExtensions		= "";
@@ -4401,8 +4401,8 @@ InstanceContext GraphicsTestGroupBuilder::createInstanceContext(const OperationT
 
 		vertExecutionMode	= "";
 		fragExecutionMode	= behaviorExecutionMode;
-		vertIODefinitions	= unusedVertVarying;
-		fragIODefinitions	= unusedFragVarying;
+		vertIODefinitions	= dummyVertVarying;
+		fragIODefinitions	= dummyFragVarying;
 
 		vertArguments		= "";
 		fragArguments		= specOpData.arguments;

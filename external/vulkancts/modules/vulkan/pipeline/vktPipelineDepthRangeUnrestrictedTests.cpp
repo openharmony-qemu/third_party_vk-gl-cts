@@ -37,11 +37,9 @@
 #include "vkQueryUtil.hpp"
 #include "vkTypeUtil.hpp"
 #include "vkObjUtil.hpp"
-
 #include "tcuTestLog.hpp"
 #include "tcuTextureUtil.hpp"
 #include "tcuImageCompare.hpp"
-#include "tcuCommandLine.hpp"
 
 #include <sstream>
 #include <vector>
@@ -66,19 +64,18 @@ enum testDynamicStaticMode
 
 struct DepthRangeUnrestrictedParam
 {
-	PipelineConstructionType	pipelineConstructionType;
-	VkFormat					depthFormat;
-	VkBool32					testClearValueOnly;
-	VkClearValue				depthBufferClearValue;
-	VkBool32					depthClampEnable;
-	float						wc;							// Component W of the vertices
-	deUint32					viewportDepthBoundsMode;
-	float						viewportMinDepth;
-	float						viewportMaxDepth;
-	VkBool32					depthBoundsTestEnable;
-	float						minDepthBounds;
-	float						maxDepthBounds;
-	VkCompareOp					depthCompareOp;
+	VkFormat		depthFormat;
+	VkBool32		testClearValueOnly;
+	VkClearValue	depthBufferClearValue;
+	VkBool32		depthClampEnable;
+	float			wc;							// Component W of the vertices
+	deUint32		viewportDepthBoundsMode;
+	float			viewportMinDepth;
+	float			viewportMaxDepth;
+	VkBool32		depthBoundsTestEnable;
+	float			minDepthBounds;
+	float			maxDepthBounds;
+	VkCompareOp		depthCompareOp;
 };
 
 // helper functions
@@ -467,7 +464,7 @@ public:
 protected:
 			void				prepareRenderPass						(VkRenderPass renderPass, VkFramebuffer framebuffer, VkPipeline pipeline);
 			void				prepareCommandBuffer					(void);
-			void				preparePipelineWrapper					(GraphicsPipelineWrapper& gpw, VkRenderPass renderpass);
+			Move<VkPipeline>	buildPipeline							(VkRenderPass renderpass);
 			void				bindShaderStage							(VkShaderStageFlagBits					stage,
 																		 const char*							sourceName,
 																		 const char*							entryName);
@@ -495,23 +492,61 @@ protected:
 	Move<VkImage>						m_colorImage;
 	Move<VkImageView>					m_colorAttachmentView;
 	Move<VkFramebuffer>					m_framebuffer;
-	GraphicsPipelineWrapper				m_pipeline;
+	Move<VkPipeline>					m_pipeline;
 
-	Move<VkShaderModule>				m_vertModule;
-	Move<VkShaderModule>				m_fragModule;
+	Move<VkShaderModule>				m_shaderModules[2];
+	deUint32							m_shaderStageCount;
+	VkPipelineShaderStageCreateInfo		m_shaderStageInfo[2];
 };
 
-void DepthRangeUnrestrictedTestInstance::preparePipelineWrapper (GraphicsPipelineWrapper& gpw, VkRenderPass renderpass)
+void DepthRangeUnrestrictedTestInstance::bindShaderStage (VkShaderStageFlagBits	stage,
+														  const char*			sourceName,
+														  const char*			entryName)
 {
+	const DeviceInterface&	vk			= m_context.getDeviceInterface();
+	const VkDevice			vkDevice	= m_context.getDevice();
+
+	// Create shader module
+	deUint32*				code		= (deUint32*)m_context.getBinaryCollection().get(sourceName).getBinary();
+	deUint32				codeSize	= (deUint32)m_context.getBinaryCollection().get(sourceName).getSize();
+
+	const VkShaderModuleCreateInfo moduleCreateInfo =
+	{
+		VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,				// VkStructureType				sType;
+		DE_NULL,													// const void*					pNext;
+		0u,															// VkShaderModuleCreateFlags	flags;
+		codeSize,													// deUintptr					codeSize;
+		code,														// const deUint32*				pCode;
+	};
+
+	m_shaderModules[m_shaderStageCount] = createShaderModule(vk, vkDevice, &moduleCreateInfo);
+
+	// Prepare shader stage info
+	m_shaderStageInfo[m_shaderStageCount].sType					= VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	m_shaderStageInfo[m_shaderStageCount].pNext					= DE_NULL;
+	m_shaderStageInfo[m_shaderStageCount].flags					= 0u;
+	m_shaderStageInfo[m_shaderStageCount].stage					= stage;
+	m_shaderStageInfo[m_shaderStageCount].module				= *m_shaderModules[m_shaderStageCount];
+	m_shaderStageInfo[m_shaderStageCount].pName					= entryName;
+	m_shaderStageInfo[m_shaderStageCount].pSpecializationInfo	= DE_NULL;
+
+	m_shaderStageCount++;
+}
+
+Move<VkPipeline> DepthRangeUnrestrictedTestInstance::buildPipeline (VkRenderPass renderPass)
+{
+	const DeviceInterface&		vk					= m_context.getDeviceInterface();
+	const VkDevice				vkDevice			= m_context.getDevice();
+
 	// Create pipeline
-	const VkVertexInputBindingDescription vertexInputBindingDescription
+	const VkVertexInputBindingDescription vertexInputBindingDescription =
 	{
 		0u,									// deUint32				binding;
 		sizeof(Vertex4RGBA),				// deUint32				strideInBytes;
 		VK_VERTEX_INPUT_RATE_VERTEX,		// VkVertexInputRate	inputRate;
 	};
 
-	const VkVertexInputAttributeDescription vertexInputAttributeDescriptions[2]
+	const VkVertexInputAttributeDescription vertexInputAttributeDescriptions[2] =
 	{
 		{
 			0u,									// deUint32 location;
@@ -527,7 +562,7 @@ void DepthRangeUnrestrictedTestInstance::preparePipelineWrapper (GraphicsPipelin
 		}
 	};
 
-	const VkPipelineVertexInputStateCreateInfo vertexInputStateParams
+	const VkPipelineVertexInputStateCreateInfo vertexInputStateParams =
 	{
 		VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,		// VkStructureType							sType;
 		DE_NULL,														// const void*								pNext;
@@ -538,16 +573,36 @@ void DepthRangeUnrestrictedTestInstance::preparePipelineWrapper (GraphicsPipelin
 		vertexInputAttributeDescriptions,								// const VkVertexInputAttributeDescription* pVertexAttributeDescriptions;
 	};
 
-	const std::vector<VkRect2D>		scissor		{ makeRect2D(m_renderSize) };
-	std::vector<VkViewport>			viewport	{ makeViewport(m_renderSize) };
+	const VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateParams =
+	{
+		VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,	// VkStructureType							sType;
+		DE_NULL,														// const void*								pNext;
+		0u,																// VkPipelineInputAssemblyStateCreateFlags	flags;
+		VK_PRIMITIVE_TOPOLOGY_POINT_LIST,								// VkPrimitiveTopology						topology;
+		VK_FALSE,														// VkBool32									primitiveRestartEnable;
+	};
+
+	const VkRect2D		scissor		= makeRect2D(m_renderSize);
+	VkViewport			viewport	= makeViewport(m_renderSize);
 
 	if (!(m_param.viewportDepthBoundsMode & TEST_MODE_VIEWPORT_DYNAMIC))
 	{
-		viewport[0].minDepth				= m_param.viewportMinDepth;
-		viewport[0].maxDepth				= m_param.viewportMaxDepth;
+		viewport.minDepth				= m_param.viewportMinDepth;
+		viewport.maxDepth				= m_param.viewportMaxDepth;
 	}
 
-	const VkPipelineRasterizationStateCreateInfo rasterStateParams
+	const VkPipelineViewportStateCreateInfo viewportStateParams =
+	{
+		VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,			// VkStructureType							sType;
+		DE_NULL,														// const void*								pNext;
+		0u,																// VkPipelineViewportStateCreateFlags		flags;
+		1u,																// deUint32									viewportCount;
+		&viewport,														// const VkViewport*						pViewports;
+		1u,																// deUint32									scissorCount;
+		&scissor														// const VkRect2D*							pScissors;
+	};
+
+	const VkPipelineRasterizationStateCreateInfo rasterStateParams =
 	{
 		VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,		// VkStructureType							sType;
 		DE_NULL,														// const void*								pNext;
@@ -589,6 +644,19 @@ void DepthRangeUnrestrictedTestInstance::preparePipelineWrapper (GraphicsPipelin
 		1u,															// deUint32										attachmentCount;
 		&colorBlendAttachmentState,									// const VkPipelineColorBlendAttachmentState*	pAttachments;
 		{ 0.0f, 0.0f, 0.0f, 0.0f },									// float										blendConst[4];
+	};
+
+	const VkPipelineMultisampleStateCreateInfo  multisampleStateParams	=
+	{
+		VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,	// VkStructureType								sType;
+		DE_NULL,													// const void*									pNext;
+		0u,															// VkPipelineMultisampleStateCreateFlags		flags;
+		VK_SAMPLE_COUNT_1_BIT,										// VkSampleCountFlagBits						rasterizationSamples;
+		VK_FALSE,													// VkBool32										sampleShadingEnable;
+		0.0f,														// float										minSampleShading;
+		DE_NULL,													// const VkSampleMask*							pSampleMask;
+		VK_FALSE,													// VkBool32										alphaToCoverageEnable;
+		VK_FALSE,													// VkBool32										alphaToOneEnable;
 	};
 
 	float minDepthBounds = m_param.minDepthBounds;
@@ -642,28 +710,37 @@ void DepthRangeUnrestrictedTestInstance::preparePipelineWrapper (GraphicsPipelin
 
 	const VkPipelineDynamicStateCreateInfo			dynamicStateParams			=
 	{
-		VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,		// VkStructureType								sType;
-		DE_NULL,													// const void*									pNext;
-		(VkPipelineDynamicStateCreateFlags)0u,						// VkPipelineDynamicStateCreateFlags			flags;
-		(deUint32)dynamicStates.size(),								// deUint32										dynamicStateCount;
-		(const VkDynamicState*)dynamicStates.data()					// const VkDynamicState*						pDynamicStates;
+		VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,	// VkStructureType                      sType;
+		DE_NULL,												// const void*                          pNext;
+		(VkPipelineDynamicStateCreateFlags)0u,					// VkPipelineDynamicStateCreateFlags    flags;
+		(deUint32)dynamicStates.size(),							// deUint32                             dynamicStateCount;
+		(const VkDynamicState*)dynamicStates.data()				// const VkDynamicState*                pDynamicStates;
 	};
 
-	gpw.setDefaultTopology(VK_PRIMITIVE_TOPOLOGY_POINT_LIST)
-	   .setDefaultMultisampleState()
-	   .setDynamicState(&dynamicStateParams)
-	   .setupVertexInputState(&vertexInputStateParams)
-	   .setupPreRasterizationShaderState(viewport,
-			scissor,
-			*m_pipelineLayout,
-		   renderpass,
-			0u,
-			*m_vertModule,
-			&rasterStateParams)
-	   .setupFragmentShaderState(*m_pipelineLayout, renderpass, 0u, *m_fragModule, &depthStencilStateParams)
-	   .setupFragmentOutputState(renderpass, 0u, &colorBlendStateParams)
-	   .setMonolithicPipelineLayout(*m_pipelineLayout)
-	   .buildPipeline();
+	const VkGraphicsPipelineCreateInfo graphicsPipelineParams =
+	{
+		VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,	// VkStructureType										sType;
+		DE_NULL,											// const void*											pNext;
+		0u,													// VkPipelineCreateFlags								flags;
+		m_shaderStageCount,									// deUint32												stageCount;
+		m_shaderStageInfo,									// const VkPipelineShaderStageCreateInfo*				pStages;
+		&vertexInputStateParams,							// const VkPipelineVertexInputStateCreateInfo*			pVertexInputState;
+		&inputAssemblyStateParams,							// const VkPipelineInputAssemblyStateCreateInfo*		pInputAssemblyState;
+		DE_NULL,											// const VkPipelineTessellationStateCreateInfo*			pTessellationState;
+		&viewportStateParams,								// const VkPipelineViewportStateCreateInfo*				pViewportState;
+		&rasterStateParams,									// const VkPipelineRasterizationStateCreateInfo*		pRasterState;
+		&multisampleStateParams,							// const VkPipelineMultisampleStateCreateInfo*			pMultisampleState;
+		&depthStencilStateParams,							// const VkPipelineDepthStencilStateCreateInfo*			pDepthStencilState;
+		&colorBlendStateParams,								// const VkPipelineColorBlendStateCreateInfo*			pColorBlendState;
+		&dynamicStateParams,								// const VkPipelineDynamicStateCreateInfo*				pDynamicState;
+		*m_pipelineLayout,									// VkPipelineLayout										layout;
+		renderPass,											// VkRenderPass											renderPass;
+		0u,													// deUint32												subpass;
+		DE_NULL,											// VkPipeline											basePipelineHandle;
+		0u,													// deInt32												basePipelineIndex;
+	};
+
+	return createGraphicsPipeline(vk, vkDevice, DE_NULL, &graphicsPipelineParams);
 }
 
 void DepthRangeUnrestrictedTestInstance::prepareRenderPass (VkRenderPass renderPass, VkFramebuffer framebuffer, VkPipeline pipeline)
@@ -708,7 +785,7 @@ void DepthRangeUnrestrictedTestInstance::prepareCommandBuffer (void)
 	vk.cmdPipelineBarrier(*m_cmdBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, (VkDependencyFlags)0,
 		0u, DE_NULL, 0u, DE_NULL, DE_LENGTH_OF_ARRAY(m_imageLayoutBarriers), m_imageLayoutBarriers);
 
-	prepareRenderPass(*m_renderPass, *m_framebuffer, m_pipeline.getPipeline());
+	prepareRenderPass(*m_renderPass, *m_framebuffer, *m_pipeline);
 
 	endCommandBuffer(vk, *m_cmdBuffer);
 }
@@ -720,7 +797,7 @@ DepthRangeUnrestrictedTestInstance::DepthRangeUnrestrictedTestInstance	(Context&
 	, m_extensions			(m_context.requireDeviceFunctionality("VK_EXT_depth_range_unrestricted"))
 	, m_renderSize			(tcu::UVec2(32,32))
 	, m_colorFormat			(VK_FORMAT_R8G8B8A8_UNORM)
-	, m_pipeline			(m_context.getDeviceInterface(), m_context.getDevice(), param.pipelineConstructionType)
+	, m_shaderStageCount	(0)
 {
 	const DeviceInterface&	vk				 = m_context.getDeviceInterface();
 	const VkDevice			vkDevice		 = m_context.getDevice();
@@ -804,7 +881,7 @@ DepthRangeUnrestrictedTestInstance::DepthRangeUnrestrictedTestInstance	(Context&
 			VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,				// VkStructureType			sType;
 			DE_NULL,											// const void*				pNext;
 			0u,													// VkAccessFlags			srcAccessMask;
-			VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,		// VkAccessFlags			dstAccessMask;
+			VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,		// VkAccessFlags			dstAccessMask;
 			VK_IMAGE_LAYOUT_UNDEFINED,							// VkImageLayout			oldLayout;
 			VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,	// VkImageLayout			newLayout;
 			VK_QUEUE_FAMILY_IGNORED,							// deUint32					srcQueueFamilyIndex;
@@ -873,9 +950,11 @@ DepthRangeUnrestrictedTestInstance::DepthRangeUnrestrictedTestInstance	(Context&
 		m_framebuffer = createFramebuffer(vk, vkDevice, &framebufferParams);
 	}
 
-	// Create shader modules
-	m_vertModule = createShaderModule(vk, vkDevice, context.getBinaryCollection().get("vert"), 0);
-	m_fragModule = createShaderModule(vk, vkDevice, context.getBinaryCollection().get("frag"), 0);
+	// Bind shader stages
+	{
+		bindShaderStage(VK_SHADER_STAGE_VERTEX_BIT, "vert", "main");
+		bindShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, "frag", "main");
+	}
 
 	// Create pipeline layout
 	{
@@ -894,7 +973,7 @@ DepthRangeUnrestrictedTestInstance::DepthRangeUnrestrictedTestInstance	(Context&
 	}
 
 	// Create pipeline
-	preparePipelineWrapper(m_pipeline, *m_renderPass);
+	m_pipeline = buildPipeline(*m_renderPass);
 
 	// Create command pool
 	m_cmdPool = createCommandPool(vk, vkDevice, VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT, queueFamilyIndex);
@@ -982,13 +1061,8 @@ tcu::TestStatus DepthRangeUnrestrictedTestInstance::verifyTestResult (void)
 															  tcu::IVec3(1, 1, 0),
 															  true,
 															  tcu::COMPARE_LOG_RESULT);
-#ifdef CTS_USES_VULKANSC
-		if (m_context.getTestContext().getCommandLine().isSubProcess())
-#endif // CTS_USES_VULKANSC
-		{
-			if (!compareOk)
-				return tcu::TestStatus::fail("Image mismatch");
-		}
+		if (!compareOk)
+			return tcu::TestStatus::fail("Image mismatch");
 	}
 
 	// Check depth buffer contents
@@ -1081,6 +1155,7 @@ tcu::TestStatus DepthRangeUnrestrictedTestInstance::verifyTestResult (void)
 				compareOk = DE_FALSE;
 			}
 		}
+
 		if (!compareOk)
 			return tcu::TestStatus::fail("Depth buffer mismatch");
 	}
@@ -1104,7 +1179,7 @@ protected:
 protected:
 			Move<VkRenderPass>					m_renderPassSecondDraw;
 			Move<VkFramebuffer>					m_framebufferSecondDraw;
-			GraphicsPipelineWrapper				m_pipelineSecondDraw;
+			Move<VkPipeline>					m_pipelineSecondDraw;
 			std::vector<bool>					m_vertexWasRendered;
 
 };
@@ -1112,7 +1187,6 @@ protected:
 DepthBoundsRangeUnrestrictedTestInstance::DepthBoundsRangeUnrestrictedTestInstance	(Context&							context,
 																					 const DepthRangeUnrestrictedParam	param)
 	: DepthRangeUnrestrictedTestInstance(context, param)
-	, m_pipelineSecondDraw				(m_context.getDeviceInterface(), m_context.getDevice(), param.pipelineConstructionType)
 {
 	const DeviceInterface&	vk				 = m_context.getDeviceInterface();
 	const VkDevice			vkDevice		 = m_context.getDevice();
@@ -1144,8 +1218,8 @@ DepthBoundsRangeUnrestrictedTestInstance::DepthBoundsRangeUnrestrictedTestInstan
 		m_framebufferSecondDraw = createFramebuffer(vk, vkDevice, &framebufferParams);
 	}
 
-	// Create pipeline
-	preparePipelineWrapper(m_pipelineSecondDraw, *m_renderPassSecondDraw);
+		// Create pipeline
+	m_pipelineSecondDraw = buildPipeline(*m_renderPassSecondDraw);
 }
 
 DepthBoundsRangeUnrestrictedTestInstance::~DepthBoundsRangeUnrestrictedTestInstance (void)
@@ -1169,14 +1243,8 @@ tcu::TestStatus DepthBoundsRangeUnrestrictedTestInstance::iterate (void)
 	prepareCommandBuffer(true);
 	submitCommandsAndWait(vk, vkDevice, queue, m_cmdBuffer.get());
 	tcu::TestStatus status = verifyTestResult(true);
-
-#ifdef CTS_USES_VULKANSC
-	if (m_context.getTestContext().getCommandLine().isSubProcess())
-#endif // CTS_USES_VULKANSC
-	{
-		if (status.getCode() != QP_TEST_RESULT_PASS)
-			return status;
-	}
+	if (status.getCode() != QP_TEST_RESULT_PASS)
+		return status;
 
 	prepareCommandBuffer(false);
 	submitCommandsAndWait(vk, vkDevice, queue, m_cmdBuffer.get());
@@ -1189,7 +1257,7 @@ void DepthBoundsRangeUnrestrictedTestInstance::prepareCommandBuffer (bool firstD
 
 	if (!firstDraw)
 	{
-		VK_CHECK(vk.resetCommandBuffer(*m_cmdBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT));
+		vk.resetCommandBuffer(*m_cmdBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 		// Color image layout changed after verifying the first draw call, restore it.
 		m_imageLayoutBarriers[0].srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 		m_imageLayoutBarriers[0].oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
@@ -1200,12 +1268,12 @@ void DepthBoundsRangeUnrestrictedTestInstance::prepareCommandBuffer (bool firstD
 
 	beginCommandBuffer(vk, *m_cmdBuffer, 0u);
 
-	vk.cmdPipelineBarrier(*m_cmdBuffer, (firstDraw ? VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT : VK_PIPELINE_STAGE_TRANSFER_BIT), VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, (VkDependencyFlags)0,
+	vk.cmdPipelineBarrier(*m_cmdBuffer, (firstDraw ? VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT : VK_PIPELINE_STAGE_TRANSFER_BIT), VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, (VkDependencyFlags)0,
 		0u, DE_NULL, 0u, DE_NULL, DE_LENGTH_OF_ARRAY(m_imageLayoutBarriers), m_imageLayoutBarriers);
 
 	prepareRenderPass((firstDraw ? *m_renderPass : *m_renderPassSecondDraw),
 					  (firstDraw ? *m_framebuffer : *m_framebufferSecondDraw),
-					  (firstDraw ? m_pipeline.getPipeline() : m_pipelineSecondDraw.getPipeline()));
+					  (firstDraw ? *m_pipeline : *m_pipelineSecondDraw));
 
 	endCommandBuffer(vk, *m_cmdBuffer);
 }
@@ -1284,13 +1352,8 @@ tcu::TestStatus DepthBoundsRangeUnrestrictedTestInstance::verifyTestResult (bool
 															  tcu::IVec3(1, 1, 0),
 															  true,
 															  tcu::COMPARE_LOG_RESULT);
-#ifdef CTS_USES_VULKANSC
-		if (m_context.getTestContext().getCommandLine().isSubProcess())
-#endif // CTS_USES_VULKANSC
-		{
-			if (!compareOk)
-				return tcu::TestStatus::fail("Image mismatch");
-		}
+		if (!compareOk)
+			return tcu::TestStatus::fail("Image mismatch");
 	}
 
 	// Check depth buffer contents
@@ -1367,7 +1430,6 @@ public:
 	virtual					~DepthRangeUnrestrictedTest	(void) { }
 	virtual void			initPrograms		(SourceCollections&	programCollection) const;
 	virtual TestInstance*	createInstance		(Context&				context) const;
-	void					checkSupport		(Context& context) const;
 
 protected:
 		const DepthRangeUnrestrictedParam       m_param;
@@ -1406,14 +1468,9 @@ TestInstance* DepthRangeUnrestrictedTest::createInstance (Context& context) cons
 		return new DepthBoundsRangeUnrestrictedTestInstance(context, m_param);
 	return new DepthRangeUnrestrictedTestInstance(context, m_param);
 }
-
-void DepthRangeUnrestrictedTest::checkSupport(Context& context) const
-{
-	checkPipelineLibraryRequirements(context.getInstanceInterface(), context.getPhysicalDevice(), m_param.pipelineConstructionType);
-}
 } // anonymous
 
-tcu::TestCaseGroup* createDepthRangeUnrestrictedTests (tcu::TestContext& testCtx, PipelineConstructionType pipelineConstructionType)
+tcu::TestCaseGroup* createDepthRangeUnrestrictedTests (tcu::TestContext& testCtx)
 {
 	de::MovePtr<tcu::TestCaseGroup> depthTests (new tcu::TestCaseGroup(testCtx, "depth_range_unrestricted", "VK_EXT_depth_range_unrestricted tests"));
 	const VkFormat depthFormats[]	=
@@ -1440,7 +1497,6 @@ tcu::TestCaseGroup* createDepthRangeUnrestrictedTests (tcu::TestContext& testCtx
 	{
 		de::MovePtr<tcu::TestCaseGroup> depthClearValueTests (new tcu::TestCaseGroup(testCtx, "clear_value", "Depth Clear value unrestricted"));
 		DepthRangeUnrestrictedParam testParams;
-		testParams.pipelineConstructionType		= pipelineConstructionType;
 		testParams.testClearValueOnly			= VK_TRUE;
 		testParams.depthClampEnable				= VK_FALSE;
 		testParams.wc							= 1.0f;
@@ -1469,7 +1525,6 @@ tcu::TestCaseGroup* createDepthRangeUnrestrictedTests (tcu::TestContext& testCtx
 	{
 		de::MovePtr<tcu::TestCaseGroup> viewportTests (new tcu::TestCaseGroup(testCtx, "viewport", "Viewport depth unrestricted range"));
 		DepthRangeUnrestrictedParam testParams;
-		testParams.pipelineConstructionType	= pipelineConstructionType;
 		testParams.testClearValueOnly		= VK_FALSE;
 		testParams.wc						= 1.0f;
 		testParams.depthClampEnable			= VK_TRUE;
@@ -1507,7 +1562,6 @@ tcu::TestCaseGroup* createDepthRangeUnrestrictedTests (tcu::TestContext& testCtx
 	{
 		de::MovePtr<tcu::TestCaseGroup> depthBoundsTests (new tcu::TestCaseGroup(testCtx, "depthbounds", "Depthbounds unrestricted range"));
 		DepthRangeUnrestrictedParam testParams;
-		testParams.pipelineConstructionType						= pipelineConstructionType;
 		testParams.testClearValueOnly							= VK_FALSE;
 		testParams.wc											= 1.0f;
 		testParams.depthClampEnable								= VK_TRUE;
@@ -1551,7 +1605,6 @@ tcu::TestCaseGroup* createDepthRangeUnrestrictedTests (tcu::TestContext& testCtx
 	{
 		de::MovePtr<tcu::TestCaseGroup> noDepthClampingTests (new tcu::TestCaseGroup(testCtx, "depthclampingdisabled", "Depth clamping disabled tests"));
 		DepthRangeUnrestrictedParam testParams;
-		testParams.pipelineConstructionType		= pipelineConstructionType;
 		testParams.testClearValueOnly			= VK_FALSE;
 		testParams.depthClampEnable				= VK_FALSE;
 		testParams.minDepthBounds				= 0.0f;

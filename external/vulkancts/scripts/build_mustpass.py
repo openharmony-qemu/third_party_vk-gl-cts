@@ -25,8 +25,8 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "..", "scripts"))
 
-from ctsbuild.common import DEQP_DIR
-from ctsbuild.config import ANY_GENERATOR
+from build.common import DEQP_DIR
+from build.config import ANY_GENERATOR
 from build_caselists import Module, getModuleByName, getBuildConfig, DEFAULT_BUILD_DIR, DEFAULT_TARGET
 from mustpass import Project, Package, Mustpass, Configuration, include, exclude, genMustpassLists, parseBuildConfigFromCmdLineArgs
 
@@ -47,33 +47,24 @@ COPYRIGHT_DECLARATION = """
 MUSTPASS_PATH		= os.path.join(DEQP_DIR, "external", "vulkancts", "mustpass")
 PROJECT				= Project(path = MUSTPASS_PATH, copyright = COPYRIGHT_DECLARATION)
 VULKAN_MODULE		= getModuleByName("dEQP-VK")
-VULKAN_SC_MODULE	= getModuleByName("dEQP-VKSC")
 BUILD_CONFIG		= getBuildConfig(DEFAULT_BUILD_DIR, DEFAULT_TARGET, "Debug")
 
-# main
+# master
 
-VULKAN_MAIN_PKG	= Package(module = VULKAN_MODULE, configurations = [
+VULKAN_MASTER_PKG	= Package(module = VULKAN_MODULE, configurations = [
 		  # Master
 		  Configuration(name					= "default",
 						filters					= [include("master.txt"),
 												   exclude("test-issues.txt"),
 												   exclude("excluded-tests.txt"),
 												   exclude("android-tests.txt")],
-						listOfGroupsToSplit		= ["dEQP-VK", "dEQP-VK.pipeline"]),
+						splitToMultipleFiles	= True),
 		  Configuration(name					= "fraction-mandatory-tests",
 						filters					= [include("fraction-mandatory-tests.txt")]),
 	 ])
 
-VULKAN_SC_MAIN_PKG	= Package(module = VULKAN_SC_MODULE, configurations = [
-		  # Master
-		  Configuration(name					= "default",
-						filters					= [include("master_sc.txt"),
-												   exclude("android-tests-sc.txt")],
-						listOfGroupsToSplit		= ["dEQP-VKSC"]),
-	])
-
 MUSTPASS_LISTS		= [
-		  Mustpass(project = PROJECT,	version = "main",	packages = [VULKAN_MAIN_PKG, VULKAN_SC_MAIN_PKG]),
+		  Mustpass(project = PROJECT,	version = "master",	packages = [VULKAN_MASTER_PKG]),
 	]
 
 if __name__ == "__main__":

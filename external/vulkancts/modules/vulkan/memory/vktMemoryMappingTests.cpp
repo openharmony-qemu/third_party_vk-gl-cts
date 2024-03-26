@@ -475,7 +475,7 @@ Move<VkDeviceMemory> allocMemory (const DeviceInterface& vk, VkDevice device, Vk
 	const VkMemoryDedicatedAllocateInfo
 										dedicatedAllocateInfo			=
 	{
-		VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO,				// VkStructureType		sType
+		VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO_KHR,			// VkStructureType		sType
 		DE_NULL,														// const void*			pNext
 		*image,															// VkImage				image
 		*buffer															// VkBuffer				buffer
@@ -1191,11 +1191,11 @@ VkDeviceSize getHostPageSize (void)
 class MemoryHeap
 {
 public:
-	MemoryHeap (const VkMemoryHeap&					heap,
-				const vector<MemoryType>&			memoryTypes,
-				const tcu::PlatformMemoryLimits&	memoryLimits,
-				const VkDeviceSize					nonCoherentAtomSize,
-				TotalMemoryTracker&					totalMemTracker)
+	MemoryHeap (const VkMemoryHeap&			heap,
+				const vector<MemoryType>&	memoryTypes,
+				const PlatformMemoryLimits&	memoryLimits,
+				const VkDeviceSize			nonCoherentAtomSize,
+				TotalMemoryTracker&			totalMemTracker)
 		: m_heap				(heap)
 		, m_memoryTypes			(memoryTypes)
 		, m_limits				(memoryLimits)
@@ -1243,15 +1243,15 @@ private:
 			return MEMORY_CLASS_SYSTEM;
 	}
 
-	const VkMemoryHeap					m_heap;
-	const vector<MemoryType>			m_memoryTypes;
-	const tcu::PlatformMemoryLimits&	m_limits;
-	const VkDeviceSize					m_nonCoherentAtomSize;
-	const VkDeviceSize					m_minAtomSize;
-	TotalMemoryTracker&					m_totalMemTracker;
+	const VkMemoryHeap			m_heap;
+	const vector<MemoryType>	m_memoryTypes;
+	const PlatformMemoryLimits&	m_limits;
+	const VkDeviceSize			m_nonCoherentAtomSize;
+	const VkDeviceSize			m_minAtomSize;
+	TotalMemoryTracker&			m_totalMemTracker;
 
-	VkDeviceSize						m_usage;
-	vector<MemoryObject*>				m_objects;
+	VkDeviceSize				m_usage;
+	vector<MemoryObject*>		m_objects;
 };
 
 // Heap is full if there is not enough memory to allocate minimal memory object.
@@ -1430,7 +1430,7 @@ public:
 		: TestInstance				(context)
 		, m_memoryObjectSysMemSize	(getMemoryObjectSystemSize(context))
 		, m_memoryMappingSysMemSize	(getMemoryMappingSystemSize())
-		, m_memoryLimits			(tcu::getMemoryLimits(context.getTestContext().getPlatform()))
+		, m_memoryLimits			(getMemoryLimits(context.getTestContext().getPlatform().getVulkanPlatform()))
 		, m_rng						(seed)
 		, m_opNdx					(0)
 	{
@@ -1634,7 +1634,7 @@ public:
 private:
 	const size_t						m_memoryObjectSysMemSize;
 	const size_t						m_memoryMappingSysMemSize;
-	const tcu::PlatformMemoryLimits		m_memoryLimits;
+	const PlatformMemoryLimits			m_memoryLimits;
 
 	de::Random							m_rng;
 	size_t								m_opNdx;
@@ -1827,14 +1827,12 @@ tcu::TestCaseGroup* createMappingTests (tcu::TestContext& testCtx)
 	{
 		{ OP_NONE,						"simple"					},
 		{ OP_REMAP,						"remap"						},
-#ifndef CTS_USES_VULKANSC
-// implicit_unmap tests use VkAllocationCallbacks forbidden in Vulkan SC
 		{ OP_IMPLICIT_UNMAP,			"implicit_unmap"			},
-#endif // CTS_USES_VULKANSC
 		{ OP_FLUSH,						"flush"						},
 		{ OP_SUB_FLUSH,					"subflush"					},
 		{ OP_SUB_FLUSH_SEPARATE,		"subflush_separate"			},
 		{ OP_SUB_FLUSH_SEPARATE,		"subflush_overlapping"		},
+
 		{ OP_INVALIDATE,				"invalidate"				},
 		{ OP_SUB_INVALIDATE,			"subinvalidate"				},
 		{ OP_SUB_INVALIDATE_SEPARATE,	"subinvalidate_separate"	},

@@ -24,12 +24,10 @@
 #include "deDynamicLibrary.h"
 #include "deMemory.h"
 
-#if (DE_OS == DE_OS_UNIX) || (DE_OS == DE_OS_ANDROID) || (DE_OS == DE_OS_OSX) || (DE_OS == DE_OS_SYMBIAN) || (DE_OS == DE_OS_IOS) || (DE_OS == DE_OS_QNX) || (DE_OS == DE_OS_FUCHSIA)
+#if (DE_OS == DE_OS_UNIX) || (DE_OS == DE_OS_ANDROID) || (DE_OS == DE_OS_OSX) || (DE_OS == DE_OS_SYMBIAN) || (DE_OS == DE_OS_IOS) || (DE_OS == DE_OS_QNX)
 /* Posix implementation. */
 
 #include <dlfcn.h>
-#include <libgen.h>
-#include <stdlib.h>
 
 struct deDynamicLibrary_s
 {
@@ -42,11 +40,7 @@ deDynamicLibrary* deDynamicLibrary_open (const char* fileName)
 	if (!library)
 		return DE_NULL;
 
-	if (getenv("LD_LIBRARY_PATH"))
-		library->libHandle = dlopen(basename((char*)fileName), RTLD_LAZY);
-	else
-		library->libHandle = dlopen(fileName, RTLD_LAZY);
-
+	library->libHandle = dlopen(fileName, RTLD_LAZY);
 	if (!library->libHandle)
 	{
 		deFree(library);

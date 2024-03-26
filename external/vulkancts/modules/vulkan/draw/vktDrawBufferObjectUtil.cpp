@@ -32,40 +32,32 @@ namespace Draw
 {
 
 Buffer::Buffer (const vk::DeviceInterface& vk, vk::VkDevice device, vk::Move<vk::VkBuffer> object_)
-	: m_allocation	(DE_NULL)
-	, m_allocOffset	(0ull)
+	: m_allocation  (DE_NULL)
 	, m_object		(object_)
 	, m_vk			(vk)
 	, m_device		(device)
 {
 }
 
-void Buffer::bindMemory (de::MovePtr<vk::Allocation> allocation, vk::VkDeviceSize allocOffset)
+void Buffer::bindMemory (de::MovePtr<vk::Allocation> allocation)
 {
 	DE_ASSERT(allocation);
-	VK_CHECK(m_vk.bindBufferMemory(m_device, *m_object, allocation->getMemory(), allocation->getOffset() + allocOffset));
+	VK_CHECK(m_vk.bindBufferMemory(m_device, *m_object, allocation->getMemory(), allocation->getOffset()));
 
 	DE_ASSERT(!m_allocation);
 	m_allocation = allocation;
-	m_allocOffset = allocOffset;
 }
 
 de::SharedPtr<Buffer> Buffer::createAndAlloc (const vk::DeviceInterface& vk,
 											  vk::VkDevice device,
 											  const vk::VkBufferCreateInfo &createInfo,
 											  vk::Allocator &allocator,
-											  vk::MemoryRequirement memoryRequirement,
-											  vk::VkDeviceSize allocationOffset)
+											  vk::MemoryRequirement memoryRequirement)
 {
 	de::SharedPtr<Buffer> ret = create(vk, device, createInfo);
 
 	vk::VkMemoryRequirements bufferRequirements = vk::getBufferMemoryRequirements(vk, device, ret->object());
-
-	// If requested, allocate more memory for the extra offset inside the allocation.
-	const auto extraRoom = de::roundUp(allocationOffset, bufferRequirements.alignment);
-	bufferRequirements.size += extraRoom;
-
-	ret->bindMemory(allocator.allocate(bufferRequirements, memoryRequirement), extraRoom);
+	ret->bindMemory(allocator.allocate(bufferRequirements, memoryRequirement));
 	return ret;
 }
 
@@ -74,13 +66,6 @@ de::SharedPtr<Buffer> Buffer::create (const vk::DeviceInterface& vk,
 									  const vk::VkBufferCreateInfo& createInfo)
 {
 	return de::SharedPtr<Buffer>(new Buffer(vk, device, vk::createBuffer(vk, device, &createInfo)));
-}
-
-void* Buffer::getHostPtr (void) const
-{
-	if (!m_allocation)
-		return nullptr;
-	return reinterpret_cast<uint8_t*>(m_allocation->getHostPtr()) + m_allocOffset;
 }
 
 void bufferBarrier (const vk::DeviceInterface&	vk,

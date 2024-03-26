@@ -434,9 +434,7 @@ void populateTextureSwizzleTests (tcu::TestCaseGroup* textureSwizzleTests)
 	} backingModes[] =
 	{
 		{ "",			TextureBinding::IMAGE_BACKING_MODE_REGULAR	},
-#ifndef CTS_USES_VULKANSC
 		{ "_sparse",	TextureBinding::IMAGE_BACKING_MODE_SPARSE	}
-#endif // CTS_USES_VULKANSC
 	};
 
 	static const struct {

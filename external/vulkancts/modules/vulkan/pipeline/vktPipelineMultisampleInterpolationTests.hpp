@@ -24,14 +24,13 @@
  *//*--------------------------------------------------------------------*/
 
 #include "vktTestCase.hpp"
-#include "vkPipelineConstructionUtil.hpp"
 
 namespace vkt
 {
 namespace pipeline
 {
 
-tcu::TestCaseGroup* createMultisampleInterpolationTests (tcu::TestContext& testCtx, vk::PipelineConstructionType pipelineConstructionType);
+tcu::TestCaseGroup* createMultisampleInterpolationTests (tcu::TestContext& testCtx);
 
 } // pipeline
 } // vkt

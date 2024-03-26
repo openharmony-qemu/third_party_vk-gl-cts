@@ -25,10 +25,6 @@ config("deqp_vk_synchronization_config") {
 
 ohos_source_set("deqp_vk_synchronization_source") {
   sources = [
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/synchronization/vktGlobalPriorityQueueTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/synchronization/vktGlobalPriorityQueueTests.hpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/synchronization/vktGlobalPriorityQueueUtils.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/synchronization/vktGlobalPriorityQueueUtils.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/synchronization/vktSynchronizationBasicEventTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/synchronization/vktSynchronizationBasicEventTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/synchronization/vktSynchronizationBasicFenceTests.cpp",
