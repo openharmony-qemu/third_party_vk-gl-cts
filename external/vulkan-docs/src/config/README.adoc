@@ -1,4 +1,4 @@
-// Copyright 2015-2021 The Khronos Group Inc.
+// Copyright 2015-2022 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -8,7 +8,7 @@
 
 The macros in `spec-macros.rb` and `spec-macros/extension.rb` are described
 in the "`Vulkan Documentation and Extensions: Procedures and Conventions`"
-document (see the link:../styleguide.txt[style guide].
+document (see the link:../styleguide.adoc[style guide].
 
 == Support for Math
 

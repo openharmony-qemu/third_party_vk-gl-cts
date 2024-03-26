@@ -29,6 +29,8 @@ ohos_source_set("deqp_vk_ycbcr_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ycbcr/vktYCbCrCopyTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ycbcr/vktYCbCrFilteringTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ycbcr/vktYCbCrFormatTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ycbcr/vktYCbCrImageOffsetTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ycbcr/vktYCbCrImageOffsetTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ycbcr/vktYCbCrImageQueryTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ycbcr/vktYCbCrStorageImageWriteTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ycbcr/vktYCbCrTests.cpp",
@@ -42,12 +44,9 @@ ohos_source_set("deqp_vk_ycbcr_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/shaderexecutor",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util",
   ]
-
-  deps = [
-    #"//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
-    #"//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",
-  ]
-
+  deps = []
+  part_name = "acts"
+  subsystem_name = "xts"
   configs = [ ":deqp_vk_ycbcr_config" ]
 }
 ohos_static_library("libdeqp_vk_ycbcr") {

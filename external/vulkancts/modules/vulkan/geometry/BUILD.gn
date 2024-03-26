@@ -37,16 +37,10 @@ ohos_source_set("deqp_vk_geometry_source") {
   ]
 
   include_dirs = deqp_vk_common_include_dirs
-  include_dirs += [
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry",
-    #"//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber",
-  ]
+  include_dirs +=
+      [ "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry" ]
 
-  deps = [
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/shaderrender:libdeqp_vk_shaderrender",
-    #"//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
-    #"//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",
-  ]
+  deps = [ "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/shaderrender:libdeqp_vk_shaderrender" ]
   part_name = "acts"
   subsystem_name = "xts"
   configs = [ ":deqp_vk_geometry_config" ]

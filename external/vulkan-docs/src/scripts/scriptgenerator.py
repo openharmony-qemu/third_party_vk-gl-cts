@@ -1,6 +1,6 @@
 #!/usr/bin/python3 -i
 #
-# Copyright 2013-2021 The Khronos Group Inc.
+# Copyright 2013-2022 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -79,7 +79,9 @@ class ScriptOutputGenerator(OutputGenerator):
         - api - name of the API
         - feature - name of the feature requiring it
         - required - None, or an additional feature dependency within
-          'feature' """
+          'feature'. The additional dependency is a boolean expression of
+          one or more extension and/or core version names, which is passed
+          through to the output script intact."""
 
         # Each entry in self.apimap contains one or more
         # ( feature, required ) tuples.
@@ -253,13 +255,8 @@ class ScriptOutputGenerator(OutputGenerator):
                 elif category == 'define':
                     self.defines[name] = None
                 elif category == 'basetype':
-                    # Do not add an entry for base types that are not API types
-                    # e.g. an API Bool type gets an entry, uint32_t does not
-                    if self.apiName(name):
-                        self.basetypes[name] = None
-                        self.addName(self.typeCategory, name, 'basetype')
-                    else:
-                        self.logMsg('diag', 'ScriptOutputGenerator::genType: unprocessed type:', name, 'category:', category)
+                    self.basetypes[name] = None
+                    self.addName(self.typeCategory, name, 'basetype')
             else:
                 self.logMsg('diag', 'ScriptOutputGenerator::genType: unprocessed type:', name)
 

@@ -78,26 +78,6 @@ ohos_source_set("deqp-gl-subgroups_source") {
   ]
 
   configs = [ ":deqp-gl-subgroups_config" ]
-
-  #   lib_dirs = [
-  #     "//third_party/vk-gl-cts/outlibs"
-  #   ]
-  #   libs = [
-  #     "z",
-  #     "png",
-  #     # "glslang",
-  #     # "SPIRV",
-  #     # "SPVRemapper",
-  #     # "spirv-tools",
-  #     # "spirv-tools-link",
-  #     # "spirv-tools-lint",
-  #     # "spirv-tools-opt",
-  #     # "spirv-tools-reduce",
-  #     # "MachineIndependent",
-  #     # "OGLCompiler",
-  #     # "OSDependent",
-  #     # "GenericCodeGen",
-  #   ]
 }
 
 ohos_static_library("libdeqp-gl-subgroups") {
