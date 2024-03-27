@@ -26,12 +26,34 @@ config("deqp_vk_mesh_shader_config") {
 ohos_source_set("deqp_vk_mesh_shader_source") {
   sources = [
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderApiTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderApiTestsEXT.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderApiTestsEXT.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderBuiltinTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderBuiltinTestsEXT.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderBuiltinTestsEXT.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderConditionalRenderingTestsEXT.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderConditionalRenderingTestsEXT.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderInOutTestsEXT.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderInOutTestsEXT.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderMiscTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderMiscTestsEXT.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderMiscTestsEXT.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderPropertyTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderPropertyTestsEXT.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderPropertyTestsEXT.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderProvokingVertexTestsEXT.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderProvokingVertexTestsEXT.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderQueryTestsEXT.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderQueryTestsEXT.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderSmokeTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderSmokeTestsEXT.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderSmokeTestsEXT.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderSyncTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderSyncTestsEXT.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderSyncTestsEXT.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderUtil.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/mesh_shader/vktMeshShaderUtil.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs
@@ -40,10 +62,7 @@ ohos_source_set("deqp_vk_mesh_shader_source") {
     #"//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber",
   ]
 
-  deps = [
-    #"//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
-    #"//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",
-  ]
+  deps = []
 
   configs = [ ":deqp_vk_mesh_shader_config" ]
 }

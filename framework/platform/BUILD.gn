@@ -140,7 +140,7 @@ ohos_shared_library("libdeqp_ohos_platform") {
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutilnoshader",
 
     #"//third_party/vk-gl-cts/external/vulkancts/modules/vulkan:deqp_vk_execute",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan:deqp_vk_build",
+    # "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan:deqp_vk_build",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan:libdeqp_vk_package",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/framework/delibs/debase:libdeqp_debase",
@@ -162,8 +162,8 @@ ohos_shared_library("libdeqp_ohos_platform") {
     "//third_party/zlib:libz",
   ]
   external_deps = [
-    "hilog:libhilog",
-    "image_framework:image_native",
+    #  "hilog_native:libhilog",
+    #  "multimedia_image_framework:image_native",
   ]
 
   configs = [ ":deqp_platform_ohos_config" ]
