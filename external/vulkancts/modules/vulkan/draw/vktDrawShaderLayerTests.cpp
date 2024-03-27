@@ -73,8 +73,8 @@ enum Constants
 
 struct TestParams
 {
-	int						numLayers;
-	const SharedGroupParams	groupParams;
+	int		numLayers;
+	bool	useDynamicRendering;
 };
 
 template<typename T>
@@ -327,7 +327,6 @@ Move<VkPipeline> makeGraphicsPipeline (const DeviceInterface&		vk,
 		0,																	// deInt32											basePipelineIndex;
 	};
 
-#ifndef CTS_USES_VULKANSC
 	VkFormat colorAttachmentFormat = VK_FORMAT_R8G8B8A8_UNORM;
 	VkPipelineRenderingCreateInfoKHR renderingCreateInfo
 	{
@@ -343,7 +342,6 @@ Move<VkPipeline> makeGraphicsPipeline (const DeviceInterface&		vk,
 	// when pipeline is created without render pass we are using dynamic rendering
 	if (renderPass == DE_NULL)
 		graphicsPipelineInfo.pNext = &renderingCreateInfo;
-#endif // CTS_USES_VULKANSC
 
 	return createGraphicsPipeline(vk, device, DE_NULL, &graphicsPipelineInfo);
 }
@@ -610,14 +608,14 @@ public:
 	};
 
 	Renderer (Context&									context,
-			  const SharedGroupParams					groupParams,
+			  const bool								useDynamicRendering,
 			  const UVec2&								renderSize,
 			  const int									numLayers,
 			  const VkFormat							colorFormat,
 			  const Vec4&								clearColor,
 			  const std::vector<PositionColorVertex>&	vertices,
 			  const Shader								shader)
-		: m_groupParams				(groupParams)
+		: m_useDynamicRendering		(useDynamicRendering)
 		, m_renderSize				(renderSize)
 		, m_colorFormat				(colorFormat)
 		, m_colorSubresourceRange	(makeImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT, 0u, 1u, 0u, numLayers))
@@ -629,7 +627,7 @@ public:
 		const VkDevice				device				= context.getDevice();
 		const deUint32				queueFamilyIndex	= context.getUniversalQueueFamilyIndex();
 		Allocator&					allocator			= context.getDefaultAllocator();
-		const VkDeviceSize			vertexBufferSize	= sizeInBytes(m_vertices);
+		const VkDeviceSize			vertexBufferSize    = sizeInBytes(m_vertices);
 
 		m_colorImage		= makeImage					(vk, device, makeImageCreateInfo(m_colorFormat, m_renderSize, m_numLayers, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT));
 		m_colorImageAlloc	= bindImage					(vk, device, allocator, *m_colorImage, MemoryRequirement::Any);
@@ -649,7 +647,7 @@ public:
 		m_vertexModule		= createShaderModule	(vk, device, context.getBinaryCollection().get("vert"), 0u);
 		m_fragmentModule	= createShaderModule	(vk, device, context.getBinaryCollection().get("frag"), 0u);
 
-		if (!m_groupParams->useDynamicRendering)
+		if (!m_useDynamicRendering)
 		{
 			m_renderPass	= makeRenderPass		(vk, device, m_colorFormat);
 
@@ -664,170 +662,65 @@ public:
 													 *m_tessellationEvaluationModule, *m_fragmentModule, m_renderSize);
 		m_cmdPool			= createCommandPool		(vk, device, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT, queueFamilyIndex);
 		m_cmdBuffer			= allocateCommandBuffer	(vk, device, *m_cmdPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-		m_secCmdBuffer		= allocateCommandBuffer	(vk, device, *m_cmdPool, VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 	}
 
 	void draw (Context& context, const VkBuffer colorBuffer) const
 	{
-		const DeviceInterface&	vk			= context.getDeviceInterface();
-		const VkDevice			device		= context.getDevice();
-		const VkQueue			queue		= context.getUniversalQueue();
-		const VkClearValue		clearValue	= makeClearValueColor(m_clearColor);
-		const VkRect2D			renderArea
+		const DeviceInterface&		vk			= context.getDeviceInterface();
+		const VkDevice				device		= context.getDevice();
+		const VkQueue				queue		= context.getUniversalQueue();
+
+		beginCommandBuffer(vk, *m_cmdBuffer);
+
+		const VkClearValue			clearValue	= makeClearValueColor(m_clearColor);
+		const VkRect2D				renderArea	=
 		{
 			makeOffset2D(0, 0),
 			makeExtent2D(m_renderSize.x(), m_renderSize.y()),
 		};
 
-#ifndef CTS_USES_VULKANSC
-		if (m_groupParams->useSecondaryCmdBuffer)
+		if (m_useDynamicRendering)
 		{
-			// record secondary command buffer
-			if (m_groupParams->secondaryCmdBufferCompletelyContainsDynamicRenderpass)
+			initialTransitionColor2DImage(vk, *m_cmdBuffer, *m_colorImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+										  VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+			beginRendering(vk, *m_cmdBuffer, *m_colorAttachment, renderArea, clearValue, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR, 0, m_numLayers);
+		}
+		else
+		{
+			const VkRenderPassBeginInfo renderPassBeginInfo =
 			{
-				beginSecondaryCmdBuffer(context, *m_secCmdBuffer, VK_RENDERING_CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT);
-				beginRendering(vk, *m_secCmdBuffer, *m_colorAttachment, renderArea, clearValue,
-							   VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR, 0u, m_numLayers);
-			}
-			else
-				beginSecondaryCmdBuffer(context, *m_secCmdBuffer);
-
-			drawCommands(context, *m_secCmdBuffer);
-
-			if (m_groupParams->secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-				endRendering(vk, *m_secCmdBuffer);
-
-			endCommandBuffer(vk, *m_secCmdBuffer);
-
-			// record primary command buffer
-			beginCommandBuffer(vk, *m_cmdBuffer, 0u);
-
-			preRenderCommands(context, *m_cmdBuffer);
-
-			if (!m_groupParams->secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-				beginRendering(vk, *m_cmdBuffer, *m_colorAttachment, renderArea, clearValue, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-							   VK_ATTACHMENT_LOAD_OP_CLEAR, VK_RENDERING_CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT, m_numLayers);
-
-			vk.cmdExecuteCommands(*m_cmdBuffer, 1u, &*m_secCmdBuffer);
-
-			if (!m_groupParams->secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-				endRendering(vk, *m_cmdBuffer);
-
-			postRenderCommands(context, colorBuffer);
-			endCommandBuffer(vk, *m_cmdBuffer);
+				VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,		// VkStructureType         sType;
+				DE_NULL,										// const void*             pNext;
+				*m_renderPass,									// VkRenderPass            renderPass;
+				*m_framebuffer,									// VkFramebuffer           framebuffer;
+				renderArea,										// VkRect2D                renderArea;
+				1u,												// uint32_t                clearValueCount;
+				&clearValue,									// const VkClearValue*     pClearValues;
+			};
+			vk.cmdBeginRenderPass(*m_cmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		}
-		else if (m_groupParams->useDynamicRendering)
-		{
-			beginCommandBuffer(vk, *m_cmdBuffer);
 
-			preRenderCommands(context, *m_cmdBuffer);
-			beginRendering(vk, *m_cmdBuffer, *m_colorAttachment, renderArea, clearValue,
-						   VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR, 0u, m_numLayers);
-			drawCommands(context, *m_cmdBuffer);
+		vk.cmdBindPipeline(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+		{
+			const VkBuffer vertexBuffer = m_vertexBuffer->object();
+			const VkDeviceSize vertexBufferOffset = 0ull;
+			vk.cmdBindVertexBuffers(*m_cmdBuffer, 0u, 1u, &vertexBuffer, &vertexBufferOffset);
+		}
+		vk.cmdDraw(*m_cmdBuffer, static_cast<deUint32>(m_numLayers * 6), 1u, 0u, 0u);	// two triangles per layer
+
+		if (m_useDynamicRendering)
 			endRendering(vk, *m_cmdBuffer);
-			postRenderCommands(context, colorBuffer);
-
-			endCommandBuffer(vk, *m_cmdBuffer);
-		}
-#endif // CTS_USES_VULKANSC
-
-		if (!m_groupParams->useDynamicRendering)
-		{
-			beginCommandBuffer(vk, *m_cmdBuffer);
-
-			preRenderCommands(context, *m_cmdBuffer);
-			beginRenderPass(context, *m_cmdBuffer, renderArea, clearValue);
-			drawCommands(context, *m_cmdBuffer);
+		else
 			vk.cmdEndRenderPass(*m_cmdBuffer);
-			postRenderCommands(context, colorBuffer);
 
-			endCommandBuffer(vk, *m_cmdBuffer);
-		}
+		copyImageToBuffer(vk, *m_cmdBuffer, *m_colorImage, colorBuffer, tcu::IVec2(m_renderSize.x(), m_renderSize.y()), VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, m_colorSubresourceRange.layerCount);
 
+		endCommandBuffer(vk, *m_cmdBuffer);
 		submitCommandsAndWait(vk, device, queue, *m_cmdBuffer);
 	}
 
-protected:
-
-	void preRenderCommands(Context& context, VkCommandBuffer cmdBuffer) const
-	{
-		if (m_groupParams->useDynamicRendering)
-		{
-			const DeviceInterface& vk = context.getDeviceInterface();
-			initialTransitionColor2DImage(vk, cmdBuffer, *m_colorImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-										  VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, m_colorSubresourceRange.layerCount);
-		}
-	}
-
-	void postRenderCommands(Context& context, VkBuffer colorBuffer) const
-	{
-		const DeviceInterface& vk = context.getDeviceInterface();
-		copyImageToBuffer(vk, *m_cmdBuffer, *m_colorImage, colorBuffer, tcu::IVec2(m_renderSize.x(), m_renderSize.y()), VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, m_colorSubresourceRange.layerCount);
-	}
-
-	void beginRenderPass(Context& context, VkCommandBuffer cmdBuffer, const VkRect2D& renderArea, const VkClearValue& clearValue) const
-	{
-		const DeviceInterface& vk = context.getDeviceInterface();
-		const VkRenderPassBeginInfo renderPassBeginInfo
-		{
-			VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,		// VkStructureType			sType;
-			DE_NULL,										// const void*				pNext;
-			*m_renderPass,									// VkRenderPass				renderPass;
-			*m_framebuffer,									// VkFramebuffer			framebuffer;
-			renderArea,										// VkRect2D					renderArea;
-			1u,												// uint32_t					clearValueCount;
-			&clearValue,									// const VkClearValue*		pClearValues;
-		};
-		vk.cmdBeginRenderPass(cmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-	}
-
-	void drawCommands (Context& context, VkCommandBuffer cmdBuffer) const
-	{
-		const DeviceInterface&	vk					= context.getDeviceInterface();
-		const VkBuffer			vertexBuffer		= m_vertexBuffer->object();
-		const VkDeviceSize		vertexBufferOffset	= 0ull;
-
-		vk.cmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-		vk.cmdBindVertexBuffers(cmdBuffer, 0u, 1u, &vertexBuffer, &vertexBufferOffset);
-		vk.cmdDraw(cmdBuffer, static_cast<deUint32>(m_numLayers * 6), 1u, 0u, 0u);	// two triangles per layer
-	}
-
-#ifndef CTS_USES_VULKANSC
-	void beginSecondaryCmdBuffer(Context& context, VkCommandBuffer cmdBuffer, VkRenderingFlagsKHR renderingFlags = 0u) const
-	{
-		VkCommandBufferInheritanceRenderingInfoKHR inheritanceRenderingInfo
-		{
-			VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_RENDERING_INFO_KHR,		// VkStructureType					sType;
-			DE_NULL,																// const void*						pNext;
-			renderingFlags,															// VkRenderingFlagsKHR				flags;
-			0u,																		// uint32_t							viewMask;
-			1u,																		// uint32_t							colorAttachmentCount;
-			&m_colorFormat,															// const VkFormat*					pColorAttachmentFormats;
-			VK_FORMAT_UNDEFINED,													// VkFormat							depthAttachmentFormat;
-			VK_FORMAT_UNDEFINED,													// VkFormat							stencilAttachmentFormat;
-			VK_SAMPLE_COUNT_1_BIT,													// VkSampleCountFlagBits			rasterizationSamples;
-		};
-		const VkCommandBufferInheritanceInfo bufferInheritanceInfo = initVulkanStructure(&inheritanceRenderingInfo);
-
-		VkCommandBufferUsageFlags usageFlags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-		if (!m_groupParams->secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-			usageFlags |= VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
-
-		const VkCommandBufferBeginInfo commandBufBeginParams
-		{
-			VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,							// VkStructureType					sType;
-			DE_NULL,																// const void*						pNext;
-			usageFlags,																// VkCommandBufferUsageFlags		flags;
-			&bufferInheritanceInfo
-		};
-
-		const DeviceInterface& vk = context.getDeviceInterface();
-		VK_CHECK(vk.beginCommandBuffer(cmdBuffer, &commandBufBeginParams));
-	}
-#endif // CTS_USES_VULKANSC
-
 private:
-	const SharedGroupParams					m_groupParams;
+	const bool								m_useDynamicRendering;
 	const UVec2								m_renderSize;
 	const VkFormat							m_colorFormat;
 	const VkImageSubresourceRange			m_colorSubresourceRange;
@@ -849,7 +742,6 @@ private:
 	Move<VkPipeline>						m_pipeline;
 	Move<VkCommandPool>						m_cmdPool;
 	Move<VkCommandBuffer>					m_cmdBuffer;
-	Move<VkCommandBuffer>					m_secCmdBuffer;
 
 	// "deleted"
 				Renderer	(const Renderer&);
@@ -861,7 +753,7 @@ void checkRequirements (Context& context, const TestParams params)
 	context.requireDeviceCoreFeature(DEVICE_CORE_FEATURE_MULTI_VIEWPORT);
 	context.requireDeviceFunctionality("VK_EXT_shader_viewport_index_layer");
 
-	if (params.groupParams->useDynamicRendering)
+	if (params.useDynamicRendering)
 		context.requireDeviceFunctionality("VK_KHR_dynamic_rendering");
 
 	const VkPhysicalDeviceLimits	limits	= context.getDeviceProperties().limits;
@@ -905,7 +797,7 @@ tcu::TestStatus testVertexShader (Context& context, const TestParams params)
 
 	// Draw.
 	{
-		const Renderer renderer (context, params.groupParams, renderSize, params.numLayers, colorFormat, clearColor, vertices, Renderer::VERTEX);
+		const Renderer renderer (context, params.useDynamicRendering, renderSize, params.numLayers, colorFormat, clearColor, vertices, Renderer::VERTEX);
 		renderer.draw(context, colorBuffer->object());
 	}
 
@@ -965,7 +857,7 @@ tcu::TestStatus testTessellationShader (Context& context, const TestParams param
 
 	// Draw.
 	{
-		const Renderer renderer (context, params.groupParams, renderSize, params.numLayers, colorFormat, clearColor, vertices, Renderer::TESSELLATION);
+		const Renderer renderer (context, params.useDynamicRendering, renderSize, params.numLayers, colorFormat, clearColor, vertices, Renderer::TESSELLATION);
 		renderer.draw(context, colorBuffer->object());
 	}
 
@@ -990,7 +882,7 @@ tcu::TestStatus testTessellationShader (Context& context, const TestParams param
 
 } // anonymous
 
-tcu::TestCaseGroup* createShaderLayerTests	(tcu::TestContext& testCtx, const SharedGroupParams groupParams)
+tcu::TestCaseGroup* createShaderLayerTests	(tcu::TestContext& testCtx, bool useDynamicRendering)
 {
 	MovePtr<tcu::TestCaseGroup> group (new tcu::TestCaseGroup(testCtx, "shader_layer", ""));
 
@@ -1010,25 +902,17 @@ tcu::TestCaseGroup* createShaderLayerTests	(tcu::TestContext& testCtx, const Sha
 	TestParams parmas
 	{
 		1,
-		groupParams
+		useDynamicRendering
 	};
 
 	for (int i = 0; i < DE_LENGTH_OF_ARRAY(numLayersToTest); ++i)
 	{
-		// reduce number of tests for dynamic rendering cases where secondary command buffer is used
-		if (groupParams->useSecondaryCmdBuffer && (i % 2))
-			continue;
-
 		parmas.numLayers = numLayersToTest[i];
 		addFunctionCaseWithPrograms<TestParams>(group.get(), "vertex_shader_" + de::toString(parmas.numLayers), "", checkRequirements, initVertexTestPrograms, testVertexShader, parmas);
 	}
 
 	for (int i = 0; i < DE_LENGTH_OF_ARRAY(numLayersToTest); ++i)
 	{
-		// reduce number of tests for dynamic rendering cases where secondary command buffer is used
-		if (groupParams->useSecondaryCmdBuffer && (i % 2))
-			continue;
-
 		parmas.numLayers = numLayersToTest[i];
 		addFunctionCaseWithPrograms<TestParams>(group.get(), "tessellation_shader_" + de::toString(parmas.numLayers), "", checkRequirements, initTessellationTestPrograms, testTessellationShader, parmas);
 	}

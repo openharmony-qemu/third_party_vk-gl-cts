@@ -89,7 +89,7 @@ void checkAllSupported (const Extensions& supportedExtensions, const vector<stri
 		 requiredExtName != requiredExtensions.end();
 		 ++requiredExtName)
 	{
-		if (!isExtensionStructSupported(supportedExtensions, RequiredExtension(*requiredExtName)))
+		if (!isExtensionSupported(supportedExtensions, RequiredExtension(*requiredExtName)))
 			TCU_THROW(NotSupportedError, (*requiredExtName + " is not supported").c_str());
 	}
 }
@@ -103,8 +103,6 @@ CustomInstance createInstanceWithWsi (Context&						context,
 
 	extensions.push_back("VK_KHR_surface");
 	extensions.push_back(getExtensionName(wsiType));
-	if (isDisplaySurface(wsiType))
-		extensions.push_back("VK_KHR_display");
 
 	// VK_EXT_swapchain_colorspace adds new surface formats. Driver can enumerate
 	// the formats regardless of whether VK_EXT_swapchain_colorspace was enabled,
@@ -116,7 +114,7 @@ CustomInstance createInstanceWithWsi (Context&						context,
 	// 2) Enable VK_EXT_swapchain colorspace if advertised by the driver.
 	//
 	// We opt for (2) as it provides basic coverage for the extension as a bonus.
-	if (isExtensionStructSupported(supportedExtensions, RequiredExtension("VK_EXT_swapchain_colorspace")))
+	if (isExtensionSupported(supportedExtensions, RequiredExtension("VK_EXT_swapchain_colorspace")))
 		extensions.push_back("VK_EXT_swapchain_colorspace");
 
 	checkAllSupported(supportedExtensions, extensions);
@@ -155,11 +153,11 @@ Move<VkDevice> createDeviceWithWsi (const vk::PlatformInterface&	vkp,
 	const VkPhysicalDeviceFeatures	features		= getDeviceFeaturesForWsi();
 	vector<const char*>		extensions;
 
-	if (!isExtensionStructSupported(supportedExtensions, RequiredExtension("VK_KHR_swapchain")))
+	if (!isExtensionSupported(supportedExtensions, RequiredExtension("VK_KHR_swapchain")))
 		TCU_THROW(NotSupportedError, "VK_KHR_swapchain is not supported");
 	extensions.push_back("VK_KHR_swapchain");
 
-	if (isExtensionStructSupported(supportedExtensions, RequiredExtension("VK_EXT_hdr_metadata")))
+	if (isExtensionSupported(supportedExtensions, RequiredExtension("VK_EXT_hdr_metadata")))
 		extensions.push_back("VK_EXT_hdr_metadata");
 
 	VkDeviceCreateInfo		deviceParams	=
@@ -419,7 +417,7 @@ tcu::TestStatus basicExtensionTest (Context& context, Type wsiType)
 	const tcu::UVec2				desiredSize		(256, 256);
 	const InstanceHelper			instHelper		(context, wsiType);
 	const NativeObjects				native			(context, instHelper.supportedExtensions, wsiType, 1u, tcu::just(desiredSize));
-	const Unique<VkSurfaceKHR>		surface			(createSurface(instHelper.vki, instHelper.instance, wsiType, native.getDisplay(), native.getWindow(), context.getTestContext().getCommandLine()));
+	const Unique<VkSurfaceKHR>		surface			(createSurface(instHelper.vki, instHelper.instance, wsiType, native.getDisplay(), native.getWindow()));
 	const DeviceHelper				devHelper		(context, instHelper.vki, instHelper.instance, *surface);
 
 	if (!de::contains(context.getInstanceExtensions().begin(), context.getInstanceExtensions().end(), "VK_EXT_swapchain_colorspace"))
@@ -460,7 +458,7 @@ tcu::TestStatus colorspaceCompareTest (Context& context, TestParams params)
 	const tcu::UVec2					desiredSize				(256, 256);
 	const InstanceHelper				instHelper				(context, params.wsiType);
 	const NativeObjects					native					(context, instHelper.supportedExtensions, params.wsiType, tcu::just(desiredSize));
-	const Unique<VkSurfaceKHR>			surface					(createSurface(instHelper.vki, instHelper.instance, params.wsiType, native.getDisplay(), native.getWindow(), context.getTestContext().getCommandLine()));
+	const Unique<VkSurfaceKHR>			surface					(createSurface(instHelper.vki, instHelper.instance, params.wsiType, native.getDisplay(), native.getWindow()));
 	const DeviceHelper					devHelper				(context, instHelper.vki, instHelper.instance, *surface);
 
 	const vector<VkSurfaceFormatKHR>	queriedFormats		=	getPhysicalDeviceSurfaceFormats(instHelper.vki,
@@ -637,7 +635,7 @@ tcu::TestStatus surfaceFormatRenderTest (Context& context,
 	const vector<VkImage>				swapchainImages			= getSwapchainImages(vkd, device, *swapchain);
 	const vector<VkExtensionProperties>	deviceExtensions		(enumerateDeviceExtensionProperties(instHelper.vki, devHelper.physicalDevice, DE_NULL));
 
-	if (checkHdr && !isExtensionStructSupported(deviceExtensions, RequiredExtension("VK_EXT_hdr_metadata")))
+	if (checkHdr && !isExtensionSupported(deviceExtensions, RequiredExtension("VK_EXT_hdr_metadata")))
 		TCU_THROW(NotSupportedError, "Extension VK_EXT_hdr_metadata not supported");
 
 	const WsiTriangleRenderer		renderer					(vkd,
@@ -769,7 +767,7 @@ tcu::TestStatus surfaceFormatRenderTests (Context& context, Type wsiType)
 	const tcu::UVec2					desiredSize		(256, 256);
 	const InstanceHelper				instHelper		(context, wsiType);
 	const NativeObjects					native			(context, instHelper.supportedExtensions, wsiType, 1u, tcu::just(desiredSize));
-	const Unique<VkSurfaceKHR>			surface			(createSurface(instHelper.vki, instHelper.instance, wsiType, native.getDisplay(), native.getWindow(), context.getTestContext().getCommandLine()));
+	const Unique<VkSurfaceKHR>			surface			(createSurface(instHelper.vki, instHelper.instance, wsiType, native.getDisplay(), native.getWindow()));
 	const DeviceHelper					devHelper		(context, instHelper.vki, instHelper.instance, *surface);
 
 	if (!de::contains(context.getInstanceExtensions().begin(), context.getInstanceExtensions().end(), "VK_EXT_swapchain_colorspace"))
@@ -790,7 +788,7 @@ tcu::TestStatus surfaceFormatRenderWithHdrTests (Context& context, Type wsiType)
 	const tcu::UVec2					desiredSize		(256, 256);
 	const InstanceHelper				instHelper		(context, wsiType);
 	const NativeObjects					native			(context, instHelper.supportedExtensions, wsiType, 1u, tcu::just(desiredSize));
-	const Unique<VkSurfaceKHR>			surface			(createSurface(instHelper.vki, instHelper.instance, wsiType, native.getDisplay(), native.getWindow(), context.getTestContext().getCommandLine()));
+	const Unique<VkSurfaceKHR>			surface			(createSurface(instHelper.vki, instHelper.instance, wsiType, native.getDisplay(), native.getWindow()));
 	const DeviceHelper					devHelper		(context, instHelper.vki, instHelper.instance, *surface);
 
 	if (!de::contains(context.getInstanceExtensions().begin(), context.getInstanceExtensions().end(), "VK_EXT_swapchain_colorspace"))

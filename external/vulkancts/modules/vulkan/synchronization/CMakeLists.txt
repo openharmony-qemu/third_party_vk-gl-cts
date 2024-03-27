@@ -4,8 +4,7 @@ include_directories(
 	${DEQP_INL_DIR}
 	)
 
-set(DEQP_VK_VKSC_SYNCHRONIZATION_SRCS
-	vktSynchronizationDefs.hpp
+set(DEQP_VK_SYNCHRONIZATION_SRCS
 	vktSynchronizationTests.cpp
 	vktSynchronizationTests.hpp
 	vktSynchronizationUtil.cpp
@@ -27,32 +26,26 @@ set(DEQP_VK_VKSC_SYNCHRONIZATION_SRCS
 	vktSynchronizationInternallySynchronizedObjectsTests.cpp
 	vktSynchronizationInternallySynchronizedObjectsTests.hpp
 	vktSynchronizationOperationTestData.hpp
-	vktSynchronizationTimelineSemaphoreTests.cpp
-	vktSynchronizationTimelineSemaphoreTests.hpp
-	vktSynchronizationImageLayoutTransitionTests.cpp
-	vktSynchronizationImageLayoutTransitionTests.cpp
-	)
-
-set(DEQP_VK_SYNCHRONIZATION_SRCS
 	vktSynchronizationCrossInstanceSharingTests.cpp
 	vktSynchronizationCrossInstanceSharingTests.hpp
+	vktSynchronizationTimelineSemaphoreTests.cpp
+	vktSynchronizationTimelineSemaphoreTests.hpp
 	vktSynchronizationNoneStageTests.cpp
 	vktSynchronizationNoneStageTests.hpp
 	vktSynchronizationSignalOrderTests.cpp
 	vktSynchronizationSignalOrderTests.hpp
 	vktSynchronizationWin32KeyedMutexTests.cpp
 	vktSynchronizationWin32KeyedMutexTests.hpp
-    vktGlobalPriorityQueueTests.cpp
-    vktGlobalPriorityQueueTests.hpp
-    vktGlobalPriorityQueueUtils.cpp
-    vktGlobalPriorityQueueUtils.hpp
+	vktSynchronizationImageLayoutTransitionTests.cpp
+	vktSynchronizationImageLayoutTransitionTests.cpp
+	)
+
+set(DEQP_VK_SYNCHRONIZATION_LIBS
+	tcutil
+	vkutil
 	)
 
 PCH(DEQP_VK_SYNCHRONIZATION_SRCS ../pch.cpp)
 
-add_library(deqp-vk-synchronization STATIC ${DEQP_VK_VKSC_SYNCHRONIZATION_SRCS} ${DEQP_VK_SYNCHRONIZATION_SRCS})
-target_link_libraries(deqp-vk-synchronization tcutil vkutil)
-
-add_library(deqp-vksc-synchronization STATIC ${DEQP_VK_VKSC_SYNCHRONIZATION_SRCS})
-target_include_directories(deqp-vksc-synchronization BEFORE PUBLIC ${CMAKE_SOURCE_DIR}/external/vulkancts/framework/vulkan/generated/vulkansc)
-target_link_libraries(deqp-vksc-synchronization PUBLIC deqp-vksc-util tcutil vkscutil)
+add_library(deqp-vk-synchronization STATIC ${DEQP_VK_SYNCHRONIZATION_SRCS})
+target_link_libraries(deqp-vk-synchronization ${DEQP_VK_SYNCHRONIZATION_LIBS})

@@ -1513,8 +1513,8 @@ private:
  * Test following code snippet with all shader stages:
  *
  *     layout(QUALIFIER) uniform Block {
- *         layout(offset = 16) vec4 b;
- *         layout(align  = 48) vec4 a;
+ *         layout(offset = 16) vec4 boy;
+ *         layout(align  = 48) vec4 man;
  *     };
  *
  * Test following block qualifiers and all types:
@@ -1642,8 +1642,8 @@ protected:
  * Use following code snippet:
  *
  *     layout (std140) uniform Block {
- *         layout (offset = b_offset) b_type b;
- *         layout (offset = a_offset) a_type a;
+ *         layout (offset = boy_offset) boy_type boy;
+ *         layout (offset = man_offset) man_type man;
  *     };
  *
  * It is expected that overlapping members will cause compilation failure.
@@ -1689,10 +1689,10 @@ protected:
 	/* Protected types */
 	struct testCase
 	{
-		glw::GLuint			  m_b_offset;
-		Utils::Type			  m_b_type;
-		glw::GLuint			  m_a_offset;
-		Utils::Type			  m_a_type;
+		glw::GLuint			  m_boy_offset;
+		Utils::Type			  m_boy_type;
+		glw::GLuint			  m_man_offset;
+		Utils::Type			  m_man_type;
 		Utils::Shader::STAGES m_stage;
 	};
 
@@ -1711,11 +1711,11 @@ protected:
  * Test following code snippet:
  *
  *     layout (std140, offset = 8) uniform Block {
- *         vec4 b;
- *         layout (align = a_alignment) type a;
+ *         vec4 boy;
+ *         layout (align = man_alignment) type man;
  *     };
  *
- * It is expected that compilation will fail whenever a_alignment is not
+ * It is expected that compilation will fail whenever man_alignment is not
  * a power of 2.
  *
  * Test all alignment in range <0, sizeof(dmat4)>. Test all shader stages.

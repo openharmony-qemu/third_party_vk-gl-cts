@@ -1,7 +1,7 @@
 /* WARNING: This is auto-generated file. Do not modify, since changes will
  * be lost! Modify the generating script instead.
  *
- * Generated from Khronos GL API description (gl.xml) revision d8371b44919d61c02e60f446a4b5461fda910f71.
+ * Generated from Khronos GL API description (gl.xml) revision 9d534f9312e56c72df763207e449c6719576fd54.
  */
 gl->activeShaderProgram								= glActiveShaderProgram;
 gl->activeTexture									= glActiveTexture;
@@ -217,7 +217,6 @@ gl->framebufferDrawBuffersEXT						= glFramebufferDrawBuffersEXT;
 gl->framebufferParameteri							= glFramebufferParameteri;
 gl->framebufferReadBufferEXT						= glFramebufferReadBufferEXT;
 gl->framebufferRenderbuffer							= glFramebufferRenderbuffer;
-gl->framebufferShadingRateEXT						= glFramebufferShadingRateEXT;
 gl->framebufferTexture								= glFramebufferTexture;
 gl->framebufferTexture1D							= glFramebufferTexture1D;
 gl->framebufferTexture2D							= glFramebufferTexture2D;
@@ -272,7 +271,6 @@ gl->getFloati_v										= glGetFloati_v;
 gl->getFloatv										= glGetFloatv;
 gl->getFragDataIndex								= glGetFragDataIndex;
 gl->getFragDataLocation								= glGetFragDataLocation;
-gl->getFragmentShadingRatesEXT						= glGetFragmentShadingRatesEXT;
 gl->getFramebufferAttachmentParameteriv				= glGetFramebufferAttachmentParameteriv;
 gl->getFramebufferParameteriv						= glGetFramebufferParameteriv;
 gl->getFramebufferParameterivEXT					= glGetFramebufferParameterivEXT;
@@ -666,8 +664,6 @@ gl->scissorIndexedv									= glScissorIndexedv;
 gl->shaderBinary									= glShaderBinary;
 gl->shaderSource									= glShaderSource;
 gl->shaderStorageBlockBinding						= glShaderStorageBlockBinding;
-gl->shadingRateEXT									= glShadingRateEXT;
-gl->shadingRateCombinerOpsEXT						= glShadingRateCombinerOpsEXT;
 gl->specializeShader								= glSpecializeShader;
 gl->stencilFunc										= glStencilFunc;
 gl->stencilFuncSeparate								= glStencilFuncSeparate;

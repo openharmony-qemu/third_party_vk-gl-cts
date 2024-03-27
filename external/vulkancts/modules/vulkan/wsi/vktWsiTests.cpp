@@ -25,7 +25,6 @@
 #include "vktTestGroupUtil.hpp"
 #include "vkWsiUtil.hpp"
 
-#include "vktWsiAcquireDrmDisplayTests.hpp"
 #include "vktWsiSurfaceTests.hpp"
 #include "vktWsiSwapchainTests.hpp"
 #include "vktWsiDisplayTests.hpp"
@@ -69,7 +68,6 @@ void createWsiTests (tcu::TestCaseGroup* apiTests)
 
 	addTestGroup(apiTests, "display", "Display coverage tests", createDisplayCoverageTests);
 	addTestGroup(apiTests, "display_control", "Display Control Tests", createDisplayControlTests);
-	addTestGroup(apiTests, "acquire_drm_display", "Acquire Drm display tests", createAcquireDrmDisplayTests);
 }
 
 } // anonymous

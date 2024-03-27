@@ -28,7 +28,7 @@ def deperiodizeFolder(folder):
     print('  Parsing = %s' % folder)
     for root, subdirs, files in os.walk(folder):
         for file in files:
-            if file.endswith(".adoc"):
+            if file.endswith(".txt"):
                 file_path = os.path.join(root, file)
                 deperiodizeFile(file_path)
         for subdir in subdirs:

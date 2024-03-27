@@ -61,7 +61,6 @@ ohos_source_set("glcts-common_source") {
     "//third_party/vk-gl-cts/external/openglcts/modules/common/glcSampleVariablesTests.cpp",
     "//third_party/vk-gl-cts/external/openglcts/modules/common/glcSeparableProgramsTransformFeedbackTests.cpp",
     "//third_party/vk-gl-cts/external/openglcts/modules/common/glcShaderConstExprTests.cpp",
-    "//third_party/vk-gl-cts/external/openglcts/modules/common/glcShaderFunctionTests.cpp",
     "//third_party/vk-gl-cts/external/openglcts/modules/common/glcShaderGroupVoteTests.cpp",
     "//third_party/vk-gl-cts/external/openglcts/modules/common/glcShaderIndexingTests.cpp",
     "//third_party/vk-gl-cts/external/openglcts/modules/common/glcShaderIntegerMixTests.cpp",
@@ -134,6 +133,25 @@ ohos_source_set("glcts-common_source") {
     "//third_party/vk-gl-cts/framework/egl:libdeqp_eglutil",
     "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
   ]
+
+  #   lib_dirs = [
+  #     "//third_party/vk-gl-cts/outlibs"
+  #   ]
+  #   libs = [
+  #     "glslang",
+  #     "SPIRV",
+  #     "SPVRemapper",
+  #     "spirv-tools",
+  #     "spirv-tools-link",
+  #     "spirv-tools-lint",
+  #     "spirv-tools-opt",
+  #     "spirv-tools-reduce",
+  #     "MachineIndependent",
+  #     "OGLCompiler",
+  #     "OSDependent",
+  #     "GenericCodeGen",
+  #   ]
+
   configs = [ ":glcts-common_config" ]
 }
 

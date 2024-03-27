@@ -25,12 +25,11 @@
 
 #include "tcuDefs.hpp"
 #include "tcuTestCase.hpp"
-#include "vktRenderPassGroupParams.hpp"
 
 namespace vkt
 {
 
-tcu::TestCaseGroup*	createRenderPassSampleReadTests		(tcu::TestContext& testCtx);
+tcu::TestCaseGroup*	createRenderPassSampleReadTests	(tcu::TestContext& testCtx);
 tcu::TestCaseGroup*	createRenderPass2SampleReadTests	(tcu::TestContext& testCtx);
 
 } // vkt

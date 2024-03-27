@@ -74,7 +74,7 @@ ImageType getImageTypeForSingleLayer (const ImageType imageType)
 	}
 }
 
-VkImageCreateInfo makeImageCreateInfo (const Texture& texture, const VkFormat format, const VkImageUsageFlags usage, const VkImageCreateFlags flags, const VkImageTiling tiling)
+VkImageCreateInfo makeImageCreateInfo (const Texture& texture, const VkFormat format, const VkImageUsageFlags usage, const VkImageCreateFlags flags)
 {
 	const VkSampleCountFlagBits samples = static_cast<VkSampleCountFlagBits>(texture.numSamples());	// integer and bit mask are aligned, so we can cast like this
 
@@ -89,7 +89,7 @@ VkImageCreateInfo makeImageCreateInfo (const Texture& texture, const VkFormat fo
 		1u,																							// deUint32					mipLevels;
 		(deUint32)texture.numLayers(),																// deUint32					arrayLayers;
 		samples,																					// VkSampleCountFlagBits	samples;
-		tiling,																						// VkImageTiling			tiling;
+		VK_IMAGE_TILING_OPTIMAL,																	// VkImageTiling			tiling;
 		usage,																						// VkImageUsageFlags		usage;
 		VK_SHARING_MODE_EXCLUSIVE,																	// VkSharingMode			sharingMode;
 		0u,																							// deUint32					queueFamilyIndexCount;

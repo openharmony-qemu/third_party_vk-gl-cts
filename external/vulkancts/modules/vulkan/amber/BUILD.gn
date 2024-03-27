@@ -27,7 +27,6 @@ config("deqp_vk_amber_config") {
 
 ohos_source_set("deqp_vk_amber_source") {
   sources = [
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber/vktAmberDepthTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber/vktAmberGlslTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber/vktAmberGlslTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber/vktAmberGraphicsFuzzTests.cpp",

@@ -30,7 +30,7 @@ namespace de
 {
 
 DynamicLibrary::DynamicLibrary (const char* fileName)
-	: m_library(nullptr)
+	: m_library(DE_NULL)
 {
 	m_library = deDynamicLibrary_open(fileName);
 	if (!m_library)
@@ -38,22 +38,13 @@ DynamicLibrary::DynamicLibrary (const char* fileName)
 }
 
 DynamicLibrary::DynamicLibrary (const char* fileNames[])
-	: m_library(nullptr)
+	: m_library(DE_NULL)
 {
-	for (size_t i = 0u; fileNames[i] != nullptr; ++i)
+	for (int i = 0; !m_library && fileNames[i]; i++)
 	{
 		m_library = deDynamicLibrary_open(fileNames[i]);
-		if (m_library)
-			break;
-	}
-
-	if (!m_library)
-	{
-		std::string nameList;
-		for (size_t i = 0u; fileNames[i] != nullptr; ++i)
-			nameList += (nameList.empty() ? "" : ", ") + std::string(fileNames[i]);
-		const std::string msg = "Failed to open dynamic library: tried " + nameList;
-		throw std::runtime_error(msg);
+		if (!m_library)
+			throw std::runtime_error(std::string("Failed to open dynamic library: '") + fileNames[0] + "'");
 	}
 }
 

@@ -41,39 +41,6 @@ void beginCommandBuffer (const DeviceInterface& vk, const VkCommandBuffer comman
 	VK_CHECK(vk.beginCommandBuffer(commandBuffer, &commandBufBeginParams));
 }
 
-void beginSecondaryCommandBuffer	(const DeviceInterface&				vkd,
-									 const VkCommandBuffer				cmdBuffer,
-									 const VkRenderPass					renderPass,
-									 const VkFramebuffer				framebuffer,
-									 const VkCommandBufferUsageFlags	flags)
-{
-	const VkCommandBufferInheritanceInfo inheritanceInfo =
-	{
-		VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO,	//	VkStructureType					sType;
-		nullptr,											//	const void*						pNext;
-		renderPass,											//	VkRenderPass					renderPass;
-		0u,													//	deUint32						subpass;
-		framebuffer,										//	VkFramebuffer					framebuffer;
-		VK_FALSE,											//	VkBool32						occlusionQueryEnable;
-		0u,													//	VkQueryControlFlags				queryFlags;
-		0u,													//	VkQueryPipelineStatisticFlags	pipelineStatistics;
-	};
-
-	const VkCommandBufferUsageFlags	extraFlags	= ((renderPass == DE_NULL)
-												? static_cast<VkCommandBufferUsageFlagBits>(0)
-												: VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
-	const VkCommandBufferUsageFlags	usageFlags	= (flags | extraFlags);
-	const VkCommandBufferBeginInfo	beginInfo	=
-	{
-		VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,	//	VkStructureType							sType;
-		nullptr,										//	const void*								pNext;
-		usageFlags,										//	VkCommandBufferUsageFlags				flags;
-		&inheritanceInfo,								//	const VkCommandBufferInheritanceInfo*	pInheritanceInfo;
-	};
-
-	vkd.beginCommandBuffer(cmdBuffer, &beginInfo);
-}
-
 void endCommandBuffer (const DeviceInterface& vk, const VkCommandBuffer commandBuffer)
 {
 	VK_CHECK(vk.endCommandBuffer(commandBuffer));
@@ -231,8 +198,6 @@ void endRenderPass (const DeviceInterface&	vk,
 	vk.cmdEndRenderPass(commandBuffer);
 }
 
-#ifndef CTS_USES_VULKANSC
-
 void beginRendering(const DeviceInterface&		vk,
 					const VkCommandBuffer		commandBuffer,
 					const VkImageView			colorImageView,
@@ -272,7 +237,7 @@ void beginRendering(const DeviceInterface&		vk,
 		DE_NULL,												// const VkRenderingAttachmentInfoKHR*	pStencilAttachment;
 	};
 
-	vk.cmdBeginRendering(commandBuffer, &renderingInfo);
+	vk.cmdBeginRenderingKHR(commandBuffer, &renderingInfo);
 }
 
 void beginRendering(const DeviceInterface&		vk,
@@ -332,16 +297,14 @@ void beginRendering(const DeviceInterface&		vk,
 		useStencilAttachment ? &depthStencilAttachment : DE_NULL,	// const VkRenderingAttachmentInfoKHR*	pStencilAttachment;
 	};
 
-	vk.cmdBeginRendering(commandBuffer, &renderingInfo);
+	vk.cmdBeginRenderingKHR(commandBuffer, &renderingInfo);
 }
 
 void endRendering(const DeviceInterface&	vk,
 				  const VkCommandBuffer		commandBuffer)
 {
-	vk.cmdEndRendering(commandBuffer);
+	vk.cmdEndRenderingKHR(commandBuffer);
 }
-
-#endif // CTS_USES_VULKANSC
 
 void submitCommandsAndWait (const DeviceInterface&		vk,
 							const VkDevice				device,

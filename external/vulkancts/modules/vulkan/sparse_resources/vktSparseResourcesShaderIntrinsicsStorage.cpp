@@ -66,15 +66,6 @@ void SparseShaderIntrinsicsCaseStorage::initPrograms (vk::SourceCollections& pro
 	// it's not possible to declare two OpTypeImage aliases for the same data type - we have to eliminate %type_image_residency when %type_image_sparse is the same
 	const std::string				typeImageResidencyName		= (opTypeImageSparse == opTypeImageResidency) ? "%type_image_sparse" : "%type_image_residency";
 
-	SpirvVersion	spirvVersion	= SPIRV_VERSION_1_0;
-	std::string		interfaceList	= "";
-
-	if (m_operand.find("Nontemporal") != std::string::npos)
-	{
-		spirvVersion	= SPIRV_VERSION_1_6;
-		interfaceList	= "%uniform_image_sparse %uniform_image_texels %uniform_image_residency";
-	}
-
 	src << "OpCapability Shader\n"
 		<< "OpCapability ImageCubeArray\n"
 		<< "OpCapability SparseResidency\n"
@@ -89,7 +80,7 @@ void SparseShaderIntrinsicsCaseStorage::initPrograms (vk::SourceCollections& pro
 
 	src << "%ext_import = OpExtInstImport \"GLSL.std.450\"\n"
 		<< "OpMemoryModel Logical GLSL450\n"
-		<< "OpEntryPoint GLCompute %func_main \"main\" %input_GlobalInvocationID " << interfaceList << "\n"
+		<< "OpEntryPoint GLCompute %func_main \"main\" %input_GlobalInvocationID\n"
 		<< "OpExecutionMode %func_main LocalSize 1 1 1\n"
 		<< "OpSource GLSL 440\n"
 
@@ -298,8 +289,7 @@ void SparseShaderIntrinsicsCaseStorage::initPrograms (vk::SourceCollections& pro
 		<< "OpReturn\n"
 		<< "OpFunctionEnd\n";
 
-	programCollection.spirvAsmSources.add("compute") << src.str()
-		<< vk::SpirVAsmBuildOptions(programCollection.usedVulkanVersion, spirvVersion);
+	programCollection.spirvAsmSources.add("compute") << src.str();
 }
 
 std::string	SparseCaseOpImageSparseFetch::getSparseImageTypeName (void) const
@@ -319,9 +309,8 @@ std::string	SparseCaseOpImageSparseFetch::sparseImageOpString (const std::string
 															   const std::string& mipLevel) const
 {
 	std::ostringstream	src;
-	std::string			additionalOperand = (m_operand.empty() ? " " : (std::string("|") + m_operand + " "));
 
-	src << resultVariable << " = OpImageSparseFetch " << resultType << " " << image << " " << coord << " Lod" << additionalOperand << mipLevel << "\n";
+	src << resultVariable << " = OpImageSparseFetch " << resultType << " " << image << " " << coord << " Lod " << mipLevel << "\n";
 
 	return src.str();
 }
@@ -346,7 +335,7 @@ std::string	SparseCaseOpImageSparseRead::sparseImageOpString (const std::string&
 
 	std::ostringstream	src;
 
-	src << resultVariable << " = OpImageSparseRead " << resultType << " " << image << " " << coord << " " << m_operand << "\n";
+	src << resultVariable << " = OpImageSparseRead " << resultType << " " << image << " " << coord << "\n";
 
 	return src.str();
 }
@@ -501,7 +490,7 @@ void SparseShaderIntrinsicsInstanceStorage::recordCommands (const VkCommandBuffe
 		};
 
 		// Create and bind compute pipeline
-		pipelines[mipLevelNdx] = makeVkSharedPtr(makeComputePipeline(deviceInterface, getDevice(), *pipelineLayout, (VkPipelineCreateFlags) 0u, *shaderModule, (VkPipelineShaderStageCreateFlags) 0u,  &specializationInfo));
+		pipelines[mipLevelNdx] = makeVkSharedPtr(makeComputePipeline(deviceInterface, getDevice(), *pipelineLayout, *shaderModule, &specializationInfo));
 		const VkPipeline computePipeline = **pipelines[mipLevelNdx];
 
 		deviceInterface.cmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePipeline);

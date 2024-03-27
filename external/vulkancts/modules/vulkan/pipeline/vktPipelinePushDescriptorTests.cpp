@@ -65,15 +65,15 @@ typedef de::SharedPtr<Unique<VkBufferView> >	VkBufferViewSp;
 typedef de::SharedPtr<Allocation>				AllocationSp;
 typedef de::SharedPtr<Unique<VkRenderPass> >	VkRenderPassSp;
 typedef de::SharedPtr<Unique<VkFramebuffer> >	VkFramebufferSp;
+typedef de::SharedPtr<Unique<VkPipeline> >		VkPipelineSp;
 
 constexpr VkDeviceSize kSizeofVec4 = static_cast<VkDeviceSize>(sizeof(tcu::Vec4));
 
 struct TestParams
 {
-	PipelineConstructionType	pipelineConstructionType;		// Used only by graphics pipeline tests
-	VkDescriptorType			descriptorType;
-	deUint32					binding;
-	deUint32					numCalls;						// Number of draw or dispatch calls
+	VkDescriptorType	descriptorType;
+	deUint32			binding;
+	deUint32			numCalls; // Number of draw or dispatch calls
 };
 
 VkDeviceSize calcItemSize (const InstanceInterface& vki, VkPhysicalDevice physicalDevice, deUint32 numElements = 1u)
@@ -87,7 +87,7 @@ void checkAllSupported (const Extensions& supportedExtensions, const vector<stri
 {
 	for (auto& requiredExtName : requiredExtensions)
 	{
-		if (!isExtensionStructSupported(supportedExtensions, RequiredExtension(requiredExtName)))
+		if (!isExtensionSupported(supportedExtensions, RequiredExtension(requiredExtName)))
 			TCU_THROW(NotSupportedError, (requiredExtName + " is not supported").c_str());
 	}
 }
@@ -112,8 +112,7 @@ Move<VkDevice> createDeviceWithPushDescriptor (const Context&				context,
 											   const InstanceInterface&		vki,
 											   VkPhysicalDevice				physicalDevice,
 											   const Extensions&			supportedExtensions,
-											   const deUint32				queueFamilyIndex,
-											   const TestParams&			params)
+											   const deUint32				queueFamilyIndex)
 {
 
 	const float						queuePriority			= 1.0f;
@@ -131,16 +130,6 @@ Move<VkDevice> createDeviceWithPushDescriptor (const Context&				context,
 	deMemset(&features, 0, sizeof(features));
 
 	vector<string>					requiredExtensionsStr	= { "VK_KHR_push_descriptor" };
-	VkPhysicalDeviceGraphicsPipelineLibraryFeaturesEXT graphicsPipelineLibraryFeaturesEXT = initVulkanStructure();
-	VkPhysicalDeviceFeatures2 features2 = initVulkanStructure(&graphicsPipelineLibraryFeaturesEXT);
-	if (params.pipelineConstructionType != PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC)
-	{
-		requiredExtensionsStr.push_back("VK_KHR_pipeline_library");
-		requiredExtensionsStr.push_back("VK_EXT_graphics_pipeline_library");
-		vki.getPhysicalDeviceFeatures2(physicalDevice, &features2);
-		if (!graphicsPipelineLibraryFeaturesEXT.graphicsPipelineLibrary)
-			TCU_THROW(NotSupportedError, "graphicsPipelineLibraryFeaturesEXT.graphicsPipelineLibrary required");
-	}
 	vector<const char *>			requiredExtensions;
 	checkAllSupported(supportedExtensions, requiredExtensionsStr);
 	// We need the contents of requiredExtensionsStr as a vector<const char*> in VkDeviceCreateInfo.
@@ -150,7 +139,7 @@ Move<VkDevice> createDeviceWithPushDescriptor (const Context&				context,
 	const VkDeviceCreateInfo		deviceParams    =
 	{
 		VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-		params.pipelineConstructionType != PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC ? &features2 : DE_NULL,
+		DE_NULL,
 		(VkDeviceCreateFlags)0,
 		1u,
 		&queueInfo,
@@ -158,7 +147,7 @@ Move<VkDevice> createDeviceWithPushDescriptor (const Context&				context,
 		DE_NULL,
 		static_cast<deUint32>(requiredExtensions.size()),
 		(requiredExtensions.empty() ? DE_NULL : requiredExtensions.data()),
-		params.pipelineConstructionType != PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC ? DE_NULL : &features
+		&features
 	};
 
 	return createCustomDevice(context.getTestContext().getCommandLine().isValidationEnabled(), vkp, instance, vki, physicalDevice, &deviceParams, DE_NULL);
@@ -267,9 +256,8 @@ private:
 	vector<VkBufferSp>			m_buffers;
 	vector<AllocationSp>		m_bufferAllocs;
 	Move<VkDescriptorSetLayout>	m_descriptorSetLayout;
-	Move<VkPipelineLayout>		m_preRasterizationStatePipelineLayout;
-	Move<VkPipelineLayout>		m_fragmentStatePipelineLayout;
-	GraphicsPipelineWrapper		m_graphicsPipeline;
+	Move<VkPipelineLayout>		m_pipelineLayout;
+	Move<VkPipeline>			m_graphicsPipelines;
 	Move<VkCommandPool>			m_cmdPool;
 	Move<VkCommandBuffer>		m_cmdBuffer;
 	vector<Vertex4RGBA>			m_vertices;
@@ -285,13 +273,12 @@ PushDescriptorBufferGraphicsTestInstance::PushDescriptorBufferGraphicsTestInstan
 	, m_physicalDevice		(chooseDevice(m_vki, m_instance, context.getTestContext().getCommandLine()))
 	, m_queueFamilyIndex	(findQueueFamilyIndexWithCaps(m_vki, m_physicalDevice, VK_QUEUE_GRAPHICS_BIT))
 	, m_deviceExtensions	(enumerateDeviceExtensionProperties(m_vki, m_physicalDevice, DE_NULL))
-	, m_device				(createDeviceWithPushDescriptor(context, m_vkp, m_instance, m_vki, m_physicalDevice, m_deviceExtensions, m_queueFamilyIndex, params))
+	, m_device				(createDeviceWithPushDescriptor(context, m_vkp, m_instance, m_vki, m_physicalDevice, m_deviceExtensions, m_queueFamilyIndex))
 	, m_vkd					(m_vkp, m_instance, *m_device)
 	, m_queue				(getDeviceQueue(m_vkd, *m_device, m_queueFamilyIndex, 0u))
 	, m_allocator			(m_vkd, *m_device, getPhysicalDeviceMemoryProperties(m_vki, m_physicalDevice))
 	, m_renderSize			(32, 32)
 	, m_colorFormat			(VK_FORMAT_R8G8B8A8_UNORM)
-	, m_graphicsPipeline	(m_vkd, *m_device, params.pipelineConstructionType)
 	, m_vertices			(createQuads(params.numCalls, 0.25f))
 {
 }
@@ -396,22 +383,18 @@ void PushDescriptorBufferGraphicsTestInstance::init (void)
 		m_descriptorSetLayout = createDescriptorSetLayout(m_vkd, *m_device, &descriptorSetLayoutCreateInfo, DE_NULL);
 
 		// Create pipeline layout
-		VkPipelineLayoutCreateFlags	pipelineLayoutFlags = (m_params.pipelineConstructionType == PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC) ? 0u : deUint32(VK_PIPELINE_LAYOUT_CREATE_INDEPENDENT_SETS_BIT_EXT);
-		VkPipelineLayoutCreateInfo	pipelineLayoutParams
+		const VkPipelineLayoutCreateInfo		pipelineLayoutParams			=
 		{
 			VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,	// VkStructureType				sType;
 			DE_NULL,										// const void*					pNext;
-			pipelineLayoutFlags,							// VkPipelineLayoutCreateFlags	flags;
-			1u,												// deUint32						setLayoutCount;
+			0u,												// VkPipelineLayoutCreateFlags	flags;
+			1u,												// deUint32						descriptorSetCount;
 			&(*m_descriptorSetLayout),						// const VkDescriptorSetLayout*	pSetLayouts;
 			0u,												// deUint32						pushConstantRangeCount;
 			DE_NULL											// const VkPushDescriptorRange*	pPushDescriptorRanges;
 		};
 
-		m_preRasterizationStatePipelineLayout	= createPipelineLayout(m_vkd, *m_device, &pipelineLayoutParams);
-		pipelineLayoutParams.setLayoutCount		= 0u;
-		pipelineLayoutParams.pSetLayouts		= DE_NULL;
-		m_fragmentStatePipelineLayout			= createPipelineLayout(m_vkd, *m_device, &pipelineLayoutParams);
+		m_pipelineLayout = createPipelineLayout(m_vkd, *m_device, &pipelineLayoutParams);
 	}
 
 	// Create buffers. One color value in each buffer.
@@ -485,25 +468,24 @@ void PushDescriptorBufferGraphicsTestInstance::init (void)
 
 		const VkPrimitiveTopology					topology							= VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
-		const vector<VkViewport>					viewports							{ makeViewport(m_renderSize) };
-		const vector<VkRect2D>						scissors							{ makeRect2D(m_renderSize) };
+		const vector<VkViewport>					viewports							(1, makeViewport(m_renderSize));
+		const vector<VkRect2D>						scissors							(1, makeRect2D(m_renderSize));
 
-		m_graphicsPipeline.setDefaultRasterizationState()
-						  .setDefaultDepthStencilState()
-						  .setDefaultMultisampleState()
-						  .setDefaultColorBlendState()
-						  .setDefaultTopology(topology)
-						  .setupVertexInputState(&vertexInputStateParams)
-						  .setupPreRasterizationShaderState(viewports,
-															scissors,
-															*m_preRasterizationStatePipelineLayout,
-															*m_renderPass,
-															0u,
-															*m_vertexShaderModule)
-						  .setupFragmentShaderState(*m_fragmentStatePipelineLayout, *m_renderPass, 0u, *m_fragmentShaderModule)
-						  .setupFragmentOutputState(*m_renderPass)
-						  .setMonolithicPipelineLayout(*m_preRasterizationStatePipelineLayout)
-						  .buildPipeline();
+		m_graphicsPipelines = makeGraphicsPipeline(m_vkd,						// const DeviceInterface&						vk
+												   *m_device,					// const VkDevice								device
+												   *m_pipelineLayout,			// const VkPipelineLayout						pipelineLayout
+												   *m_vertexShaderModule,		// const VkShaderModule							vertexShaderModule
+												   DE_NULL,						// const VkShaderModule							tessellationControlShaderModule
+												   DE_NULL,						// const VkShaderModule							tessellationEvalShaderModule
+												   DE_NULL,						// const VkShaderModule							geometryShaderModule
+												   *m_fragmentShaderModule,		// const VkShaderModule							fragmentShaderModule
+												   *m_renderPass,				// const VkRenderPass							renderPass
+												   viewports,					// const std::vector<VkViewport>&				viewports
+												   scissors,					// const std::vector<VkRect2D>&					scissors
+												   topology,					// const VkPrimitiveTopology					topology
+												   0u,							// const deUint32								subpass
+												   0u,							// const deUint32								patchControlPoints
+												   &vertexInputStateParams);	// const VkPipelineVertexInputStateCreateInfo*	vertexInputStateCreateInfo
 	}
 
 	// Create vertex buffer
@@ -541,7 +523,7 @@ void PushDescriptorBufferGraphicsTestInstance::init (void)
 		m_cmdBuffer = allocateCommandBuffer(m_vkd, *m_device, *m_cmdPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 		beginCommandBuffer(m_vkd, *m_cmdBuffer, 0u);
 		beginRenderPass(m_vkd, *m_cmdBuffer, *m_renderPass, *m_framebuffer, makeRect2D(0, 0, m_renderSize.x(), m_renderSize.y()), attachmentClearValue);
-		m_vkd.cmdBindPipeline(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline.getPipeline());
+		m_vkd.cmdBindPipeline(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_graphicsPipelines);
 		m_vkd.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &m_vertexBuffer.get(), &vertexBufferOffset);
 
 		// Draw quads. Switch input buffer which contains the quad color for each draw call.
@@ -568,7 +550,7 @@ void PushDescriptorBufferGraphicsTestInstance::init (void)
 				DE_NULL									// const VkBufferView*				pTexelBufferView;
 			};
 
-			m_vkd.cmdPushDescriptorSetKHR(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_preRasterizationStatePipelineLayout, 0, 1, &writeDescriptorSet);
+			m_vkd.cmdPushDescriptorSetKHR(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipelineLayout, 0, 1, &writeDescriptorSet);
 			m_vkd.cmdDraw(*m_cmdBuffer, 6, 1, 6 * quadNdx, 0);
 		}
 
@@ -639,7 +621,6 @@ public:
 															 const string&		description,
 															 const TestParams&	params);
 						~PushDescriptorBufferGraphicsTest	(void);
-	void				checkSupport						(Context& context) const;
 	void				initPrograms						(SourceCollections& sourceCollections) const;
 	TestInstance*		createInstance						(Context& context) const;
 
@@ -663,11 +644,6 @@ PushDescriptorBufferGraphicsTest::~PushDescriptorBufferGraphicsTest (void)
 TestInstance* PushDescriptorBufferGraphicsTest::createInstance (Context& context) const
 {
 	return new PushDescriptorBufferGraphicsTestInstance(context, m_params);
-}
-
-void PushDescriptorBufferGraphicsTest::checkSupport(Context& context) const
-{
-	checkPipelineLibraryRequirements(context.getInstanceInterface(), context.getPhysicalDevice(), m_params.pipelineConstructionType);
 }
 
 void PushDescriptorBufferGraphicsTest::initPrograms (SourceCollections& sourceCollections) const
@@ -751,7 +727,7 @@ PushDescriptorBufferComputeTestInstance::PushDescriptorBufferComputeTestInstance
 	, m_physicalDevice		(chooseDevice(m_vki, m_instance, context.getTestContext().getCommandLine()))
 	, m_queueFamilyIndex	(findQueueFamilyIndexWithCaps(m_vki, m_physicalDevice, VK_QUEUE_COMPUTE_BIT))
 	, m_deviceExtensions	(enumerateDeviceExtensionProperties(m_vki, m_physicalDevice, DE_NULL))
-	, m_device				(createDeviceWithPushDescriptor(context, m_vkp, m_instance, m_vki, m_physicalDevice, m_deviceExtensions, m_queueFamilyIndex, params))
+	, m_device				(createDeviceWithPushDescriptor(context, m_vkp, m_instance, m_vki, m_physicalDevice, m_deviceExtensions, m_queueFamilyIndex))
 	, m_vkd					(m_vkp, m_instance, *m_device)
 	, m_queue				(getDeviceQueue(m_vkd, *m_device, m_queueFamilyIndex, 0u))
 	, m_itemSize			(calcItemSize(m_vki, m_physicalDevice))
@@ -1089,9 +1065,8 @@ private:
 	Move<VkBuffer>					m_vertexBuffer;
 	de::MovePtr<Allocation>			m_vertexBufferAlloc;
 	Move<VkDescriptorSetLayout>		m_descriptorSetLayout;
-	Move<VkPipelineLayout>			m_preRasterizationStatePipelineLayout;
-	Move<VkPipelineLayout>			m_fragmentStatePipelineLayout;
-	GraphicsPipelineWrapper			m_graphicsPipeline;
+	Move<VkPipelineLayout>			m_pipelineLayout;
+	Move<VkPipeline>				m_graphicsPipelines;
 	Move<VkCommandPool>				m_cmdPool;
 	Move<VkCommandBuffer>			m_cmdBuffer;
 	vector<Vertex4Tex4>				m_vertices;
@@ -1107,14 +1082,13 @@ PushDescriptorImageGraphicsTestInstance::PushDescriptorImageGraphicsTestInstance
 	, m_physicalDevice		(chooseDevice(m_vki, m_instance, context.getTestContext().getCommandLine()))
 	, m_queueFamilyIndex	(findQueueFamilyIndexWithCaps(m_vki, m_physicalDevice, VK_QUEUE_GRAPHICS_BIT))
 	, m_deviceExtensions	(enumerateDeviceExtensionProperties(m_vki, m_physicalDevice, DE_NULL))
-	, m_device				(createDeviceWithPushDescriptor(context, m_vkp, m_instance, m_vki, m_physicalDevice, m_deviceExtensions, m_queueFamilyIndex, params))
+	, m_device				(createDeviceWithPushDescriptor(context, m_vkp, m_instance, m_vki, m_physicalDevice, m_deviceExtensions, m_queueFamilyIndex))
 	, m_vkd					(m_vkp, m_instance, *m_device)
 	, m_queue				(getDeviceQueue(m_vkd, *m_device, m_queueFamilyIndex, 0u))
 	, m_allocator			(m_vkd, *m_device, getPhysicalDeviceMemoryProperties(m_vki, m_physicalDevice))
 	, m_renderSize			(32, 32)
 	, m_textureSize			(32, 32)
 	, m_colorFormat			(VK_FORMAT_R8G8B8A8_UNORM)
-	, m_graphicsPipeline	(m_vkd, *m_device, params.pipelineConstructionType)
 	, m_vertices			(createTexQuads(params.numCalls, 0.25f))
 {
 }
@@ -1504,22 +1478,18 @@ void PushDescriptorImageGraphicsTestInstance::init (void)
 		m_descriptorSetLayout = createDescriptorSetLayout(m_vkd, *m_device, &descriptorSetLayoutCreateInfo, DE_NULL);
 
 		// Create pipeline layout
-		VkPipelineLayoutCreateFlags	pipelineLayoutFlags = (m_params.pipelineConstructionType == PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC) ? 0u : deUint32(VK_PIPELINE_LAYOUT_CREATE_INDEPENDENT_SETS_BIT_EXT);
-		VkPipelineLayoutCreateInfo	pipelineLayoutParams
+		const VkPipelineLayoutCreateInfo		pipelineLayoutParams			=
 		{
 			VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,	// VkStructureType				sType;
 			DE_NULL,										// const void*					pNext;
-			pipelineLayoutFlags,							// VkPipelineLayoutCreateFlags	flags;
-			0u,												// deUint32						setLayoutCount;
-			DE_NULL,										// const VkDescriptorSetLayout*	pSetLayouts;
+			0u,												// VkPipelineLayoutCreateFlags	flags;
+			1u,												// deUint32						descriptorSetCount;
+			&(*m_descriptorSetLayout),						// const VkDescriptorSetLayout*	pSetLayouts;
 			0u,												// deUint32						pushConstantRangeCount;
 			DE_NULL											// const VkPushDescriptorRange*	pPushDescriptorRanges;
 		};
 
-		m_preRasterizationStatePipelineLayout	= createPipelineLayout(m_vkd, *m_device, &pipelineLayoutParams);
-		pipelineLayoutParams.setLayoutCount		= 1u;
-		pipelineLayoutParams.pSetLayouts		= &(*m_descriptorSetLayout);
-		m_fragmentStatePipelineLayout			= createPipelineLayout(m_vkd, *m_device, &pipelineLayoutParams);
+		m_pipelineLayout = createPipelineLayout(m_vkd, *m_device, &pipelineLayoutParams);
 	}
 
 	// Create shaders
@@ -1564,24 +1534,26 @@ void PushDescriptorImageGraphicsTestInstance::init (void)
 			vertexInputAttributeDescriptions							// const VkVertexInputAttributeDescription*	pVertexAttributeDescriptions;
 		};
 
-		const vector<VkViewport>					viewports		{ makeViewport(m_renderSize) };
-		const vector<VkRect2D>						scissors		{ makeRect2D(m_renderSize) };
+		const VkPrimitiveTopology					topology							= VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
-		m_graphicsPipeline.setMonolithicPipelineLayout(*m_fragmentStatePipelineLayout)
-						  .setDefaultRasterizationState()
-						  .setDefaultDepthStencilState()
-						  .setDefaultMultisampleState()
-						  .setDefaultColorBlendState()
-						  .setupVertexInputState(&vertexInputStateParams)
-						  .setupPreRasterizationShaderState(viewports,
-															scissors,
-															*m_preRasterizationStatePipelineLayout,
-															*m_renderPass,
-															0u,
-															*m_vertexShaderModule)
-						  .setupFragmentShaderState(*m_fragmentStatePipelineLayout, *m_renderPass, 0u, *m_fragmentShaderModule)
-						  .setupFragmentOutputState(*m_renderPass)
-						  .buildPipeline();
+		const vector<VkViewport>					viewports							(1, makeViewport(m_renderSize));
+		const vector<VkRect2D>						scissors							(1, makeRect2D(m_renderSize));
+
+		m_graphicsPipelines = makeGraphicsPipeline(m_vkd,						// const DeviceInterface&						vk
+												   *m_device,					// const VkDevice								device
+												   *m_pipelineLayout,			// const VkPipelineLayout						pipelineLayout
+												   *m_vertexShaderModule,		// const VkShaderModule							vertexShaderModule
+												   DE_NULL,						// const VkShaderModule							tessellationControlShaderModule
+												   DE_NULL,						// const VkShaderModule							tessellationEvalShaderModule
+												   DE_NULL,						// const VkShaderModule							geometryShaderModule
+												   *m_fragmentShaderModule,		// const VkShaderModule							fragmentShaderModule
+												   *m_renderPass,				// const VkRenderPass							renderPass
+												   viewports,					// const std::vector<VkViewport>&				viewports
+												   scissors,					// const std::vector<VkRect2D>&					scissors
+												   topology,					// const VkPrimitiveTopology					topology
+												   0u,							// const deUint32								subpass
+												   0u,							// const deUint32								patchControlPoints
+												   &vertexInputStateParams);	// const VkPipelineVertexInputStateCreateInfo*	vertexInputStateCreateInfo
 	}
 
 	// Create vertex buffer
@@ -1619,7 +1591,7 @@ void PushDescriptorImageGraphicsTestInstance::init (void)
 		m_cmdBuffer = allocateCommandBuffer(m_vkd, *m_device, *m_cmdPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 		beginCommandBuffer(m_vkd, *m_cmdBuffer, 0u);
 		beginRenderPass(m_vkd, *m_cmdBuffer, *m_renderPass, *m_framebuffer, makeRect2D(0, 0, m_renderSize.x(), m_renderSize.y()), attachmentClearValue);
-		m_vkd.cmdBindPipeline(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline.getPipeline());
+		m_vkd.cmdBindPipeline(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_graphicsPipelines);
 		m_vkd.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &m_vertexBuffer.get(), &vertexBufferOffset);
 
 		// Draw quads. Switch sampler or image view depending on the test.
@@ -1691,7 +1663,7 @@ void PushDescriptorImageGraphicsTestInstance::init (void)
 				writeDescriptorSets.push_back(writeDescriptorSet);
 			}
 
-			m_vkd.cmdPushDescriptorSetKHR(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_fragmentStatePipelineLayout, 0, (deUint32)writeDescriptorSets.size(), writeDescriptorSets.data());
+			m_vkd.cmdPushDescriptorSetKHR(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipelineLayout, 0, (deUint32)writeDescriptorSets.size(), writeDescriptorSets.data());
 			m_vkd.cmdDraw(*m_cmdBuffer, 6, 1, 6 * quadNdx, 0);
 		}
 
@@ -1794,8 +1766,6 @@ public:
 															 const string&		description,
 															 const TestParams&	params);
 						~PushDescriptorImageGraphicsTest	(void);
-
-	void				checkSupport						(Context& context) const;
 	void				initPrograms						(SourceCollections& sourceCollections) const;
 	TestInstance*		createInstance						(Context& context) const;
 
@@ -1819,11 +1789,6 @@ PushDescriptorImageGraphicsTest::~PushDescriptorImageGraphicsTest (void)
 TestInstance* PushDescriptorImageGraphicsTest::createInstance (Context& context) const
 {
 	return new PushDescriptorImageGraphicsTestInstance(context, m_params);
-}
-
-void PushDescriptorImageGraphicsTest::checkSupport(Context& context) const
-{
-	checkPipelineLibraryRequirements(context.getInstanceInterface(), context.getPhysicalDevice(), m_params.pipelineConstructionType);
 }
 
 void PushDescriptorImageGraphicsTest::initPrograms (SourceCollections& sourceCollections) const
@@ -1964,7 +1929,7 @@ PushDescriptorImageComputeTestInstance::PushDescriptorImageComputeTestInstance (
 	, m_physicalDevice		(chooseDevice(m_vki, m_instance, context.getTestContext().getCommandLine()))
 	, m_queueFamilyIndex	(findQueueFamilyIndexWithCaps(m_vki, m_physicalDevice, VK_QUEUE_COMPUTE_BIT | VK_QUEUE_GRAPHICS_BIT))
 	, m_deviceExtensions	(enumerateDeviceExtensionProperties(m_vki, m_physicalDevice, DE_NULL))
-	, m_device				(createDeviceWithPushDescriptor(context, m_vkp, m_instance, m_vki, m_physicalDevice, m_deviceExtensions, m_queueFamilyIndex, params))
+	, m_device				(createDeviceWithPushDescriptor(context, m_vkp, m_instance, m_vki, m_physicalDevice, m_deviceExtensions, m_queueFamilyIndex))
 	, m_vkd					(m_vkp, m_instance, *m_device)
 	, m_queue				(getDeviceQueue(m_vkd, *m_device, m_queueFamilyIndex, 0u))
 	, m_itemSize			(calcItemSize(m_vki, m_physicalDevice, 2u))
@@ -2738,9 +2703,8 @@ private:
 	Move<VkBuffer>					m_vertexBuffer;
 	de::MovePtr<Allocation>			m_vertexBufferAlloc;
 	Move<VkDescriptorSetLayout>		m_descriptorSetLayout;
-	Move<VkPipelineLayout>			m_preRasterizationStatePipelineLayout;
-	Move<VkPipelineLayout>			m_fragmentStatePipelineLayout;
-	GraphicsPipelineWrapper			m_graphicsPipeline;
+	Move<VkPipelineLayout>			m_pipelineLayout;
+	Move<VkPipeline>				m_graphicsPipelines;
 	Move<VkCommandPool>				m_cmdPool;
 	Move<VkCommandBuffer>			m_cmdBuffer;
 	vector<Vertex4RGBA>				m_vertices;
@@ -2756,14 +2720,13 @@ PushDescriptorTexelBufferGraphicsTestInstance::PushDescriptorTexelBufferGraphics
 	, m_physicalDevice		(chooseDevice(m_vki, m_instance, context.getTestContext().getCommandLine()))
 	, m_queueFamilyIndex	(findQueueFamilyIndexWithCaps(m_vki, m_physicalDevice, VK_QUEUE_GRAPHICS_BIT))
 	, m_deviceExtensions	(enumerateDeviceExtensionProperties(m_vki, m_physicalDevice, DE_NULL))
-	, m_device				(createDeviceWithPushDescriptor(context, m_vkp, m_instance, m_vki, m_physicalDevice, m_deviceExtensions, m_queueFamilyIndex, params))
+	, m_device				(createDeviceWithPushDescriptor(context, m_vkp, m_instance, m_vki, m_physicalDevice, m_deviceExtensions, m_queueFamilyIndex))
 	, m_vkd					(m_vkp, m_instance, *m_device)
 	, m_queue				(getDeviceQueue(m_vkd, *m_device, m_queueFamilyIndex, 0u))
 	, m_allocator			(m_vkd, *m_device, getPhysicalDeviceMemoryProperties(m_vki, m_physicalDevice))
 	, m_renderSize			(32, 32)
 	, m_colorFormat			(VK_FORMAT_R8G8B8A8_UNORM)
 	, m_bufferFormat		(VK_FORMAT_R32G32B32A32_SFLOAT)
-	, m_graphicsPipeline	(m_vkd, *m_device, params.pipelineConstructionType)
 	, m_vertices			(createQuads(params.numCalls, 0.25f))
 {
 }
@@ -2908,22 +2871,18 @@ void PushDescriptorTexelBufferGraphicsTestInstance::init (void)
 
 		m_descriptorSetLayout = createDescriptorSetLayout(m_vkd, *m_device, &descriptorSetLayoutCreateInfo, DE_NULL);
 
-		VkPipelineLayoutCreateFlags	pipelineLayoutFlags = (m_params.pipelineConstructionType == PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC) ? 0u : deUint32(VK_PIPELINE_LAYOUT_CREATE_INDEPENDENT_SETS_BIT_EXT);
-		VkPipelineLayoutCreateInfo	pipelineLayoutParams
+		const VkPipelineLayoutCreateInfo		pipelineLayoutParams			=
 		{
 			VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,	// VkStructureType				sType;
 			DE_NULL,										// const void*					pNext;
-			pipelineLayoutFlags,							// VkPipelineLayoutCreateFlags	flags;
-			0u,												// deUint32						setLayoutCount;
-			DE_NULL,										// const VkDescriptorSetLayout*	pSetLayouts;
+			0u,												// VkPipelineLayoutCreateFlags	flags;
+			1u,												// deUint32						descriptorSetCount;
+			&(*m_descriptorSetLayout),						// const VkDescriptorSetLayout*	pSetLayouts;
 			0u,												// deUint32						pushConstantRangeCount;
 			DE_NULL											// const VkPushDescriptorRange*	pPushDescriptorRanges;
 		};
 
-		m_preRasterizationStatePipelineLayout	= createPipelineLayout(m_vkd, *m_device, &pipelineLayoutParams);
-		pipelineLayoutParams.setLayoutCount		= 1u;
-		pipelineLayoutParams.pSetLayouts		= &(*m_descriptorSetLayout);
-		m_fragmentStatePipelineLayout			= createPipelineLayout(m_vkd, *m_device, &pipelineLayoutParams);
+		m_pipelineLayout = createPipelineLayout(m_vkd, *m_device, &pipelineLayoutParams);
 	}
 
 	// Create shaders
@@ -2968,24 +2927,26 @@ void PushDescriptorTexelBufferGraphicsTestInstance::init (void)
 			vertexInputAttributeDescriptions							// const VkVertexInputAttributeDescription*	pVertexAttributeDescriptions;
 		};
 
-		const vector<VkViewport>					viewports			{ makeViewport(m_renderSize) };
-		const vector<VkRect2D>						scissors			{ makeRect2D(m_renderSize) };
+		const VkPrimitiveTopology					topology							= VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
-		m_graphicsPipeline.setMonolithicPipelineLayout(*m_fragmentStatePipelineLayout)
-						  .setDefaultRasterizationState()
-						  .setDefaultDepthStencilState()
-						  .setDefaultMultisampleState()
-						  .setDefaultColorBlendState()
-						  .setupVertexInputState(&vertexInputStateParams)
-						  .setupPreRasterizationShaderState(viewports,
-															scissors,
-															*m_preRasterizationStatePipelineLayout,
-															*m_renderPass,
-															0u,
-															*m_vertexShaderModule)
-						  .setupFragmentShaderState(*m_fragmentStatePipelineLayout, *m_renderPass, 0u, *m_fragmentShaderModule)
-						  .setupFragmentOutputState(*m_renderPass)
-						  .buildPipeline();
+		const vector<VkViewport>					viewports							(1, makeViewport(m_renderSize));
+		const vector<VkRect2D>						scissors							(1, makeRect2D(m_renderSize));
+
+		m_graphicsPipelines = makeGraphicsPipeline(m_vkd,						// const DeviceInterface&						vk
+												   *m_device,					// const VkDevice								device
+												   *m_pipelineLayout,			// const VkPipelineLayout						pipelineLayout
+												   *m_vertexShaderModule,		// const VkShaderModule							vertexShaderModule
+												   DE_NULL,						// const VkShaderModule							tessellationControlShaderModule
+												   DE_NULL,						// const VkShaderModule							tessellationEvalShaderModule
+												   DE_NULL,						// const VkShaderModule							geometryShaderModule
+												   *m_fragmentShaderModule,		// const VkShaderModule							fragmentShaderModule
+												   *m_renderPass,				// const VkRenderPass							renderPass
+												   viewports,					// const std::vector<VkViewport>&				viewports
+												   scissors,					// const std::vector<VkRect2D>&					scissors
+												   topology,					// const VkPrimitiveTopology					topology
+												   0u,							// const deUint32								subpass
+												   0u,							// const deUint32								patchControlPoints
+												   &vertexInputStateParams);	// const VkPipelineVertexInputStateCreateInfo*	vertexInputStateCreateInfo
 	}
 
 	// Create vertex buffer
@@ -3023,7 +2984,7 @@ void PushDescriptorTexelBufferGraphicsTestInstance::init (void)
 		m_cmdBuffer = allocateCommandBuffer(m_vkd, *m_device, *m_cmdPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 		beginCommandBuffer(m_vkd, *m_cmdBuffer, 0u);
 		beginRenderPass(m_vkd, *m_cmdBuffer, *m_renderPass, *m_framebuffer, makeRect2D(0, 0, m_renderSize.x(), m_renderSize.y()), attachmentClearValue);
-		m_vkd.cmdBindPipeline(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline.getPipeline());
+		m_vkd.cmdBindPipeline(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_graphicsPipelines);
 		m_vkd.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &m_vertexBuffer.get(), &vertexBufferOffset);
 
 		// Draw quads. Switch buffer view between draws.
@@ -3043,7 +3004,7 @@ void PushDescriptorTexelBufferGraphicsTestInstance::init (void)
 				&m_bufferViews[quadNdx]->get()			// const VkBufferView*				pTexelBufferView;
 			};
 
-			m_vkd.cmdPushDescriptorSetKHR(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_fragmentStatePipelineLayout, 0, 1u, &writeDescriptorSet);
+			m_vkd.cmdPushDescriptorSetKHR(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipelineLayout, 0, 1u, &writeDescriptorSet);
 			m_vkd.cmdDraw(*m_cmdBuffer, 6, 1, 6 * quadNdx, 0);
 		}
 
@@ -3114,8 +3075,6 @@ public:
 																 const string&		description,
 																 const TestParams&	params);
 						~PushDescriptorTexelBufferGraphicsTest	(void);
-
-	void				checkSupport						(Context& context) const;
 	void				initPrograms						(SourceCollections& sourceCollections) const;
 	TestInstance*		createInstance						(Context& context) const;
 
@@ -3139,11 +3098,6 @@ PushDescriptorTexelBufferGraphicsTest::~PushDescriptorTexelBufferGraphicsTest (v
 TestInstance* PushDescriptorTexelBufferGraphicsTest::createInstance (Context& context) const
 {
 	return new PushDescriptorTexelBufferGraphicsTestInstance(context, m_params);
-}
-
-void PushDescriptorTexelBufferGraphicsTest::checkSupport(Context& context) const
-{
-	checkPipelineLibraryRequirements(context.getInstanceInterface(), context.getPhysicalDevice(), m_params.pipelineConstructionType);
 }
 
 void PushDescriptorTexelBufferGraphicsTest::initPrograms (SourceCollections& sourceCollections) const
@@ -3244,7 +3198,7 @@ PushDescriptorTexelBufferComputeTestInstance::PushDescriptorTexelBufferComputeTe
 	, m_physicalDevice		(chooseDevice(m_vki, m_instance, context.getTestContext().getCommandLine()))
 	, m_queueFamilyIndex	(findQueueFamilyIndexWithCaps(m_vki, m_physicalDevice, VK_QUEUE_COMPUTE_BIT))
 	, m_deviceExtensions	(enumerateDeviceExtensionProperties(m_vki, m_physicalDevice, DE_NULL))
-	, m_device				(createDeviceWithPushDescriptor(context, m_vkp, m_instance, m_vki, m_physicalDevice, m_deviceExtensions, m_queueFamilyIndex, params))
+	, m_device				(createDeviceWithPushDescriptor(context, m_vkp, m_instance, m_vki, m_physicalDevice, m_deviceExtensions, m_queueFamilyIndex))
 	, m_vkd					(m_vkp, m_instance, *m_device)
 	, m_queue				(getDeviceQueue(m_vkd, *m_device, m_queueFamilyIndex, 0u))
 	, m_itemSize			(calcItemSize(m_vki, m_physicalDevice))
@@ -3608,9 +3562,8 @@ private:
 	Move<VkBuffer>					m_vertexBuffer;
 	de::MovePtr<Allocation>			m_vertexBufferAlloc;
 	Move<VkDescriptorSetLayout>		m_descriptorSetLayout;
-	Move<VkPipelineLayout>			m_preRasterizationStatePipelineLayout;
-	Move<VkPipelineLayout>			m_fragmentStatePipelineLayout;
-	vector<GraphicsPipelineWrapper>	m_graphicsPipelines;
+	Move<VkPipelineLayout>			m_pipelineLayout;
+	vector<VkPipelineSp>			m_graphicsPipelines;
 	Move<VkCommandPool>				m_cmdPool;
 	Move<VkCommandBuffer>			m_cmdBuffer;
 	vector<Vertex4Tex4>				m_vertices;
@@ -3626,7 +3579,7 @@ PushDescriptorInputAttachmentGraphicsTestInstance::PushDescriptorInputAttachment
 	, m_physicalDevice		(chooseDevice(m_vki, m_instance, context.getTestContext().getCommandLine()))
 	, m_queueFamilyIndex	(findQueueFamilyIndexWithCaps(m_vki, m_physicalDevice, VK_QUEUE_GRAPHICS_BIT))
 	, m_deviceExtensions	(enumerateDeviceExtensionProperties(m_vki, m_physicalDevice, DE_NULL))
-	, m_device				(createDeviceWithPushDescriptor(context, m_vkp, m_instance, m_vki, m_physicalDevice, m_deviceExtensions, m_queueFamilyIndex, params))
+	, m_device				(createDeviceWithPushDescriptor(context, m_vkp, m_instance, m_vki, m_physicalDevice, m_deviceExtensions, m_queueFamilyIndex))
 	, m_vkd					(m_vkp, m_instance, *m_device)
 	, m_queue				(getDeviceQueue(m_vkd, *m_device, m_queueFamilyIndex, 0u))
 	, m_allocator			(m_vkd, *m_device, getPhysicalDeviceMemoryProperties(m_vki, m_physicalDevice))
@@ -3961,22 +3914,18 @@ void PushDescriptorInputAttachmentGraphicsTestInstance::init (void)
 		m_descriptorSetLayout = createDescriptorSetLayout(m_vkd, *m_device, &descriptorSetLayoutCreateInfo, DE_NULL);
 
 		// Create pipeline layout
-		VkPipelineLayoutCreateFlags	pipelineLayoutFlags = (m_params.pipelineConstructionType == PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC) ? 0u : deUint32(VK_PIPELINE_LAYOUT_CREATE_INDEPENDENT_SETS_BIT_EXT);
-		VkPipelineLayoutCreateInfo	pipelineLayoutParams
+		const VkPipelineLayoutCreateInfo		pipelineLayoutParams			=
 		{
 			VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,	// VkStructureType				sType;
 			DE_NULL,										// const void*					pNext;
-			pipelineLayoutFlags,							// VkPipelineLayoutCreateFlags	flags;
-			0u,												// deUint32						setLayoutCount;
-			DE_NULL,										// const VkDescriptorSetLayout*	pSetLayouts;
+			0u,												// VkPipelineLayoutCreateFlags	flags;
+			1u,												// deUint32						descriptorSetCount;
+			&(*m_descriptorSetLayout),						// const VkDescriptorSetLayout*	pSetLayouts;
 			0u,												// deUint32						pushConstantRangeCount;
 			DE_NULL											// const VkPushDescriptorRange*	pPushDescriptorRanges;
 		};
 
-		m_preRasterizationStatePipelineLayout	= createPipelineLayout(m_vkd, *m_device, &pipelineLayoutParams);
-		pipelineLayoutParams.setLayoutCount		= 1u;
-		pipelineLayoutParams.pSetLayouts		= &(*m_descriptorSetLayout);
-		m_fragmentStatePipelineLayout			= createPipelineLayout(m_vkd, *m_device, &pipelineLayoutParams);
+		m_pipelineLayout = createPipelineLayout(m_vkd, *m_device, &pipelineLayoutParams);
 	}
 
 	// Create shaders
@@ -3984,8 +3933,6 @@ void PushDescriptorInputAttachmentGraphicsTestInstance::init (void)
 		m_vertexShaderModule	= createShaderModule(m_vkd, *m_device, m_context.getBinaryCollection().get("vert"), 0u);
 		m_fragmentShaderModule	= createShaderModule(m_vkd, *m_device, m_context.getBinaryCollection().get("frag"), 0u);
 	}
-
-	m_graphicsPipelines.reserve(2);
 
 	// Create pipelines
 	for (deUint32 pipelineIdx = 0; pipelineIdx < 2; pipelineIdx++)
@@ -4024,25 +3971,26 @@ void PushDescriptorInputAttachmentGraphicsTestInstance::init (void)
 			vertexInputAttributeDescriptions							// const VkVertexInputAttributeDescription*	pVertexAttributeDescriptions;
 		};
 
-		const vector<VkViewport>	viewports	{ makeViewport(m_renderSize) };
-		const vector<VkRect2D>		scissors	{ makeRect2D(m_renderSize) };
+		const VkPrimitiveTopology					topology							= VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
-		m_graphicsPipelines.emplace_back(m_vkd, *m_device, m_params.pipelineConstructionType);
-		m_graphicsPipelines.back().setMonolithicPipelineLayout(*m_fragmentStatePipelineLayout)
-								  .setDefaultRasterizationState()
-								  .setDefaultDepthStencilState()
-								  .setDefaultMultisampleState()
-								  .setDefaultColorBlendState()
-								  .setupVertexInputState(&vertexInputStateParams)
-								  .setupPreRasterizationShaderState(viewports,
-																	scissors,
-																	*m_preRasterizationStatePipelineLayout,
-																	**m_renderPasses[pipelineIdx],
-																	0u,
-																	*m_vertexShaderModule)
-								  .setupFragmentShaderState(*m_fragmentStatePipelineLayout, **m_renderPasses[pipelineIdx], 0u, *m_fragmentShaderModule)
-								  .setupFragmentOutputState(**m_renderPasses[pipelineIdx])
-								  .buildPipeline();
+		const vector<VkViewport>					viewports							(1, makeViewport(m_renderSize));
+		const vector<VkRect2D>						scissors							(1, makeRect2D(m_renderSize));
+
+		m_graphicsPipelines.push_back(VkPipelineSp(new Unique<VkPipeline>(makeGraphicsPipeline(m_vkd,							// const DeviceInterface&						vk
+																							   *m_device,						// const VkDevice								device
+																							   *m_pipelineLayout,				// const VkPipelineLayout						pipelineLayout
+																							   *m_vertexShaderModule,			// const VkShaderModule							vertexShaderModule
+																							   DE_NULL,							// const VkShaderModule							tessellationControlShaderModule
+																							   DE_NULL,							// const VkShaderModule							tessellationEvalShaderModule
+																							   DE_NULL,							// const VkShaderModule							geometryShaderModule
+																							   *m_fragmentShaderModule,			// const VkShaderModule							fragmentShaderModule
+																							   **m_renderPasses[pipelineIdx],	// const VkRenderPass							renderPass
+																							   viewports,						// const std::vector<VkViewport>&				viewports
+																							   scissors,						// const std::vector<VkRect2D>&					scissors
+																							   topology,						// const VkPrimitiveTopology					topology
+																							   0u,								// const deUint32								subpass
+																							   0u,								// const deUint32								patchControlPoints
+																							   &vertexInputStateParams))));		// const VkPipelineVertexInputStateCreateInfo*	vertexInputStateCreateInfo
 	}
 
 	// Create vertex buffer
@@ -4082,7 +4030,7 @@ void PushDescriptorInputAttachmentGraphicsTestInstance::init (void)
 		for (deUint32 quadNdx = 0; quadNdx < m_params.numCalls; quadNdx++)
 		{
 			beginRenderPass(m_vkd, *m_cmdBuffer, **m_renderPasses[quadNdx], **m_framebuffers[quadNdx], makeRect2D(0, 0, m_renderSize.x(), m_renderSize.y()), attachmentClearValue);
-			m_vkd.cmdBindPipeline(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipelines[quadNdx].getPipeline());
+			m_vkd.cmdBindPipeline(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, **m_graphicsPipelines[quadNdx]);
 			m_vkd.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &m_vertexBuffer.get(), &vertexBufferOffset);
 
 			VkDescriptorImageInfo	descriptorImageInfo	=
@@ -4106,7 +4054,7 @@ void PushDescriptorInputAttachmentGraphicsTestInstance::init (void)
 				DE_NULL									// const VkBufferView*				pTexelBufferView;
 			};
 
-			m_vkd.cmdPushDescriptorSetKHR(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_fragmentStatePipelineLayout, 0, 1, &writeDescriptorSet);
+			m_vkd.cmdPushDescriptorSetKHR(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipelineLayout, 0, 1, &writeDescriptorSet);
 			m_vkd.cmdDraw(*m_cmdBuffer, 6, 1, 6 * quadNdx, 0);
 
 			endRenderPass(m_vkd, *m_cmdBuffer);
@@ -4187,8 +4135,6 @@ public:
 															 const string&		description,
 															 const TestParams&	params);
 						~PushDescriptorInputAttachmentGraphicsTest	(void);
-
-	void				checkSupport						(Context& context) const;
 	void				initPrograms						(SourceCollections& sourceCollections) const;
 	TestInstance*		createInstance						(Context& context) const;
 
@@ -4212,11 +4158,6 @@ PushDescriptorInputAttachmentGraphicsTest::~PushDescriptorInputAttachmentGraphic
 TestInstance* PushDescriptorInputAttachmentGraphicsTest::createInstance (Context& context) const
 {
 	return new PushDescriptorInputAttachmentGraphicsTestInstance(context, m_params);
-}
-
-void PushDescriptorInputAttachmentGraphicsTest::checkSupport(Context& context) const
-{
-	checkPipelineLibraryRequirements(context.getInstanceInterface(), context.getPhysicalDevice(), m_params.pipelineConstructionType);
 }
 
 void PushDescriptorInputAttachmentGraphicsTest::initPrograms (SourceCollections& sourceCollections) const
@@ -4253,47 +4194,47 @@ void PushDescriptorInputAttachmentGraphicsTest::initPrograms (SourceCollections&
 
 } // anonymous
 
-tcu::TestCaseGroup* createPushDescriptorTests (tcu::TestContext& testCtx, PipelineConstructionType pipelineType)
+tcu::TestCaseGroup* createPushDescriptorTests (tcu::TestContext& testCtx)
 {
 	const TestParams params[] =
 	{
-		{ pipelineType, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,				0u, 1u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,				0u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,				1u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,				3u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,				0u, 1u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,				0u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,				1u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,				3u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,				1u, 128u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,		0u, 1u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,		0u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,		1u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,		3u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_SAMPLER,						0u, 1u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_SAMPLER,						0u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_SAMPLER,						1u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_SAMPLER,						3u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,				0u, 1u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,				0u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,				1u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,				3u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,				0u, 1u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,				0u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,				1u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,				3u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,		0u, 1u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,		0u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,		1u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,		3u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,		0u, 1u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,		0u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,		1u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,		3u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,			0u, 1u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,			0u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,			1u, 2u },
-		{ pipelineType, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,			3u, 2u }
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,			0u, 1u },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,			0u, 2u },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,			1u, 2u },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,			3u, 2u },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,			0u, 1u },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,			0u, 2u },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,			1u, 2u },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,			3u, 2u },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,			1u, 128u },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,	0u, 1u },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,	0u, 2u },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,	1u, 2u },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,	3u, 2u },
+		{ VK_DESCRIPTOR_TYPE_SAMPLER,					0u, 1u },
+		{ VK_DESCRIPTOR_TYPE_SAMPLER,					0u, 2u },
+		{ VK_DESCRIPTOR_TYPE_SAMPLER,					1u, 2u },
+		{ VK_DESCRIPTOR_TYPE_SAMPLER,					3u, 2u },
+		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,				0u, 1u },
+		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,				0u, 2u },
+		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,				1u, 2u },
+		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,				3u, 2u },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,				0u, 1u },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,				0u, 2u },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,				1u, 2u },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,				3u, 2u },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,		0u, 1u },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,		0u, 2u },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,		1u, 2u },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,		3u, 2u },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,		0u, 1u },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,		0u, 2u },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,		1u, 2u },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,		3u, 2u },
+		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,			0u, 1u },
+		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,			0u, 2u },
+		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,			1u, 2u },
+		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,			3u, 2u }
 	};
 
 	de::MovePtr<tcu::TestCaseGroup>	pushDescriptorTests	(new tcu::TestCaseGroup(testCtx, "push_descriptor", "Push descriptor tests"));
@@ -4311,58 +4252,50 @@ tcu::TestCaseGroup* createPushDescriptorTests (tcu::TestContext& testCtx, Pipeli
 				testName += "_uniform_buffer";
 				if (params[testIdx].numCalls <= 2)
 					graphicsTests->addChild(new PushDescriptorBufferGraphicsTest(testCtx, testName.c_str(), "", params[testIdx]));
-				if (pipelineType == PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC)
-					computeTests->addChild(new PushDescriptorBufferComputeTest(testCtx, testName.c_str(), "", params[testIdx]));
+				computeTests->addChild(new PushDescriptorBufferComputeTest(testCtx, testName.c_str(), "", params[testIdx]));
 				break;
 
 			case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
 				testName += "_storage_buffer";
 				if (params[testIdx].numCalls <= 2)
 					graphicsTests->addChild(new PushDescriptorBufferGraphicsTest(testCtx, testName.c_str(), "", params[testIdx]));
-				if (pipelineType == PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC)
-					computeTests->addChild(new PushDescriptorBufferComputeTest(testCtx, testName.c_str(), "", params[testIdx]));
+				computeTests->addChild(new PushDescriptorBufferComputeTest(testCtx, testName.c_str(), "", params[testIdx]));
 				break;
 
 			case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
 				testName += "_combined_image_sampler";
 				graphicsTests->addChild(new PushDescriptorImageGraphicsTest(testCtx, testName.c_str(), "", params[testIdx]));
-				if (pipelineType == PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC)
-					computeTests->addChild(new PushDescriptorImageComputeTest(testCtx, testName.c_str(), "", params[testIdx]));
+				computeTests->addChild(new PushDescriptorImageComputeTest(testCtx, testName.c_str(), "", params[testIdx]));
 				break;
 
 			case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
 				testName += "_sampled_image";
 				graphicsTests->addChild(new PushDescriptorImageGraphicsTest(testCtx, testName.c_str(), "", params[testIdx]));
-				if (pipelineType == PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC)
-					computeTests->addChild(new PushDescriptorImageComputeTest(testCtx, testName.c_str(), "", params[testIdx]));
+				computeTests->addChild(new PushDescriptorImageComputeTest(testCtx, testName.c_str(), "", params[testIdx]));
 				break;
 
 			case VK_DESCRIPTOR_TYPE_SAMPLER:
 				testName += "_sampler";
 				graphicsTests->addChild(new PushDescriptorImageGraphicsTest(testCtx, testName.c_str(), "", params[testIdx]));
-				if (pipelineType == PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC)
-					computeTests->addChild(new PushDescriptorImageComputeTest(testCtx, testName.c_str(), "", params[testIdx]));
+				computeTests->addChild(new PushDescriptorImageComputeTest(testCtx, testName.c_str(), "", params[testIdx]));
 				break;
 
 			case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
 				testName += "_storage_image";
 				graphicsTests->addChild(new PushDescriptorImageGraphicsTest(testCtx, testName.c_str(), "", params[testIdx]));
-				if (pipelineType == PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC)
-					computeTests->addChild(new PushDescriptorImageComputeTest(testCtx, testName.c_str(), "", params[testIdx]));
+				computeTests->addChild(new PushDescriptorImageComputeTest(testCtx, testName.c_str(), "", params[testIdx]));
 				break;
 
 			case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
 				testName += "_uniform_texel_buffer";
 				graphicsTests->addChild(new PushDescriptorTexelBufferGraphicsTest(testCtx, testName.c_str(), "", params[testIdx]));
-				if (pipelineType == PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC)
-					computeTests->addChild(new PushDescriptorTexelBufferComputeTest(testCtx, testName.c_str(), "", params[testIdx]));
+				computeTests->addChild(new PushDescriptorTexelBufferComputeTest(testCtx, testName.c_str(), "", params[testIdx]));
 				break;
 
 			case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
 				testName += "_storage_texel_buffer";
 				graphicsTests->addChild(new PushDescriptorTexelBufferGraphicsTest(testCtx, testName.c_str(), "", params[testIdx]));
-				if (pipelineType == PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC)
-					computeTests->addChild(new PushDescriptorTexelBufferComputeTest(testCtx, testName.c_str(), "", params[testIdx]));
+				computeTests->addChild(new PushDescriptorTexelBufferComputeTest(testCtx, testName.c_str(), "", params[testIdx]));
 				break;
 
 			case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
@@ -4377,8 +4310,7 @@ tcu::TestCaseGroup* createPushDescriptorTests (tcu::TestContext& testCtx, Pipeli
 	}
 
 	pushDescriptorTests->addChild(graphicsTests.release());
-	if (pipelineType == PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC)
-		pushDescriptorTests->addChild(computeTests.release());
+	pushDescriptorTests->addChild(computeTests.release());
 
 	return pushDescriptorTests.release();
 }

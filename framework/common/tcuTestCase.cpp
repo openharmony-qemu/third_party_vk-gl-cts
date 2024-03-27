@@ -68,7 +68,7 @@ TestNode::~TestNode (void)
 	TestNode::deinit();
 }
 
-void TestNode::getChildren (vector<TestNode*>& res) const
+void TestNode::getChildren (vector<TestNode*>& res)
 {
 	res.clear();
 	for (int i = 0; i < (int)m_children.size(); i++)

@@ -62,6 +62,8 @@ using ::std::vector;
  *//*--------------------------------------------------------------------*/
 namespace test_common
 {
+static constexpr auto VK_NULL_HANDLE = DE_NULL;
+
 using ::std::chrono::high_resolution_clock;
 using ::std::chrono::microseconds;
 
@@ -315,7 +317,7 @@ void checkSupport(Context& context, const TestParams&)
 		TCU_THROW(NotSupportedError, "Extension 'VK_EXT_pipeline_creation_cache_control' is not supported");
 	}
 
-	const auto features = context.getPipelineCreationCacheControlFeatures();
+	const auto features = context.getPipelineCreationCacheControlFeaturesEXT();
 	if (features.pipelineCreationCacheControl == DE_FALSE)
 	{
 		TCU_THROW(NotSupportedError, "Feature 'pipelineCreationCacheControl' is not enabled");

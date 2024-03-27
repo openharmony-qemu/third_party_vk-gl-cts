@@ -26,7 +26,6 @@
 
 #include "tcuDefs.hpp"
 #include "tcuTestCase.hpp"
-#include "vktRenderPassGroupParams.hpp"
 
 namespace vkt
 {

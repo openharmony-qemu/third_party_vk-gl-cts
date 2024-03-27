@@ -33,7 +33,6 @@ namespace DynamicState
 {
 
 tcu::TestCaseGroup* createDynamicStateComputeTests (tcu::TestContext& testCtx);
-void cleanupDevice();
 
 } // DynamicState
 } // vkt

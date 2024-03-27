@@ -14,8 +14,6 @@ set(DEQP_VK_TRANSFORM_FEEDBACK_SRCS
 	vktTransformFeedbackFuzzLayoutTests.hpp
 	vktTransformFeedbackRandomLayoutCase.cpp
 	vktTransformFeedbackRandomLayoutCase.hpp
-	vktPrimitivesGeneratedQueryTests.cpp
-	vktPrimitivesGeneratedQueryTests.hpp
 )
 
 set(DEQP_VK_TRANSFORM_FEEDBACK_LIBS

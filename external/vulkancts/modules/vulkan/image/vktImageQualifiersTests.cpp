@@ -41,7 +41,6 @@
 #include "vkTypeUtil.hpp"
 #include "vkCmdUtil.hpp"
 #include "vkObjUtil.hpp"
-#include "vkBufferWithMemory.hpp"
 
 #include "deDefs.hpp"
 #include "deStringUtil.hpp"
@@ -346,7 +345,7 @@ protected:
 	const tcu::UVec3				m_imageSize;
 	const tcu::TextureFormat		m_format;
 
-	de::MovePtr<BufferWithMemory>	m_buffer;
+	de::MovePtr<Buffer>				m_buffer;
 	Move<VkDescriptorPool>			m_descriptorPool;
 	Move<VkDescriptorSetLayout>		m_descriptorSetLayout;
 	Move<VkDescriptorSet>			m_descriptorSet;
@@ -533,7 +532,7 @@ void MemoryQualifierInstanceImage::prepareResources (const VkDeviceSize bufferSi
 
 	// Create a buffer to store shader output (copied from image data)
 	const VkBufferCreateInfo	bufferCreateInfo = makeBufferCreateInfo(bufferSizeInBytes, VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-	m_buffer = de::MovePtr<BufferWithMemory>(new BufferWithMemory(deviceInterface, device, allocator, bufferCreateInfo, MemoryRequirement::HostVisible));
+	m_buffer = de::MovePtr<Buffer>(new Buffer(deviceInterface, device, allocator, bufferCreateInfo, MemoryRequirement::HostVisible));
 }
 
 void MemoryQualifierInstanceImage::prepareDescriptors (void)
@@ -644,7 +643,7 @@ void MemoryQualifierInstanceBuffer::prepareResources (const VkDeviceSize bufferS
 
 	// Create a buffer to store shader output
 	const VkBufferCreateInfo bufferCreateInfo = makeBufferCreateInfo(bufferSizeInBytes, VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT);
-	m_buffer = de::MovePtr<BufferWithMemory>(new BufferWithMemory(deviceInterface, device, allocator, bufferCreateInfo, MemoryRequirement::HostVisible));
+	m_buffer = de::MovePtr<Buffer>(new Buffer(deviceInterface, device, allocator, bufferCreateInfo, MemoryRequirement::HostVisible));
 
 	m_bufferView = makeBufferView(deviceInterface, device, m_buffer->get(), mapTextureFormat(m_format), 0ull, bufferSizeInBytes);
 }

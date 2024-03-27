@@ -26,14 +26,13 @@
  *//*--------------------------------------------------------------------*/
 
 #include "vktTestCase.hpp"
-#include "vkPipelineConstructionUtil.hpp"
 
 namespace vkt
 {
 namespace pipeline
 {
 
-tcu::TestCaseGroup* createPushDescriptorTests (tcu::TestContext& testCtx, vk::PipelineConstructionType pipelineType);
+tcu::TestCaseGroup* createPushDescriptorTests (tcu::TestContext& testCtx);
 
 } // pipeline
 } // vkt

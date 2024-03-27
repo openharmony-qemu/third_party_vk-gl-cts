@@ -2,8 +2,8 @@
 ^LICENSES/Apache-2\.0\.txt
 ^scripts/asciidoctor-chunker/asciidoctor-chunker\.js:
 ^config/chunkindex/lunr\.js:
-^ChangeLog\.adoc
-^style/markup\.adoc
+^ChangeLog\.txt
+^style/markup\.txt
 ^config/khronos\.css
 ^config/optimize-pdf
 ^scripts/htmldiff/htmldiff\.pl

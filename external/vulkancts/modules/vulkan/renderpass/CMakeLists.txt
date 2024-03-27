@@ -6,12 +6,11 @@ include_directories(
 	${DEQP_INL_DIR}
 	)
 
-set(DEQP_VK_VKSC_RENDER_PASS_SRCS
+set(DEQP_VK_RENDER_PASS_SRCS
 	vktRenderPassTests.cpp
 	vktRenderPassTests.hpp
 	vktRenderPassTestsUtil.cpp
 	vktRenderPassTestsUtil.hpp
-	vktRenderPassGroupParams.hpp
 	vktRenderPassMultisampleTests.cpp
 	vktRenderPassMultisampleTests.hpp
 	vktRenderPassMultisampleResolveTests.cpp
@@ -20,6 +19,8 @@ set(DEQP_VK_VKSC_RENDER_PASS_SRCS
 	vktRenderPassDepthStencilResolveTests.hpp
 	vktRenderPassSampleReadTests.cpp
 	vktRenderPassSampleReadTests.hpp
+	vktRenderPassSparseRenderTargetTests.cpp
+	vktRenderPassSparseRenderTargetTests.hpp
 	vktRenderPassSubpassDependencyTests.cpp
 	vktRenderPassSubpassDependencyTests.hpp
 	vktRenderPassUnusedAttachmentSparseFillingTests.hpp
@@ -28,34 +29,23 @@ set(DEQP_VK_VKSC_RENDER_PASS_SRCS
 	vktRenderPassUnusedAttachmentTests.hpp
 	vktRenderPassUnusedClearAttachmentTests.cpp
 	vktRenderPassUnusedClearAttachmentTests.hpp
-	vktRenderPassMultipleSubpassesMultipleCommandBuffersTests.cpp
-	vktRenderPassMultipleSubpassesMultipleCommandBuffersTests.hpp
-	)
-
-set(DEQP_VK_RENDER_PASS_SRCS
 	vktRenderPassFragmentDensityMapTests.cpp
 	vktRenderPassFragmentDensityMapTests.hpp
-	vktRenderPassSparseRenderTargetTests.cpp
-	vktRenderPassSparseRenderTargetTests.hpp
+	vktRenderPassMultipleSubpassesMultipleCommandBuffersTests.cpp
+	vktRenderPassMultipleSubpassesMultipleCommandBuffersTests.hpp
 	vktRenderPassLoadStoreOpNoneTests.cpp
 	vktRenderPassLoadStoreOpNoneTests.hpp
-	vktRenderPassDitheringTests.cpp
-	vktRenderPassDitheringTests.hpp
 	vktDynamicRenderingTests.cpp
 	vktDynamicRenderingTests.hpp
-	vktRenderPassDepthStencilWriteConditionsTests.cpp
-	vktRenderPassDepthStencilWriteConditionsTests.hpp
-	vktRenderPassSubpassMergeFeedbackTests.cpp
-	vktRenderPassSubpassMergeFeedbackTests.hpp
-	vktDynamicRenderingRandomTests.cpp
-	vktDynamicRenderingRandomTests.hpp
+	)
+
+set(DEQP_VK_RENDER_PASS_LIBS
+	tcutil
+	vkutil
+	deqp-vk-draw
 	)
 
 PCH(DEQP_VK_RENDER_PASS_SRCS ../pch.cpp)
 
-add_library(deqp-vk-render-pass STATIC ${DEQP_VK_VKSC_RENDER_PASS_SRCS} ${DEQP_VK_RENDER_PASS_SRCS})
-target_link_libraries(deqp-vk-render-pass tcutil vkutil deqp-vk-draw)
-
-add_library(deqp-vksc-render-pass STATIC ${DEQP_VK_VKSC_RENDER_PASS_SRCS})
-target_include_directories(deqp-vksc-render-pass BEFORE PUBLIC ${CMAKE_SOURCE_DIR}/external/vulkancts/framework/vulkan/generated/vulkansc)
-target_link_libraries(deqp-vksc-render-pass PUBLIC deqp-vksc-util tcutil vkscutil deqp-vksc-draw)
+add_library(deqp-vk-render-pass STATIC ${DEQP_VK_RENDER_PASS_SRCS})
+target_link_libraries(deqp-vk-render-pass ${DEQP_VK_RENDER_PASS_LIBS})

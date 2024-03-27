@@ -105,19 +105,14 @@ struct DrawParamsBase
 {
 	std::vector<PositionColorVertex>	vertices;
 	vk::VkPrimitiveTopology				topology;
-	GroupParams							groupParams;	// we can't use SharedGroupParams here
+	bool								useDynamicRendering;
 
 	DrawParamsBase ()
 	{}
 
-	DrawParamsBase (const vk::VkPrimitiveTopology top, const SharedGroupParams gParams)
-		: topology		(top)
-		, groupParams
-		{
-			gParams->useDynamicRendering,
-			gParams->useSecondaryCmdBuffer,
-			gParams->secondaryCmdBufferCompletelyContainsDynamicRenderpass
-		}
+	DrawParamsBase (const vk::VkPrimitiveTopology top, bool dynamicRendering)
+		: topology	(top)
+		, useDynamicRendering(dynamicRendering)
 	{}
 };
 
@@ -137,8 +132,8 @@ struct DrawParams : DrawParamsBase
 	// vkCmdDraw parameters is like a single VkDrawIndirectCommand
 	vk::VkDrawIndirectCommand	params;
 
-	DrawParams (const vk::VkPrimitiveTopology top, const SharedGroupParams gParams, const deUint32 vertexC, const deUint32 instanceC, const deUint32 firstV, const deUint32 firstI)
-		: DrawParamsBase	(top, gParams)
+	DrawParams (const vk::VkPrimitiveTopology top, bool dynamicRendering, const deUint32 vertexC, const deUint32 instanceC, const deUint32 firstV, const deUint32 firstI)
+		: DrawParamsBase	(top, dynamicRendering)
 	{
 		params.vertexCount		= vertexC;
 		params.instanceCount	= instanceC;
@@ -152,8 +147,8 @@ struct DrawIndexedParams : DrawParamsBase, IndexedParamsBase
 	// vkCmdDrawIndexed parameters is like a single VkDrawIndexedIndirectCommand
 	vk::VkDrawIndexedIndirectCommand	params;
 
-	DrawIndexedParams (const vk::VkPrimitiveTopology top, const SharedGroupParams gParams, const vk::VkIndexType indexT, const deUint32 indexC, const deUint32 instanceC, const deUint32 firstIdx, const deInt32 vertexO, const deUint32 firstIns)
-		: DrawParamsBase	(top, gParams)
+	DrawIndexedParams (const vk::VkPrimitiveTopology top, bool dynamicRendering, const vk::VkIndexType indexT, const deUint32 indexC, const deUint32 instanceC, const deUint32 firstIdx, const deInt32 vertexO, const deUint32 firstIns)
+		: DrawParamsBase	(top, dynamicRendering)
 		, IndexedParamsBase	(indexT)
 	{
 		params.indexCount		= indexC;
@@ -168,8 +163,8 @@ struct DrawIndirectParams : DrawParamsBase
 {
 	std::vector<vk::VkDrawIndirectCommand>	commands;
 
-	DrawIndirectParams (const vk::VkPrimitiveTopology top, const SharedGroupParams gParams)
-		: DrawParamsBase	(top, gParams)
+	DrawIndirectParams (const vk::VkPrimitiveTopology top, bool dynamicRendering)
+		: DrawParamsBase	(top, dynamicRendering)
 	{}
 
 	void addCommand (const deUint32 vertexC, const deUint32 instanceC, const deUint32 firstV, const deUint32 firstI)
@@ -188,8 +183,8 @@ struct DrawIndexedIndirectParams : DrawParamsBase, IndexedParamsBase
 {
 	std::vector<vk::VkDrawIndexedIndirectCommand>	commands;
 
-	DrawIndexedIndirectParams (const vk::VkPrimitiveTopology top, const SharedGroupParams gParams, const vk::VkIndexType indexT)
-		: DrawParamsBase	(top, gParams)
+	DrawIndexedIndirectParams (const vk::VkPrimitiveTopology top, bool dynamicRendering, const vk::VkIndexType indexT)
+		: DrawParamsBase	(top, dynamicRendering)
 		, IndexedParamsBase	(indexT)
 	{}
 
@@ -281,15 +276,8 @@ public:
 	virtual							~DrawTestInstanceBase	(void) = 0;
 	void							initialize				(const DrawParamsBase& data);
 	void							initPipeline			(const vk::VkDevice device);
-	void							preRenderBarriers		(void);
-	void							beginRenderPass			(vk::VkCommandBuffer cmdBuffer);
-	void							endRenderPass			(vk::VkCommandBuffer cmdBuffer);
-
-#ifndef CTS_USES_VULKANSC
-	void							beginSecondaryCmdBuffer	(const vk::DeviceInterface& vk, vk::VkRenderingFlagsKHR renderingFlags = 0u);
-	void							beginDynamicRender		(vk::VkCommandBuffer cmdBuffer, vk::VkRenderingFlagsKHR renderingFlags = 0u);
-	void							endDynamicRender		(vk::VkCommandBuffer cmdBuffer);
-#endif // CTS_USES_VULKANSC
+	void							beginRenderPass			(void);
+	void							endRenderPass			(void);
 
 	// Specialize this function for each type
 	virtual tcu::TestStatus			iterate					(void) = 0;
@@ -311,7 +299,6 @@ protected:
 	de::SharedPtr<Buffer>									m_vertexBuffer;
 	vk::Move<vk::VkCommandPool>								m_cmdPool;
 	vk::Move<vk::VkCommandBuffer>							m_cmdBuffer;
-	vk::Move<vk::VkCommandBuffer>							m_secCmdBuffer;
 
 	enum
 	{
@@ -333,7 +320,7 @@ DrawTestInstanceBase::~DrawTestInstanceBase (void)
 
 void DrawTestInstanceBase::initialize (const DrawParamsBase& data)
 {
-	m_data = data;
+	m_data	= data;
 
 	const vk::VkDevice	device				= m_context.getDevice();
 	const deUint32		queueFamilyIndex	= m_context.getUniversalQueueFamilyIndex();
@@ -351,7 +338,7 @@ void DrawTestInstanceBase::initialize (const DrawParamsBase& data)
 	m_colorTargetView						= vk::createImageView(m_vk, device, &colorTargetViewInfo);
 
 	// create render pass only when we are not using dynamic rendering
-	if (!m_data.groupParams.useDynamicRendering)
+	if (!m_data.useDynamicRendering)
 	{
 		RenderPassCreateInfo renderPassCreateInfo;
 		renderPassCreateInfo.addAttachment(AttachmentDescription(m_colorAttachmentFormat,
@@ -429,9 +416,6 @@ void DrawTestInstanceBase::initialize (const DrawParamsBase& data)
 	m_cmdPool	= vk::createCommandPool(m_vk, device, &cmdPoolCreateInfo);
 	m_cmdBuffer	= vk::allocateCommandBuffer(m_vk, device, *m_cmdPool, vk::VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
-	if (m_data.groupParams.useSecondaryCmdBuffer)
-		m_secCmdBuffer = vk::allocateCommandBuffer(m_vk, device, *m_cmdPool, vk::VK_COMMAND_BUFFER_LEVEL_SECONDARY);
-
 	initPipeline(device);
 }
 
@@ -457,7 +441,6 @@ void DrawTestInstanceBase::initPipeline (const vk::VkDevice device)
 	pipelineCreateInfo.addState(PipelineCreateInfo::RasterizerState());
 	pipelineCreateInfo.addState(PipelineCreateInfo::MultiSampleState());
 
-#ifndef CTS_USES_VULKANSC
 	vk::VkPipelineRenderingCreateInfoKHR renderingCreateInfo
 	{
 		vk::VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR,
@@ -469,16 +452,17 @@ void DrawTestInstanceBase::initPipeline (const vk::VkDevice device)
 		vk::VK_FORMAT_UNDEFINED
 	};
 
-	if (m_data.groupParams.useDynamicRendering)
+	if (m_data.useDynamicRendering)
 		pipelineCreateInfo.pNext = &renderingCreateInfo;
-#endif // CTS_USES_VULKANSC
 
 	m_pipeline = vk::createGraphicsPipeline(m_vk, device, DE_NULL, &pipelineCreateInfo);
 }
 
-void DrawTestInstanceBase::preRenderBarriers (void)
+void DrawTestInstanceBase::beginRenderPass (void)
 {
 	const vk::VkClearValue clearColor { { { 0.0f, 0.0f, 0.0f, 1.0f } } };
+
+	beginCommandBuffer(m_vk, *m_cmdBuffer, 0u);
 
 	initialTransitionColor2DImage(m_vk, *m_cmdBuffer, m_colorTargetImage->object(), vk::VK_IMAGE_LAYOUT_GENERAL,
 								  vk::VK_ACCESS_TRANSFER_WRITE_BIT, vk::VK_PIPELINE_STAGE_TRANSFER_BIT);
@@ -487,7 +471,7 @@ void DrawTestInstanceBase::preRenderBarriers (void)
 	m_vk.cmdClearColorImage(*m_cmdBuffer, m_colorTargetImage->object(),
 		vk::VK_IMAGE_LAYOUT_GENERAL, &clearColor.color, 1, &subresourceRange);
 
-	const vk::VkMemoryBarrier memBarrier
+	const vk::VkMemoryBarrier memBarrier =
 	{
 		vk::VK_STRUCTURE_TYPE_MEMORY_BARRIER,
 		DE_NULL,
@@ -498,77 +482,22 @@ void DrawTestInstanceBase::preRenderBarriers (void)
 	m_vk.cmdPipelineBarrier(*m_cmdBuffer, vk::VK_PIPELINE_STAGE_TRANSFER_BIT,
 		vk::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 		0, 1, &memBarrier, 0, DE_NULL, 0, DE_NULL);
+
+	const vk::VkRect2D	renderArea	= vk::makeRect2D(WIDTH, HEIGHT);
+
+	if (m_data.useDynamicRendering)
+		vk::beginRendering(m_vk, *m_cmdBuffer, *m_colorTargetView, renderArea, clearColor);
+	else
+		vk::beginRenderPass(m_vk, *m_cmdBuffer, *m_renderPass, *m_framebuffer, renderArea, 1u, &clearColor);
 }
 
-void DrawTestInstanceBase::beginRenderPass (vk::VkCommandBuffer cmdBuffer)
+void DrawTestInstanceBase::endRenderPass (void)
 {
-	const vk::VkClearValue	clearColor	{ { { 0.0f, 0.0f, 0.0f, 1.0f } } };
-	const vk::VkRect2D		renderArea	= vk::makeRect2D(WIDTH, HEIGHT);
-
-	vk::beginRenderPass(m_vk, cmdBuffer, *m_renderPass, *m_framebuffer, renderArea, 1u, &clearColor);
+	if (m_data.useDynamicRendering)
+		vk::endRendering(m_vk, *m_cmdBuffer);
+	else
+		vk::endRenderPass(m_vk, *m_cmdBuffer);
 }
-
-void DrawTestInstanceBase::endRenderPass (vk::VkCommandBuffer cmdBuffer)
-{
-	vk::endRenderPass(m_vk, cmdBuffer);
-}
-
-#ifndef CTS_USES_VULKANSC
-void DrawTestInstanceBase::beginSecondaryCmdBuffer(const vk::DeviceInterface& vk, vk::VkRenderingFlagsKHR renderingFlags)
-{
-	const vk::VkCommandBufferInheritanceRenderingInfoKHR inheritanceRenderingInfo
-	{
-		vk::VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_RENDERING_INFO_KHR,	// VkStructureType					sType;
-		DE_NULL,																// const void*						pNext;
-		renderingFlags,															// VkRenderingFlagsKHR				flags;
-		0u,																		// uint32_t							viewMask;
-		1u,																		// uint32_t							colorAttachmentCount;
-		&m_colorAttachmentFormat,												// const VkFormat*					pColorAttachmentFormats;
-		vk::VK_FORMAT_UNDEFINED,												// VkFormat							depthAttachmentFormat;
-		vk::VK_FORMAT_UNDEFINED,												// VkFormat							stencilAttachmentFormat;
-		vk::VK_SAMPLE_COUNT_1_BIT,												// VkSampleCountFlagBits			rasterizationSamples;
-	};
-
-	const vk::VkCommandBufferInheritanceInfo bufferInheritanceInfo
-	{
-		vk::VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO,					// VkStructureType					sType;
-		&inheritanceRenderingInfo,												// const void*						pNext;
-		DE_NULL,																// VkRenderPass						renderPass;
-		0u,																		// deUint32							subpass;
-		DE_NULL,																// VkFramebuffer					framebuffer;
-		VK_FALSE,																// VkBool32							occlusionQueryEnable;
-		(vk::VkQueryControlFlags)0u,											// VkQueryControlFlags				queryFlags;
-		(vk::VkQueryPipelineStatisticFlags)0u									// VkQueryPipelineStatisticFlags	pipelineStatistics;
-	};
-
-	vk::VkCommandBufferUsageFlags usageFlags = vk::VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-	if (!m_data.groupParams.secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-		usageFlags |= vk::VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
-
-	const vk::VkCommandBufferBeginInfo commandBufBeginParams
-	{
-		vk::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,						// VkStructureType					sType;
-		DE_NULL,																// const void*						pNext;
-		usageFlags,																// VkCommandBufferUsageFlags		flags;
-		&bufferInheritanceInfo
-	};
-
-	VK_CHECK(vk.beginCommandBuffer(*m_secCmdBuffer, &commandBufBeginParams));
-}
-
-void DrawTestInstanceBase::beginDynamicRender(vk::VkCommandBuffer cmdBuffer, vk::VkRenderingFlagsKHR renderingFlags)
-{
-	const vk::VkClearValue	clearColor{ { { 0.0f, 0.0f, 0.0f, 1.0f } } };
-	const vk::VkRect2D		renderArea = vk::makeRect2D(WIDTH, HEIGHT);
-
-	vk::beginRendering(m_vk, cmdBuffer, *m_colorTargetView, renderArea, clearColor, vk::VK_IMAGE_LAYOUT_GENERAL, vk::VK_ATTACHMENT_LOAD_OP_LOAD, renderingFlags);
-}
-
-void DrawTestInstanceBase::endDynamicRender(vk::VkCommandBuffer cmdBuffer)
-{
-	vk::endRendering(m_vk, cmdBuffer);
-}
-#endif // CTS_USES_VULKANSC
 
 void DrawTestInstanceBase::generateRefImage (const tcu::PixelBufferAccess& access, const std::vector<tcu::Vec4>& vertices, const std::vector<tcu::Vec4>& colors) const
 {
@@ -601,7 +530,6 @@ public:
 							DrawTestInstance		(Context& context, const T& data);
 	virtual					~DrawTestInstance		(void);
 	virtual void			generateDrawData		(void);
-	virtual void			draw					(vk::VkCommandBuffer cmdBuffer, vk::VkBuffer indirectBuffer = DE_NULL, vk::VkDeviceSize indirectOffset = 0ul);
 	virtual tcu::TestStatus	iterate					(void);
 private:
 	T						m_data;
@@ -610,7 +538,7 @@ private:
 template<typename T>
 DrawTestInstance<T>::DrawTestInstance (Context& context, const T& data)
 	: DrawTestInstanceBase	(context)
-	, m_data(data)
+	, m_data				(data)
 {
 	generateDrawData();
 	initialize(m_data);
@@ -623,12 +551,6 @@ DrawTestInstance<T>::~DrawTestInstance (void)
 
 template<typename T>
 void DrawTestInstance<T>::generateDrawData (void)
-{
-	DE_FATAL("Using the general case of this function is forbidden!");
-}
-
-template<typename T>
-void DrawTestInstance<T>::draw(vk::VkCommandBuffer, vk::VkBuffer, vk::VkDeviceSize)
 {
 	DE_FATAL("Using the general case of this function is forbidden!");
 }
@@ -688,8 +610,7 @@ void DrawTestCase<T>::checkSupport (Context& context) const
 		context.requireDeviceCoreFeature(DEVICE_CORE_FEATURE_GEOMETRY_SHADER);
 	}
 
-#ifndef CTS_USES_VULKANSC
-	if (m_data.groupParams.useDynamicRendering)
+	if (m_data.useDynamicRendering)
 		context.requireDeviceFunctionality("VK_KHR_dynamic_rendering");
 
 	if (m_data.topology == vk::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN &&
@@ -698,7 +619,6 @@ void DrawTestCase<T>::checkSupport (Context& context) const
 	{
 		TCU_THROW(NotSupportedError, "VK_KHR_portability_subset: Triangle fans are not supported by this implementation");
 	}
-#endif // CTS_USES_VULKANSC
 }
 
 template<typename T>
@@ -764,84 +684,22 @@ void DrawTestInstance<DrawParams>::generateDrawData (void)
 }
 
 template<>
-void DrawTestInstance<DrawParams>::draw(vk::VkCommandBuffer cmdBuffer, vk::VkBuffer, vk::VkDeviceSize)
-{
-	m_vk.cmdDraw(cmdBuffer, m_data.params.vertexCount, m_data.params.instanceCount, m_data.params.firstVertex, m_data.params.firstInstance);
-}
-
-template<>
 tcu::TestStatus DrawTestInstance<DrawParams>::iterate (void)
 {
 	tcu::TestLog			&log				= m_context.getTestContext().getLog();
 	const vk::VkQueue		queue				= m_context.getUniversalQueue();
 	const vk::VkDevice		device				= m_context.getDevice();
+
+	beginRenderPass();
+
 	const vk::VkDeviceSize	vertexBufferOffset	= 0;
 	const vk::VkBuffer		vertexBuffer		= m_vertexBuffer->object();
 
-#ifndef CTS_USES_VULKANSC
-	if (m_data.groupParams.useSecondaryCmdBuffer)
-	{
-		// record secondary command buffer
-		if (m_data.groupParams.secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-		{
-			beginSecondaryCmdBuffer(m_vk, vk::VK_RENDERING_CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT);
-			beginDynamicRender(*m_secCmdBuffer);
-		}
-		else
-			beginSecondaryCmdBuffer(m_vk);
-
-		m_vk.cmdBindVertexBuffers(*m_secCmdBuffer, 0, 1, &vertexBuffer, &vertexBufferOffset);
-		m_vk.cmdBindPipeline(*m_secCmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-		draw(*m_secCmdBuffer);
-
-		if (m_data.groupParams.secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-			endDynamicRender(*m_secCmdBuffer);
-
-		endCommandBuffer(m_vk, *m_secCmdBuffer);
-
-		// record primary command buffer
-		beginCommandBuffer(m_vk, *m_cmdBuffer, 0u);
-
-		preRenderBarriers();
-
-		if (!m_data.groupParams.secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-			beginDynamicRender(*m_cmdBuffer, vk::VK_RENDERING_CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT);
-
-		m_vk.cmdExecuteCommands(*m_cmdBuffer, 1u, &*m_secCmdBuffer);
-
-		if (!m_data.groupParams.secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-			endDynamicRender(*m_cmdBuffer);
-
-		endCommandBuffer(m_vk, *m_cmdBuffer);
-	}
-	else if(m_data.groupParams.useDynamicRendering)
-	{
-		beginCommandBuffer(m_vk, *m_cmdBuffer, 0u);
-		preRenderBarriers();
-		beginDynamicRender(*m_cmdBuffer);
-
-		m_vk.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &vertexBuffer, &vertexBufferOffset);
-		m_vk.cmdBindPipeline(*m_cmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-		draw(*m_cmdBuffer);
-
-		endDynamicRender(*m_cmdBuffer);
-		endCommandBuffer(m_vk, *m_cmdBuffer);
-	}
-#endif // CTS_USES_VULKANSC
-
-	if (!m_data.groupParams.useDynamicRendering)
-	{
-		beginCommandBuffer(m_vk, *m_cmdBuffer, 0u);
-		preRenderBarriers();
-		beginRenderPass(*m_cmdBuffer);
-
-		m_vk.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &vertexBuffer, &vertexBufferOffset);
-		m_vk.cmdBindPipeline(*m_cmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-		draw(*m_cmdBuffer);
-
-		endRenderPass(*m_cmdBuffer);
-		endCommandBuffer(m_vk, *m_cmdBuffer);
-	}
+	m_vk.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &vertexBuffer, &vertexBufferOffset);
+	m_vk.cmdBindPipeline(*m_cmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+	m_vk.cmdDraw(*m_cmdBuffer, m_data.params.vertexCount, m_data.params.instanceCount, m_data.params.firstVertex, m_data.params.firstInstance);
+	endRenderPass();
+	endCommandBuffer(m_vk, *m_cmdBuffer);
 
 	submitCommandsAndWait(m_vk, device, queue, m_cmdBuffer.get());
 
@@ -910,12 +768,6 @@ void DrawTestInstance<DrawIndexedParams>::generateDrawData (void)
 }
 
 template<>
-void DrawTestInstance<DrawIndexedParams>::draw(vk::VkCommandBuffer cmdBuffer, vk::VkBuffer, vk::VkDeviceSize)
-{
-	m_vk.cmdDrawIndexed(cmdBuffer, m_data.params.indexCount, m_data.params.instanceCount, m_data.params.firstIndex, m_data.params.vertexOffset, m_data.params.firstInstance);
-}
-
-template<>
 tcu::TestStatus DrawTestInstance<DrawIndexedParams>::iterate (void)
 {
 	tcu::TestLog				&log				= m_context.getTestContext().getLog();
@@ -924,9 +776,18 @@ tcu::TestStatus DrawTestInstance<DrawIndexedParams>::iterate (void)
 	const deUint32				queueFamilyIndex	= m_context.getUniversalQueueFamilyIndex();
 	const vk::VkQueue			queue				= m_context.getUniversalQueue();
 	vk::Allocator&				allocator			= m_context.getDefaultAllocator();
-	const vk::VkDeviceSize		vertexBufferOffset	= 0;
-	const vk::VkBuffer			vertexBuffer		= m_vertexBuffer->object();
-	const deUint32				bufferSize			= (deUint32)(m_data.indexes.size() * sizeof(deUint32));
+
+	beginRenderPass();
+
+	const vk::VkDeviceSize	vertexBufferOffset = 0;
+	const vk::VkBuffer	vertexBuffer = m_vertexBuffer->object();
+
+	m_vk.cmdBindPipeline(*m_cmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+	m_vk.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &vertexBuffer, &vertexBufferOffset);
+
+	const deUint32	bufferSize	= (deUint32)(m_data.indexes.size() * sizeof(deUint32));
+
+	vk::Move<vk::VkBuffer>	indexBuffer;
 
 	const vk::VkBufferCreateInfo	bufferCreateInfo =
 	{
@@ -940,8 +801,9 @@ tcu::TestStatus DrawTestInstance<DrawIndexedParams>::iterate (void)
 		&queueFamilyIndex,							// const deUint32*		pQueueFamilyIndices;
 	};
 
-	vk::Move<vk::VkBuffer>			indexBuffer = createBuffer(vk, vkDevice, &bufferCreateInfo);
-	de::MovePtr<vk::Allocation>		indexAlloc;
+	indexBuffer = createBuffer(vk, vkDevice, &bufferCreateInfo);
+
+	de::MovePtr<vk::Allocation>	indexAlloc;
 
 	indexAlloc = allocator.allocate(getBufferMemoryRequirements(vk, vkDevice, *indexBuffer), vk::MemoryRequirement::HostVisible);
 	VK_CHECK(vk.bindBufferMemory(vkDevice, *indexBuffer, indexAlloc->getMemory(), indexAlloc->getOffset()));
@@ -950,73 +812,10 @@ tcu::TestStatus DrawTestInstance<DrawIndexedParams>::iterate (void)
 
 	vk::flushAlloc(m_vk, vkDevice, *indexAlloc);
 
-#ifndef CTS_USES_VULKANSC
-	if (m_data.groupParams.useSecondaryCmdBuffer)
-	{
-		// record secondary command buffer
-		if (m_data.groupParams.secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-		{
-			beginSecondaryCmdBuffer(m_vk, vk::VK_RENDERING_CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT);
-			beginDynamicRender(*m_secCmdBuffer);
-		}
-		else
-			beginSecondaryCmdBuffer(m_vk);
-
-		m_vk.cmdBindPipeline(*m_secCmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-		m_vk.cmdBindVertexBuffers(*m_secCmdBuffer, 0, 1, &vertexBuffer, &vertexBufferOffset);
-		m_vk.cmdBindIndexBuffer(*m_secCmdBuffer, *indexBuffer, 0u, m_data.indexType);
-		draw(*m_secCmdBuffer);
-
-		if (m_data.groupParams.secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-			endDynamicRender(*m_secCmdBuffer);
-
-		endCommandBuffer(m_vk, *m_secCmdBuffer);
-
-		// record primary command buffer
-		beginCommandBuffer(m_vk, *m_cmdBuffer, 0u);
-
-		preRenderBarriers();
-
-		if (!m_data.groupParams.secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-			beginDynamicRender(*m_cmdBuffer, vk::VK_RENDERING_CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT);
-
-		m_vk.cmdExecuteCommands(*m_cmdBuffer, 1u, &*m_secCmdBuffer);
-
-		if (!m_data.groupParams.secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-			endDynamicRender(*m_cmdBuffer);
-
-		endCommandBuffer(m_vk, *m_cmdBuffer);
-	}
-	else if (m_data.groupParams.useDynamicRendering)
-	{
-		beginCommandBuffer(m_vk, *m_cmdBuffer, 0u);
-		preRenderBarriers();
-		beginDynamicRender(*m_cmdBuffer);
-
-		m_vk.cmdBindPipeline(*m_cmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-		m_vk.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &vertexBuffer, &vertexBufferOffset);
-		m_vk.cmdBindIndexBuffer(*m_cmdBuffer, *indexBuffer, 0u, m_data.indexType);
-		draw(*m_cmdBuffer);
-
-		endDynamicRender(*m_cmdBuffer);
-		endCommandBuffer(m_vk, *m_cmdBuffer);
-	}
-#endif // CTS_USES_VULKANSC
-
-	if (!m_data.groupParams.useDynamicRendering)
-	{
-		beginCommandBuffer(m_vk, *m_cmdBuffer, 0u);
-		preRenderBarriers();
-		beginRenderPass(*m_cmdBuffer);
-
-		m_vk.cmdBindPipeline(*m_cmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-		m_vk.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &vertexBuffer, &vertexBufferOffset);
-		m_vk.cmdBindIndexBuffer(*m_cmdBuffer, *indexBuffer, 0u, m_data.indexType);
-		draw(*m_cmdBuffer);
-
-		endRenderPass(*m_cmdBuffer);
-		endCommandBuffer(m_vk, *m_cmdBuffer);
-	}
+	m_vk.cmdBindIndexBuffer(*m_cmdBuffer, *indexBuffer, 0u, m_data.indexType);
+	m_vk.cmdDrawIndexed(*m_cmdBuffer, m_data.params.indexCount, m_data.params.instanceCount, m_data.params.firstIndex, m_data.params.vertexOffset, m_data.params.firstInstance);
+	endRenderPass();
+	endCommandBuffer(m_vk, *m_cmdBuffer);
 
 	submitCommandsAndWait(m_vk, vkDevice, queue, m_cmdBuffer.get());
 
@@ -1085,26 +884,6 @@ void DrawTestInstance<DrawIndirectParams>::generateDrawData (void)
 }
 
 template<>
-void DrawTestInstance<DrawIndirectParams>::draw(vk::VkCommandBuffer cmdBuffer, vk::VkBuffer indirectBuffer, vk::VkDeviceSize indirectOffset)
-{
-	const vk::VkPhysicalDeviceFeatures features = m_context.getDeviceFeatures();
-
-	// If multiDrawIndirect not supported execute single calls
-	if (m_data.commands.size() > 1 && !(features.multiDrawIndirect))
-	{
-		for (deUint32 cmdIdx = 0; cmdIdx < m_data.commands.size(); ++cmdIdx)
-		{
-			const deUint32	offset = (deUint32)(indirectOffset + cmdIdx * sizeof(vk::VkDrawIndirectCommand));
-			m_vk.cmdDrawIndirect(cmdBuffer, indirectBuffer, offset, 1, sizeof(vk::VkDrawIndirectCommand));
-		}
-	}
-	else
-	{
-		m_vk.cmdDrawIndirect(cmdBuffer, indirectBuffer, indirectOffset, (deUint32)m_data.commands.size(), sizeof(vk::VkDrawIndirectCommand));
-	}
-}
-
-template<>
 tcu::TestStatus DrawTestInstance<DrawIndirectParams>::iterate (void)
 {
 	tcu::TestLog						&log				= m_context.getTestContext().getLog();
@@ -1113,10 +892,18 @@ tcu::TestStatus DrawTestInstance<DrawIndirectParams>::iterate (void)
 	vk::Allocator&						allocator			= m_context.getDefaultAllocator();
 	const vk::VkQueue					queue				= m_context.getUniversalQueue();
 	const deUint32						queueFamilyIndex	= m_context.getUniversalQueueFamilyIndex();
-	const vk::VkDeviceSize				vertexBufferOffset	= 0;
-	const vk::VkBuffer					vertexBuffer		= m_vertexBuffer->object();
-	vk::Move<vk::VkBuffer>				indirectBuffer;
-	de::MovePtr<vk::Allocation>			indirectAlloc;
+	const vk::VkPhysicalDeviceFeatures	features			= m_context.getDeviceFeatures();
+
+	beginRenderPass();
+
+	const vk::VkDeviceSize	vertexBufferOffset	= 0;
+	const vk::VkBuffer		vertexBuffer		= m_vertexBuffer->object();
+
+	m_vk.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &vertexBuffer, &vertexBufferOffset);
+	m_vk.cmdBindPipeline(*m_cmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+
+	vk::Move<vk::VkBuffer>		indirectBuffer;
+	de::MovePtr<vk::Allocation>	indirectAlloc;
 
 	{
 		const vk::VkDeviceSize	indirectInfoSize	= m_data.commands.size() * sizeof(vk::VkDrawIndirectCommand);
@@ -1142,70 +929,22 @@ tcu::TestStatus DrawTestInstance<DrawIndirectParams>::iterate (void)
 		vk::flushAlloc(m_vk, vkDevice, *indirectAlloc);
 	}
 
-#ifndef CTS_USES_VULKANSC
-	if (m_data.groupParams.useSecondaryCmdBuffer)
+	// If multiDrawIndirect not supported execute single calls
+	if (m_data.commands.size() > 1 && !(features.multiDrawIndirect))
 	{
-		// record secondary command buffer
-		if (m_data.groupParams.secondaryCmdBufferCompletelyContainsDynamicRenderpass)
+		for (deUint32 cmdIdx = 0; cmdIdx < m_data.commands.size(); ++cmdIdx)
 		{
-			beginSecondaryCmdBuffer(m_vk, vk::VK_RENDERING_CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT);
-			beginDynamicRender(*m_secCmdBuffer);
+			const deUint32	offset	= (deUint32)(indirectAlloc->getOffset() + cmdIdx * sizeof(vk::VkDrawIndirectCommand));
+			m_vk.cmdDrawIndirect(*m_cmdBuffer, *indirectBuffer, offset, 1, sizeof(vk::VkDrawIndirectCommand));
 		}
-		else
-			beginSecondaryCmdBuffer(m_vk);
-
-		m_vk.cmdBindVertexBuffers(*m_secCmdBuffer, 0, 1, &vertexBuffer, &vertexBufferOffset);
-		m_vk.cmdBindPipeline(*m_secCmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-		draw(*m_secCmdBuffer, *indirectBuffer, indirectAlloc->getOffset());
-
-		if (m_data.groupParams.secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-			endDynamicRender(*m_secCmdBuffer);
-
-		endCommandBuffer(m_vk, *m_secCmdBuffer);
-
-		// record primary command buffer
-		beginCommandBuffer(m_vk, *m_cmdBuffer, 0u);
-
-		preRenderBarriers();
-
-		if (!m_data.groupParams.secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-			beginDynamicRender(*m_cmdBuffer, vk::VK_RENDERING_CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT);
-
-		m_vk.cmdExecuteCommands(*m_cmdBuffer, 1u, &*m_secCmdBuffer);
-
-		if (!m_data.groupParams.secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-			endDynamicRender(*m_cmdBuffer);
-
-		endCommandBuffer(m_vk, *m_cmdBuffer);
 	}
-	else if (m_data.groupParams.useDynamicRendering)
+	else
 	{
-		beginCommandBuffer(m_vk, *m_cmdBuffer, 0u);
-		preRenderBarriers();
-		beginDynamicRender(*m_cmdBuffer);
-
-		m_vk.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &vertexBuffer, &vertexBufferOffset);
-		m_vk.cmdBindPipeline(*m_cmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-		draw(*m_cmdBuffer, *indirectBuffer, indirectAlloc->getOffset());
-
-		endDynamicRender(*m_cmdBuffer);
-		endCommandBuffer(m_vk, *m_cmdBuffer);
+		m_vk.cmdDrawIndirect(*m_cmdBuffer, *indirectBuffer, indirectAlloc->getOffset(), (deUint32)m_data.commands.size(), sizeof(vk::VkDrawIndirectCommand));
 	}
-#endif // CTS_USES_VULKANSC
 
-	if (!m_data.groupParams.useDynamicRendering)
-	{
-		beginCommandBuffer(m_vk, *m_cmdBuffer, 0u);
-		preRenderBarriers();
-		beginRenderPass(*m_cmdBuffer);
-
-		m_vk.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &vertexBuffer, &vertexBufferOffset);
-		m_vk.cmdBindPipeline(*m_cmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-		draw(*m_cmdBuffer, *indirectBuffer, indirectAlloc->getOffset());
-
-		endRenderPass(*m_cmdBuffer);
-		endCommandBuffer(m_vk, *m_cmdBuffer);
-	}
+	endRenderPass();
+	endCommandBuffer(m_vk, *m_cmdBuffer);
 
 	submitCommandsAndWait(m_vk, vkDevice, queue, m_cmdBuffer.get());
 
@@ -1298,26 +1037,6 @@ void DrawTestInstance<DrawIndexedIndirectParams>::generateDrawData (void)
 }
 
 template<>
-void DrawTestInstance<DrawIndexedIndirectParams>::draw(vk::VkCommandBuffer cmdBuffer, vk::VkBuffer indirectBuffer, vk::VkDeviceSize indirectOffset)
-{
-	const vk::VkPhysicalDeviceFeatures features = m_context.getDeviceFeatures();
-
-	// If multiDrawIndirect not supported execute single calls
-	if (m_data.commands.size() > 1 && !(features.multiDrawIndirect))
-	{
-		for (deUint32 cmdIdx = 0; cmdIdx < m_data.commands.size(); ++cmdIdx)
-		{
-			const deUint32	offset = (deUint32)(indirectOffset + cmdIdx * sizeof(vk::VkDrawIndexedIndirectCommand));
-			m_vk.cmdDrawIndexedIndirect(cmdBuffer, indirectBuffer, offset, 1, sizeof(vk::VkDrawIndexedIndirectCommand));
-		}
-	}
-	else
-	{
-		m_vk.cmdDrawIndexedIndirect(cmdBuffer, indirectBuffer, indirectOffset, (deUint32)m_data.commands.size(), sizeof(vk::VkDrawIndexedIndirectCommand));
-	}
-}
-
-template<>
 tcu::TestStatus DrawTestInstance<DrawIndexedIndirectParams>::iterate (void)
 {
 	tcu::TestLog						&log				= m_context.getTestContext().getLog();
@@ -1326,10 +1045,18 @@ tcu::TestStatus DrawTestInstance<DrawIndexedIndirectParams>::iterate (void)
 	const deUint32						queueFamilyIndex	= m_context.getUniversalQueueFamilyIndex();
 	const vk::VkQueue					queue				= m_context.getUniversalQueue();
 	vk::Allocator&						allocator			= m_context.getDefaultAllocator();
-	const vk::VkDeviceSize				vertexBufferOffset	= 0;
-	const vk::VkBuffer					vertexBuffer		= m_vertexBuffer->object();
-	vk::Move<vk::VkBuffer>				indirectBuffer;
-	de::MovePtr<vk::Allocation>			indirectAlloc;
+	const vk::VkPhysicalDeviceFeatures	features			= m_context.getDeviceFeatures();
+
+	beginRenderPass();
+
+	const vk::VkDeviceSize	vertexBufferOffset	= 0;
+	const vk::VkBuffer		vertexBuffer		= m_vertexBuffer->object();
+
+	m_vk.cmdBindPipeline(*m_cmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+	m_vk.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &vertexBuffer, &vertexBufferOffset);
+
+	vk::Move<vk::VkBuffer>		indirectBuffer;
+	de::MovePtr<vk::Allocation>	indirectAlloc;
 
 	{
 		const vk::VkDeviceSize	indirectInfoSize	= m_data.commands.size() * sizeof(vk::VkDrawIndexedIndirectCommand);
@@ -1382,73 +1109,24 @@ tcu::TestStatus DrawTestInstance<DrawIndexedIndirectParams>::iterate (void)
 
 	vk::flushAlloc(m_vk, vkDevice, *indexAlloc);
 
-#ifndef CTS_USES_VULKANSC
-	if (m_data.groupParams.useSecondaryCmdBuffer)
+	m_vk.cmdBindIndexBuffer(*m_cmdBuffer, *indexBuffer, 0u, m_data.indexType);
+
+	// If multiDrawIndirect not supported execute single calls
+	if (m_data.commands.size() > 1 && !(features.multiDrawIndirect))
 	{
-		// record secondary command buffer
-		if (m_data.groupParams.secondaryCmdBufferCompletelyContainsDynamicRenderpass)
+		for (deUint32 cmdIdx = 0; cmdIdx < m_data.commands.size(); ++cmdIdx)
 		{
-			beginSecondaryCmdBuffer(m_vk, vk::VK_RENDERING_CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT);
-			beginDynamicRender(*m_secCmdBuffer);
+			const deUint32	offset	= (deUint32)(indirectAlloc->getOffset() + cmdIdx * sizeof(vk::VkDrawIndexedIndirectCommand));
+			m_vk.cmdDrawIndexedIndirect(*m_cmdBuffer, *indirectBuffer, offset, 1, sizeof(vk::VkDrawIndexedIndirectCommand));
 		}
-		else
-			beginSecondaryCmdBuffer(m_vk);
-
-		m_vk.cmdBindPipeline(*m_secCmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-		m_vk.cmdBindVertexBuffers(*m_secCmdBuffer, 0, 1, &vertexBuffer, &vertexBufferOffset);
-		m_vk.cmdBindIndexBuffer(*m_secCmdBuffer, *indexBuffer, 0u, m_data.indexType);
-		draw(*m_secCmdBuffer, *indirectBuffer, indirectAlloc->getOffset());
-
-		if (m_data.groupParams.secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-			endDynamicRender(*m_secCmdBuffer);
-
-		endCommandBuffer(m_vk, *m_secCmdBuffer);
-
-		// record primary command buffer
-		beginCommandBuffer(m_vk, *m_cmdBuffer, 0u);
-
-		preRenderBarriers();
-
-		if (!m_data.groupParams.secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-			beginDynamicRender(*m_cmdBuffer, vk::VK_RENDERING_CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT);
-
-		m_vk.cmdExecuteCommands(*m_cmdBuffer, 1u, &*m_secCmdBuffer);
-
-		if (!m_data.groupParams.secondaryCmdBufferCompletelyContainsDynamicRenderpass)
-			endDynamicRender(*m_cmdBuffer);
-
-		endCommandBuffer(m_vk, *m_cmdBuffer);
 	}
-	else if (m_data.groupParams.useDynamicRendering)
+	else
 	{
-		beginCommandBuffer(m_vk, *m_cmdBuffer, 0u);
-		preRenderBarriers();
-		beginDynamicRender(*m_cmdBuffer);
-
-		m_vk.cmdBindPipeline(*m_cmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-		m_vk.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &vertexBuffer, &vertexBufferOffset);
-		m_vk.cmdBindIndexBuffer(*m_cmdBuffer, *indexBuffer, 0u, m_data.indexType);
-		draw(*m_cmdBuffer, *indirectBuffer, indirectAlloc->getOffset());
-
-		endDynamicRender(*m_cmdBuffer);
-		endCommandBuffer(m_vk, *m_cmdBuffer);
+		m_vk.cmdDrawIndexedIndirect(*m_cmdBuffer, *indirectBuffer, indirectAlloc->getOffset(), (deUint32)m_data.commands.size(), sizeof(vk::VkDrawIndexedIndirectCommand));
 	}
-#endif // CTS_USES_VULKANSC
 
-	if (!m_data.groupParams.useDynamicRendering)
-	{
-		beginCommandBuffer(m_vk, *m_cmdBuffer, 0u);
-		preRenderBarriers();
-		beginRenderPass(*m_cmdBuffer);
-
-		m_vk.cmdBindPipeline(*m_cmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-		m_vk.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &vertexBuffer, &vertexBufferOffset);
-		m_vk.cmdBindIndexBuffer(*m_cmdBuffer, *indexBuffer, 0u, m_data.indexType);
-		draw(*m_cmdBuffer, *indirectBuffer, indirectAlloc->getOffset());
-
-		endRenderPass(*m_cmdBuffer);
-		endCommandBuffer(m_vk, *m_cmdBuffer);
-	}
+	endRenderPass();
+	endCommandBuffer(m_vk, *m_cmdBuffer);
 
 	submitCommandsAndWait(m_vk, vkDevice, queue, m_cmdBuffer.get());
 
@@ -1491,12 +1169,12 @@ struct TestCaseParams
 {
 	const DrawCommandType			command;
 	const vk::VkPrimitiveTopology	topology;
-	const SharedGroupParams			groupParams;
+	const bool						useDynamicRendering;
 
-	TestCaseParams (const DrawCommandType cmd, const vk::VkPrimitiveTopology top, const SharedGroupParams gParams)
-		: command		(cmd)
-		, topology		(top)
-		, groupParams	(gParams)
+	TestCaseParams (const DrawCommandType cmd, const vk::VkPrimitiveTopology top, bool dynamicRendering)
+		: command				(cmd)
+		, topology				(top)
+		, useDynamicRendering	(dynamicRendering)
 	{}
 };
 
@@ -1508,7 +1186,7 @@ void populateSubGroup (tcu::TestCaseGroup* testGroup, const TestCaseParams caseP
 	tcu::TestContext&				testCtx					= testGroup->getTestContext();
 	const DrawCommandType			command					= caseParams.command;
 	const vk::VkPrimitiveTopology	topology				= caseParams.topology;
-	const SharedGroupParams			groupParams				= caseParams.groupParams;
+	const bool						useDynamicRendering		= caseParams.useDynamicRendering;
 	const deUint32					primitiveCountArrLength = DE_LENGTH_OF_ARRAY(PRIMITIVE_COUNT);
 
 	for (deUint32 primitiveCountIdx = 0; primitiveCountIdx < primitiveCountArrLength; ++primitiveCountIdx)
@@ -1516,7 +1194,7 @@ void populateSubGroup (tcu::TestCaseGroup* testGroup, const TestCaseParams caseP
 		const deUint32 primitives = PRIMITIVE_COUNT[primitiveCountIdx];
 
 		// when testing VK_KHR_dynamic_rendering there is no need to duplicate tests for all primitive counts; use just 1 and 45
-		if (groupParams->useDynamicRendering && (primitiveCountIdx != 0) && (primitiveCountIdx != primitiveCountArrLength-1))
+		if (useDynamicRendering && (primitiveCountIdx != 0) && (primitiveCountIdx != primitiveCountArrLength-1))
 			continue;
 
 		deUint32	multiplier	= 1;
@@ -1547,7 +1225,7 @@ void populateSubGroup (tcu::TestCaseGroup* testGroup, const TestCaseParams caseP
 				deUint32	firstPrimitive	= rnd.getInt(0, primitives);
 				deUint32	firstVertex		= multiplier * firstPrimitive;
 				testGroup->addChild(new DrawCase(testCtx, name.c_str(), "vkCmdDraw testcase.",
-					DrawParams(topology, groupParams, vertexCount, 1, firstVertex, 0))
+					DrawParams(topology, useDynamicRendering, vertexCount, 1, firstVertex, 0))
 				);
 				break;
 			}
@@ -1556,7 +1234,7 @@ void populateSubGroup (tcu::TestCaseGroup* testGroup, const TestCaseParams caseP
 				deUint32	firstIndex			= rnd.getInt(0, OFFSET_LIMIT);
 				deUint32	vertexOffset		= rnd.getInt(0, OFFSET_LIMIT);
 				testGroup->addChild(new IndexedCase(testCtx, name.c_str(), "vkCmdDrawIndexed testcase.",
-					DrawIndexedParams(topology, groupParams, vk::VK_INDEX_TYPE_UINT32, vertexCount, 1, firstIndex, vertexOffset, 0))
+					DrawIndexedParams(topology, useDynamicRendering, vk::VK_INDEX_TYPE_UINT32, vertexCount, 1, firstIndex, vertexOffset, 0))
 				);
 				break;
 			}
@@ -1564,7 +1242,7 @@ void populateSubGroup (tcu::TestCaseGroup* testGroup, const TestCaseParams caseP
 			{
 				deUint32	firstVertex		= rnd.getInt(0, OFFSET_LIMIT);
 
-				DrawIndirectParams	params	= DrawIndirectParams(topology, groupParams);
+				DrawIndirectParams	params	= DrawIndirectParams(topology, useDynamicRendering);
 
 				params.addCommand(vertexCount, 1, 0, 0);
 				testGroup->addChild(new IndirectCase(testCtx, (name + "_single_command").c_str(), "vkCmdDrawIndirect testcase.", params));
@@ -1578,7 +1256,7 @@ void populateSubGroup (tcu::TestCaseGroup* testGroup, const TestCaseParams caseP
 				deUint32	firstIndex		= rnd.getInt(vertexCount, OFFSET_LIMIT);
 				deUint32	vertexOffset	= rnd.getInt(vertexCount, OFFSET_LIMIT);
 
-				DrawIndexedIndirectParams	params	= DrawIndexedIndirectParams(topology, groupParams, vk::VK_INDEX_TYPE_UINT32);
+				DrawIndexedIndirectParams	params	= DrawIndexedIndirectParams(topology, useDynamicRendering, vk::VK_INDEX_TYPE_UINT32);
 				params.addCommand(vertexCount, 1, 0, 0, 0);
 				testGroup->addChild(new IndexedIndirectCase(testCtx, (name + "_single_command").c_str(), "vkCmdDrawIndexedIndirect testcase.", params));
 
@@ -1592,7 +1270,7 @@ void populateSubGroup (tcu::TestCaseGroup* testGroup, const TestCaseParams caseP
 	}
 }
 
-void createDrawTests(tcu::TestCaseGroup* testGroup, const SharedGroupParams groupParams)
+void createDrawTests(tcu::TestCaseGroup* testGroup, bool useDynamicRendering)
 {
 	for (deUint32 drawTypeIndex = 0; drawTypeIndex < DRAW_COMMAND_TYPE_DRAW_LAST; ++drawTypeIndex)
 	{
@@ -1604,20 +1282,16 @@ void createDrawTests(tcu::TestCaseGroup* testGroup, const SharedGroupParams grou
 			const vk::VkPrimitiveTopology	topology	(static_cast<vk::VkPrimitiveTopology>(topologyIdx));
 			const std::string				groupName	(de::toLower(getPrimitiveTopologyName(topology)).substr(22));
 
-			// reduce number of tests for dynamic rendering cases where secondary command buffer is used
-			if (groupParams->useSecondaryCmdBuffer && (topologyIdx % 2u))
-				continue;
-
-			addTestGroup(topologyGroup.get(), groupName, "Testcases with a specific topology.", populateSubGroup, TestCaseParams(command, topology, groupParams));
+			addTestGroup(topologyGroup.get(), groupName, "Testcases with a specific topology.", populateSubGroup, TestCaseParams(command, topology, useDynamicRendering));
 		}
 
 		testGroup->addChild(topologyGroup.release());
 	}
 }
 
-tcu::TestCaseGroup*	createBasicDrawTests (tcu::TestContext& testCtx, const SharedGroupParams groupParams)
+tcu::TestCaseGroup*	createBasicDrawTests (tcu::TestContext& testCtx, bool useDynamicRendering)
 {
-	return createTestGroup(testCtx, "basic_draw", "Basic drawing tests", createDrawTests, groupParams);
+	return createTestGroup(testCtx, "basic_draw", "Basic drawing tests", createDrawTests, useDynamicRendering);
 }
 
 }	// DrawTests

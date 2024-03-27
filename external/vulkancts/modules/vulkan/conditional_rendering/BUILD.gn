@@ -33,8 +33,6 @@ ohos_source_set("deqp_vk_conditional_rendering_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/conditional_rendering/vktConditionalDrawAndClearTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/conditional_rendering/vktConditionalDrawTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/conditional_rendering/vktConditionalDrawTests.hpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/conditional_rendering/vktConditionalIgnoreTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/conditional_rendering/vktConditionalIgnoreTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/conditional_rendering/vktConditionalRenderingTestUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/conditional_rendering/vktConditionalRenderingTestUtil.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/conditional_rendering/vktConditionalTests.cpp",
@@ -45,16 +43,14 @@ ohos_source_set("deqp_vk_conditional_rendering_source") {
   include_dirs += [
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/conditional_rendering",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/draw",
-
-    #"//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/compute",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/compute",
   ]
 
   deps = [
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/compute:libdeqp_vk_compute",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/draw:libdeqp_vk_draw",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
-
-    #"//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/compute:libdeqp_vk_compute",
   ]
   part_name = "acts"
   subsystem_name = "xts"

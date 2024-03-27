@@ -40,7 +40,6 @@ ohos_source_set("tcutil_source") {
     "//third_party/vk-gl-cts/framework/common/tcuImageCompare.cpp",
     "//third_party/vk-gl-cts/framework/common/tcuImageIO.cpp",
     "//third_party/vk-gl-cts/framework/common/tcuInterval.cpp",
-    "//third_party/vk-gl-cts/framework/common/tcuLibDrm.cpp",
     "//third_party/vk-gl-cts/framework/common/tcuMatrix.cpp",
     "//third_party/vk-gl-cts/framework/common/tcuMaybe.cpp",
     "//third_party/vk-gl-cts/framework/common/tcuPlatform.cpp",
@@ -91,13 +90,16 @@ ohos_source_set("tcutil_source") {
     "//third_party/vk-gl-cts/framework/qphelper:libdeqp_qphelper",
     "//third_party/vk-gl-cts/framework/xexml:libdeqp_xexml",
   ]
-  part_name = "acts"
-  subsystem_name = "xts"
+
+  #   lib_dirs = ["//third_party/vk-gl-cts/outlibs"]
+
+  #   libs=["png"]
+
   configs = [ ":tcutil_config" ]
 }
 
 ohos_static_library("libdeqp_tcutil") {
   deps = [ ":tcutil_source" ]
-  part_name = "acts"
-  subsystem_name = "xts"
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
 }
