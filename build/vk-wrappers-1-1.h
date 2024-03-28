@@ -1,1 +1,0 @@
-PFN_vkGetPhysicalDeviceProperties2 vkGetPhysicalDeviceProperties2;

@@ -25,7 +25,6 @@
  *//*--------------------------------------------------------------------*/
 
 #include "vktTestCase.hpp"
-#include "vktDrawGroupParams.hpp"
 
 namespace vkt
 {
@@ -34,7 +33,7 @@ namespace Draw
 class MultipleClearsWithinRenderPassTests : public tcu::TestCaseGroup
 {
 public:
-						MultipleClearsWithinRenderPassTests		(tcu::TestContext &testCtx, const SharedGroupParams groupParams);
+						MultipleClearsWithinRenderPassTests		(tcu::TestContext &testCtx, bool useDynamicRendering);
 						~MultipleClearsWithinRenderPassTests	();
 	void				init									();
 
@@ -43,7 +42,7 @@ private:
 	MultipleClearsWithinRenderPassTests&	operator=			(const MultipleClearsWithinRenderPassTests &other);
 
 private:
-	const SharedGroupParams m_groupParams;
+	const bool m_useDynamicRendering;
 };
 }
 }

@@ -1,7 +1,6 @@
 include_directories(
 	..
 	../draw
-	../util
 	${DEQP_INL_DIR}
 )
 
@@ -11,8 +10,6 @@ set(DEQP_VK_DYNAMIC_STATE_SRCS
 	vktDynamicStateBaseClass.cpp
 	vktDynamicStateCBTests.cpp
 	vktDynamicStateCBTests.hpp
-	vktDynamicStateClearTests.cpp
-	vktDynamicStateClearTests.hpp
 	vktDynamicStateComputeTests.cpp
 	vktDynamicStateComputeTests.hpp
 	vktDynamicStateDSTests.cpp
@@ -27,15 +24,15 @@ set(DEQP_VK_DYNAMIC_STATE_SRCS
 	vktDynamicStateTests.hpp
 	vktDynamicStateVPTests.cpp
 	vktDynamicStateVPTests.hpp
-	vktDynamicStateDiscardTests.cpp
-	vktDynamicStateDiscardTests.hpp
+)
+
+set(DEQP_VK_DYNAMIC_STATE_LIBS
+	deqp-vk-draw
+	tcutil
+	vkutil
 )
 
 PCH(DEQP_VK_DYNAMIC_STATE_SRCS ../pch.cpp)
 
 add_library(deqp-vk-dynamic-state STATIC ${DEQP_VK_DYNAMIC_STATE_SRCS})
-target_link_libraries(deqp-vk-dynamic-state deqp-vk-draw tcutil vkutil)
-
-add_library(deqp-vksc-dynamic-state STATIC ${DEQP_VK_DYNAMIC_STATE_SRCS})
-target_include_directories(deqp-vksc-dynamic-state BEFORE PUBLIC ${CMAKE_SOURCE_DIR}/external/vulkancts/framework/vulkan/generated/vulkansc)
-target_link_libraries(deqp-vksc-dynamic-state PUBLIC deqp-vksc-draw deqp-vksc-util tcutil vkscutil)
+target_link_libraries(deqp-vk-dynamic-state ${DEQP_VK_DYNAMIC_STATE_LIBS})

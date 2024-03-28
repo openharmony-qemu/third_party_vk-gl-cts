@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# Copyright 2016-2022 The Khronos Group Inc.
+# Copyright 2016-2021 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -100,7 +100,7 @@ def logErr(*args, **kwargs):
 
     if file is not None:
         file.write(strfile.getvalue())
-    raise UserWarning(strfile.getvalue())
+    sys.exit(1)
 
 def isempty(s):
     """Return True if s is nothing but white space, False otherwise"""
@@ -236,21 +236,17 @@ def lookupPage(pageMap, name):
     return pi
 
 def loadFile(filename):
-    """Load a file into a list of strings. Return the (list, newline_string) or (None, None) on failure"""
-    newline_string = "\n"
+    """Load a file into a list of strings. Return the list or None on failure"""
     try:
-        with open(filename, 'rb') as fp:
-            contents = fp.read()
-            if contents.count(b"\r\n") > 1:
-                newline_string = "\r\n"
-
-        with open(filename, 'r', encoding='utf-8') as fp:
-            lines = fp.readlines()
+        fp = open(filename, 'r', encoding='utf-8')
     except:
         logWarn('Cannot open file', filename, ':', sys.exc_info()[0])
-        return None, None
+        return None
 
-    return lines, newline_string
+    file = fp.readlines()
+    fp.close()
+
+    return file
 
 def clampToBlock(line, minline, maxline):
     """Clamp a line number to be in the range [minline,maxline].
@@ -284,8 +280,8 @@ def fixupRefs(pageMap, specFile, file):
         # # line to the include line, so autogeneration can at least
         # # pull the include out, but mark it not to be extracted.
         # # Examples include the host sync table includes in
-        # # chapters/fundamentals.adoc and the table of Vk*Flag types in
-        # # appendices/boilerplate.adoc.
+        # # chapters/fundamentals.txt and the table of Vk*Flag types in
+        # # appendices/boilerplate.txt.
         # if pi.begin is None and pi.validity is None and pi.end is None:
         #     pi.begin = pi.include
         #     pi.extractPage = False
@@ -319,8 +315,8 @@ def fixupRefs(pageMap, specFile, file):
         # the parameter and body sections. Other pages infer the location of
         # the body, but have no parameter sections.
         #
-        # Probably some other types infer this as well - refer to list of
-        # all page types in genRef.py:emitPage()
+        #@ Probably some other types infer this as well - refer to list of
+        #@ all page types in genRef.py:emitPage()
         if pi.include is not None:
             if pi.type in ['funcpointers', 'protos', 'structs']:
                 pi.param = nextPara(file, pi.include)
@@ -382,20 +378,9 @@ def fixupRefs(pageMap, specFile, file):
                             'at line', pi.include)
 
 
-def compatiblePageTypes(refpage_type, pagemap_type):
-    """Returns whether two refpage 'types' (categories) are compatible -
-       this is only true for 'consts' and 'enums' types."""
-
-    constsEnums = [ 'consts', 'enums' ]
-
-    if refpage_type == pagemap_type:
-        return True
-    if refpage_type in constsEnums and pagemap_type in constsEnums:
-        return True
-    return False
-
 # Patterns used to recognize interesting lines in an asciidoc source file.
 # These patterns are only compiled once.
+INCSVAR_DEF = re.compile(r':INCS-VAR: (?P<value>.*)')
 endifPat   = re.compile(r'^endif::(?P<condition>[\w_+,]+)\[\]')
 beginPat   = re.compile(r'^\[open,(?P<attribs>refpage=.*)\]')
 # attribute key/value pairs of an open block
@@ -410,7 +395,8 @@ errorPat   = re.compile(r'^// *refError')
 # (category), and API name (entity_name). It could be put into the API
 # conventions object.
 INCLUDE = re.compile(
-        r'include::(?P<directory_traverse>((../){1,4}|\{generated\}/)(generated/)?)(?P<generated_type>[\w]+)/(?P<category>\w+)/(?P<entity_name>[^./]+).adoc[\[][\]]')
+        r'include::(?P<directory_traverse>((../){1,4}|\{INCS-VAR\}/|\{generated\}/)(generated/)?)(?P<generated_type>[\w]+)/(?P<category>\w+)/(?P<entity_name>[^./]+).txt[\[][\]]')
+
 
 def findRefs(file, filename):
     """Identify reference pages in a list of strings, returning a dictionary of
@@ -439,9 +425,25 @@ def findRefs(file, filename):
 
     # Track the pageInfo object corresponding to the current open block
     pi = None
+    incsvar = None
 
     while (line < numLines):
         setLogLine(line)
+
+        # Look for a file-wide definition
+        matches = INCSVAR_DEF.match(file[line])
+        if matches:
+            incsvar = matches.group('value')
+            logDiag('Matched INCS-VAR definition:', incsvar)
+
+            line = line + 1
+            continue
+
+        # Perform INCS-VAR substitution immediately.
+        if incsvar and '{INCS-VAR}' in file[line]:
+            newLine = file[line].replace('{INCS-VAR}', incsvar)
+            logDiag('PERFORMING SUBSTITUTION', file[line], '->', newLine)
+            file[line] = newLine
 
         # Only one of the patterns can possibly match. Add it to
         # the dictionary for that name.
@@ -554,7 +556,7 @@ def findRefs(file, filename):
             if gen_type == 'validity':
                 logDiag('Matched validity pattern')
                 if pi is not None:
-                    if pi.type and not compatiblePageTypes(refpage_type, pi.type):
+                    if pi.type and refpage_type != pi.type:
                         logWarn('ERROR: pageMap[' + name + '] type:',
                                 pi.type, 'does not match type:', refpage_type)
                     pi.type = refpage_type
@@ -571,7 +573,7 @@ def findRefs(file, filename):
                 if pi is not None:
                     if pi.include is not None:
                         logDiag('found multiple includes for this block')
-                    if pi.type and not compatiblePageTypes(refpage_type, pi.type):
+                    if pi.type and refpage_type != pi.type:
                         logWarn('ERROR: pageMap[' + name + '] type:',
                                 pi.type, 'does not match type:', refpage_type)
                     pi.type = refpage_type

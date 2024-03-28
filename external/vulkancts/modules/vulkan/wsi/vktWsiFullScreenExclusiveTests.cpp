@@ -73,7 +73,7 @@ void checkAllSupported (const Extensions& supportedExtensions,
 		 requiredExtName != requiredExtensions.end();
 		 ++requiredExtName)
 	{
-		if (!isExtensionStructSupported(supportedExtensions, RequiredExtension(*requiredExtName)))
+		if (!isExtensionSupported(supportedExtensions, RequiredExtension(*requiredExtName)))
 			TCU_THROW(NotSupportedError, (*requiredExtName + " is not supported").c_str());
 	}
 }
@@ -87,10 +87,8 @@ CustomInstance createInstanceWithWsi (Context&						context,
 
 	extensions.push_back("VK_KHR_surface");
 	extensions.push_back(getExtensionName(wsiType));
-	if (isDisplaySurface(wsiType))
-		extensions.push_back("VK_KHR_display");
 
-	if (isExtensionStructSupported(supportedExtensions, RequiredExtension("VK_KHR_get_surface_capabilities2")))
+	if (isExtensionSupported(supportedExtensions, RequiredExtension("VK_KHR_get_surface_capabilities2")))
 		extensions.push_back("VK_KHR_get_surface_capabilities2");
 
 	checkAllSupported(supportedExtensions, extensions);
@@ -129,11 +127,11 @@ Move<VkDevice> createDeviceWithWsi (const vk::PlatformInterface&	vkp,
 	const VkPhysicalDeviceFeatures	features		= getDeviceFeaturesForWsi();
 	std::vector<const char*>		extensions;
 
-	if (!isExtensionStructSupported(supportedExtensions, RequiredExtension("VK_KHR_swapchain")))
+	if (!isExtensionSupported(supportedExtensions, RequiredExtension("VK_KHR_swapchain")))
 		TCU_THROW(NotSupportedError, "VK_KHR_swapchain is not supported");
 	extensions.push_back("VK_KHR_swapchain");
 
-	if (isExtensionStructSupported(supportedExtensions, RequiredExtension("VK_EXT_full_screen_exclusive")))
+	if (isExtensionSupported(supportedExtensions, RequiredExtension("VK_EXT_full_screen_exclusive")))
 	{
 		extensions.push_back("VK_EXT_full_screen_exclusive");
 	}
@@ -213,7 +211,7 @@ de::MovePtr<Display> createDisplay (const vk::Platform&	platform,
 	}
 	catch (const tcu::NotSupportedError& e)
 	{
-		if (isExtensionStructSupported(supportedExtensions, RequiredExtension(getExtensionName(wsiType))) &&
+		if (isExtensionSupported(supportedExtensions, RequiredExtension(getExtensionName(wsiType))) &&
 		    platform.hasDisplay(wsiType))
 		{
 			// If VK_KHR_{platform}_surface was supported, vk::Platform implementation
@@ -344,10 +342,10 @@ tcu::TestStatus fullScreenExclusiveTest(Context& context,
 
 	const InstanceHelper						instHelper(context, testParams.wsiType);
 	const NativeObjectsFS						native(context, instHelper.supportedExtensions, testParams.wsiType);
-	const Unique<VkSurfaceKHR>					surface(createSurface(instHelper.vki, instHelper.instance, testParams.wsiType, *native.display, *native.window, context.getTestContext().getCommandLine()));
+	const Unique<VkSurfaceKHR>					surface(createSurface(instHelper.vki, instHelper.instance, testParams.wsiType, *native.display, *native.window));
 	const DeviceHelper							devHelper(context, instHelper.vki, instHelper.instance, *surface);
 	const std::vector<VkExtensionProperties>	deviceExtensions(enumerateDeviceExtensionProperties(instHelper.vki, devHelper.physicalDevice, DE_NULL));
-	if (!isExtensionStructSupported(deviceExtensions, RequiredExtension("VK_EXT_full_screen_exclusive")))
+	if (!isExtensionSupported(deviceExtensions, RequiredExtension("VK_EXT_full_screen_exclusive")))
 		TCU_THROW(NotSupportedError, "Extension VK_EXT_full_screen_exclusive not supported");
 
 	native.window->setVisible(true);

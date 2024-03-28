@@ -94,12 +94,11 @@ using DispatchSequence	= tcu::Vector<DispatchOp, kDispatchSequenceSize>;
 // Test parameters.
 struct TestParams
 {
-	PipelineConstructionType	pipelineConstructionType;
-	SetUpdateType				graphicsSetUpdateType;
-	SetUpdateType				computeSetUpdateType;
-	SetUpdateType				rayTracingSetUpdateType;
-	SetupSequence				setupSequence;
-	DispatchSequence			dispatchSequence;
+	SetUpdateType		graphicsSetUpdateType;
+	SetUpdateType		computeSetUpdateType;
+	SetUpdateType		rayTracingSetUpdateType;
+	SetupSequence		setupSequence;
+	DispatchSequence	dispatchSequence;
 
 protected:
 	bool hasSetupOp (SetupOp op) const
@@ -181,24 +180,16 @@ BindPointTest::BindPointTest (tcu::TestContext& testCtx, const std::string& name
 
 void BindPointTest::checkSupport (Context& context) const
 {
-	if ((m_params.hasGraphics() && m_params.graphicsSetUpdateType != SetUpdateType::WRITE) ||
-		(m_params.hasCompute() && m_params.computeSetUpdateType != SetUpdateType::WRITE) ||
-		(m_params.hasRayTracing() && m_params.rayTracingSetUpdateType != SetUpdateType::WRITE))
+	if (m_params.graphicsSetUpdateType != SetUpdateType::WRITE || m_params.computeSetUpdateType != SetUpdateType::WRITE)
 	{
 		context.requireDeviceFunctionality("VK_KHR_push_descriptor");
 
-		if ((m_params.hasGraphics() && m_params.graphicsSetUpdateType == SetUpdateType::PUSH_WITH_TEMPLATE) ||
-			(m_params.hasCompute() && m_params.computeSetUpdateType == SetUpdateType::PUSH_WITH_TEMPLATE) ||
-			(m_params.hasRayTracing() && m_params.rayTracingSetUpdateType == SetUpdateType::PUSH_WITH_TEMPLATE))
-		{
+		if (m_params.graphicsSetUpdateType == SetUpdateType::PUSH_WITH_TEMPLATE || m_params.computeSetUpdateType == SetUpdateType::PUSH_WITH_TEMPLATE)
 			context.requireDeviceFunctionality("VK_KHR_descriptor_update_template");
-		}
 	}
 
 	if (m_params.hasRayTracing())
 		context.requireDeviceFunctionality("VK_KHR_ray_tracing_pipeline");
-
-	checkPipelineLibraryRequirements(context.getInstanceInterface(), context.getPhysicalDevice(), m_params.pipelineConstructionType);
 }
 
 void BindPointTest::initPrograms (vk::SourceCollections& programCollection) const
@@ -408,8 +399,8 @@ tcu::TestStatus BindPointInstance::iterate (void)
 	const auto	imageViewType	= VK_IMAGE_VIEW_TYPE_2D;
 	const auto	imageUsage		= static_cast<VkImageUsageFlags>(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
 
-	const std::vector<VkViewport>	viewports	{ makeViewport(imageExtent) };
-	const std::vector<VkRect2D>		scissors	{ makeRect2D(imageExtent) };
+	const auto	viewport		= makeViewport(imageExtent);
+	const auto	scissor			= makeRect2D(imageExtent);
 
 	const auto	hasGraphics		= m_params.hasGraphics();
 	const auto	hasCompute		= m_params.hasCompute();
@@ -497,9 +488,9 @@ tcu::TestStatus BindPointInstance::iterate (void)
 	if (hasCompute)		compShader = createShaderModule(vkd, device, m_context.getBinaryCollection().get("comp"), 0u);
 	if (hasRayTracing)	rgenShader = createShaderModule(vkd, device, m_context.getBinaryCollection().get("rgen"), 0u);
 
-	Move<VkRenderPass>			renderPass;
-	Move<VkFramebuffer>			framebuffer;
-	GraphicsPipelineWrapper		graphicsPipeline(vkd, device, m_params.pipelineConstructionType);
+	Move<VkRenderPass>	renderPass;
+	Move<VkFramebuffer>	framebuffer;
+	Move<VkPipeline>	graphicsPipeline;
 
 	if (hasGraphics)
 	{
@@ -508,6 +499,9 @@ tcu::TestStatus BindPointInstance::iterate (void)
 		framebuffer	= makeFramebuffer(vkd, device, renderPass.get(), colorAttachmentView.get(), imageExtent.width, imageExtent.height);
 
 		// Graphics pipeline.
+		std::vector<VkViewport>	viewports(1u, viewport);
+		std::vector<VkRect2D>	scissors(1u, scissor);
+
 		const VkPipelineVertexInputStateCreateInfo vertexInputState =
 		{
 			VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,	// VkStructureType                             sType
@@ -519,23 +513,9 @@ tcu::TestStatus BindPointInstance::iterate (void)
 			nullptr,													// const VkVertexInputAttributeDescription*    pVertexAttributeDescriptions
 		};
 
-		graphicsPipeline.setDefaultTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP)
-						.setDefaultRasterizationState()
-						.setDefaultMultisampleState()
-						.setDefaultDepthStencilState()
-						.setDefaultColorBlendState()
-						.setupVertexInputState(&vertexInputState)
-						.setupPreRasterizationShaderState(
-							viewports,
-							scissors,
-							*graphicsPipelineLayout,
-							*renderPass,
-							0u,
-							*vertShader)
-						.setupFragmentShaderState(*graphicsPipelineLayout, *renderPass, 0u, *fragShader)
-						.setupFragmentOutputState(*renderPass, 0u)
-						.setMonolithicPipelineLayout(*graphicsPipelineLayout)
-						.buildPipeline();
+		graphicsPipeline = makeGraphicsPipeline(vkd, device, graphicsPipelineLayout.get(),
+			vertShader.get(), DE_NULL, DE_NULL, DE_NULL, fragShader.get(),	// Shaders.
+			renderPass.get(), viewports, scissors, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP, 0u, 0u, &vertexInputState);
 	}
 
 	// Compute pipeline.
@@ -651,7 +631,7 @@ tcu::TestStatus BindPointInstance::iterate (void)
 		switch (setupOp)
 		{
 		case SetupOp::BIND_GRAPHICS_PIPELINE:
-			vkd.cmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline.getPipeline());
+			vkd.cmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline.get());
 			boundGraphicsPipeline = true;
 			break;
 
@@ -732,7 +712,7 @@ tcu::TestStatus BindPointInstance::iterate (void)
 		{
 		case DispatchOp::DRAW:
 			DE_ASSERT(boundGraphicsPipeline && boundGraphicsSet);
-			beginRenderPass(vkd, cmdBuffer, renderPass.get(), framebuffer.get(), scissors[0], tcu::Vec4(1.0f, 0.0f, 0.0f, 1.0f));
+			beginRenderPass(vkd, cmdBuffer, renderPass.get(), framebuffer.get(), scissor, tcu::Vec4(1.0f, 0.0f, 0.0f, 1.0f));
 			vkd.cmdDraw(cmdBuffer, 4u, 1u, 0u, 0u);
 			endRenderPass(vkd, cmdBuffer);
 			break;
@@ -872,7 +852,7 @@ std::string toString(VkPipelineBindPoint point)
 
 } // anonymous
 
-tcu::TestCaseGroup* createBindPointTests (tcu::TestContext& testCtx, PipelineConstructionType pipelineConstructionType)
+tcu::TestCaseGroup* createBindPointTests (tcu::TestContext& testCtx)
 {
 	using GroupPtr		= de::MovePtr<tcu::TestCaseGroup>;
 	using BindPointPair	= tcu::Vector<VkPipelineBindPoint, kTestBindPoints>;
@@ -891,26 +871,8 @@ tcu::TestCaseGroup* createBindPointTests (tcu::TestContext& testCtx, PipelineCon
 	{
 		const auto& testPair = testPairs[testPairIdx];
 
-		// dont repeat tests if there is no graphics pipeline
-		if (pipelineConstructionType != PIPELINE_CONSTRUCTION_TYPE_MONOLITHIC)
-		{
-			bool skipTests = true;
-			for (int elemIdx = 0; elemIdx < std::remove_reference<decltype(testPair)>::type::SIZE; ++elemIdx)
-			{
-				if (testPair[elemIdx] == VK_PIPELINE_BIND_POINT_GRAPHICS)
-				{
-					skipTests = false;
-					break;
-				}
-			}
-
-			if (skipTests)
-				continue;
-		}
-
 		// Default values. Two of them will be overwritten later.
 		TestParams params;
-		params.pipelineConstructionType = pipelineConstructionType;
 		params.graphicsSetUpdateType	= SetUpdateType::TYPE_COUNT;
 		params.computeSetUpdateType		= SetUpdateType::TYPE_COUNT;
 		params.rayTracingSetUpdateType	= SetUpdateType::TYPE_COUNT;

@@ -24,8 +24,6 @@ set(DEQP_VK_WSI_SRCS
 	vktWsiSharedPresentableImageTests.hpp
 	vktWsiDisplayTests.hpp
 	vktWsiDisplayTests.cpp
-	vktWsiAcquireDrmDisplayTests.hpp
-	vktWsiAcquireDrmDisplayTests.cpp
 	vktWsiColorSpaceTests.cpp
 	vktWsiColorSpaceTests.hpp
 	vktWsiFullScreenExclusiveTests.cpp

@@ -40,7 +40,6 @@
 #include "vkTypeUtil.hpp"
 #include "vkCmdUtil.hpp"
 #include "vkObjUtil.hpp"
-#include "vkBufferWithMemory.hpp"
 
 #include "tcuTextureUtil.hpp"
 #include "tcuTexture.hpp"
@@ -130,7 +129,7 @@ static string getCoordStr (const ImageType		imageType,
 			return string("ivec3(" + x + "," + y + "," + z + ")");
 		default:
 			DE_ASSERT(false);
-			return "";
+			return DE_NULL;
 	}
 }
 
@@ -189,7 +188,7 @@ static string getAtomicFuncArgumentShaderStr (const AtomicOperation	op,
 			return string("((" + z + "*" + toString(gridSize.x()) + " + " + x + ")*" + toString(gridSize.y()) + " + " + y + ")");
 		default:
 			DE_ASSERT(false);
-			return "";
+			return DE_NULL;
 	}
 }
 
@@ -210,7 +209,7 @@ static string getAtomicOperationCaseName (const AtomicOperation op)
 		case ATOMIC_OPERATION_COMPARE_EXCHANGE:	return string("compare_exchange");
 		default:
 			DE_ASSERT(false);
-			return "";
+			return DE_NULL;
 	}
 }
 
@@ -228,7 +227,7 @@ static string getAtomicOperationShaderFuncName (const AtomicOperation op)
 		case ATOMIC_OPERATION_COMPARE_EXCHANGE:	return string("imageAtomicCompSwap");
 		default:
 			DE_ASSERT(false);
-			return "";
+			return DE_NULL;
 	}
 }
 
@@ -506,7 +505,7 @@ static void initDataForImage (const VkDevice			device,
 							  const TextureFormat&		format,
 							  const AtomicOperation		operation,
 							  const tcu::UVec3&			gridSize,
-							  BufferWithMemory&			buffer)
+							  Buffer&					buffer)
 {
 	Allocation&				bufferAllocation	= buffer.getAllocation();
 	const VkFormat			imageFormat			= mapTextureFormat(format);
@@ -538,46 +537,21 @@ static void initDataForImage (const VkDevice			device,
 	flushAlloc(deviceInterface, device, bufferAllocation);
 }
 
-void commonCheckSupport (Context& context, const tcu::TextureFormat& tcuFormat, VkImageTiling tiling, ImageType imageType, const tcu::UVec3& imageSize, AtomicOperation operation, bool useTransfer, ShaderReadType readType, ImageBackingType backingType)
+void commonCheckSupport (Context& context, const tcu::TextureFormat& tcuFormat, ImageType imageType, AtomicOperation operation, bool useTransfer, ShaderReadType readType, ImageBackingType backingType)
 {
 	const VkFormat				format				= mapTextureFormat(tcuFormat);
 	const VkImageType			vkImgType			= mapImageType(imageType);
 	const VkFormatFeatureFlags	texelBufferSupport	= (VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_BIT | VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_ATOMIC_BIT);
-
-	const auto& vki				= context.getInstanceInterface();
-	const auto	physicalDevice	= context.getPhysicalDevice();
-	const auto usageFlags = getUsageFlags(useTransfer);
-
-	VkImageFormatProperties	vkImageFormatProperties;
-	const auto result = vki.getPhysicalDeviceImageFormatProperties(physicalDevice, format, vkImgType, tiling, usageFlags, 0, &vkImageFormatProperties);
-	if (result != VK_SUCCESS) {
-		if (result == VK_ERROR_FORMAT_NOT_SUPPORTED)
-			TCU_THROW(NotSupportedError, "Format unsupported for tiling");
-		else
-			TCU_FAIL("vkGetPhysicalDeviceImageFormatProperties returned unexpected error");
-	}
-
-	if (vkImageFormatProperties.maxArrayLayers < (uint32_t)getNumLayers(imageType, imageSize)) {
-		TCU_THROW(NotSupportedError, "This format and tiling combination does not support this number of aray layers");
-	}
-
 	const VkFormatProperties	formatProperties	= getPhysicalDeviceFormatProperties(context.getInstanceInterface(),
 																						context.getPhysicalDevice(), format);
+
 	if ((imageType == IMAGE_TYPE_BUFFER) &&
 		((formatProperties.bufferFeatures & texelBufferSupport) != texelBufferSupport))
 		TCU_THROW(NotSupportedError, "Atomic storage texel buffers not supported");
 
-	const VkFormatFeatureFlags requiredFeaturesLinear = (VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT | VK_FORMAT_FEATURE_STORAGE_IMAGE_ATOMIC_BIT);
-	if (tiling == vk::VK_IMAGE_TILING_LINEAR &&
-			((formatProperties.linearTilingFeatures & requiredFeaturesLinear) != requiredFeaturesLinear)
-	) {
-		TCU_THROW(NotSupportedError, "Format doesn't support atomic storage with linear tiling");
-	}
-
 	if (imageType == IMAGE_TYPE_CUBE_ARRAY)
 		context.requireDeviceCoreFeature(DEVICE_CORE_FEATURE_IMAGE_CUBE_ARRAY);
 
-#ifndef CTS_USES_VULKANSC
 	if (backingType == ImageBackingType::SPARSE)
 	{
 		context.requireDeviceCoreFeature(DEVICE_CORE_FEATURE_SPARSE_BINDING);
@@ -589,10 +563,9 @@ void commonCheckSupport (Context& context, const tcu::TextureFormat& tcuFormat, 
 		default:				DE_ASSERT(false); break;
 		}
 
-		if (!checkSparseImageFormatSupport(context.getPhysicalDevice(), context.getInstanceInterface(), format, vkImgType, VK_SAMPLE_COUNT_1_BIT, usageFlags, tiling))
+		if (!checkSparseImageFormatSupport(context.getPhysicalDevice(), context.getInstanceInterface(), format, vkImgType, VK_SAMPLE_COUNT_1_BIT, getUsageFlags(useTransfer), VK_IMAGE_TILING_OPTIMAL))
 			TCU_THROW(NotSupportedError, "Format does not support sparse images");
 	}
-#endif // CTS_USES_VULKANSC
 
 	if (isFloatFormat(format))
 	{
@@ -610,12 +583,10 @@ void commonCheckSupport (Context& context, const tcu::TextureFormat& tcuFormat, 
 		if (operation == ATOMIC_OPERATION_MIN || operation == ATOMIC_OPERATION_MAX)
 		{
 			context.requireDeviceFunctionality("VK_EXT_shader_atomic_float2");
-#ifndef CTS_USES_VULKANSC
 			if (!context.getShaderAtomicFloat2FeaturesEXT().shaderImageFloat32AtomicMinMax)
 			{
 				TCU_THROW(NotSupportedError, "shaderImageFloat32AtomicMinMax not supported");
 			}
-#endif // CTS_USES_VULKANSC
 		}
 
 		if ((formatProperties.optimalTilingFeatures & requiredFeatures) != requiredFeatures)
@@ -671,7 +642,6 @@ public:
 															 const ImageType			imageType,
 															 const tcu::UVec3&			imageSize,
 															 const tcu::TextureFormat&	format,
-															 const VkImageTiling		tiling,
 															 const AtomicOperation		operation,
 															 const bool					useTransfer,
 															 const ShaderReadType		shaderReadType,
@@ -686,7 +656,6 @@ private:
 	const ImageType				m_imageType;
 	const tcu::UVec3			m_imageSize;
 	const tcu::TextureFormat	m_format;
-	const VkImageTiling			m_tiling;
 	const AtomicOperation		m_operation;
 	const bool					m_useTransfer;
 	const ShaderReadType		m_readType;
@@ -700,7 +669,6 @@ BinaryAtomicEndResultCase::BinaryAtomicEndResultCase (tcu::TestContext&			testCt
 													  const ImageType			imageType,
 													  const tcu::UVec3&			imageSize,
 													  const tcu::TextureFormat&	format,
-													  const VkImageTiling		tiling,
 													  const AtomicOperation		operation,
 													  const bool				useTransfer,
 													  const ShaderReadType		shaderReadType,
@@ -710,7 +678,6 @@ BinaryAtomicEndResultCase::BinaryAtomicEndResultCase (tcu::TestContext&			testCt
 	, m_imageType	(imageType)
 	, m_imageSize	(imageSize)
 	, m_format		(format)
-	, m_tiling		(tiling)
 	, m_operation	(operation)
 	, m_useTransfer	(useTransfer)
 	, m_readType	(shaderReadType)
@@ -721,7 +688,7 @@ BinaryAtomicEndResultCase::BinaryAtomicEndResultCase (tcu::TestContext&			testCt
 
 void BinaryAtomicEndResultCase::checkSupport (Context& context) const
 {
-	commonCheckSupport(context, m_format, m_tiling, m_imageType, m_imageSize, m_operation, m_useTransfer, m_readType, m_backingType);
+	commonCheckSupport(context, m_format, m_imageType, m_operation, m_useTransfer, m_readType, m_backingType);
 }
 
 void BinaryAtomicEndResultCase::initPrograms (SourceCollections& sourceCollections) const
@@ -803,7 +770,6 @@ public:
 																 const ImageType			imageType,
 																 const tcu::UVec3&			imageSize,
 																 const tcu::TextureFormat&	format,
-																 const VkImageTiling		tiling,
 																 const AtomicOperation		operation,
 																 const bool					useTransfer,
 																 const ShaderReadType		shaderReadType,
@@ -818,7 +784,6 @@ private:
 	const ImageType				m_imageType;
 	const tcu::UVec3			m_imageSize;
 	const tcu::TextureFormat	m_format;
-	const VkImageTiling			m_tiling;
 	const AtomicOperation		m_operation;
 	const bool					m_useTransfer;
 	const ShaderReadType		m_readType;
@@ -832,7 +797,6 @@ BinaryAtomicIntermValuesCase::BinaryAtomicIntermValuesCase (TestContext&			testC
 															const ImageType			imageType,
 															const tcu::UVec3&		imageSize,
 															const TextureFormat&	format,
-															const VkImageTiling		tiling,
 															const AtomicOperation	operation,
 															const bool				useTransfer,
 															const ShaderReadType	shaderReadType,
@@ -842,7 +806,6 @@ BinaryAtomicIntermValuesCase::BinaryAtomicIntermValuesCase (TestContext&			testC
 	, m_imageType	(imageType)
 	, m_imageSize	(imageSize)
 	, m_format		(format)
-	, m_tiling		(tiling)
 	, m_operation	(operation)
 	, m_useTransfer	(useTransfer)
 	, m_readType	(shaderReadType)
@@ -853,7 +816,7 @@ BinaryAtomicIntermValuesCase::BinaryAtomicIntermValuesCase (TestContext&			testC
 
 void BinaryAtomicIntermValuesCase::checkSupport (Context& context) const
 {
-	commonCheckSupport(context, m_format, m_tiling, m_imageType, m_imageSize, m_operation, m_useTransfer, m_readType, m_backingType);
+	commonCheckSupport(context, m_format, m_imageType, m_operation, m_useTransfer, m_readType, m_backingType);
 }
 
 void BinaryAtomicIntermValuesCase::initPrograms (SourceCollections& sourceCollections) const
@@ -936,7 +899,6 @@ public:
 														  const ImageType				imageType,
 														  const tcu::UVec3&				imageSize,
 														  const TextureFormat&			format,
-														  const VkImageTiling			tiling,
 														  const AtomicOperation			operation,
 														  const bool					useTransfer,
 														  const ShaderReadType			shaderReadType,
@@ -979,31 +941,30 @@ protected:
 	void						createImageResources	(const VkFormat&				imageFormat,
 														 const bool						useTransfer);
 
-	const string					m_name;
-	const ImageType					m_imageType;
-	const tcu::UVec3				m_imageSize;
-	const TextureFormat				m_format;
-	const VkImageTiling				m_tiling;
-	const AtomicOperation			m_operation;
-	const bool						m_useTransfer;
-	const ShaderReadType			m_readType;
-	const ImageBackingType			m_backingType;
+	const string				m_name;
+	const ImageType				m_imageType;
+	const tcu::UVec3			m_imageSize;
+	const TextureFormat			m_format;
+	const AtomicOperation		m_operation;
+	const bool					m_useTransfer;
+	const ShaderReadType		m_readType;
+	const ImageBackingType		m_backingType;
 
-	de::MovePtr<BufferWithMemory>	m_inputBuffer;
-	de::MovePtr<BufferWithMemory>	m_outputBuffer;
-	Move<VkBufferView>				m_descResultBufferView;
-	Move<VkBufferView>				m_descIntermResultsBufferView;
-	Move<VkDescriptorPool>			m_descriptorPool;
-	Move<VkDescriptorSetLayout>		m_descriptorSetLayout;
-	Move<VkDescriptorSet>			m_descriptorSet;
+	de::MovePtr<Buffer>			m_inputBuffer;
+	de::MovePtr<Buffer>			m_outputBuffer;
+	Move<VkBufferView>			m_descResultBufferView;
+	Move<VkBufferView>			m_descIntermResultsBufferView;
+	Move<VkDescriptorPool>		m_descriptorPool;
+	Move<VkDescriptorSetLayout>	m_descriptorSetLayout;
+	Move<VkDescriptorSet>		m_descriptorSet;
 
-	Move<VkDescriptorSetLayout>		m_descriptorSetLayoutNoTransfer;
-	Move<VkDescriptorPool>			m_descriptorPoolNoTransfer;
+	Move<VkDescriptorSetLayout>	m_descriptorSetLayoutNoTransfer;
+	Move<VkDescriptorPool>		m_descriptorPoolNoTransfer;
 
-	de::MovePtr<Image>				m_resultImage;
-	Move<VkImageView>				m_resultImageView;
+	de::MovePtr<Image>			m_resultImage;
+	Move<VkImageView>			m_resultImageView;
 
-	std::vector<VkSemaphore>		m_waitSemaphores;
+	std::vector<VkSemaphore>	m_waitSemaphores;
 };
 
 BinaryAtomicInstanceBase::BinaryAtomicInstanceBase (Context&				context,
@@ -1011,7 +972,6 @@ BinaryAtomicInstanceBase::BinaryAtomicInstanceBase (Context&				context,
 													const ImageType			imageType,
 													const tcu::UVec3&		imageSize,
 													const TextureFormat&	format,
-													const VkImageTiling		tiling,
 													const AtomicOperation	operation,
 													const bool				useTransfer,
 													const ShaderReadType	shaderReadType,
@@ -1021,7 +981,6 @@ BinaryAtomicInstanceBase::BinaryAtomicInstanceBase (Context&				context,
 	, m_imageType		(imageType)
 	, m_imageSize		(imageSize)
 	, m_format			(format)
-	, m_tiling			(tiling)
 	, m_operation		(operation)
 	, m_useTransfer		(useTransfer)
 	, m_readType		(shaderReadType)
@@ -1049,7 +1008,7 @@ tcu::TestStatus	BinaryAtomicInstanceBase::iterate (void)
 	tcu::UVec3				gridSize			= getShaderGridSize(m_imageType, m_imageSize);
 
 	//Prepare the buffer with the initial data for the image
-	m_inputBuffer = de::MovePtr<BufferWithMemory>(new BufferWithMemory(deviceInterface,
+	m_inputBuffer = de::MovePtr<Buffer>(new Buffer(deviceInterface,
 													device,
 													allocator,
 													makeBufferCreateInfo(imageSizeInBytes,
@@ -1062,7 +1021,7 @@ tcu::TestStatus	BinaryAtomicInstanceBase::iterate (void)
 	initDataForImage(device, deviceInterface, m_format, m_operation, gridSize, *m_inputBuffer);
 
 	// Create a buffer to store shader output copied from result image
-	m_outputBuffer = de::MovePtr<BufferWithMemory>(new BufferWithMemory(deviceInterface,
+	m_outputBuffer = de::MovePtr<Buffer>(new Buffer(deviceInterface,
 													device,
 													allocator,
 													makeBufferCreateInfo(outBuffSizeInBytes,
@@ -1284,7 +1243,7 @@ void BinaryAtomicInstanceBase::createImageAndView	(VkFormat						imageFormat,
 		1u,														// deUint32					mipLevels;
 		numLayers,												// deUint32					arrayLayers;
 		VK_SAMPLE_COUNT_1_BIT,									// VkSampleCountFlagBits	samples;
-		m_tiling,												// VkImageTiling			tiling;
+		VK_IMAGE_TILING_OPTIMAL,								// VkImageTiling			tiling;
 		usageFlags,												// VkImageUsageFlags		usage;
 		VK_SHARING_MODE_EXCLUSIVE,								// VkSharingMode			sharingMode;
 		0u,														// deUint32					queueFamilyIndexCount;
@@ -1292,7 +1251,6 @@ void BinaryAtomicInstanceBase::createImageAndView	(VkFormat						imageFormat,
 		VK_IMAGE_LAYOUT_UNDEFINED,								// VkImageLayout			initialLayout;
 	};
 
-#ifndef CTS_USES_VULKANSC
 	if (m_backingType == ImageBackingType::SPARSE)
 	{
 		const auto&		vki				= m_context.getInstanceInterface();
@@ -1316,7 +1274,6 @@ void BinaryAtomicInstanceBase::createImageAndView	(VkFormat						imageFormat,
 		imagePtr = de::MovePtr<Image>(sparseImage);
 	}
 	else
-#endif // CTS_USES_VULKANSC
 		imagePtr = de::MovePtr<Image>(new Image(deviceInterface, device, allocator, createInfo, MemoryRequirement::Any));
 
 	const VkImageSubresourceRange subresourceRange = makeImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT, 0u, 1u, 0u, numLayers);
@@ -1340,12 +1297,11 @@ public:
 														const ImageType				imageType,
 														const tcu::UVec3&			imageSize,
 														const TextureFormat&		format,
-														const VkImageTiling			tiling,
 														const AtomicOperation		operation,
 														const bool					useTransfer,
 														const ShaderReadType		shaderReadType,
 														const ImageBackingType		backingType)
-							: BinaryAtomicInstanceBase(context, name, imageType, imageSize, format, tiling, operation, useTransfer, shaderReadType, backingType) {}
+							: BinaryAtomicInstanceBase(context, name, imageType, imageSize, format, operation, useTransfer, shaderReadType, backingType) {}
 
 	virtual deUint32	getOutputBufferSize			   (void) const;
 
@@ -1611,7 +1567,7 @@ bool BinaryAtomicEndResultInstance::isValueCorrect(const T resultValue, deInt32 
 
 TestInstance* BinaryAtomicEndResultCase::createInstance (Context& context) const
 {
-	return new BinaryAtomicEndResultInstance(context, m_name, m_imageType, m_imageSize, m_format, m_tiling, m_operation, m_useTransfer, m_readType, m_backingType);
+	return new BinaryAtomicEndResultInstance(context, m_name, m_imageType, m_imageSize, m_format, m_operation, m_useTransfer, m_readType, m_backingType);
 }
 
 class BinaryAtomicIntermValuesInstance : public BinaryAtomicInstanceBase
@@ -1623,12 +1579,11 @@ public:
 															const ImageType			imageType,
 															const tcu::UVec3&		imageSize,
 															const TextureFormat&	format,
-															const VkImageTiling		tiling,
 															const AtomicOperation	operation,
 															const bool				useTransfer,
 															const ShaderReadType	shaderReadType,
 															const ImageBackingType	backingType)
-							: BinaryAtomicInstanceBase(context, name, imageType, imageSize, format, tiling, operation, useTransfer, shaderReadType, backingType) {}
+							: BinaryAtomicInstanceBase(context, name, imageType, imageSize, format, operation, useTransfer, shaderReadType, backingType) {}
 
 	virtual deUint32	getOutputBufferSize				   (void) const;
 
@@ -1924,7 +1879,7 @@ bool BinaryAtomicIntermValuesInstance::verifyRecursive (const deInt32	index,
 
 TestInstance* BinaryAtomicIntermValuesCase::createInstance (Context& context) const
 {
-	return new BinaryAtomicIntermValuesInstance(context, m_name, m_imageType, m_imageSize, m_format, m_tiling, m_operation, m_useTransfer, m_readType, m_backingType);
+	return new BinaryAtomicIntermValuesInstance(context, m_name, m_imageType, m_imageSize, m_format, m_operation, m_useTransfer, m_readType, m_backingType);
 }
 
 } // anonymous ns
@@ -1965,11 +1920,6 @@ tcu::TestCaseGroup* createImageAtomicOperationTests (tcu::TestContext& testCtx)
 		tcu::TextureFormat(tcu::TextureFormat::R, tcu::TextureFormat::SIGNED_INT64)
 	};
 
-    static const VkImageTiling s_tilings[] = {
-        VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_TILING_LINEAR,
-    };
-
 	const struct
 	{
 		ShaderReadType		type;
@@ -1977,9 +1927,7 @@ tcu::TestCaseGroup* createImageAtomicOperationTests (tcu::TestContext& testCtx)
 	} readTypes[] =
 	{
 		{	ShaderReadType::NORMAL,	"normal_read"	},
-#ifndef CTS_USES_VULKANSC
 		{	ShaderReadType::SPARSE,	"sparse_read"	},
-#endif // CTS_USES_VULKANSC
 	};
 
 	const struct
@@ -1989,9 +1937,7 @@ tcu::TestCaseGroup* createImageAtomicOperationTests (tcu::TestContext& testCtx)
 	} backingTypes[] =
 	{
 		{	ImageBackingType::NORMAL,	"normal_img"	},
-#ifndef CTS_USES_VULKANSC
 		{	ImageBackingType::SPARSE,	"sparse_img"	},
-#endif // CTS_USES_VULKANSC
 	};
 
 	for (deUint32 operationI = 0; operationI < ATOMIC_OPERATION_LAST; operationI++)
@@ -2028,57 +1974,50 @@ tcu::TestCaseGroup* createImageAtomicOperationTests (tcu::TestContext& testCtx)
 
 						for (deUint32 formatNdx = 0; formatNdx < DE_LENGTH_OF_ARRAY(formats); formatNdx++)
 						{
-							for (int tilingNdx = 0; tilingNdx < DE_LENGTH_OF_ARRAY(s_tilings); tilingNdx++)
+							const TextureFormat&	format		= formats[formatNdx];
+							const std::string		formatName	= getShaderImageFormatQualifier(format);
+
+							// Need SPIRV programs in vktImageAtomicSpirvShaders.cpp
+							if (imageType == IMAGE_TYPE_BUFFER && (format.type != tcu::TextureFormat::FLOAT))
 							{
-								const TextureFormat&	format		= formats[formatNdx];
-								const std::string		formatName	= getShaderImageFormatQualifier(format);
-								const char* suffix = (s_tilings[tilingNdx] == VK_IMAGE_TILING_OPTIMAL) ? "" : "_linear";
-
-								// Need SPIRV programs in vktImageAtomicSpirvShaders.cpp
-								if (imageType == IMAGE_TYPE_BUFFER && (format.type != tcu::TextureFormat::FLOAT))
-								{
-									continue;
-								}
-
-								// Only 2D and 3D images may support sparse residency.
-								// VK_IMAGE_TILING_LINEAR does not support sparse residency
-								const auto vkImageType = mapImageType(imageType);
-								if (backingType.type == ImageBackingType::SPARSE && ((vkImageType != VK_IMAGE_TYPE_2D && vkImageType != VK_IMAGE_TYPE_3D) || (s_tilings[tilingNdx] == VK_IMAGE_TILING_LINEAR)))
-									continue;
-
-								// Only some operations are supported on floating-point
-								if (format.type == tcu::TextureFormat::FLOAT)
-								{
-									if (operation != ATOMIC_OPERATION_ADD &&
-#ifndef CTS_USES_VULKANSC
-										operation != ATOMIC_OPERATION_MIN &&
-										operation != ATOMIC_OPERATION_MAX &&
-#endif // CTS_USES_VULKANSC
-										operation != ATOMIC_OPERATION_EXCHANGE)
-									{
-										continue;
-									}
-								}
-
-								if (readType.type == ShaderReadType::SPARSE)
-								{
-									// When using transfer, shader reads will not be used, so avoid creating two identical cases.
-									if (useTransfer)
-										continue;
-
-									// Sparse reads are not supported for all types of images.
-									if (imageType == IMAGE_TYPE_1D || imageType == IMAGE_TYPE_1D_ARRAY || imageType == IMAGE_TYPE_BUFFER)
-										continue;
-								}
-
-								//!< Atomic case checks the end result of the operations, and not the intermediate return values
-								const string caseEndResult = formatName + "_end_result" + suffix;
-								backingTypeGroup->addChild(new BinaryAtomicEndResultCase(testCtx, caseEndResult, "", imageType, imageSize, format, s_tilings[tilingNdx], operation, useTransfer, readType.type, backingType.type, glu::GLSL_VERSION_450));
-
-								//!< Atomic case checks the return values of the atomic function and not the end result.
-								const string caseIntermValues = formatName + "_intermediate_values" + suffix;
-								backingTypeGroup->addChild(new BinaryAtomicIntermValuesCase(testCtx, caseIntermValues, "", imageType, imageSize, format, s_tilings[tilingNdx], operation, useTransfer, readType.type, backingType.type, glu::GLSL_VERSION_450));
+								continue;
 							}
+
+							// Only 2D and 3D images may support sparse residency.
+							const auto vkImageType = mapImageType(imageType);
+							if (backingType.type == ImageBackingType::SPARSE && (vkImageType != VK_IMAGE_TYPE_2D && vkImageType != VK_IMAGE_TYPE_3D))
+								continue;
+
+							// Only some operations are supported on floating-point
+							if (format.type == tcu::TextureFormat::FLOAT)
+							{
+								if (operation != ATOMIC_OPERATION_ADD &&
+									operation != ATOMIC_OPERATION_EXCHANGE &&
+									operation != ATOMIC_OPERATION_MIN &&
+									operation != ATOMIC_OPERATION_MAX)
+								{
+									continue;
+								}
+							}
+
+							if (readType.type == ShaderReadType::SPARSE)
+							{
+								// When using transfer, shader reads will not be used, so avoid creating two identical cases.
+								if (useTransfer)
+									continue;
+
+								// Sparse reads are not supported for all types of images.
+								if (imageType == IMAGE_TYPE_1D || imageType == IMAGE_TYPE_1D_ARRAY || imageType == IMAGE_TYPE_BUFFER)
+									continue;
+							}
+
+							//!< Atomic case checks the end result of the operations, and not the intermediate return values
+							const string caseEndResult = formatName + "_end_result";
+							backingTypeGroup->addChild(new BinaryAtomicEndResultCase(testCtx, caseEndResult, "", imageType, imageSize, format, operation, useTransfer, readType.type, backingType.type, glu::GLSL_VERSION_450));
+
+							//!< Atomic case checks the return values of the atomic function and not the end result.
+							const string caseIntermValues = formatName + "_intermediate_values";
+							backingTypeGroup->addChild(new BinaryAtomicIntermValuesCase(testCtx, caseIntermValues, "", imageType, imageSize, format, operation, useTransfer, readType.type, backingType.type, glu::GLSL_VERSION_450));
 						}
 
 						readTypeGroup->addChild(backingTypeGroup.release());

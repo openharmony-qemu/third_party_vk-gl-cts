@@ -88,44 +88,27 @@ enum AtomicOperation
 
 struct Params
 {
-	glu::ShaderType				shaderType;
-	AccessType					accessType;
-	vk::VkFormat				imageFormat;
-	AtomicOperation				atomicOperation;
-	bool						pipelineProtectedAccess;
-	vk::VkPipelineCreateFlags	flags;
-	ProtectionMode				protectionMode;
+	glu::ShaderType		shaderType;
+	AccessType			accessType;
+	vk::VkFormat		imageFormat;
+	AtomicOperation		atomicOperation;
 
 	Params (void)
-		: shaderType				(glu::SHADERTYPE_LAST)
-		, accessType				(ACCESS_TYPE_LAST)
-		, imageFormat				(vk::VK_FORMAT_UNDEFINED)
-		, atomicOperation			(ATOMIC_OPERATION_LAST)
-		, pipelineProtectedAccess	(false)
-		, flags						((vk::VkPipelineCreateFlags)0u)
-		, protectionMode			(PROTECTION_ENABLED)
+		: shaderType		(glu::SHADERTYPE_LAST)
+		, accessType		(ACCESS_TYPE_LAST)
+		, imageFormat		(vk::VK_FORMAT_UNDEFINED)
+		, atomicOperation	(ATOMIC_OPERATION_LAST)
 	{}
 
-	Params (const glu::ShaderType			shaderType_,
-			const AccessType				accessType_,
-			const vk::VkFormat				imageFormat_,
-			const AtomicOperation			atomicOperation_,
-			const bool						pipelineProtectedAccess_,
-			const vk::VkPipelineCreateFlags flags_)
-		: shaderType				(shaderType_)
-		, accessType				(accessType_)
-		, imageFormat				(imageFormat_)
-		, atomicOperation			(atomicOperation_)
-		, pipelineProtectedAccess	(pipelineProtectedAccess_)
-		, flags						(flags_)
-		, protectionMode			(PROTECTION_ENABLED)
-	{
-#ifndef CTS_USES_VULKANSC
-		if ((flags_ & vk::VK_PIPELINE_CREATE_NO_PROTECTED_ACCESS_BIT_EXT) != 0) {
-			protectionMode = PROTECTION_DISABLED;
-		}
-#endif
-	}
+	Params (const glu::ShaderType	shaderType_,
+			const AccessType		accessType_,
+			const vk::VkFormat		imageFormat_,
+			const AtomicOperation	atomicOperation_	= ATOMIC_OPERATION_LAST)
+		: shaderType		(shaderType_)
+		, accessType		(accessType_)
+		, imageFormat		(imageFormat_)
+		, atomicOperation	(atomicOperation_)
+	{}
 };
 
 static deUint32 getSeedValue (const Params& params)
@@ -257,7 +240,7 @@ private:
 	tcu::TestStatus				executeComputeTest		(void);
 
 	const ImageValidator&		m_validator;
-	const Params				m_params;
+	const Params&				m_params;
 };
 
 class ImageAccessTestCase : public TestCase
@@ -468,7 +451,7 @@ void ImageAccessTestCase::initPrograms (vk::SourceCollections& programCollection
 ImageAccessTestInstance::ImageAccessTestInstance (Context&					ctx,
 												  const ImageValidator&		validator,
 												  const Params&				params)
-	: ProtectedTestInstance(ctx, params.pipelineProtectedAccess ? std::vector<std::string>({ "VK_EXT_pipeline_protected_access" }) : std::vector<std::string>())
+	: ProtectedTestInstance	(ctx)
 	, m_validator			(validator)
 	, m_params				(params)
 {
@@ -519,13 +502,11 @@ tcu::TestStatus ImageAccessTestInstance::executeComputeTest (void)
 	const vk::VkQueue					queue				= ctx.getQueue();
 	const deUint32						queueFamilyIndex	= ctx.getQueueFamilyIndex();
 
-	vk::Unique<vk::VkCommandPool>		cmdPool				(makeCommandPool(vk, device, m_params.protectionMode, queueFamilyIndex));
+	vk::Unique<vk::VkCommandPool>		cmdPool				(makeCommandPool(vk, device, PROTECTION_ENABLED, queueFamilyIndex));
 
 	de::MovePtr<tcu::Texture2D>			texture2D			= createTestTexture2D();
 	const tcu::Sampler					refSampler			= tcu::Sampler(tcu::Sampler::CLAMP_TO_EDGE, tcu::Sampler::CLAMP_TO_EDGE, tcu::Sampler::CLAMP_TO_EDGE,
-																		   tcu::Sampler::NEAREST, tcu::Sampler::NEAREST,
-																		   00.0f /* LOD threshold */, true /* normalized coords */, tcu::Sampler::COMPAREMODE_NONE,
-																		   0 /* cmp channel */, tcu::Vec4(0.0f) /* border color */, true /* seamless cube map */);
+																		   tcu::Sampler::NEAREST, tcu::Sampler::NEAREST);
 
 	vk::Unique<vk::VkShaderModule>		computeShader		(vk::createShaderModule(vk, device, ctx.getBinaryCollection().get("comp"), 0));
 
@@ -546,14 +527,14 @@ tcu::TestStatus ImageAccessTestInstance::executeComputeTest (void)
 												vk::VK_IMAGE_USAGE_SAMPLED_BIT		|
 												vk::VK_IMAGE_USAGE_STORAGE_BIT;
 
-		imageSrc = createImage2D(ctx, m_params.protectionMode, queueFamilyIndex,
+		imageSrc = createImage2D(ctx, PROTECTION_ENABLED, queueFamilyIndex,
 								 IMAGE_WIDTH, IMAGE_HEIGHT,
 								 m_params.imageFormat,
 								 imageUsageFlags);
 
 		if (m_params.accessType != ACCESS_TYPE_IMAGE_ATOMICS)
 		{
-			imageDst = createImage2D(ctx, m_params.protectionMode, queueFamilyIndex,
+			imageDst = createImage2D(ctx, PROTECTION_ENABLED, queueFamilyIndex,
 									 IMAGE_WIDTH, IMAGE_HEIGHT,
 									 m_params.imageFormat,
 									 imageUsageFlags);
@@ -594,11 +575,11 @@ tcu::TestStatus ImageAccessTestInstance::executeComputeTest (void)
 		}
 
 		// Copy unprotected image to protected image
-		copyToProtectedImage(m_protectedContext, **unprotectedImage, **imageSrc, imageSrcLayout, IMAGE_WIDTH, IMAGE_HEIGHT, m_params.protectionMode);
+		copyToProtectedImage(m_protectedContext, **unprotectedImage, **imageSrc, imageSrcLayout, IMAGE_WIDTH, IMAGE_HEIGHT);
 	}
 
 	// Clear dst image
-	if (m_params.accessType != ACCESS_TYPE_IMAGE_ATOMICS && m_params.protectionMode == PROTECTION_ENABLED)
+	if (m_params.accessType != ACCESS_TYPE_IMAGE_ATOMICS)
 		clearImage(m_protectedContext, **imageDst);
 
 	// Create descriptors
@@ -698,7 +679,7 @@ tcu::TestStatus ImageAccessTestInstance::executeComputeTest (void)
 	// Create validation compute commands & submit
 	{
 		const vk::Unique<vk::VkFence>		fence		(vk::createFence(vk, device));
-		vk::Unique<vk::VkPipeline>			pipeline	(makeComputePipeline(vk, device, *pipelineLayout, m_params.flags, *computeShader, (vk::VkPipelineShaderStageCreateFlags)0u));
+		vk::Unique<vk::VkPipeline>			pipeline	(makeComputePipeline(vk, device, *pipelineLayout, *computeShader, DE_NULL));
 		vk::Unique<vk::VkCommandBuffer>		cmdBuffer	(vk::allocateCommandBuffer(vk, device, *cmdPool, vk::VK_COMMAND_BUFFER_LEVEL_PRIMARY));
 
 		beginCommandBuffer(vk, *cmdBuffer);
@@ -708,7 +689,7 @@ tcu::TestStatus ImageAccessTestInstance::executeComputeTest (void)
 		vk.cmdDispatch(*cmdBuffer, (deUint32)IMAGE_WIDTH, (deUint32)IMAGE_HEIGHT, 1u);
 		endCommandBuffer(vk, *cmdBuffer);
 
-		VK_CHECK(queueSubmit(ctx, m_params.protectionMode, queue, *cmdBuffer, *fence, ~0ull));
+		VK_CHECK(queueSubmit(ctx, PROTECTION_ENABLED, queue, *cmdBuffer, *fence, ~0ull));
 	}
 
 	// Calculate reference image
@@ -732,7 +713,7 @@ tcu::TestStatus ImageAccessTestInstance::executeFragmentTest (void)
 	const deUint32						queueFamilyIndex	= ctx.getQueueFamilyIndex();
 
 	// Create output image
-	de::MovePtr<vk::ImageWithMemory>	colorImage			(createImage2D(ctx, m_params.protectionMode, queueFamilyIndex,
+	de::MovePtr<vk::ImageWithMemory>	colorImage			(createImage2D(ctx, PROTECTION_ENABLED, queueFamilyIndex,
 																		   RENDER_WIDTH, RENDER_HEIGHT,
 																		   m_params.imageFormat,
 																		   vk::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT|vk::VK_IMAGE_USAGE_SAMPLED_BIT));
@@ -741,14 +722,12 @@ tcu::TestStatus ImageAccessTestInstance::executeFragmentTest (void)
 	vk::Unique<vk::VkRenderPass>		renderPass			(createRenderPass(ctx, m_params.imageFormat));
 	vk::Unique<vk::VkFramebuffer>		framebuffer			(createFramebuffer(ctx, RENDER_WIDTH, RENDER_HEIGHT, *renderPass, *colorImageView));
 
-	vk::Unique<vk::VkCommandPool>		cmdPool				(makeCommandPool(vk, device, m_params.protectionMode, queueFamilyIndex));
+	vk::Unique<vk::VkCommandPool>		cmdPool				(makeCommandPool(vk, device, PROTECTION_ENABLED, queueFamilyIndex));
 	vk::Unique<vk::VkCommandBuffer>		cmdBuffer			(vk::allocateCommandBuffer(vk, device, *cmdPool, vk::VK_COMMAND_BUFFER_LEVEL_PRIMARY));
 
 	de::MovePtr<tcu::Texture2D>			texture2D			= createTestTexture2D();
 	const tcu::Sampler					refSampler			= tcu::Sampler(tcu::Sampler::CLAMP_TO_EDGE, tcu::Sampler::CLAMP_TO_EDGE, tcu::Sampler::CLAMP_TO_EDGE,
-																		   tcu::Sampler::NEAREST, tcu::Sampler::NEAREST,
-																		   00.0f /* LOD threshold */, true /* normalized coords */, tcu::Sampler::COMPAREMODE_NONE,
-																		   0 /* cmp channel */, tcu::Vec4(0.0f) /* border color */, true /* seamless cube map */);
+																		   tcu::Sampler::NEAREST, tcu::Sampler::NEAREST);
 
 	vk::Move<vk::VkShaderModule>		vertexShader		= createShaderModule(vk, device, ctx.getBinaryCollection().get("vert"), 0);
 	vk::Move<vk::VkShaderModule>		fragmentShader		= createShaderModule(vk, device, ctx.getBinaryCollection().get("frag"), 0);
@@ -781,14 +760,14 @@ tcu::TestStatus ImageAccessTestInstance::executeFragmentTest (void)
 				break;
 		}
 
-		imageSrc = createImage2D(ctx, m_params.protectionMode, queueFamilyIndex,
+		imageSrc = createImage2D(ctx, PROTECTION_ENABLED, queueFamilyIndex,
 								 IMAGE_WIDTH, IMAGE_HEIGHT,
 								 m_params.imageFormat,
 								 imageUsageFlags);
 
 		if (m_params.accessType == ACCESS_TYPE_IMAGE_STORE)
 		{
-			imageDst = createImage2D(ctx, m_params.protectionMode, queueFamilyIndex,
+			imageDst = createImage2D(ctx, PROTECTION_ENABLED, queueFamilyIndex,
 									 IMAGE_WIDTH, IMAGE_HEIGHT,
 									 m_params.imageFormat,
 									 imageUsageFlags);
@@ -829,11 +808,11 @@ tcu::TestStatus ImageAccessTestInstance::executeFragmentTest (void)
 		uploadImage(m_protectedContext, **unprotectedImage, *texture2D);
 
 		// Copy unprotected image to protected image
-		copyToProtectedImage(m_protectedContext, **unprotectedImage, **imageSrc, imageLayout, IMAGE_WIDTH, IMAGE_HEIGHT, m_params.protectionMode);
+		copyToProtectedImage(m_protectedContext, **unprotectedImage, **imageSrc, imageLayout, IMAGE_WIDTH, IMAGE_HEIGHT);
 	}
 
 	// Clear dst image
-	if (m_params.accessType == ACCESS_TYPE_IMAGE_STORE && m_params.protectionMode == PROTECTION_ENABLED)
+	if (m_params.accessType == ACCESS_TYPE_IMAGE_STORE)
 		clearImage(m_protectedContext, **imageDst);
 
 	// Create descriptors
@@ -1023,8 +1002,7 @@ tcu::TestStatus ImageAccessTestInstance::executeFragmentTest (void)
 											vertexBindings,
 											vertexAttribs,
 											tcu::UVec2(RENDER_WIDTH, RENDER_HEIGHT),
-											vk::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
-											m_params.flags);
+											vk::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP);
 
 	// Begin cmd buffer
 	beginCommandBuffer(vk, *cmdBuffer);
@@ -1110,7 +1088,7 @@ tcu::TestStatus ImageAccessTestInstance::executeFragmentTest (void)
 	// Submit command buffer
 	{
 		const vk::Unique<vk::VkFence>	fence		(vk::createFence(vk, device));
-		VK_CHECK(queueSubmit(ctx, m_params.protectionMode, queue, *cmdBuffer, *fence, ~0ull));
+		VK_CHECK(queueSubmit(ctx, PROTECTION_ENABLED, queue, *cmdBuffer, *fence, ~0ull));
 	}
 
 	// Calculate reference image
@@ -1206,89 +1184,55 @@ tcu::TestCaseGroup*	createShaderImageAccessTests (tcu::TestContext& testCtx)
 		{ vk::VK_FORMAT_R32_UINT,		"r32ui"	},
 	};
 
-	static const struct
-	{
-		bool			pipelineProtectedAccess;
-		const char*		name;
-	} protectedAccess[] =
-	{
-		{ false, "default"},
-#ifndef CTS_USES_VULKANSC
-		{ true, "protected_access"},
-#endif
-	};
-	static const struct
-	{
-		vk::VkPipelineCreateFlags	flags;
-		const char*					name;
-	} flags[] =
-	{
-		{ (vk::VkPipelineCreateFlagBits)0u,						"none"},
-#ifndef CTS_USES_VULKANSC
-		{ vk::VK_PIPELINE_CREATE_PROTECTED_ACCESS_ONLY_BIT_EXT, "protected_access_only"},
-		{ vk::VK_PIPELINE_CREATE_NO_PROTECTED_ACCESS_BIT_EXT,	"no_protected_access"},
-#endif
-	};
-
 	for (int shaderTypeNdx = 0; shaderTypeNdx < DE_LENGTH_OF_ARRAY(shaderTypes); ++shaderTypeNdx)
 	{
-		const glu::ShaderType				shaderType = shaderTypes[shaderTypeNdx].type;
-		de::MovePtr<tcu::TestCaseGroup>		shaderGroup(new tcu::TestCaseGroup(testCtx, shaderTypes[shaderTypeNdx].name, shaderTypes[shaderTypeNdx].desc));
+		const glu::ShaderType				shaderType		= shaderTypes[shaderTypeNdx].type;
+		de::MovePtr<tcu::TestCaseGroup>		shaderGroup		(new tcu::TestCaseGroup(testCtx, shaderTypes[shaderTypeNdx].name, shaderTypes[shaderTypeNdx].desc));
 
-		for (int protectedAccessNdx = 0; protectedAccessNdx < DE_LENGTH_OF_ARRAY(protectedAccess); ++protectedAccessNdx) {
-			de::MovePtr<tcu::TestCaseGroup>		protectedAccessGroup(new tcu::TestCaseGroup(testCtx, protectedAccess[protectedAccessNdx].name, ""));
-			for (int flagsNdx = 0; flagsNdx < DE_LENGTH_OF_ARRAY(flags); ++flagsNdx) {
-				de::MovePtr<tcu::TestCaseGroup>		flagsGroup(new tcu::TestCaseGroup(testCtx, flags[flagsNdx].name, ""));
-				if (!protectedAccess[protectedAccessNdx].pipelineProtectedAccess && flags[flagsNdx].flags != 0u) continue;
-				for (int accessNdx = 0; accessNdx < DE_LENGTH_OF_ARRAY(accessTypes); ++accessNdx)
+		for (int accessNdx = 0; accessNdx < DE_LENGTH_OF_ARRAY(accessTypes); ++accessNdx)
+		{
+			const AccessType					accessType			= accessTypes[accessNdx].type;
+
+			if (shaderType == glu::SHADERTYPE_COMPUTE && accessType == ACCESS_TYPE_IMAGE_STORE) // \note already tested in other tests
+				continue;
+
+			de::MovePtr<tcu::TestCaseGroup>		accessTypeGroup		(new tcu::TestCaseGroup(testCtx, accessTypes[accessNdx].name, accessTypes[accessNdx].desc));
+
+			if (accessType == ACCESS_TYPE_IMAGE_ATOMICS)
+			{
+				for (deUint32 atomicOpI = 0; atomicOpI < ATOMIC_OPERATION_LAST; ++atomicOpI)
 				{
-					const AccessType					accessType = accessTypes[accessNdx].type;
+					const AtomicOperation				atomicOp		= (AtomicOperation)atomicOpI;
+					de::MovePtr<tcu::TestCaseGroup>		operationGroup	(new tcu::TestCaseGroup(testCtx, getAtomicOperationCaseName(atomicOp).c_str(), ""));
 
-					if (shaderType == glu::SHADERTYPE_COMPUTE && accessType == ACCESS_TYPE_IMAGE_STORE) // \note already tested in other tests
-						continue;
-
-					de::MovePtr<tcu::TestCaseGroup>		accessTypeGroup(new tcu::TestCaseGroup(testCtx, accessTypes[accessNdx].name, accessTypes[accessNdx].desc));
-
-					if (accessType == ACCESS_TYPE_IMAGE_ATOMICS)
+					for (deUint32 formatNdx = 0; formatNdx < DE_LENGTH_OF_ARRAY(formats); formatNdx++)
 					{
-						for (deUint32 atomicOpI = 0; atomicOpI < ATOMIC_OPERATION_LAST; ++atomicOpI)
-						{
-							const AtomicOperation				atomicOp = (AtomicOperation)atomicOpI;
-							de::MovePtr<tcu::TestCaseGroup>		operationGroup(new tcu::TestCaseGroup(testCtx, getAtomicOperationCaseName(atomicOp).c_str(), ""));
+						const vk::VkFormat		format		= formats[formatNdx].format;
 
-							for (deUint32 formatNdx = 0; formatNdx < DE_LENGTH_OF_ARRAY(formats); formatNdx++)
-							{
-								const vk::VkFormat		format = formats[formatNdx].format;
+						if (format != vk::VK_FORMAT_R32_UINT && format != vk::VK_FORMAT_R32_SINT)
+							continue;
 
-								if (format != vk::VK_FORMAT_R32_UINT && format != vk::VK_FORMAT_R32_SINT)
-									continue;
-
-								operationGroup->addChild(new ImageAccessTestCase(testCtx, formats[formatNdx].name, "", Params(shaderType, accessType, format, atomicOp, protectedAccess[protectedAccessNdx].pipelineProtectedAccess, flags[flagsNdx].flags)));
-							}
-
-							accessTypeGroup->addChild(operationGroup.release());
-						}
-					}
-					else
-					{
-						for (deUint32 formatNdx = 0; formatNdx < DE_LENGTH_OF_ARRAY(formats); formatNdx++)
-						{
-							const vk::VkFormat		format = formats[formatNdx].format;
-
-							accessTypeGroup->addChild(new ImageAccessTestCase(testCtx, formats[formatNdx].name, "", Params(shaderType, accessType, format, ATOMIC_OPERATION_LAST, protectedAccess[protectedAccessNdx].pipelineProtectedAccess, flags[flagsNdx].flags)));
-						}
+						operationGroup->addChild(new ImageAccessTestCase(testCtx, formats[formatNdx].name, "", Params(shaderType, accessType, format, atomicOp)));
 					}
 
-					flagsGroup->addChild(accessTypeGroup.release());
+					accessTypeGroup->addChild(operationGroup.release());
 				}
-				protectedAccessGroup->addChild(flagsGroup.release());
 			}
-			shaderGroup->addChild(protectedAccessGroup.release());
+			else
+			{
+				for (deUint32 formatNdx = 0; formatNdx < DE_LENGTH_OF_ARRAY(formats); formatNdx++)
+				{
+					const vk::VkFormat		format		= formats[formatNdx].format;
+
+					accessTypeGroup->addChild(new ImageAccessTestCase(testCtx, formats[formatNdx].name, "", Params(shaderType, accessType, format)));
+				}
+			}
+
+			shaderGroup->addChild(accessTypeGroup.release());
 		}
 
 		accessGroup->addChild(shaderGroup.release());
 	}
-
 
 	return accessGroup.release();
 }

@@ -1,12 +1,12 @@
 #!/bin/sh
-# Copyright 2019-2022 The Khronos Group Inc.
+# Copyright 2019-2021 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 
 # Generate documentation for the python scripts in this repo, using pdoc3:
 # https://pdoc3.github.io/pdoc/
 #
-# Output is under $(OUTDIR)/python-docs
+# Output is under out/python-docs
 
 set -e
 
@@ -22,10 +22,10 @@ pathsToDocs() {
 (
     cd $(dirname $0)
     # Needed to complete the build - cannot import genRef.py without it.
-    make pyapi
+    make gen/api.py
 
     SPECDIR=$(pwd)
-    OUTDIR=$(pwd)/gen/out/python-docs
+    OUTDIR=$(pwd)/out/python-docs
     INDEX=$OUTDIR/index.html
     mkdir -p $OUTDIR
     cp scripts/__init__.py.docs scripts/__init__.py

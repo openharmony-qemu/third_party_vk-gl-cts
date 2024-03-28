@@ -1036,11 +1036,14 @@ void ShaderParser::parseValue (ValueBlock& valueBlock)
 	// Parse actual value.
 	if (m_curToken == TOKEN_LEFT_BRACKET) // value list
 	{
+		int	arrayLength	= 0; // \todo [2015-08-03 pyry] Currently unused
+
 		advanceToken(TOKEN_LEFT_BRACKET);
 
 		for (;;)
 		{
 			parseValueElement(basicType, dstBlock->back());
+			arrayLength++;
 
 			if (m_curToken == TOKEN_RIGHT_BRACKET)
 				break;
@@ -1284,9 +1287,9 @@ void ShaderParser::parsePipelineProgram (ProgramSpecification& program)
 		}
 		else if (m_curToken == TOKEN_REQUIRE)
 		{
-			vector<RequiredCapability> unusedCaps;
+			vector<RequiredCapability> dummyCaps;
 			size_t size = program.requiredExtensions.size();
-			parseRequirement(unusedCaps, program.requiredExtensions);
+			parseRequirement(dummyCaps, program.requiredExtensions);
 
 			if (size == program.requiredExtensions.size())
 				parseError("only extension requirements are allowed inside pipeline program");
@@ -1313,7 +1316,7 @@ void ShaderParser::parsePipelineProgram (ProgramSpecification& program)
 				case TOKEN_TESSELLATION_EVALUATION:	program.sources.sources[SHADERTYPE_TESSELLATION_EVALUATION].push_back(source);	break;
 				case TOKEN_GEOMETRY:				program.sources.sources[SHADERTYPE_GEOMETRY].push_back(source);					break;
 				default:
-					DE_FATAL("Unreachable");
+					parseError(DE_FALSE);
 			}
 		}
 		else
@@ -1415,7 +1418,7 @@ void ShaderParser::parseShaderCase (vector<tcu::TestNode*>& shaderNodeList)
 				}
 
 				default:
-					DE_FATAL("Unreachable");
+					parseError(DE_FALSE);
 			}
 		}
 		else if (m_curToken == TOKEN_VERSION)

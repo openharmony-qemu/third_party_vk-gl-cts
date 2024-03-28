@@ -54,35 +54,6 @@ static const char* fragmentShaderSource		=	"#version 300 es\n"
 
 using tcu::TestLog;
 
-// Helper class that enables tests to be executed on GL4.5 context
-// and removes code redundancy in each test that requires it.
-class VAOHelper: protected glu::CallLogWrapper
-{
-public:
-	VAOHelper(Context& ctx)
-		: CallLogWrapper(ctx.getRenderContext().getFunctions(), ctx.getTestContext().getLog())
-		, m_vao(0)
-	{
-		// tests need vao only for GL4.5 context
-		if (glu::isContextTypeES(ctx.getRenderContext().getType()))
-			return;
-
-		glGenVertexArrays(1, &m_vao);
-		glBindVertexArray(m_vao);
-		glVertexAttribPointer(0, 1, GL_BYTE, GL_TRUE, 0, NULL);
-		glEnableVertexAttribArray(0);
-	}
-
-	~VAOHelper()
-	{
-		if (m_vao)
-			glDeleteVertexArrays(1, &m_vao);
-	}
-
-private:
-	GLuint		m_vao;
-};
-
 NegativeVertexArrayApiTests::NegativeVertexArrayApiTests (Context& context)
 	: TestCaseGroup(context, "vertex_array", "Negative Vertex Array API Cases")
 {
@@ -151,13 +122,6 @@ void NegativeVertexArrayApiTests::init (void)
 		});
 	ES3F_ADD_API_CASE(vertex_attrib_pointer, "Invalid glVertexAttribPointer() usage",
 		{
-			GLuint vao = 0;
-			glGenVertexArrays(1, &vao);
-			if (glu::isContextTypeES(m_context.getRenderContext().getType()))
-				glBindVertexArray(0);
-			else
-				glBindVertexArray(vao);
-
 			m_log << tcu::TestLog::Section("", "GL_INVALID_ENUM is generated if type is not an accepted value.");
 			glVertexAttribPointer(0, 1, 0, GL_TRUE, 0, 0);
 			expectError(GL_INVALID_ENUM);
@@ -191,7 +155,9 @@ void NegativeVertexArrayApiTests::init (void)
 			m_log << tcu::TestLog::EndSection;
 
 			m_log << tcu::TestLog::Section("", "GL_INVALID_OPERATION is generated a non-zero vertex array object is bound, zero is bound to the GL_ARRAY_BUFFER buffer object binding point and the pointer argument is not NULL.");
+			GLuint vao;
 			GLbyte offset = 1;
+			glGenVertexArrays(1, &vao);
 			glBindVertexArray(vao);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			expectError(GL_NO_ERROR);
@@ -206,13 +172,6 @@ void NegativeVertexArrayApiTests::init (void)
 		});
 	ES3F_ADD_API_CASE(vertex_attrib_i_pointer, "Invalid glVertexAttribPointer() usage",
 		{
-			GLuint vao = 0;
-			glGenVertexArrays(1, &vao);
-			if (glu::isContextTypeES(m_context.getRenderContext().getType()))
-				glBindVertexArray(0);
-			else
-				glBindVertexArray(vao);
-
 			m_log << tcu::TestLog::Section("", "GL_INVALID_ENUM is generated if type is not an accepted value.");
 			glVertexAttribIPointer(0, 1, 0, 0, 0);
 			expectError(GL_INVALID_ENUM);
@@ -239,7 +198,9 @@ void NegativeVertexArrayApiTests::init (void)
 			m_log << tcu::TestLog::EndSection;
 
 			m_log << tcu::TestLog::Section("", "GL_INVALID_OPERATION is generated a non-zero vertex array object is bound, zero is bound to the GL_ARRAY_BUFFER buffer object binding point and the pointer argument is not NULL.");
+			GLuint vao;
 			GLbyte offset = 1;
+			glGenVertexArrays(1, &vao);
 			glBindVertexArray(vao);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			expectError(GL_NO_ERROR);
@@ -303,7 +264,6 @@ void NegativeVertexArrayApiTests::init (void)
 			glu::ShaderProgram program(m_context.getRenderContext(), glu::makeVtxFragSources(vertexShaderSource, fragmentShaderSource));
 			glUseProgram(program.getProgram());
 			GLuint fbo;
-			VAOHelper vao(m_context);
 
 			m_log << tcu::TestLog::Section("", "GL_INVALID_ENUM is generated if mode is not an accepted value.");
 			glDrawArrays(-1, 0, 1);
@@ -331,7 +291,6 @@ void NegativeVertexArrayApiTests::init (void)
 		{
 			glUseProgram(0);
 			GLuint fbo;
-			VAOHelper vao(m_context);
 
 			m_log << tcu::TestLog::Section("", "GL_INVALID_ENUM is generated if mode is not an accepted value.");
 			glDrawArrays(-1, 0, 1);
@@ -358,7 +317,6 @@ void NegativeVertexArrayApiTests::init (void)
 			glu::ShaderProgram program(m_context.getRenderContext(), glu::makeVtxFragSources(vertexShaderSource, fragmentShaderSource));
 			glUseProgram(program.getProgram());
 			GLuint fbo;
-			VAOHelper vao(m_context);
 
 			m_log << tcu::TestLog::Section("", "GL_INVALID_ENUM is generated if mode is not an accepted value.");
 			glDrawArrays(-1, 0, 1);
@@ -384,14 +342,12 @@ void NegativeVertexArrayApiTests::init (void)
 		});
 	ES3F_ADD_API_CASE(draw_elements, "Invalid glDrawElements() usage",
 		{
-			const bool isES	= glu::isContextTypeES(m_context.getRenderContext().getType());
 			glu::ShaderProgram program(m_context.getRenderContext(), glu::makeVtxFragSources(vertexShaderSource, fragmentShaderSource));
 			glUseProgram(program.getProgram());
 			GLuint fbo;
 			GLuint buf;
 			GLuint tfID;
 			GLfloat vertices[1] = { 0 };
-			VAOHelper vao(m_context);
 
 			m_log << tcu::TestLog::Section("", "GL_INVALID_ENUM is generated if mode is not an accepted value.");
 			glDrawElements(-1, 1, GL_UNSIGNED_BYTE, vertices);
@@ -420,7 +376,7 @@ void NegativeVertexArrayApiTests::init (void)
 			glDeleteFramebuffers(1, &fbo);
 			m_log << tcu::TestLog::EndSection;
 
-			if (isES && !m_context.getContextInfo().isExtensionSupported("GL_EXT_geometry_shader")) // GL_EXT_geometry_shader removes error
+			if (!m_context.getContextInfo().isExtensionSupported("GL_EXT_geometry_shader")) // GL_EXT_geometry_shader removes error
 			{
 				m_log << tcu::TestLog::Section("", "GL_INVALID_OPERATION is generated if transform feedback is active and not paused.");
 				const char* tfVarying		= "gl_Position";
@@ -459,7 +415,6 @@ void NegativeVertexArrayApiTests::init (void)
 			glUseProgram(0);
 			GLuint fbo;
 			GLfloat vertices[1] = { 0 };
-			VAOHelper vao(m_context);
 
 			m_log << tcu::TestLog::Section("", "GL_INVALID_ENUM is generated if mode is not an accepted value.");
 			glDrawElements(-1, 1, GL_UNSIGNED_BYTE, vertices);
@@ -490,14 +445,12 @@ void NegativeVertexArrayApiTests::init (void)
 		});
 	ES3F_ADD_API_CASE(draw_elements_incomplete_primitive, "Invalid glDrawElements() usage",
 		{
-			const bool isES	= glu::isContextTypeES(m_context.getRenderContext().getType());
 			glu::ShaderProgram program(m_context.getRenderContext(), glu::makeVtxFragSources(vertexShaderSource, fragmentShaderSource));
 			glUseProgram(program.getProgram());
 			GLuint fbo;
 			GLuint buf;
 			GLuint tfID;
 			GLfloat vertices[1] = { 0 };
-			VAOHelper vao(m_context);
 
 			m_log << tcu::TestLog::Section("", "GL_INVALID_ENUM is generated if mode is not an accepted value.");
 			glDrawElements(-1, 1, GL_UNSIGNED_BYTE, vertices);
@@ -526,7 +479,7 @@ void NegativeVertexArrayApiTests::init (void)
 			glDeleteFramebuffers(1, &fbo);
 			m_log << tcu::TestLog::EndSection;
 
-			if (isES && !m_context.getContextInfo().isExtensionSupported("GL_EXT_geometry_shader")) // GL_EXT_geometry_shader removes error
+			if (!m_context.getContextInfo().isExtensionSupported("GL_EXT_geometry_shader")) // GL_EXT_geometry_shader removes error
 			{
 				m_log << tcu::TestLog::Section("", "GL_INVALID_OPERATION is generated if transform feedback is active and not paused.");
 				const char* tfVarying		= "gl_Position";
@@ -565,7 +518,6 @@ void NegativeVertexArrayApiTests::init (void)
 			glu::ShaderProgram program(m_context.getRenderContext(), glu::makeVtxFragSources(vertexShaderSource, fragmentShaderSource));
 			glUseProgram(program.getProgram());
 			GLuint fbo;
-			VAOHelper vao(m_context);
 			glVertexAttribDivisor(0, 1);
 			expectError(GL_NO_ERROR);
 
@@ -597,7 +549,6 @@ void NegativeVertexArrayApiTests::init (void)
 		{
 			glUseProgram(0);
 			GLuint fbo;
-			VAOHelper vao(m_context);
 			glVertexAttribDivisor(0, 1);
 			expectError(GL_NO_ERROR);
 
@@ -628,7 +579,6 @@ void NegativeVertexArrayApiTests::init (void)
 			glu::ShaderProgram program(m_context.getRenderContext(), glu::makeVtxFragSources(vertexShaderSource, fragmentShaderSource));
 			glUseProgram(program.getProgram());
 			GLuint fbo;
-			VAOHelper vao(m_context);
 			glVertexAttribDivisor(0, 1);
 			expectError(GL_NO_ERROR);
 
@@ -658,15 +608,12 @@ void NegativeVertexArrayApiTests::init (void)
 		});
 	ES3F_ADD_API_CASE(draw_elements_instanced, "Invalid glDrawElementsInstanced() usage",
 		{
-			const bool isES	= glu::isContextTypeES(m_context.getRenderContext().getType());
 			glu::ShaderProgram program(m_context.getRenderContext(), glu::makeVtxFragSources(vertexShaderSource, fragmentShaderSource));
 			glUseProgram(program.getProgram());
 			GLuint fbo;
 			GLuint buf;
 			GLuint tfID;
 			GLfloat vertices[1] = { 0 };
-			VAOHelper vao(m_context);
-
 			glVertexAttribDivisor(0, 1);
 			expectError(GL_NO_ERROR);
 
@@ -699,7 +646,7 @@ void NegativeVertexArrayApiTests::init (void)
 			glDeleteFramebuffers(1, &fbo);
 			m_log << tcu::TestLog::EndSection;
 
-			if (isES && !m_context.getContextInfo().isExtensionSupported("GL_EXT_geometry_shader")) // GL_EXT_geometry_shader removes error
+			if (!m_context.getContextInfo().isExtensionSupported("GL_EXT_geometry_shader")) // GL_EXT_geometry_shader removes error
 			{
 				m_log << tcu::TestLog::Section("", "GL_INVALID_OPERATION is generated if transform feedback is active and not paused.");
 				const char* tfVarying		= "gl_Position";
@@ -738,7 +685,6 @@ void NegativeVertexArrayApiTests::init (void)
 			glUseProgram(0);
 			GLuint fbo;
 			GLfloat vertices[1] = { 0 };
-			VAOHelper vao(m_context);
 			glVertexAttribDivisor(0, 1);
 			expectError(GL_NO_ERROR);
 
@@ -773,14 +719,12 @@ void NegativeVertexArrayApiTests::init (void)
 		});
 	ES3F_ADD_API_CASE(draw_elements_instanced_incomplete_primitive, "Invalid glDrawElementsInstanced() usage",
 		{
-			const bool isES	= glu::isContextTypeES(m_context.getRenderContext().getType());
 			glu::ShaderProgram program(m_context.getRenderContext(), glu::makeVtxFragSources(vertexShaderSource, fragmentShaderSource));
 			glUseProgram(program.getProgram());
 			GLuint fbo;
 			GLuint buf;
 			GLuint tfID;
 			GLfloat vertices[1] = { 0 };
-			VAOHelper vao(m_context);
 			glVertexAttribDivisor(0, 1);
 			expectError(GL_NO_ERROR);
 
@@ -813,7 +757,7 @@ void NegativeVertexArrayApiTests::init (void)
 			glDeleteFramebuffers(1, &fbo);
 			m_log << tcu::TestLog::EndSection;
 
-			if (isES && !m_context.getContextInfo().isExtensionSupported("GL_EXT_geometry_shader")) // GL_EXT_geometry_shader removes error
+			if (!m_context.getContextInfo().isExtensionSupported("GL_EXT_geometry_shader")) // GL_EXT_geometry_shader removes error
 			{
 				m_log << tcu::TestLog::Section("", "GL_INVALID_OPERATION is generated if transform feedback is active and not paused.");
 				const char* tfVarying		= "gl_Position";
@@ -849,7 +793,6 @@ void NegativeVertexArrayApiTests::init (void)
 		});
 	ES3F_ADD_API_CASE(draw_range_elements, "Invalid glDrawRangeElements() usage",
 		{
-			const bool isES	= glu::isContextTypeES(m_context.getRenderContext().getType());
 			glu::ShaderProgram program(m_context.getRenderContext(), glu::makeVtxFragSources(vertexShaderSource, fragmentShaderSource));
 			glUseProgram(program.getProgram());
 			GLuint fbo;
@@ -857,7 +800,6 @@ void NegativeVertexArrayApiTests::init (void)
 			GLuint tfID;
 			deUint32 vertices[1];
 			vertices[0] = 0xffffffffu;
-			VAOHelper vao(m_context);
 
 			m_log << tcu::TestLog::Section("", "GL_INVALID_ENUM is generated if mode is not an accepted value.");
 			glDrawRangeElements(-1, 0, 1, 1, GL_UNSIGNED_BYTE, vertices);
@@ -891,7 +833,7 @@ void NegativeVertexArrayApiTests::init (void)
 			glDeleteFramebuffers(1, &fbo);
 			m_log << tcu::TestLog::EndSection;
 
-			if (isES && !m_context.getContextInfo().isExtensionSupported("GL_EXT_geometry_shader")) // GL_EXT_geometry_shader removes error
+			if (!m_context.getContextInfo().isExtensionSupported("GL_EXT_geometry_shader")) // GL_EXT_geometry_shader removes error
 			{
 				m_log << tcu::TestLog::Section("", "GL_INVALID_OPERATION is generated if transform feedback is active and not paused.");
 				const char* tfVarying		= "gl_Position";
@@ -932,7 +874,6 @@ void NegativeVertexArrayApiTests::init (void)
 			glUseProgram(0);
 			GLuint fbo;
 			deUint32 vertices[1];
-			VAOHelper vao(m_context);
 			vertices[0] = 0xffffffffu;
 
 			m_log << tcu::TestLog::Section("", "GL_INVALID_ENUM is generated if mode is not an accepted value.");
@@ -969,14 +910,12 @@ void NegativeVertexArrayApiTests::init (void)
 		});
 	ES3F_ADD_API_CASE(draw_range_elements_incomplete_primitive, "Invalid glDrawRangeElements() usage",
 		{
-			const bool isES	= glu::isContextTypeES(m_context.getRenderContext().getType());
 			glu::ShaderProgram program(m_context.getRenderContext(), glu::makeVtxFragSources(vertexShaderSource, fragmentShaderSource));
 			glUseProgram(program.getProgram());
 			GLuint fbo;
 			GLuint buf;
 			GLuint tfID;
 			deUint32 vertices[1];
-			VAOHelper vao(m_context);
 			vertices[0] = 0xffffffffu;
 
 			m_log << tcu::TestLog::Section("", "GL_INVALID_ENUM is generated if mode is not an accepted value.");
@@ -1011,7 +950,7 @@ void NegativeVertexArrayApiTests::init (void)
 			glDeleteFramebuffers(1, &fbo);
 			m_log << tcu::TestLog::EndSection;
 
-			if (isES && !m_context.getContextInfo().isExtensionSupported("GL_EXT_geometry_shader")) // GL_EXT_geometry_shader removes error
+			if (!m_context.getContextInfo().isExtensionSupported("GL_EXT_geometry_shader")) // GL_EXT_geometry_shader removes error
 			{
 				m_log << tcu::TestLog::Section("", "GL_INVALID_OPERATION is generated if transform feedback is active and not paused.");
 				const char* tfVarying		= "gl_Position";

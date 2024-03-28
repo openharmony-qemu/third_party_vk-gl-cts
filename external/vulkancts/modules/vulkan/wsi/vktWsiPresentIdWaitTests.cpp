@@ -120,8 +120,6 @@ vector<const char*> getRequiredInstanceExtensions (vk::wsi::Type wsiType)
 	vector<const char*> extensions;
 	extensions.push_back("VK_KHR_surface");
 	extensions.push_back(getExtensionName(wsiType));
-	if (isDisplaySurface(wsiType))
-		extensions.push_back("VK_KHR_display");
 	return extensions;
 }
 
@@ -191,31 +189,10 @@ vk::Move<vk::VkDevice> createDeviceWithWsi (const vk::PlatformInterface&				vkp,
 		extensions.push_back(ext);
 
 	deMemset(&features, 0, sizeof(features));
-
-	vk::VkPhysicalDeviceFeatures2		physicalDeviceFeatures2 { vk::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, DE_NULL, features };
-
-	vk::VkPhysicalDevicePresentIdFeaturesKHR presentIdFeatures = { vk::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_ID_FEATURES_KHR, DE_NULL, DE_TRUE };
-	vk::VkPhysicalDevicePresentWaitFeaturesKHR presentWaitFeatures = { vk::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_WAIT_FEATURES_KHR, DE_NULL, DE_TRUE };
-
-	void* pNext = DE_NULL;
-	for (size_t i = 0; i < extraExtensions.size(); ++i) {
-		if (strcmp(extraExtensions[i], "VK_KHR_present_id") == 0)
-		{
-			presentIdFeatures.pNext = pNext;
-			pNext = &presentIdFeatures;
-		}
-		else if (strcmp(extraExtensions[i], "VK_KHR_present_wait") == 0)
-		{
-			presentWaitFeatures.pNext = pNext;
-			pNext = &presentWaitFeatures;
-		}
-	}
-	physicalDeviceFeatures2.pNext = pNext;
-
 	const vk::VkDeviceCreateInfo		deviceParams	=
 	{
 		vk::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-		pNext ? &physicalDeviceFeatures2 : DE_NULL,
+		nullptr,
 		(vk::VkDeviceCreateFlags)0,
 		DE_LENGTH_OF_ARRAY(queueInfos),
 		&queueInfos[0],
@@ -223,7 +200,7 @@ vk::Move<vk::VkDevice> createDeviceWithWsi (const vk::PlatformInterface&				vkp,
 		nullptr,									// ppEnabledLayerNames
 		static_cast<deUint32>(extensions.size()),	// enabledExtensionCount
 		extensions.data(),							// ppEnabledExtensionNames
-		pNext ? DE_NULL : &features
+		&features
 	};
 
 	return createCustomDevice(validationEnabled, vkp, instance, vki, physicalDevice, &deviceParams, pAllocator);
@@ -393,7 +370,7 @@ tcu::TestStatus PresentIdWaitInstance::iterate (void)
 	const tcu::UVec2						desiredSize					(256, 256);
 	const InstanceHelper					instHelper					(m_context, m_wsiType);
 	const NativeObjects						native						(m_context, instHelper.supportedExtensions, m_wsiType, 1u, tcu::just(desiredSize));
-	const vk::Unique<vk::VkSurfaceKHR>		surface						(createSurface(instHelper.vki, instHelper.instance, m_wsiType, native.getDisplay(), native.getWindow(), m_context.getTestContext().getCommandLine()));
+	const vk::Unique<vk::VkSurfaceKHR>		surface						(createSurface(instHelper.vki, instHelper.instance, m_wsiType, native.getDisplay(), native.getWindow()));
 	const DeviceHelper						devHelper					(m_context, instHelper.vki, instHelper.instance, vector<vk::VkSurfaceKHR>(1u, surface.get()), getRequiredDeviceExts());
 	const vk::DeviceInterface&				vkd							= devHelper.vkd;
 	const vk::VkDevice						device						= *devHelper.device;
@@ -909,15 +886,11 @@ struct DualIdAndWait
 
 tcu::TestStatus PresentWaitDualInstance::iterate (void)
 {
-	const vk::wsi::PlatformProperties& platformProperties = getPlatformProperties(m_wsiType);
-	if (2 > platformProperties.maxWindowsPerDisplay)
-		TCU_THROW(NotSupportedError, "Creating 2 windows not supported");
-
 	const tcu::UVec2						desiredSize					(256, 256);
 	const InstanceHelper					instHelper					(m_context, m_wsiType);
 	const NativeObjects						native						(m_context, instHelper.supportedExtensions, m_wsiType, 2u, tcu::just(desiredSize));
-	const vk::Unique<vk::VkSurfaceKHR>		surface1					(createSurface(instHelper.vki, instHelper.instance, m_wsiType, native.getDisplay(), native.getWindow(0), m_context.getTestContext().getCommandLine()));
-	const vk::Unique<vk::VkSurfaceKHR>		surface2					(createSurface(instHelper.vki, instHelper.instance, m_wsiType, native.getDisplay(), native.getWindow(1), m_context.getTestContext().getCommandLine()));
+	const vk::Unique<vk::VkSurfaceKHR>		surface1					(createSurface(instHelper.vki, instHelper.instance, m_wsiType, native.getDisplay(), native.getWindow(0)));
+	const vk::Unique<vk::VkSurfaceKHR>		surface2					(createSurface(instHelper.vki, instHelper.instance, m_wsiType, native.getDisplay(), native.getWindow(1)));
 	const DeviceHelper						devHelper					(m_context, instHelper.vki, instHelper.instance, vector<vk::VkSurfaceKHR>{surface1.get(), surface2.get()}, getRequiredDeviceExts());
 	const vk::DeviceInterface&				vkd							= devHelper.vkd;
 	const vk::VkDevice						device						= *devHelper.device;
@@ -1088,7 +1061,7 @@ void PresentIdWaitCase<T>::checkSupport (Context& context) const
 
 	for (const auto& ext : checkedDeviceExts)
 	{
-		if (!context.isDeviceFunctionalitySupported(ext))
+		if (!vk::isExtensionSupported(supportedDeviceExts, vk::RequiredExtension(ext)))
 			TCU_THROW(NotSupportedError, ext + string(" is not supported"));
 	}
 }

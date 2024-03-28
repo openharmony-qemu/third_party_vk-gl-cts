@@ -87,6 +87,7 @@
 #include "es31fPrimitiveBoundingBoxTests.hpp"
 #include "es31fAndroidExtensionPackES31ATests.hpp"
 #include "es31fCopyImageTests.hpp"
+#include "es31fDrawBuffersIndexedTests.hpp"
 #include "es31fDefaultVertexArrayObjectTests.hpp"
 #include "es31fSRGBDecodeTests.hpp"
 #include "es31fDrawElementsBaseVertexTests.hpp"
@@ -296,19 +297,12 @@ private:
 		addChild(new ShaderHelperInvocationTests		(m_context));
 
 		{
-			static const ShaderLibraryGroup::File s_implicitConversionsFilesES[] =
+			static const ShaderLibraryGroup::File s_implicitConversionsFiles[] =
 			{
 				{ "shaders/es31/implicit_conversions.test",		"es31",		"GLSL ES 3.1 GL_EXT_shader_implicit_conversions Tests"	},
 				{ "shaders/es32/implicit_conversions.test",		"es32",		"GLSL ES 3.2 GL_EXT_shader_implicit_conversions Tests"	},
 			};
-			static const ShaderLibraryGroup::File s_implicitConversionsFilesGL[] =
-			{
-				{ "shaders/gl45/implicit_conversions.test",		"gl45",		"GL45 implicit conversions Tests" },
-			};
-			if (m_isGL45)
-				addChild(new ShaderLibraryGroup(m_context, "implicit_conversions", "GL45 implicit conversions Tests", DE_LENGTH_OF_ARRAY(s_implicitConversionsFilesGL), s_implicitConversionsFilesGL));
-			else
-				addChild(new ShaderLibraryGroup(m_context, "implicit_conversions", "GL_EXT_shader_implicit_conversions Tests", DE_LENGTH_OF_ARRAY(s_implicitConversionsFilesES), s_implicitConversionsFilesES));
+			addChild(new ShaderLibraryGroup(m_context, "implicit_conversions", "GL_EXT_shader_implicit_conversions Tests", DE_LENGTH_OF_ARRAY(s_implicitConversionsFiles), s_implicitConversionsFiles));
 		}
 
 		{
@@ -476,21 +470,22 @@ void GLES31FunctionalTests::init (void)
 	addChild(new PrimitiveBoundingBoxTests				(m_context));
 	addChild(new AndroidExtensionPackES31ATests			(m_context));
 	addChild(createCopyImageTests						(m_context, false));
+	addChild(createDrawBuffersIndexedTests				(m_context));
 	addChild(new DefaultVertexArrayObjectTests			(m_context));
 	addChild(new SRGBTextureDecodeTests					(m_context));
 	addChild(new DrawElementsBaseVertexTests			(m_context));
 }
 
-GL45ES31FunctionalTests::GL45ES31FunctionalTests (Context& context)
+GL45FunctionalTests::GL45FunctionalTests (Context& context)
 	: TestCaseGroup(context, "functional", "Functionality Tests")
 {
 }
 
-GL45ES31FunctionalTests::~GL45ES31FunctionalTests (void)
+GL45FunctionalTests::~GL45FunctionalTests (void)
 {
 }
 
-void GL45ES31FunctionalTests::init (void)
+void GL45FunctionalTests::init (void)
 {
 	addChild(new ShaderTests							(m_context, true));
 	addChild(new ComputeTests							(m_context));
@@ -519,6 +514,7 @@ void GL45ES31FunctionalTests::init (void)
 	addChild(new LayoutBindingTests						(m_context));
 	addChild(new PrimitiveBoundingBoxTests				(m_context));
 	addChild(createCopyImageTests						(m_context, true));
+	addChild(createDrawBuffersIndexedTests				(m_context));
 	addChild(new SRGBTextureDecodeTests					(m_context));
 	addChild(new DrawElementsBaseVertexTests			(m_context));
 }

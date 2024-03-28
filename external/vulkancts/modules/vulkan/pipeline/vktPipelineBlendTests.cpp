@@ -133,7 +133,6 @@ public:
 										BlendTest				(tcu::TestContext&							testContext,
 																 const std::string&							name,
 																 const std::string&							description,
-																 PipelineConstructionType					pipelineConstructionType,
 																 const VkFormat								colorFormat,
 																 const VkPipelineColorBlendAttachmentState	blendStates[QUAD_COUNT]);
 	virtual								~BlendTest				(void);
@@ -142,7 +141,6 @@ public:
 	virtual TestInstance*				createInstance			(Context& context) const;
 
 private:
-	const PipelineConstructionType		m_pipelineConstructionType;
 	const VkFormat						m_colorFormat;
 	VkPipelineColorBlendAttachmentState	m_blendStates[QUAD_COUNT];
 };
@@ -161,7 +159,6 @@ public:
 										DualSourceBlendTest		(tcu::TestContext&							testContext,
 																 const std::string&							name,
 																 const std::string&							description,
-																 PipelineConstructionType					pipelineConstructionType,
 																 const VkFormat								colorFormat,
 																 const VkPipelineColorBlendAttachmentState	blendStates[QUAD_COUNT]);
 	virtual								~DualSourceBlendTest	(void);
@@ -170,7 +167,6 @@ public:
 	virtual TestInstance*				createInstance			(Context& context) const;
 
 private:
-	const PipelineConstructionType		m_pipelineConstructionType;
 	const VkFormat						m_colorFormat;
 	VkPipelineColorBlendAttachmentState	m_blendStates[QUAD_COUNT];
 };
@@ -178,7 +174,7 @@ private:
 class BlendTestInstance : public vkt::TestInstance
 {
 public:
-										BlendTestInstance		(Context& context, PipelineConstructionType pipelineConstructionType, const VkFormat colorFormat, const VkPipelineColorBlendAttachmentState blendStates[BlendTest::QUAD_COUNT]);
+										BlendTestInstance		(Context& context, const VkFormat colorFormat, const VkPipelineColorBlendAttachmentState blendStates[BlendTest::QUAD_COUNT]);
 	virtual								~BlendTestInstance		(void);
 	virtual tcu::TestStatus				iterate					(void);
 
@@ -205,7 +201,7 @@ private:
 	de::MovePtr<Allocation>				m_vertexBufferAlloc;
 
 	Move<VkPipelineLayout>				m_pipelineLayout;
-	GraphicsPipelineWrapper				m_graphicsPipelines[BlendTest::QUAD_COUNT];
+	Move<VkPipeline>					m_graphicsPipelines[BlendTest::QUAD_COUNT];
 
 	Move<VkCommandPool>					m_cmdPool;
 	Move<VkCommandBuffer>				m_cmdBuffer;
@@ -215,7 +211,7 @@ private:
 class DualSourceBlendTestInstance : public vkt::TestInstance
 {
 public:
-										DualSourceBlendTestInstance		(Context& context, const PipelineConstructionType m_pipelineConstructionType, const VkFormat colorFormat, const VkPipelineColorBlendAttachmentState blendStates[DualSourceBlendTest::QUAD_COUNT]);
+										DualSourceBlendTestInstance		(Context& context, const VkFormat colorFormat, const VkPipelineColorBlendAttachmentState blendStates[DualSourceBlendTest::QUAD_COUNT]);
 	virtual								~DualSourceBlendTestInstance	(void);
 	virtual tcu::TestStatus				iterate					(void);
 
@@ -242,7 +238,7 @@ private:
 	de::MovePtr<Allocation>				m_vertexBufferAlloc;
 
 	Move<VkPipelineLayout>				m_pipelineLayout;
-	GraphicsPipelineWrapper				m_graphicsPipelines[DualSourceBlendTest::QUAD_COUNT];
+	Move<VkPipeline>					m_graphicsPipelines[DualSourceBlendTest::QUAD_COUNT];
 
 	Move<VkCommandPool>					m_cmdPool;
 	Move<VkCommandBuffer>				m_cmdBuffer;
@@ -421,12 +417,10 @@ const tcu::Vec4 BlendTest::s_blendConst = tcu::Vec4(0.1f, 0.2f, 0.3f, 0.4f);
 BlendTest::BlendTest (tcu::TestContext&								testContext,
 					  const std::string&							name,
 					  const std::string&							description,
-					  PipelineConstructionType						pipelineConstructionType,
 					  const VkFormat								colorFormat,
 					  const VkPipelineColorBlendAttachmentState		blendStates[QUAD_COUNT])
-	: vkt::TestCase					(testContext, name, description)
-	, m_pipelineConstructionType	(pipelineConstructionType)
-	, m_colorFormat					(colorFormat)
+	: vkt::TestCase	(testContext, name, description)
+	, m_colorFormat(colorFormat)
 {
 	deMemcpy(m_blendStates, blendStates, sizeof(VkPipelineColorBlendAttachmentState) * QUAD_COUNT);
 }
@@ -437,7 +431,7 @@ BlendTest::~BlendTest (void)
 
 TestInstance* BlendTest::createInstance(Context& context) const
 {
-	return new BlendTestInstance(context, m_pipelineConstructionType, m_colorFormat, m_blendStates);
+	return new BlendTestInstance(context, m_colorFormat, m_blendStates);
 }
 
 void BlendTest::checkSupport (Context& context) const
@@ -445,8 +439,6 @@ void BlendTest::checkSupport (Context& context) const
 	if (!isSupportedBlendFormat(context.getInstanceInterface(), context.getPhysicalDevice(), m_colorFormat))
 		throw tcu::NotSupportedError(std::string("Unsupported color blending format: ") + getFormatName(m_colorFormat));
 
-	checkPipelineLibraryRequirements(context.getInstanceInterface(), context.getPhysicalDevice(), m_pipelineConstructionType);
-#ifndef CTS_USES_VULKANSC
 	if (context.isDeviceFunctionalitySupported("VK_KHR_portability_subset") &&
 		!context.getPortabilitySubsetFeatures().constantAlphaColorBlendFactors)
 	{
@@ -465,7 +457,6 @@ void BlendTest::checkSupport (Context& context) const
 		if (quadNdx < BlendTest::QUAD_COUNT)
 			TCU_THROW(NotSupportedError, "VK_KHR_portability_subset: Constant alpha color blend factors are not supported by this implementation");
 	}
-#endif // CTS_USES_VULKANSC
 }
 
 void BlendTest::initPrograms (SourceCollections& sourceCollections) const
@@ -506,12 +497,10 @@ const tcu::Vec4 DualSourceBlendTest::s_blendConst = tcu::Vec4(0.1f, 0.2f, 0.3f, 
 DualSourceBlendTest::DualSourceBlendTest (tcu::TestContext&								testContext,
 										  const std::string&							name,
 										  const std::string&							description,
-										  PipelineConstructionType						pipelineConstructionType,
 										  const VkFormat								colorFormat,
 										  const VkPipelineColorBlendAttachmentState		blendStates[QUAD_COUNT])
-	: vkt::TestCase					(testContext, name, description)
-	, m_pipelineConstructionType	(pipelineConstructionType)
-	, m_colorFormat					(colorFormat)
+	: vkt::TestCase	(testContext, name, description)
+	, m_colorFormat(colorFormat)
 {
 	deMemcpy(m_blendStates, blendStates, sizeof(VkPipelineColorBlendAttachmentState) * QUAD_COUNT);
 }
@@ -536,7 +525,7 @@ deBool isSrc1BlendFactor(vk::VkBlendFactor blendFactor)
 
 TestInstance* DualSourceBlendTest::createInstance(Context& context) const
 {
-	return new DualSourceBlendTestInstance(context, m_pipelineConstructionType, m_colorFormat, m_blendStates);
+	return new DualSourceBlendTestInstance(context, m_colorFormat, m_blendStates);
 }
 
 void DualSourceBlendTest::checkSupport (Context& context) const
@@ -559,7 +548,6 @@ void DualSourceBlendTest::checkSupport (Context& context) const
 
 	if (!isSupportedBlendFormat(context.getInstanceInterface(), context.getPhysicalDevice(), m_colorFormat))
 		throw tcu::NotSupportedError(std::string("Unsupported color blending format: ") + getFormatName(m_colorFormat));
-	checkPipelineLibraryRequirements(context.getInstanceInterface(), context.getPhysicalDevice(), m_pipelineConstructionType);
 }
 
 void DualSourceBlendTest::initPrograms (SourceCollections& sourceCollections) const
@@ -599,19 +587,11 @@ void DualSourceBlendTest::initPrograms (SourceCollections& sourceCollections) co
 // BlendTestInstance
 
 BlendTestInstance::BlendTestInstance (Context&									context,
-									  const PipelineConstructionType			pipelineConstructionType,
 									  const VkFormat							colorFormat,
 									  const VkPipelineColorBlendAttachmentState	blendStates[BlendTest::QUAD_COUNT])
 	: vkt::TestInstance	(context)
 	, m_renderSize		(32, 32)
 	, m_colorFormat		(colorFormat)
-	, m_graphicsPipelines
-	{
-		{ context.getDeviceInterface(), context.getDevice(), pipelineConstructionType },
-		{ context.getDeviceInterface(), context.getDevice(), pipelineConstructionType },
-		{ context.getDeviceInterface(), context.getDevice(), pipelineConstructionType },
-		{ context.getDeviceInterface(), context.getDevice(), pipelineConstructionType }
-	}
 {
 	const DeviceInterface&		vk					= m_context.getDeviceInterface();
 	const VkDevice				vkDevice			= m_context.getDevice();
@@ -743,8 +723,8 @@ BlendTestInstance::BlendTestInstance (Context&									context,
 			vertexInputAttributeDescriptions								// const VkVertexInputAttributeDescription*	pVertexAttributeDescriptions;
 		};
 
-		const std::vector<VkViewport>				viewports	{ makeViewport(m_renderSize) };
-		const std::vector<VkRect2D>					scissors	{ makeRect2D(m_renderSize) };
+		const std::vector<VkViewport>				viewports							(1, makeViewport(m_renderSize));
+		const std::vector<VkRect2D>					scissors							(1, makeRect2D(m_renderSize));
 
 		// The color blend attachment will be set up before creating the graphics pipeline.
 		VkPipelineColorBlendStateCreateInfo			colorBlendStateParams				=
@@ -768,21 +748,25 @@ BlendTestInstance::BlendTestInstance (Context&									context,
 		{
 			colorBlendStateParams.attachmentCount	= 1u;
 			colorBlendStateParams.pAttachments		= &m_blendStates[quadNdx];
-
-			m_graphicsPipelines[quadNdx].setDefaultMultisampleState()
-										.setDefaultDepthStencilState()
-										.setDefaultRasterizationState()
-										.setupVertexInputState(&vertexInputStateParams)
-										.setupPreRasterizationShaderState(viewports,
-																		  scissors,
-																		  *m_pipelineLayout,
-																		  *m_renderPass,
-																		  0u,
-																		  *m_vertexShaderModule)
-										.setupFragmentShaderState(*m_pipelineLayout, *m_renderPass, 0u, *m_fragmentShaderModule)
-										.setupFragmentOutputState(*m_renderPass, 0u, &colorBlendStateParams)
-										.setMonolithicPipelineLayout(*m_pipelineLayout)
-										.buildPipeline();
+			m_graphicsPipelines[quadNdx]			= makeGraphicsPipeline(vk,									// const DeviceInterface&                        vk
+																		   vkDevice,							// const VkDevice                                device
+																		   *m_pipelineLayout,					// const VkPipelineLayout                        pipelineLayout
+																		   *m_vertexShaderModule,				// const VkShaderModule                          vertexShaderModule
+																		   DE_NULL,								// const VkShaderModule                          tessellationControlModule
+																		   DE_NULL,								// const VkShaderModule                          tessellationEvalModule
+																		   DE_NULL,								// const VkShaderModule                          geometryShaderModule
+																		   *m_fragmentShaderModule,				// const VkShaderModule                          fragmentShaderModule
+																		   *m_renderPass,						// const VkRenderPass                            renderPass
+																		   viewports,							// const std::vector<VkViewport>&                viewports
+																		   scissors,							// const std::vector<VkRect2D>&                  scissors
+																		   VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,	// const VkPrimitiveTopology                     topology
+																		   0u,									// const deUint32                                subpass
+																		   0u,									// const deUint32                                patchControlPoints
+																		   &vertexInputStateParams,				// const VkPipelineVertexInputStateCreateInfo*   vertexInputStateCreateInfo
+																		   DE_NULL,								// const VkPipelineRasterizationStateCreateInfo* rasterizationStateCreateInfo
+																		   DE_NULL,								// const VkPipelineMultisampleStateCreateInfo*   multisampleStateCreateInfo
+																		   DE_NULL,								// const VkPipelineDepthStencilStateCreateInfo*  depthStencilStateCreateInfo
+																		   &colorBlendStateParams);				// const VkPipelineColorBlendStateCreateInfo*    colorBlendStateCreateInfo
 		}
 	}
 
@@ -857,7 +841,7 @@ BlendTestInstance::BlendTestInstance (Context&									context,
 		{
 			VkDeviceSize vertexBufferOffset = quadOffset * quadNdx;
 
-			vk.cmdBindPipeline(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipelines[quadNdx].getPipeline());
+			vk.cmdBindPipeline(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_graphicsPipelines[quadNdx]);
 			vk.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &m_vertexBuffer.get(), &vertexBufferOffset);
 			vk.cmdDraw(*m_cmdBuffer, (deUint32)(m_vertices.size() / BlendTest::QUAD_COUNT), 1, 0, 0);
 		}
@@ -1193,19 +1177,11 @@ tcu::TestStatus BlendTestInstance::verifyImage (void)
 // DualSourceBlendTestInstance
 
 DualSourceBlendTestInstance::DualSourceBlendTestInstance (Context&									context,
-														  const PipelineConstructionType			pipelineConstructionType,
 														  const VkFormat							colorFormat,
 														  const VkPipelineColorBlendAttachmentState	blendStates[DualSourceBlendTest::QUAD_COUNT])
 	: vkt::TestInstance	(context)
 	, m_renderSize		(32, 32)
 	, m_colorFormat		(colorFormat)
-	, m_graphicsPipelines
-	{
-		{ context.getDeviceInterface(), context.getDevice(), pipelineConstructionType },
-		{ context.getDeviceInterface(), context.getDevice(), pipelineConstructionType },
-		{ context.getDeviceInterface(), context.getDevice(), pipelineConstructionType },
-		{ context.getDeviceInterface(), context.getDevice(), pipelineConstructionType }
-	}
 {
 	const DeviceInterface&		vk					= m_context.getDeviceInterface();
 	const VkDevice				vkDevice			= m_context.getDevice();
@@ -1343,8 +1319,8 @@ DualSourceBlendTestInstance::DualSourceBlendTestInstance (Context&									conte
 			vertexInputAttributeDescriptions								// const VkVertexInputAttributeDescription*	pVertexAttributeDescriptions;
 		};
 
-		const std::vector<VkViewport>				viewports		{ makeViewport(m_renderSize) };
-		const std::vector<VkRect2D>					scissors		{ makeRect2D(m_renderSize) };
+		const std::vector<VkViewport>				viewports							(1, makeViewport(m_renderSize));
+		const std::vector<VkRect2D>					scissors							(1, makeRect2D(m_renderSize));
 
 		// The color blend attachment will be set up before creating the graphics pipeline.
 		VkPipelineColorBlendStateCreateInfo			colorBlendStateParams				=
@@ -1368,21 +1344,25 @@ DualSourceBlendTestInstance::DualSourceBlendTestInstance (Context&									conte
 		{
 			colorBlendStateParams.attachmentCount	= 1u;
 			colorBlendStateParams.pAttachments		= &m_blendStates[quadNdx];
-
-			m_graphicsPipelines[quadNdx].setDefaultRasterizationState()
-										.setDefaultDepthStencilState()
-										.setDefaultMultisampleState()
-										.setupVertexInputState(&vertexInputStateParams)
-										.setupPreRasterizationShaderState(viewports,
-																		  scissors,
-																		  *m_pipelineLayout,
-																		  *m_renderPass,
-																		  0u,
-																		  *m_vertexShaderModule)
-										.setupFragmentShaderState(*m_pipelineLayout, *m_renderPass, 0u, *m_fragmentShaderModule)
-										.setupFragmentOutputState(*m_renderPass, 0u, &colorBlendStateParams)
-										.setMonolithicPipelineLayout(*m_pipelineLayout)
-										.buildPipeline();
+			m_graphicsPipelines[quadNdx]			= makeGraphicsPipeline(vk,									// const DeviceInterface&                        vk
+																		   vkDevice,							// const VkDevice                                device
+																		   *m_pipelineLayout,					// const VkPipelineLayout                        pipelineLayout
+																		   *m_vertexShaderModule,				// const VkShaderModule                          vertexShaderModule
+																		   DE_NULL,								// const VkShaderModule                          tessellationControlModule
+																		   DE_NULL,								// const VkShaderModule                          tessellationEvalModule
+																		   DE_NULL,								// const VkShaderModule                          geometryShaderModule
+																		   *m_fragmentShaderModule,				// const VkShaderModule                          fragmentShaderModule
+																		   *m_renderPass,						// const VkRenderPass                            renderPass
+																		   viewports,							// const std::vector<VkViewport>&                viewports
+																		   scissors,							// const std::vector<VkRect2D>&                  scissors
+																		   VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,	// const VkPrimitiveTopology                     topology
+																		   0u,									// const deUint32                                subpass
+																		   0u,									// const deUint32                                patchControlPoints
+																		   &vertexInputStateParams,				// const VkPipelineVertexInputStateCreateInfo*   vertexInputStateCreateInfo
+																		   DE_NULL,								// const VkPipelineRasterizationStateCreateInfo* rasterizationStateCreateInfo
+																		   DE_NULL,								// const VkPipelineMultisampleStateCreateInfo*   multisampleStateCreateInfo
+																		   DE_NULL,								// const VkPipelineDepthStencilStateCreateInfo*  depthStencilStateCreateInfo
+																		   &colorBlendStateParams);				// const VkPipelineColorBlendStateCreateInfo*    colorBlendStateCreateInfo
 		}
 	}
 
@@ -1460,7 +1440,7 @@ DualSourceBlendTestInstance::DualSourceBlendTestInstance (Context&									conte
 		{
 			VkDeviceSize vertexBufferOffset = quadOffset * quadNdx;
 
-			vk.cmdBindPipeline(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipelines[quadNdx].getPipeline());
+			vk.cmdBindPipeline(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_graphicsPipelines[quadNdx]);
 			vk.cmdBindVertexBuffers(*m_cmdBuffer, 0, 1, &m_vertexBuffer.get(), &vertexBufferOffset);
 			vk.cmdDraw(*m_cmdBuffer, (deUint32)(m_vertices.size() / DualSourceBlendTest::QUAD_COUNT), 1, 0, 0);
 		}
@@ -1647,10 +1627,9 @@ tcu::TestStatus DualSourceBlendTestInstance::verifyImage (void)
 
 struct ClampTestParams
 {
-	PipelineConstructionType	pipelineConstructionType;
-	vk::VkFormat				colorFormat;
-	tcu::Vec4					quadColor;
-	tcu::Vec4					blendConstants;
+	vk::VkFormat	colorFormat;
+	tcu::Vec4		quadColor;
+	tcu::Vec4		blendConstants;
 };
 
 class ClampTest : public vkt::TestCase
@@ -1735,7 +1714,6 @@ void ClampTest::checkSupport (Context& context) const
 {
 	if (!isSupportedBlendFormat(context.getInstanceInterface(), context.getPhysicalDevice(), m_params.colorFormat))
 		throw tcu::NotSupportedError(std::string("Unsupported color blending format: ") + getFormatName(m_params.colorFormat));
-	checkPipelineLibraryRequirements(context.getInstanceInterface(), context.getPhysicalDevice(), m_params.pipelineConstructionType);
 }
 
 TestInstance* ClampTest::createInstance(Context& context) const
@@ -1855,7 +1833,7 @@ tcu::TestStatus ClampTestInstance::iterate (void)
 		},
 	};
 
-	const vk::VkPipelineVertexInputStateCreateInfo vertexInputStateParams
+	const vk::VkPipelineVertexInputStateCreateInfo vertexInputStateParams =
 	{
 		vk::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,					// VkStructureType							sType;
 		nullptr,																		// const void*								pNext;
@@ -1866,8 +1844,8 @@ tcu::TestStatus ClampTestInstance::iterate (void)
 		vertexInputAttributeDescriptions,												// const VkVertexInputAttributeDescription*	pVertexAttributeDescriptions;
 	};
 
-	const std::vector<vk::VkViewport>	viewports	{ makeViewport(renderSize) };
-	const std::vector<vk::VkRect2D>		scissors	{ makeRect2D(renderSize) };
+	const std::vector<vk::VkViewport>	viewports	(1, makeViewport(renderSize));
+	const std::vector<vk::VkRect2D>		scissors	(1, makeRect2D(renderSize));
 
 	const vk::VkColorComponentFlags colorComponentFlags = (0u
 		| vk::VK_COLOR_COMPONENT_R_BIT
@@ -1877,7 +1855,7 @@ tcu::TestStatus ClampTestInstance::iterate (void)
 	);
 
 	// Color blend attachment state. Central aspect of the test.
-	const vk::VkPipelineColorBlendAttachmentState colorBlendAttachmentState
+	const vk::VkPipelineColorBlendAttachmentState colorBlendAttachmentState =
 	{
 		VK_TRUE,							// VkBool32					blendEnable;
 		vk::VK_BLEND_FACTOR_CONSTANT_COLOR,	// VkBlendFactor			srcColorBlendFactor;
@@ -1889,7 +1867,7 @@ tcu::TestStatus ClampTestInstance::iterate (void)
 		colorComponentFlags,				// VkColorComponentFlags	colorWriteMask;
 	};
 
-	const vk::VkPipelineColorBlendStateCreateInfo colorBlendStateParams
+	const vk::VkPipelineColorBlendStateCreateInfo colorBlendStateParams =
 	{
 		vk::VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,	// VkStructureType								sType;
 		nullptr,														// const void*									pNext;
@@ -1906,21 +1884,26 @@ tcu::TestStatus ClampTestInstance::iterate (void)
 		},
 	};
 
-	GraphicsPipelineWrapper graphicsPipeline(vkd, device, m_params.pipelineConstructionType);
-	graphicsPipeline.setDefaultRasterizationState()
-					.setDefaultDepthStencilState()
-					.setDefaultMultisampleState()
-					.setupVertexInputState(&vertexInputStateParams)
-					.setupPreRasterizationShaderState(viewports,
-													  scissors,
-													  *pipelineLayout,
-													  *renderPass,
-													  0u,
-													  *vertexShaderModule)
-					.setupFragmentShaderState(*pipelineLayout, *renderPass, 0u, *fragmentShaderModule)
-					.setupFragmentOutputState(*renderPass, 0u, &colorBlendStateParams)
-					.setMonolithicPipelineLayout(*pipelineLayout)
-					.buildPipeline();
+	auto graphicsPipeline = makeGraphicsPipeline(
+		vkd,										// const DeviceInterface&                        vk
+		device,										// const VkDevice                                device
+		pipelineLayout.get(),						// const VkPipelineLayout                        pipelineLayout
+		vertexShaderModule.get(),					// const VkShaderModule                          vertexShaderModule
+		DE_NULL,									// const VkShaderModule                          tessellationControlModule
+		DE_NULL,									// const VkShaderModule                          tessellationEvalModule
+		DE_NULL,									// const VkShaderModule                          geometryShaderModule
+		fragmentShaderModule.get(),					// const VkShaderModule                          fragmentShaderModule
+		renderPass.get(),							// const VkRenderPass                            renderPass
+		viewports,									// const std::vector<VkViewport>&                viewports
+		scissors,									// const std::vector<VkRect2D>&                  scissors
+		vk::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,	// const VkPrimitiveTopology                     topology
+		0u,											// const deUint32                                subpass
+		0u,											// const deUint32                                patchControlPoints
+		&vertexInputStateParams,					// const VkPipelineVertexInputStateCreateInfo*   vertexInputStateCreateInfo
+		nullptr,									// const VkPipelineRasterizationStateCreateInfo* rasterizationStateCreateInfo
+		nullptr,									// const VkPipelineMultisampleStateCreateInfo*   multisampleStateCreateInfo
+		nullptr,									// const VkPipelineDepthStencilStateCreateInfo*  depthStencilStateCreateInfo
+		&colorBlendStateParams);					// const VkPipelineColorBlendStateCreateInfo*    colorBlendStateCreateInfo
 
 	// Vertex buffer
 	auto						quadTexture = createFullscreenQuad();
@@ -1967,7 +1950,7 @@ tcu::TestStatus ClampTestInstance::iterate (void)
 
 	beginCommandBuffer(vkd, cmdBuffer, 0u);
 		beginRenderPass(vkd, cmdBuffer, renderPass.get(), framebuffer.get(), makeRect2D(renderSize), clearValue);
-			vkd.cmdBindPipeline(cmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline.getPipeline());
+			vkd.cmdBindPipeline(cmdBuffer, vk::VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline.get());
 			vkd.cmdBindVertexBuffers(cmdBuffer, 0, 1u, &vertexBuffer.get(), vertexOffets);
 			vkd.cmdDraw(cmdBuffer, static_cast<deUint32>(vertices.size()), 1, 0, 0);
 		endRenderPass(vkd, cmdBuffer);
@@ -2087,7 +2070,7 @@ std::string getFormatCaseName (VkFormat format)
 	return de::toLower(fullName.substr(10));
 }
 
-tcu::TestCaseGroup* createBlendTests (tcu::TestContext& testCtx, PipelineConstructionType pipelineConstructionType)
+tcu::TestCaseGroup* createBlendTests (tcu::TestContext& testCtx)
 {
 	const deUint32 blendStatesPerFormat = 100 * BlendTest::QUAD_COUNT;
 
@@ -2179,7 +2162,6 @@ tcu::TestCaseGroup* createBlendTests (tcu::TestContext& testCtx, PipelineConstru
 				blendStateTests->addChild(new BlendTest(testCtx,
 														getBlendStateSetName(quadBlendConfigs),
 														getBlendStateSetDescription(quadBlendConfigs),
-														pipelineConstructionType,
 														format,
 														quadBlendConfigs));
 			}
@@ -2224,7 +2206,6 @@ tcu::TestCaseGroup* createBlendTests (tcu::TestContext& testCtx, PipelineConstru
 				blendStateTests->addChild(new DualSourceBlendTest(testCtx,
 																  getBlendStateSetName(quadBlendConfigs),
 																  getBlendStateSetDescription(quadBlendConfigs),
-																  pipelineConstructionType,
 																  format,
 																  quadBlendConfigs));
 			}
@@ -2249,7 +2230,6 @@ tcu::TestCaseGroup* createBlendTests (tcu::TestContext& testCtx, PipelineConstru
 		const auto& format = clampFormats[formatIdx];
 		ClampTestParams testParams;
 
-		testParams.pipelineConstructionType = pipelineConstructionType;
 		testParams.colorFormat = format;
 
 		if (isUnormFormat(format))

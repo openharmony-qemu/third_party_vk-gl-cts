@@ -195,7 +195,6 @@ public:
 											VertexInputTest				(tcu::TestContext&					testContext,
 																		 const std::string&					name,
 																		 const std::string&					description,
-																		 const PipelineConstructionType		pipelineConstructionType,
 																		 const std::vector<AttributeInfo>&	attributeInfos,
 																		 BindingMapping						bindingMapping,
 																		 AttributeLayout					attributeLayout,
@@ -216,7 +215,6 @@ private:
 	std::string								getGlslAttributeConditions	(const AttributeInfo& attributeInfo, const std::string attributeIndex) const;
 	static tcu::Vec4						getFormatThreshold			(VkFormat format);
 
-	const PipelineConstructionType			m_pipelineConstructionType;
 	const std::vector<AttributeInfo>		m_attributeInfos;
 	const BindingMapping					m_bindingMapping;
 	const AttributeLayout					m_attributeLayout;
@@ -240,7 +238,6 @@ public:
 	typedef	std::vector<VertexInputAttributeDescription>	AttributeDescriptionList;
 
 											VertexInputInstance			(Context&												context,
-																		 const PipelineConstructionType							pipelineConstructionType,
 																		 const AttributeDescriptionList&						attributeDescriptions,
 																		 const std::vector<VkVertexInputBindingDescription>&	bindingDescriptions,
 																		 const std::vector<VkDeviceSize>&						bindingOffsets);
@@ -273,7 +270,7 @@ private:
 	Move<VkShaderModule>					m_fragmentShaderModule;
 
 	Move<VkPipelineLayout>					m_pipelineLayout;
-	GraphicsPipelineWrapper					m_graphicsPipeline;
+	Move<VkPipeline>						m_graphicsPipeline;
 
 	Move<VkCommandPool>						m_cmdPool;
 	Move<VkCommandBuffer>					m_cmdBuffer;
@@ -339,20 +336,19 @@ deUint32 getConsumedLocations (const VertexInputTest::AttributeInfo& attributeIn
 VertexInputTest::VertexInputTest (tcu::TestContext&						testContext,
 								  const std::string&					name,
 								  const std::string&					description,
-								  const PipelineConstructionType		pipelineConstructionType,
 								  const std::vector<AttributeInfo>&		attributeInfos,
 								  BindingMapping						bindingMapping,
 								  AttributeLayout						attributeLayout,
 								  LayoutSkip							layoutSkip,
 								  LayoutOrder							layoutOrder)
-	: vkt::TestCase					(testContext, name, description)
-	, m_pipelineConstructionType	(pipelineConstructionType)
-	, m_attributeInfos				(attributeInfos)
-	, m_bindingMapping				(bindingMapping)
-	, m_attributeLayout				(attributeLayout)
-	, m_layoutSkip					(layoutSkip)
-	, m_queryMaxAttributes			(attributeInfos.size() == 0)
-	, m_maxAttributes				(16)
+
+	: vkt::TestCase			(testContext, name, description)
+	, m_attributeInfos		(attributeInfos)
+	, m_bindingMapping		(bindingMapping)
+	, m_attributeLayout		(attributeLayout)
+	, m_layoutSkip			(layoutSkip)
+	, m_queryMaxAttributes	(attributeInfos.size() == 0)
+	, m_maxAttributes		(16)
 {
 	DE_ASSERT(m_attributeLayout == ATTRIBUTE_LAYOUT_INTERLEAVED || m_bindingMapping == BINDING_MAPPING_ONE_TO_MANY);
 
@@ -462,8 +458,6 @@ void VertexInputTest::checkSupport (Context& context) const
 
 	if (m_attributeInfos.size() > maxAttributes)
 		TCU_THROW(NotSupportedError, "Unsupported number of vertex input attributes, maxVertexInputAttributes: " + de::toString(maxAttributes));
-
-	checkPipelineLibraryRequirements(context.getInstanceInterface(), context.getPhysicalDevice(), m_pipelineConstructionType);
 }
 
 TestInstance* VertexInputTest::createInstance (Context& context) const
@@ -604,7 +598,6 @@ TestInstance* VertexInputTest::createInstance (Context& context) const
 	}
 
 	// Portability requires stride to be multiply of minVertexInputBindingStrideAlignment
-#ifndef CTS_USES_VULKANSC
 	if (context.isDeviceFunctionalitySupported("VK_KHR_portability_subset"))
 	{
 		deUint32 minStrideAlignment = context.getPortabilitySubsetProperties().minVertexInputBindingStrideAlignment;
@@ -614,9 +607,8 @@ TestInstance* VertexInputTest::createInstance (Context& context) const
 				TCU_THROW(NotSupportedError, "VK_KHR_portability_subset: stride is not multiply of minVertexInputBindingStrideAlignment");
 		}
 	}
-#endif // CTS_USES_VULKANSC
 
-	return new VertexInputInstance(context, m_pipelineConstructionType, attributeDescriptions, bindingDescriptions, bindingOffsets);
+	return new VertexInputInstance(context, attributeDescriptions, bindingDescriptions, bindingOffsets);
 }
 
 void VertexInputTest::initPrograms (SourceCollections& programCollection) const
@@ -966,14 +958,12 @@ tcu::Vec4 VertexInputTest::getFormatThreshold (VkFormat format)
 }
 
 VertexInputInstance::VertexInputInstance (Context&												context,
-										  const PipelineConstructionType						pipelineConstructionType,
 										  const AttributeDescriptionList&						attributeDescriptions,
 										  const std::vector<VkVertexInputBindingDescription>&	bindingDescriptions,
 										  const std::vector<VkDeviceSize>&						bindingOffsets)
 	: vkt::TestInstance			(context)
 	, m_renderSize				(16, 16)
 	, m_colorFormat				(VK_FORMAT_R8G8B8A8_UNORM)
-	, m_graphicsPipeline		(context.getDeviceInterface(), context.getDevice(), pipelineConstructionType)
 {
 	DE_ASSERT(bindingDescriptions.size() == bindingOffsets.size());
 
@@ -1087,6 +1077,7 @@ VertexInputInstance::VertexInputInstance (Context&												context,
 		0,														// uint32_t							offset
 		sizeof(specializationData),								// uint32_t							size
 	};
+
 	const VkSpecializationInfo specializationInfo =
 	{
 		1,														// uint32_t							mapEntryCount
@@ -1097,6 +1088,28 @@ VertexInputInstance::VertexInputInstance (Context&												context,
 
 	// Create pipeline
 	{
+		const VkPipelineShaderStageCreateInfo shaderStageParams[2] =
+		{
+			{
+				VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,		// VkStructureType						sType;
+				DE_NULL,													// const void*							pNext;
+				0u,															// VkPipelineShaderStageCreateFlags		flags;
+				VK_SHADER_STAGE_VERTEX_BIT,									// VkShaderStageFlagBits				stage;
+				*m_vertexShaderModule,										// VkShaderModule						module;
+				"main",														// const char*							pName;
+				&specializationInfo											// const VkSpecializationInfo*			pSpecializationInfo;
+			},
+			{
+				VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,		// VkStructureType						sType;
+				DE_NULL,													// const void*							pNext;
+				0u,															// VkPipelineShaderStageCreateFlags		flags;
+				VK_SHADER_STAGE_FRAGMENT_BIT,								// VkShaderStageFlagBits				stage;
+				*m_fragmentShaderModule,									// VkShaderModule						module;
+				"main",														// const char*							pName;
+				DE_NULL														// const VkSpecializationInfo*			pSpecializationInfo;
+			}
+		};
+
 		// Create vertex attribute array and check if their VK formats are supported
 		std::vector<VkVertexInputAttributeDescription> vkAttributeDescriptions;
 		for (size_t attributeNdx = 0; attributeNdx < attributeDescriptions.size(); attributeNdx++)
@@ -1116,8 +1129,45 @@ VertexInputInstance::VertexInputInstance (Context&												context,
 			vkAttributeDescriptions.data()									// const VkVertexInputAttributeDescription*	pVertexAttributeDescriptions;
 		};
 
-		const std::vector<VkViewport>	viewport	{ makeViewport(m_renderSize) };
-		const std::vector<VkRect2D>		scissor		{ makeRect2D(m_renderSize) };
+		const VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateParams =
+		{
+			VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,	// VkStructureType							sType;
+			DE_NULL,														// const void*								pNext;
+			0u,																// VkPipelineInputAssemblyStateCreateFlags	flags;
+			VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,							// VkPrimitiveTopology						topology;
+			false															// VkBool32									primitiveRestartEnable;
+		};
+
+		const VkViewport	viewport	= makeViewport(m_renderSize);
+		const VkRect2D		scissor		= makeRect2D(m_renderSize);
+
+		const VkPipelineViewportStateCreateInfo viewportStateParams =
+		{
+			VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,			// VkStructureType						sType;
+			DE_NULL,														// const void*							pNext;
+			0u,																// VkPipelineViewportStateCreateFlags	flags;
+			1u,																// deUint32								viewportCount;
+			&viewport,														// const VkViewport*					pViewports;
+			1u,																// deUint32								scissorCount;
+			&scissor														// const VkRect2D*						pScissors;
+		};
+
+		const VkPipelineRasterizationStateCreateInfo rasterStateParams =
+		{
+			VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,		// VkStructureType							sType;
+			DE_NULL,														// const void*								pNext;
+			0u,																// VkPipelineRasterizationStateCreateFlags	flags;
+			false,															// VkBool32									depthClampEnable;
+			false,															// VkBool32									rasterizerDiscardEnable;
+			VK_POLYGON_MODE_FILL,											// VkPolygonMode							polygonMode;
+			VK_CULL_MODE_NONE,												// VkCullModeFlags							cullMode;
+			VK_FRONT_FACE_COUNTER_CLOCKWISE,								// VkFrontFace								frontFace;
+			VK_FALSE,														// VkBool32									depthBiasEnable;
+			0.0f,															// float									depthBiasConstantFactor;
+			0.0f,															// float									depthBiasClamp;
+			0.0f,															// float									depthBiasSlopeFactor;
+			1.0f,															// float									lineWidth;
+		};
 
 		const VkPipelineColorBlendAttachmentState colorBlendAttachmentState =
 		{
@@ -1144,29 +1194,77 @@ VertexInputInstance::VertexInputInstance (Context&												context,
 			{ 0.0f, 0.0f, 0.0f, 0.0f },									// float										blendConstants[4];
 		};
 
-		m_graphicsPipeline.setDefaultRasterizationState()
-						  .setDefaultDepthStencilState()
-						  .setDefaultMultisampleState()
-						  .setDefaultTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP)
-						  .setupVertexInputState(&vertexInputStateParams)
-						  .setupPreRasterizationShaderState(viewport,
-										scissor,
-										*m_pipelineLayout,
-										*m_renderPass,
-										0u,
-										*m_vertexShaderModule,
-										DE_NULL,
-										DE_NULL,
-										DE_NULL,
-										DE_NULL,
-										&specializationInfo)
-						  .setupFragmentShaderState(*m_pipelineLayout,
-										*m_renderPass,
-										0u,
-										*m_fragmentShaderModule)
-						  .setupFragmentOutputState(*m_renderPass, 0u, &colorBlendStateParams)
-						  .setMonolithicPipelineLayout(*m_pipelineLayout)
-						  .buildPipeline();
+		const VkPipelineMultisampleStateCreateInfo	multisampleStateParams	=
+		{
+			VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,	// VkStructureType							sType;
+			DE_NULL,													// const void*								pNext;
+			0u,															// VkPipelineMultisampleStateCreateFlags	flags;
+			VK_SAMPLE_COUNT_1_BIT,										// VkSampleCountFlagBits					rasterizationSamples;
+			false,														// VkBool32									sampleShadingEnable;
+			0.0f,														// float									minSampleShading;
+			DE_NULL,													// const VkSampleMask*						pSampleMask;
+			false,														// VkBool32									alphaToCoverageEnable;
+			false														// VkBool32									alphaToOneEnable;
+		};
+
+		VkPipelineDepthStencilStateCreateInfo depthStencilStateParams =
+		{
+			VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,	// VkStructureType							sType;
+			DE_NULL,													// const void*								pNext;
+			0u,															// VkPipelineDepthStencilStateCreateFlags	flags;
+			false,														// VkBool32									depthTestEnable;
+			false,														// VkBool32									depthWriteEnable;
+			VK_COMPARE_OP_LESS,											// VkCompareOp								depthCompareOp;
+			false,														// VkBool32									depthBoundsTestEnable;
+			false,														// VkBool32									stencilTestEnable;
+			// VkStencilOpState	front;
+			{
+				VK_STENCIL_OP_KEEP,		// VkStencilOp	failOp;
+				VK_STENCIL_OP_KEEP,		// VkStencilOp	passOp;
+				VK_STENCIL_OP_KEEP,		// VkStencilOp	depthFailOp;
+				VK_COMPARE_OP_NEVER,	// VkCompareOp	compareOp;
+				0u,						// deUint32		compareMask;
+				0u,						// deUint32		writeMask;
+				0u,						// deUint32		reference;
+			},
+			// VkStencilOpState	back;
+			{
+				VK_STENCIL_OP_KEEP,		// VkStencilOp	failOp;
+				VK_STENCIL_OP_KEEP,		// VkStencilOp	passOp;
+				VK_STENCIL_OP_KEEP,		// VkStencilOp	depthFailOp;
+				VK_COMPARE_OP_NEVER,	// VkCompareOp	compareOp;
+				0u,						// deUint32		compareMask;
+				0u,						// deUint32		writeMask;
+				0u,						// deUint32		reference;
+			},
+			0.0f,														// float			minDepthBounds;
+			1.0f,														// float			maxDepthBounds;
+		};
+
+		const VkGraphicsPipelineCreateInfo graphicsPipelineParams =
+		{
+			VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,	// VkStructureType									sType;
+			DE_NULL,											// const void*										pNext;
+			0u,													// VkPipelineCreateFlags							flags;
+			2u,													// deUint32											stageCount;
+			shaderStageParams,									// const VkPipelineShaderStageCreateInfo*			pStages;
+			&vertexInputStateParams,							// const VkPipelineVertexInputStateCreateInfo*		pVertexInputState;
+			&inputAssemblyStateParams,							// const VkPipelineInputAssemblyStateCreateInfo*	pInputAssemblyState;
+			DE_NULL,											// const VkPipelineTessellationStateCreateInfo*		pTessellationState;
+			&viewportStateParams,								// const VkPipelineViewportStateCreateInfo*			pViewportState;
+			&rasterStateParams,									// const VkPipelineRasterizationStateCreateInfo*	pRasterizationState;
+			&multisampleStateParams,							// const VkPipelineMultisampleStateCreateInfo*		pMultisampleState;
+			&depthStencilStateParams,							// const VkPipelineDepthStencilStateCreateInfo*		pDepthStencilState;
+			&colorBlendStateParams,								// const VkPipelineColorBlendStateCreateInfo*		pColorBlendState;
+			(const VkPipelineDynamicStateCreateInfo*)DE_NULL,	// const VkPipelineDynamicStateCreateInfo*			pDynamicState;
+			*m_pipelineLayout,									// VkPipelineLayout									layout;
+			*m_renderPass,										// VkRenderPass										renderPass;
+			0u,													// deUint32											subpass;
+			0u,													// VkPipeline										basePipelineHandle;
+			0u													// deInt32											basePipelineIndex;
+		};
+
+		m_graphicsPipeline	= createGraphicsPipeline(vk, vkDevice, DE_NULL, &graphicsPipelineParams);
 	}
 
 	// Create vertex buffer
@@ -1234,7 +1332,7 @@ VertexInputInstance::VertexInputInstance (Context&												context,
 
 		beginRenderPass(vk, *m_cmdBuffer, *m_renderPass, *m_framebuffer, makeRect2D(0, 0, m_renderSize.x(), m_renderSize.y()), attachmentClearValue);
 
-		vk.cmdBindPipeline(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline.getPipeline());
+		vk.cmdBindPipeline(*m_cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_graphicsPipeline);
 
 		std::vector<VkBuffer> vertexBuffers;
 		for (size_t bufferNdx = 0; bufferNdx < m_vertexBuffers.size(); bufferNdx++)
@@ -1659,7 +1757,7 @@ struct CompatibleFormats
 	std::vector<VkFormat>		compatibleVkFormats;
 };
 
-void createSingleAttributeCases (tcu::TestCaseGroup* singleAttributeTests, PipelineConstructionType pipelineConstructionType, VertexInputTest::GlslType glslType)
+void createSingleAttributeCases (tcu::TestCaseGroup* singleAttributeTests, VertexInputTest::GlslType glslType)
 {
 	const VkFormat vertexFormats[] =
 	{
@@ -1766,7 +1864,6 @@ void createSingleAttributeCases (tcu::TestCaseGroup* singleAttributeTests, Pipel
 			singleAttributeTests->addChild(new VertexInputTest(singleAttributeTests->getTestContext(),
 															   getAttributeInfoCaseName(attributeInfo),
 															   getAttributeInfoDescription(attributeInfo),
-															   pipelineConstructionType,
 															   std::vector<VertexInputTest::AttributeInfo>(1, attributeInfo),
 															   VertexInputTest::BINDING_MAPPING_ONE_TO_ONE,
 															   VertexInputTest::ATTRIBUTE_LAYOUT_INTERLEAVED));
@@ -1777,7 +1874,6 @@ void createSingleAttributeCases (tcu::TestCaseGroup* singleAttributeTests, Pipel
 			singleAttributeTests->addChild(new VertexInputTest(singleAttributeTests->getTestContext(),
 															   getAttributeInfoCaseName(attributeInfo),
 															   getAttributeInfoDescription(attributeInfo),
-															   pipelineConstructionType,
 															   std::vector<VertexInputTest::AttributeInfo>(1, attributeInfo),
 															   VertexInputTest::BINDING_MAPPING_ONE_TO_ONE,
 															   VertexInputTest::ATTRIBUTE_LAYOUT_INTERLEAVED));
@@ -1785,17 +1881,17 @@ void createSingleAttributeCases (tcu::TestCaseGroup* singleAttributeTests, Pipel
 	}
 }
 
-void createSingleAttributeTests (tcu::TestCaseGroup* singleAttributeTests, PipelineConstructionType pipelineConstructionType)
+void createSingleAttributeTests (tcu::TestCaseGroup* singleAttributeTests)
 {
 	for (int glslTypeNdx = 0; glslTypeNdx < VertexInputTest::GLSL_TYPE_COUNT; glslTypeNdx++)
 	{
 		VertexInputTest::GlslType glslType = (VertexInputTest::GlslType)glslTypeNdx;
-		addTestGroup(singleAttributeTests, VertexInputTest::s_glslTypeDescriptions[glslType].name, "", createSingleAttributeCases, pipelineConstructionType, glslType);
+		addTestGroup(singleAttributeTests, VertexInputTest::s_glslTypeDescriptions[glslType].name, "", createSingleAttributeCases, glslType);
 	}
 }
 
 // Create all unique GlslType combinations recursively
-void createMultipleAttributeCases (PipelineConstructionType pipelineConstructionType, deUint32 depth, deUint32 firstNdx, CompatibleFormats* compatibleFormats, de::Random& randomFunc, tcu::TestCaseGroup& testGroup, VertexInputTest::BindingMapping bindingMapping, VertexInputTest::AttributeLayout attributeLayout, VertexInputTest::LayoutSkip layoutSkip, VertexInputTest::LayoutOrder layoutOrder, const std::vector<VertexInputTest::AttributeInfo>& attributeInfos = std::vector<VertexInputTest::AttributeInfo>(0))
+void createMultipleAttributeCases (deUint32 depth, deUint32 firstNdx, CompatibleFormats* compatibleFormats, de::Random& randomFunc, tcu::TestCaseGroup& testGroup, VertexInputTest::BindingMapping bindingMapping, VertexInputTest::AttributeLayout attributeLayout, VertexInputTest::LayoutSkip layoutSkip, VertexInputTest::LayoutOrder layoutOrder, const std::vector<VertexInputTest::AttributeInfo>& attributeInfos = std::vector<VertexInputTest::AttributeInfo>(0))
 {
 	tcu::TestContext& testCtx = testGroup.getTestContext();
 
@@ -1826,7 +1922,7 @@ void createMultipleAttributeCases (PipelineConstructionType pipelineConstruction
 			const std::string caseName = VertexInputTest::s_glslTypeDescriptions[currentNdx].name;
 			const std::string caseDesc = getAttributeInfosDescription(newAttributeInfos);
 
-			testGroup.addChild(new VertexInputTest(testCtx, caseName, caseDesc, pipelineConstructionType, newAttributeInfos, bindingMapping, attributeLayout, layoutSkip, layoutOrder));
+			testGroup.addChild(new VertexInputTest(testCtx, caseName, caseDesc, newAttributeInfos, bindingMapping, attributeLayout, layoutSkip, layoutOrder));
 		}
 		// Add test group
 		else
@@ -1834,13 +1930,13 @@ void createMultipleAttributeCases (PipelineConstructionType pipelineConstruction
 			const std::string				name			= VertexInputTest::s_glslTypeDescriptions[currentNdx].name;
 			de::MovePtr<tcu::TestCaseGroup>	newTestGroup	(new tcu::TestCaseGroup(testCtx, name.c_str(), ""));
 
-			createMultipleAttributeCases(pipelineConstructionType, depth - 1u, currentNdx + 1u, compatibleFormats, randomFunc, *newTestGroup, bindingMapping, attributeLayout, layoutSkip, layoutOrder, newAttributeInfos);
+			createMultipleAttributeCases(depth - 1u, currentNdx + 1u, compatibleFormats, randomFunc, *newTestGroup, bindingMapping, attributeLayout, layoutSkip, layoutOrder, newAttributeInfos);
 			testGroup.addChild(newTestGroup.release());
 		}
 	}
 }
 
-void createMultipleAttributeTests (tcu::TestCaseGroup* multipleAttributeTests, PipelineConstructionType pipelineConstructionType)
+void createMultipleAttributeTests (tcu::TestCaseGroup* multipleAttributeTests)
 {
 	// Required vertex formats, unpacked
 	const VkFormat vertexFormats[] =
@@ -1912,7 +2008,7 @@ void createMultipleAttributeTests (tcu::TestCaseGroup* multipleAttributeTests, P
 		}
 	}
 
-	de::Random						randomFunc(102030);
+	de::Random                      randomFunc(102030);
 	tcu::TestContext&				testCtx = multipleAttributeTests->getTestContext();
 
 	for (deUint32 layoutSkipNdx = 0; layoutSkipNdx < DE_LENGTH_OF_ARRAY(layoutSkips); layoutSkipNdx++)
@@ -1927,9 +2023,9 @@ void createMultipleAttributeTests (tcu::TestCaseGroup* multipleAttributeTests, P
 		if (layoutSkip == VertexInputTest::LAYOUT_SKIP_ENABLED && layoutOrder == VertexInputTest::LAYOUT_ORDER_OUT_OF_ORDER)
 			continue;
 
-		createMultipleAttributeCases(pipelineConstructionType, 2u, 0u, compatibleFormats, randomFunc, *oneToOneAttributeTests,			VertexInputTest::BINDING_MAPPING_ONE_TO_ONE,	VertexInputTest::ATTRIBUTE_LAYOUT_INTERLEAVED, layoutSkip, layoutOrder);
-		createMultipleAttributeCases(pipelineConstructionType, 2u, 0u, compatibleFormats, randomFunc, *oneToManyAttributeTests,			VertexInputTest::BINDING_MAPPING_ONE_TO_MANY,	VertexInputTest::ATTRIBUTE_LAYOUT_INTERLEAVED, layoutSkip, layoutOrder);
-		createMultipleAttributeCases(pipelineConstructionType, 2u, 0u, compatibleFormats, randomFunc, *oneToManySequentialAttributeTests,	VertexInputTest::BINDING_MAPPING_ONE_TO_MANY,	VertexInputTest::ATTRIBUTE_LAYOUT_SEQUENTIAL, layoutSkip, layoutOrder);
+		createMultipleAttributeCases(2u, 0u, compatibleFormats, randomFunc, *oneToOneAttributeTests,			VertexInputTest::BINDING_MAPPING_ONE_TO_ONE,	VertexInputTest::ATTRIBUTE_LAYOUT_INTERLEAVED, layoutSkip, layoutOrder);
+		createMultipleAttributeCases(2u, 0u, compatibleFormats, randomFunc, *oneToManyAttributeTests,			VertexInputTest::BINDING_MAPPING_ONE_TO_MANY,	VertexInputTest::ATTRIBUTE_LAYOUT_INTERLEAVED, layoutSkip, layoutOrder);
+		createMultipleAttributeCases(2u, 0u, compatibleFormats, randomFunc, *oneToManySequentialAttributeTests,	VertexInputTest::BINDING_MAPPING_ONE_TO_MANY,	VertexInputTest::ATTRIBUTE_LAYOUT_SEQUENTIAL, layoutSkip, layoutOrder);
 
 		if (layoutSkip == VertexInputTest::LAYOUT_SKIP_ENABLED)
 		{
@@ -1973,7 +2069,7 @@ void createMultipleAttributeTests (tcu::TestCaseGroup* multipleAttributeTests, P
 	}
 }
 
-void createMaxAttributeTests (tcu::TestCaseGroup* maxAttributeTests, PipelineConstructionType pipelineConstructionType)
+void createMaxAttributeTests (tcu::TestCaseGroup* maxAttributeTests)
 {
 	// Required vertex formats, unpacked
 	const VkFormat					vertexFormats[]		=
@@ -2061,9 +2157,9 @@ void createMaxAttributeTests (tcu::TestCaseGroup* maxAttributeTests, PipelineCon
 			attributeInfos[attributeNdx].vkType			= format;
 		}
 
-		bindingOneToOneTests->addChild(new VertexInputTest(testCtx, "interleaved", "Interleaved attribute layout", pipelineConstructionType, attributeInfos, VertexInputTest::BINDING_MAPPING_ONE_TO_ONE, VertexInputTest::ATTRIBUTE_LAYOUT_INTERLEAVED));
-		bindingOneToManyTests->addChild(new VertexInputTest(testCtx, "interleaved", "Interleaved attribute layout", pipelineConstructionType, attributeInfos, VertexInputTest::BINDING_MAPPING_ONE_TO_MANY, VertexInputTest::ATTRIBUTE_LAYOUT_INTERLEAVED));
-		bindingOneToManyTests->addChild(new VertexInputTest(testCtx, "sequential", "Sequential attribute layout", pipelineConstructionType, attributeInfos, VertexInputTest::BINDING_MAPPING_ONE_TO_MANY, VertexInputTest::ATTRIBUTE_LAYOUT_SEQUENTIAL));
+		bindingOneToOneTests->addChild(new VertexInputTest(testCtx, "interleaved", "Interleaved attribute layout", attributeInfos, VertexInputTest::BINDING_MAPPING_ONE_TO_ONE, VertexInputTest::ATTRIBUTE_LAYOUT_INTERLEAVED));
+		bindingOneToManyTests->addChild(new VertexInputTest(testCtx, "interleaved", "Interleaved attribute layout", attributeInfos, VertexInputTest::BINDING_MAPPING_ONE_TO_MANY, VertexInputTest::ATTRIBUTE_LAYOUT_INTERLEAVED));
+		bindingOneToManyTests->addChild(new VertexInputTest(testCtx, "sequential", "Sequential attribute layout", attributeInfos, VertexInputTest::BINDING_MAPPING_ONE_TO_MANY, VertexInputTest::ATTRIBUTE_LAYOUT_SEQUENTIAL));
 
 		numAttributeTests->addChild(bindingOneToOneTests.release());
 		numAttributeTests->addChild(bindingOneToManyTests.release());
@@ -2073,11 +2169,11 @@ void createMaxAttributeTests (tcu::TestCaseGroup* maxAttributeTests, PipelineCon
 
 } // anonymous
 
-void createVertexInputTests (tcu::TestCaseGroup* vertexInputTests, PipelineConstructionType pipelineConstructionType)
+void createVertexInputTests (tcu::TestCaseGroup* vertexInputTests)
 {
-	addTestGroup(vertexInputTests, "single_attribute", "Uses one attribute", createSingleAttributeTests, pipelineConstructionType);
-	addTestGroup(vertexInputTests, "multiple_attributes", "Uses more than one attribute", createMultipleAttributeTests, pipelineConstructionType);
-	addTestGroup(vertexInputTests, "max_attributes", "Implementations can use as many vertex input attributes as they advertise", createMaxAttributeTests, pipelineConstructionType);
+	addTestGroup(vertexInputTests, "single_attribute", "Uses one attribute", createSingleAttributeTests);
+	addTestGroup(vertexInputTests, "multiple_attributes", "Uses more than one attribute", createMultipleAttributeTests);
+	addTestGroup(vertexInputTests, "max_attributes", "Implementations can use as many vertex input attributes as they advertise", createMaxAttributeTests);
 }
 
 } // pipeline

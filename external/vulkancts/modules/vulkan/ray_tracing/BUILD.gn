@@ -41,10 +41,6 @@ ohos_source_set("deqp_vk_ray_tracing_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingMiscTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingNonUniformArgsTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingNullASTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingOpacityMicromapTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingOpacityMicromapTests.hpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingPipelineFlagsTests.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingPipelineFlagsTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingPipelineLibraryTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingProceduralGeometryTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingShaderBindingTableTests.cpp",
@@ -60,9 +56,11 @@ ohos_source_set("deqp_vk_ray_tracing_source") {
     #"//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber",
   ]
 
-  deps = []
-  part_name = "acts"
-  subsystem_name = "xts"
+  deps = [
+    #"//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
+    #"//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",
+  ]
+
   configs = [ ":deqp_vk_ray_tracing_config" ]
 }
 ohos_static_library("libdeqp_vk_ray_tracing") {

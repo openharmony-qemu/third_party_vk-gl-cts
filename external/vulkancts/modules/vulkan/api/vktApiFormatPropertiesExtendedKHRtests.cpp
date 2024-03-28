@@ -28,9 +28,6 @@
 #include "vktTestGroupUtil.hpp"
 #include "vkStrUtil.hpp"
 
-#include <iostream>
-#include <iomanip>
-
 namespace
 {
 using namespace vk;
@@ -43,29 +40,17 @@ void checkSupport (Context& context, const VkFormat format)
 	context.requireInstanceFunctionality(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 }
 
-void checkFlags (VkFlags64 reportedFlags, VkFlags64 requestedFlags, const char* setName)
-{
-	const auto andMask = (reportedFlags & requestedFlags);
-	if (andMask != requestedFlags)
-	{
-		// Find which bits are missing.
-		const auto missingBits = (andMask ^ requestedFlags);
-		std::ostringstream msg;
-		msg << setName << ": missing flags 0x" << std::hex << std::setw(16) << std::setfill('0') << missingBits;
-		TCU_FAIL(msg.str());
-	}
-}
-
 tcu::TestStatus test (Context& context, const VkFormat format)
 {
-	const VkFormatProperties3 formatProperties (context.getFormatProperties(format));
-	const VkFormatProperties3 requiredProperties (context.getRequiredFormatProperties(format));
+	const VkFormatProperties3KHR formatProperties (context.getFormatProperties(format));
+	const VkFormatProperties3KHR requiredProperties (context.getRequiredFormatProperties(format));
 
-	checkFlags(formatProperties.bufferFeatures, requiredProperties.bufferFeatures, "Buffer features");
-	checkFlags(formatProperties.linearTilingFeatures, requiredProperties.linearTilingFeatures, "Linear tiling features");
-	checkFlags(formatProperties.optimalTilingFeatures, requiredProperties.optimalTilingFeatures, "Optimal tiling features");
+	bool allPass = true;
+	allPass = allPass && ((formatProperties.bufferFeatures			& requiredProperties.bufferFeatures) == requiredProperties.bufferFeatures);
+	allPass = allPass && ((formatProperties.linearTilingFeatures	& requiredProperties.linearTilingFeatures) == requiredProperties.linearTilingFeatures);
+	allPass = allPass && ((formatProperties.optimalTilingFeatures	& requiredProperties.optimalTilingFeatures) == requiredProperties.optimalTilingFeatures);
 
-	return tcu::TestStatus::pass("Pass");
+	return allPass ? tcu::TestStatus::pass("") : tcu::TestStatus::fail("");
 }
 
 void createTestCases (tcu::TestCaseGroup* group)

@@ -100,7 +100,7 @@ SamplerType getFetchSamplerType (tcu::TextureFormat format)
 	}
 }
 
-static tcu::Texture1DView getSubView (const tcu::Texture1DView& view, int baseLevel, int maxLevel, tcu::ImageViewMinLodParams* minLodParams DE_UNUSED_ATTR)
+static tcu::Texture1DView getSubView (const tcu::Texture1DView& view, int baseLevel, int maxLevel)
 {
 	const int	clampedBase	= de::clamp(baseLevel, 0, view.getNumLevels()-1);
 	const int	clampedMax	= de::clamp(maxLevel, clampedBase, view.getNumLevels()-1);
@@ -108,15 +108,15 @@ static tcu::Texture1DView getSubView (const tcu::Texture1DView& view, int baseLe
 	return tcu::Texture1DView(numLevels, view.getLevels()+clampedBase);
 }
 
-static tcu::Texture2DView getSubView (const tcu::Texture2DView& view, int baseLevel, int maxLevel, tcu::ImageViewMinLodParams* minLodParams = DE_NULL)
+static tcu::Texture2DView getSubView (const tcu::Texture2DView& view, int baseLevel, int maxLevel)
 {
 	const int	clampedBase	= de::clamp(baseLevel, 0, view.getNumLevels()-1);
 	const int	clampedMax	= de::clamp(maxLevel, clampedBase, view.getNumLevels()-1);
 	const int	numLevels	= clampedMax-clampedBase+1;
-	return tcu::Texture2DView(numLevels, view.getLevels()+clampedBase, view.isES2(), minLodParams);
+	return tcu::Texture2DView(numLevels, view.getLevels()+clampedBase, view.isES2());
 }
 
-static tcu::TextureCubeView getSubView (const tcu::TextureCubeView& view, int baseLevel, int maxLevel, tcu::ImageViewMinLodParams* minLodParams = DE_NULL)
+static tcu::TextureCubeView getSubView (const tcu::TextureCubeView& view, int baseLevel, int maxLevel)
 {
 	const int							clampedBase	= de::clamp(baseLevel, 0, view.getNumLevels()-1);
 	const int							clampedMax	= de::clamp(maxLevel, clampedBase, view.getNumLevels()-1);
@@ -126,18 +126,18 @@ static tcu::TextureCubeView getSubView (const tcu::TextureCubeView& view, int ba
 	for (int face = 0; face < tcu::CUBEFACE_LAST; face++)
 		levels[face] = view.getFaceLevels((tcu::CubeFace)face) + clampedBase;
 
-	return tcu::TextureCubeView(numLevels, levels, false, minLodParams);
+	return tcu::TextureCubeView(numLevels, levels);
 }
 
-static tcu::Texture3DView getSubView (const tcu::Texture3DView& view, int baseLevel, int maxLevel, tcu::ImageViewMinLodParams* minLodParams = DE_NULL)
+static tcu::Texture3DView getSubView (const tcu::Texture3DView& view, int baseLevel, int maxLevel)
 {
 	const int	clampedBase	= de::clamp(baseLevel, 0, view.getNumLevels()-1);
 	const int	clampedMax	= de::clamp(maxLevel, clampedBase, view.getNumLevels()-1);
 	const int	numLevels	= clampedMax-clampedBase+1;
-	return tcu::Texture3DView(numLevels, view.getLevels()+clampedBase, false, minLodParams);
+	return tcu::Texture3DView(numLevels, view.getLevels()+clampedBase);
 }
 
-static tcu::TextureCubeArrayView getSubView (const tcu::TextureCubeArrayView& view, int baseLevel, int maxLevel, tcu::ImageViewMinLodParams* minLodParams DE_UNUSED_ATTR = DE_NULL)
+static tcu::TextureCubeArrayView getSubView (const tcu::TextureCubeArrayView& view, int baseLevel, int maxLevel)
 {
 	const int	clampedBase	= de::clamp(baseLevel, 0, view.getNumLevels()-1);
 	const int	clampedMax	= de::clamp(maxLevel, clampedBase, view.getNumLevels()-1);
@@ -429,7 +429,7 @@ static void sampleTextureNonProjected (const PixelAccess& dst, const tcu::Textur
 {
 	// Separate combined DS formats
 	std::vector<tcu::ConstPixelBufferAccess>	srcLevelStorage;
-	tcu::Texture2DView							src					= getEffectiveTextureView(rawSrc, srcLevelStorage, params.sampler);
+	const tcu::Texture2DView					src					= getEffectiveTextureView(rawSrc, srcLevelStorage, params.sampler);
 
 	float										lodBias				= (params.flags & ReferenceParams::USE_BIAS) ? params.bias : 0.0f;
 
@@ -456,9 +456,6 @@ static void sampleTextureNonProjected (const PixelAccess& dst, const tcu::Textur
 			float	s		= triangleInterpolate(triS[triNdx].x(), triS[triNdx].y(), triS[triNdx].z(), triX, triY);
 			float	t		= triangleInterpolate(triT[triNdx].x(), triT[triNdx].y(), triT[triNdx].z(), triX, triY);
 			float	lod		= triLod[triNdx];
-
-			if (params.imageViewMinLod != 0.0f && params.samplerType == SAMPLERTYPE_FETCH_FLOAT)
-				lod = (float)params.lodTexelFetch;
 
 			if (params.float16TexCoord)
 			{
@@ -558,17 +555,7 @@ static void sampleTextureProjected (const PixelAccess& dst, const tcu::Texture2D
 
 void sampleTexture (const tcu::PixelBufferAccess& dst, const tcu::Texture2DView& src, const float* texCoord, const ReferenceParams& params)
 {
-	tcu::ImageViewMinLodParams	minLodParams =
-	{
-		params.baseLevel,								// int		baseLevel;
-		{
-			params.imageViewMinLod,							// float	minLod;
-			params.imageViewMinLodMode,						// ImageViewMinLodMode
-		},
-		params.samplerType == SAMPLERTYPE_FETCH_FLOAT	// bool	intTexCoord;
-	};
-
-	const tcu::Texture2DView	view	= getSubView(src, params.baseLevel, params.maxLevel, params.imageViewMinLod != 0.0f ? &minLodParams : DE_NULL);
+	const tcu::Texture2DView	view	= getSubView(src, params.baseLevel, params.maxLevel);
 	const tcu::Vec4				sq		= tcu::Vec4(texCoord[0+0], texCoord[2+0], texCoord[4+0], texCoord[6+0]);
 	const tcu::Vec4				tq		= tcu::Vec4(texCoord[0+1], texCoord[2+1], texCoord[4+1], texCoord[6+1]);
 
@@ -580,17 +567,7 @@ void sampleTexture (const tcu::PixelBufferAccess& dst, const tcu::Texture2DView&
 
 void sampleTexture (const tcu::SurfaceAccess& dst, const tcu::Texture2DView& src, const float* texCoord, const ReferenceParams& params)
 {
-	tcu::ImageViewMinLodParams	minLodParams =
-	{
-		params.baseLevel,								// int		baseLevel;
-		{
-			params.imageViewMinLod,							// float	minLod;
-			params.imageViewMinLodMode,						// ImageViewMinLodMode
-		},
-		params.samplerType == SAMPLERTYPE_FETCH_FLOAT	// bool		intTexCoord;
-	};
-
-	const tcu::Texture2DView	view	= getSubView(src, params.baseLevel, params.maxLevel, params.imageViewMinLod != 0.0f ? &minLodParams : DE_NULL);
+	const tcu::Texture2DView	view	= getSubView(src, params.baseLevel, params.maxLevel);
 	const tcu::Vec4				sq		= tcu::Vec4(texCoord[0+0], texCoord[2+0], texCoord[4+0], texCoord[6+0]);
 	const tcu::Vec4				tq		= tcu::Vec4(texCoord[0+1], texCoord[2+1], texCoord[4+1], texCoord[6+1]);
 
@@ -602,7 +579,7 @@ void sampleTexture (const tcu::SurfaceAccess& dst, const tcu::Texture2DView& src
 
 void sampleTexture (const tcu::SurfaceAccess& dst, const tcu::Texture1DView& src, const float* texCoord, const ReferenceParams& params)
 {
-	const tcu::Texture1DView	view	= getSubView(src, params.baseLevel, params.maxLevel, DE_NULL);
+	const tcu::Texture1DView	view	= getSubView(src, params.baseLevel, params.maxLevel);
 	const tcu::Vec4				sq		= tcu::Vec4(texCoord[0], texCoord[1], texCoord[2], texCoord[3]);
 
 	if (params.flags & ReferenceParams::PROJECTED)
@@ -701,17 +678,7 @@ static void sampleTextureCube (const tcu::SurfaceAccess& dst, const tcu::Texture
 
 void sampleTexture (const tcu::SurfaceAccess& dst, const tcu::TextureCubeView& src, const float* texCoord, const ReferenceParams& params)
 {
-	tcu::ImageViewMinLodParams	minLodParams =
-	{
-		params.baseLevel,								// int		baseLevel;
-		{
-			params.imageViewMinLod,							// float	minLod;
-			params.imageViewMinLodMode,						// ImageViewMinLodMode
-		},
-		params.samplerType == SAMPLERTYPE_FETCH_FLOAT	// bool	intTexCoord;
-	};
-
-	const tcu::TextureCubeView	view	= getSubView(src, params.baseLevel, params.maxLevel, params.imageViewMinLod != 0.0f ? &minLodParams : DE_NULL);
+	const tcu::TextureCubeView	view	= getSubView(src, params.baseLevel, params.maxLevel);
 	const tcu::Vec4				sq		= tcu::Vec4(texCoord[0+0], texCoord[3+0], texCoord[6+0], texCoord[9+0]);
 	const tcu::Vec4				tq		= tcu::Vec4(texCoord[0+1], texCoord[3+1], texCoord[6+1], texCoord[9+1]);
 	const tcu::Vec4				rq		= tcu::Vec4(texCoord[0+2], texCoord[3+2], texCoord[6+2], texCoord[9+2]);
@@ -848,9 +815,6 @@ static void sampleTextureNonProjected (const tcu::SurfaceAccess& dst, const tcu:
 			float	r		= triangleInterpolate(triR[triNdx].x(), triR[triNdx].y(), triR[triNdx].z(), triX, triY);
 			float	lod		= triLod[triNdx];
 
-			if (params.imageViewMinLod != 0.0f && params.samplerType == SAMPLERTYPE_FETCH_FLOAT)
-				lod = (float)params.lodTexelFetch;
-
 			dst.setPixel(src.sample(params.sampler, s, t, r, lod) * params.colorScale + params.colorBias, x, y);
 		}
 	}
@@ -906,17 +870,7 @@ static void sampleTextureProjected (const tcu::SurfaceAccess& dst, const tcu::Te
 
 void sampleTexture (const tcu::SurfaceAccess& dst, const tcu::Texture3DView& src, const float* texCoord, const ReferenceParams& params)
 {
-	tcu::ImageViewMinLodParams	minLodParams =
-	{
-		params.baseLevel,								// int		baseLevel;
-		{
-			params.imageViewMinLod,							// float	minLod;
-			params.imageViewMinLodMode,						// ImageViewMinLodMode
-		},
-		params.samplerType == SAMPLERTYPE_FETCH_FLOAT	// bool	intTexCoord;
-	};
-
-	const tcu::Texture3DView	view	= getSubView(src, params.baseLevel, params.maxLevel, params.imageViewMinLod != 0.0f ? &minLodParams : DE_NULL);
+	const tcu::Texture3DView	view	= getSubView(src, params.baseLevel, params.maxLevel);
 	const tcu::Vec4				sq		= tcu::Vec4(texCoord[0+0], texCoord[3+0], texCoord[6+0], texCoord[9+0]);
 	const tcu::Vec4				tq		= tcu::Vec4(texCoord[0+1], texCoord[3+1], texCoord[6+1], texCoord[9+1]);
 	const tcu::Vec4				rq		= tcu::Vec4(texCoord[0+2], texCoord[3+2], texCoord[6+2], texCoord[9+2]);
@@ -1302,7 +1256,7 @@ int computeTextureLookupDiff (const tcu::ConstPixelBufferAccess&	result,
 	DE_ASSERT(result.getWidth() == errorMask.getWidth() && result.getHeight() == errorMask.getHeight());
 
 	std::vector<tcu::ConstPixelBufferAccess>	srcLevelStorage;
-	const tcu::Texture1DView					src					= getEffectiveTextureView(getSubView(baseView, sampleParams.baseLevel, sampleParams.maxLevel, DE_NULL), srcLevelStorage, sampleParams.sampler);
+	const tcu::Texture1DView					src					= getEffectiveTextureView(getSubView(baseView, sampleParams.baseLevel, sampleParams.maxLevel), srcLevelStorage, sampleParams.sampler);
 
 	const tcu::Vec4								sq					= tcu::Vec4(texCoord[0], texCoord[1], texCoord[2], texCoord[3]);
 
@@ -1405,19 +1359,7 @@ int computeTextureLookupDiff (const tcu::ConstPixelBufferAccess&	result,
 	DE_ASSERT(result.getWidth() == errorMask.getWidth() && result.getHeight() == errorMask.getHeight());
 
 	std::vector<tcu::ConstPixelBufferAccess>	srcLevelStorage;
-	tcu::ImageViewMinLodParams	minLodParams =
-	{
-		sampleParams.baseLevel,								// int		baseLevel;
-		{
-			sampleParams.imageViewMinLod,							// float	minLod;
-			sampleParams.imageViewMinLodMode,						// ImageViewMinLodMode
-		},
-		sampleParams.samplerType == SAMPLERTYPE_FETCH_FLOAT	// bool	intTexCoord;
-	};
-
-	const tcu::Texture2DView					view				= getSubView(baseView, sampleParams.baseLevel, sampleParams.maxLevel, sampleParams.imageViewMinLod != 0.0f ? &minLodParams : DE_NULL);
-
-	const tcu::Texture2DView					src					= getEffectiveTextureView(view, srcLevelStorage, sampleParams.sampler);
+	const tcu::Texture2DView					src					= getEffectiveTextureView(getSubView(baseView, sampleParams.baseLevel, sampleParams.maxLevel), srcLevelStorage, sampleParams.sampler);
 
 	const tcu::Vec4								sq					= tcu::Vec4(texCoord[0+0], texCoord[2+0], texCoord[4+0], texCoord[6+0]);
 	const tcu::Vec4								tq					= tcu::Vec4(texCoord[0+1], texCoord[2+1], texCoord[4+1], texCoord[6+1]);
@@ -1433,13 +1375,6 @@ int computeTextureLookupDiff (const tcu::ConstPixelBufferAccess&	result,
 	const tcu::Vec3								triW[2]				= { sampleParams.w.swizzle(0, 1, 2), sampleParams.w.swizzle(3, 2, 1) };
 
 	const tcu::Vec2								lodBias				((sampleParams.flags & ReferenceParams::USE_BIAS) ? sampleParams.bias : 0.0f);
-
-	// imageViewMinLodRel is used to calculate the image level to sample from, when VK_EXT_image_view_min_lod extension is enabled.
-	// The value is relative to baseLevel as the Texture*View 'src' was created as the baseLevel being level[0].
-	const float									imageViewMinLodRel	= sampleParams.imageViewMinLod - (float)sampleParams.baseLevel;
-	// We need to adapt ImageView's minLod value to the mipmap mdoe (i.e. nearest or linear) so we clamp with the right minLod value later.
-	const float									imageViewMinLodRelMode = tcu::isSamplerMipmapModeLinear(sampleParams.sampler.minFilter) ? deFloatFloor(imageViewMinLodRel) : (float)deClamp32((int)deFloatCeil(imageViewMinLodRel + 0.5f) - 1, sampleParams.baseLevel, sampleParams.maxLevel);
-	const float									minLod				= (sampleParams.imageViewMinLod != 0.0f) ? de::max(imageViewMinLodRelMode, sampleParams.minLod) : sampleParams.minLod;
 
 	const float									posEps				= 1.0f / float(1<<MIN_SUBPIXEL_BITS);
 
@@ -1516,7 +1451,7 @@ int computeTextureLookupDiff (const tcu::ConstPixelBufferAccess&	result,
 						lodBounds.y() = de::max(lodBounds.y(), lodO.y());
 					}
 
-					const tcu::Vec2	clampedLod	= tcu::clampLodBounds(lodBounds + lodBias, tcu::Vec2(minLod, sampleParams.maxLod), lodPrec);
+					const tcu::Vec2	clampedLod	= tcu::clampLodBounds(lodBounds + lodBias, tcu::Vec2(sampleParams.minLod, sampleParams.maxLod), lodPrec);
 					if (tcu::isLookupResultValid(src, sampleParams.sampler, lookupPrec, coord, clampedLod, resPix))
 					{
 						isOk = true;
@@ -1623,17 +1558,7 @@ int computeTextureLookupDiff (const tcu::ConstPixelBufferAccess&	result,
 	DE_ASSERT(result.getWidth() == errorMask.getWidth() && result.getHeight() == errorMask.getHeight());
 
 	std::vector<tcu::ConstPixelBufferAccess>	srcLevelStorage;
-	tcu::ImageViewMinLodParams	minLodParams =
-	{
-		sampleParams.baseLevel,								// int		baseLevel;
-		{
-			sampleParams.imageViewMinLod,					// float	minLod;
-			sampleParams.imageViewMinLodMode,				// ImageViewMinLodMode
-		},
-		sampleParams.samplerType == SAMPLERTYPE_FETCH_FLOAT	// bool	intTexCoord;
-	};
-
-	const tcu::TextureCubeView					src					= getEffectiveTextureView(getSubView(baseView, sampleParams.baseLevel, sampleParams.maxLevel, sampleParams.imageViewMinLod != 0.0f ? &minLodParams : DE_NULL), srcLevelStorage, sampleParams.sampler);
+	const tcu::TextureCubeView					src					= getEffectiveTextureView(getSubView(baseView, sampleParams.baseLevel, sampleParams.maxLevel), srcLevelStorage, sampleParams.sampler);
 
 	const tcu::Vec4								sq					= tcu::Vec4(texCoord[0+0], texCoord[3+0], texCoord[6+0], texCoord[9+0]);
 	const tcu::Vec4								tq					= tcu::Vec4(texCoord[0+1], texCoord[3+1], texCoord[6+1], texCoord[9+1]);
@@ -1653,13 +1578,6 @@ int computeTextureLookupDiff (const tcu::ConstPixelBufferAccess&	result,
 	const tcu::Vec2								lodBias				((sampleParams.flags & ReferenceParams::USE_BIAS) ? sampleParams.bias : 0.0f);
 
 	const float									posEps				= 1.0f / float(1<<MIN_SUBPIXEL_BITS);
-
-	// imageViewMinLodRel is used to calculate the image level to sample from, when VK_EXT_image_view_min_lod extension is enabled.
-	// The value is relative to baseLevel as the Texture*View 'src' was created as the baseLevel being level[0].
-	const float									imageViewMinLodRel	= sampleParams.imageViewMinLod - (float)sampleParams.baseLevel;
-	// We need to adapt ImageView's minLod value to the mipmap mdoe (i.e. nearest or linear) so we clamp with the right minLod value later.
-	const float									imageViewMinLodRelMode = tcu::isSamplerMipmapModeLinear(sampleParams.sampler.minFilter) ? deFloatFloor(imageViewMinLodRel) : (float)deClamp32((int)deFloatCeil(imageViewMinLodRel + 0.5f) - 1, sampleParams.baseLevel, sampleParams.maxLevel);
-	const float									minLod				= (sampleParams.imageViewMinLod != 0.0f) ? de::max(imageViewMinLodRelMode, sampleParams.minLod) : sampleParams.minLod;
 
 	int											numFailed			= 0;
 
@@ -1748,7 +1666,7 @@ int computeTextureLookupDiff (const tcu::ConstPixelBufferAccess&	result,
 						lodBounds.y() = de::max(lodBounds.y(), lodO.y());
 					}
 
-					const tcu::Vec2	clampedLod	= tcu::clampLodBounds(lodBounds + lodBias, tcu::Vec2(minLod, sampleParams.maxLod), lodPrec);
+					const tcu::Vec2	clampedLod	= tcu::clampLodBounds(lodBounds + lodBias, tcu::Vec2(sampleParams.minLod, sampleParams.maxLod), lodPrec);
 
 					if (tcu::isLookupResultValid(src, sampleParams.sampler, lookupPrec, coord, clampedLod, resPix))
 					{
@@ -1820,17 +1738,7 @@ int computeTextureLookupDiff (const tcu::ConstPixelBufferAccess&	result,
 	DE_ASSERT(result.getWidth() == errorMask.getWidth() && result.getHeight() == errorMask.getHeight());
 
 	std::vector<tcu::ConstPixelBufferAccess>	srcLevelStorage;
-	tcu::ImageViewMinLodParams	minLodParams =
-	{
-		sampleParams.baseLevel,									// int		baseLevel;
-		{
-			sampleParams.imageViewMinLod,						// float	minLod;
-			sampleParams.imageViewMinLodMode,					// ImageViewMinLodMode
-		},
-		sampleParams.samplerType == SAMPLERTYPE_FETCH_FLOAT		// bool	intTexCoord;
-	};
-
-	const tcu::Texture3DView					src					= getEffectiveTextureView(getSubView(baseView, sampleParams.baseLevel, sampleParams.maxLevel, sampleParams.imageViewMinLod != 0.0f ? &minLodParams : DE_NULL), srcLevelStorage, sampleParams.sampler);
+	const tcu::Texture3DView					src					= getEffectiveTextureView(getSubView(baseView, sampleParams.baseLevel, sampleParams.maxLevel), srcLevelStorage, sampleParams.sampler);
 
 	const tcu::Vec4								sq					= tcu::Vec4(texCoord[0+0], texCoord[3+0], texCoord[6+0], texCoord[9+0]);
 	const tcu::Vec4								tq					= tcu::Vec4(texCoord[0+1], texCoord[3+1], texCoord[6+1], texCoord[9+1]);
@@ -1848,13 +1756,6 @@ int computeTextureLookupDiff (const tcu::ConstPixelBufferAccess&	result,
 	const tcu::Vec3								triW[2]				= { sampleParams.w.swizzle(0, 1, 2), sampleParams.w.swizzle(3, 2, 1) };
 
 	const tcu::Vec2								lodBias				((sampleParams.flags & ReferenceParams::USE_BIAS) ? sampleParams.bias : 0.0f);
-
-	// imageViewMinLodRel is used to calculate the image level to sample from, when VK_EXT_image_view_min_lod extension is enabled.
-	// The value is relative to baseLevel as the Texture*View 'src' was created as the baseLevel being level[0].
-	const float									imageViewMinLodRel	= sampleParams.imageViewMinLod - (float)sampleParams.baseLevel;
-	// We need to adapt ImageView's minLod value to the mipmap mdoe (i.e. nearest or linear) so we clamp with the right minLod value later.
-	const float									imageViewMinLodRelMode = tcu::isSamplerMipmapModeLinear(sampleParams.sampler.minFilter) ? deFloatFloor(imageViewMinLodRel) : (float)deClamp32((int)deFloatCeil(imageViewMinLodRel + 0.5f) - 1, sampleParams.baseLevel, sampleParams.maxLevel);
-	const float									minLod				= (sampleParams.imageViewMinLod != 0.0f) ? de::max(imageViewMinLodRelMode, sampleParams.minLod) : sampleParams.minLod;
 
 	const float									posEps				= 1.0f / float(1<<MIN_SUBPIXEL_BITS);
 
@@ -1936,7 +1837,7 @@ int computeTextureLookupDiff (const tcu::ConstPixelBufferAccess&	result,
 						lodBounds.y() = de::max(lodBounds.y(), lodO.y());
 					}
 
-					const tcu::Vec2	clampedLod	= tcu::clampLodBounds(lodBounds + lodBias, tcu::Vec2(minLod, sampleParams.maxLod), lodPrec);
+					const tcu::Vec2	clampedLod	= tcu::clampLodBounds(lodBounds + lodBias, tcu::Vec2(sampleParams.minLod, sampleParams.maxLod), lodPrec);
 
 					if (tcu::isLookupResultValid(src, sampleParams.sampler, lookupPrec, coord, clampedLod, resPix))
 					{
@@ -2302,17 +2203,7 @@ int computeTextureLookupDiff (const tcu::ConstPixelBufferAccess&	result,
 	DE_ASSERT(result.getWidth() == errorMask.getWidth() && result.getHeight() == errorMask.getHeight());
 
 	std::vector<tcu::ConstPixelBufferAccess>	srcLevelStorage;
-	tcu::ImageViewMinLodParams	minLodParams =
-	{
-		sampleParams.baseLevel,									// int		baseLevel;
-		{
-			sampleParams.imageViewMinLod,							// float	minLod;
-			sampleParams.imageViewMinLodMode,						// ImageViewMinLodMode
-		},
-		sampleParams.samplerType == SAMPLERTYPE_FETCH_FLOAT		// bool	intTexCoord;
-	};
-
-	const tcu::TextureCubeArrayView				src					= getEffectiveTextureView(getSubView(baseView, sampleParams.baseLevel, sampleParams.maxLevel, sampleParams.imageViewMinLod != 0.0f ? &minLodParams : DE_NULL), srcLevelStorage, sampleParams.sampler);
+	const tcu::TextureCubeArrayView				src					= getEffectiveTextureView(getSubView(baseView, sampleParams.baseLevel, sampleParams.maxLevel), srcLevelStorage, sampleParams.sampler);
 
 	const tcu::Vec4								sq					= tcu::Vec4(texCoord[0+0], texCoord[4+0], texCoord[8+0], texCoord[12+0]);
 	const tcu::Vec4								tq					= tcu::Vec4(texCoord[0+1], texCoord[4+1], texCoord[8+1], texCoord[12+1]);
@@ -2511,8 +2402,6 @@ int computeTextureCompareDiff (const tcu::ConstPixelBufferAccess&	result,
 
 	const tcu::Vec2		lodBias			((sampleParams.flags & ReferenceParams::USE_BIAS) ? sampleParams.bias : 0.0f);
 
-	const float			minLod			= (sampleParams.imageViewMinLod != 0.0f) ? de::max(deFloatFloor(sampleParams.imageViewMinLod), sampleParams.minLod) : sampleParams.minLod;
-
 	int					numFailed		= 0;
 
 	const tcu::Vec2 lodOffsets[] =
@@ -2582,7 +2471,7 @@ int computeTextureCompareDiff (const tcu::ConstPixelBufferAccess&	result,
 					lodBounds.y() = de::max(lodBounds.y(), lodO.y());
 				}
 
-				const tcu::Vec2	clampedLod	= tcu::clampLodBounds(lodBounds + lodBias, tcu::Vec2(minLod, sampleParams.maxLod), lodPrec);
+				const tcu::Vec2	clampedLod	= tcu::clampLodBounds(lodBounds + lodBias, tcu::Vec2(sampleParams.minLod, sampleParams.maxLod), lodPrec);
 				const bool		isOk		= tcu::isTexCompareResultValid(src, sampleParams.sampler, comparePrec, coord, clampedLod, sampleParams.ref, resPix.x());
 
 				if (!isOk)
@@ -2626,8 +2515,6 @@ int computeTextureCompareDiff (const tcu::ConstPixelBufferAccess&	result,
 	const tcu::Vec3		triW[2]			= { sampleParams.w.swizzle(0, 1, 2), sampleParams.w.swizzle(3, 2, 1) };
 
 	const tcu::Vec2		lodBias			((sampleParams.flags & ReferenceParams::USE_BIAS) ? sampleParams.bias : 0.0f);
-
-	const float			minLod			= (sampleParams.imageViewMinLod != 0.0f) ? de::max(deFloatFloor(sampleParams.imageViewMinLod), sampleParams.minLod) : sampleParams.minLod;
 
 	int					numFailed		= 0;
 
@@ -2706,7 +2593,7 @@ int computeTextureCompareDiff (const tcu::ConstPixelBufferAccess&	result,
 					lodBounds.y() = de::max(lodBounds.y(), lodO.y());
 				}
 
-				const tcu::Vec2	clampedLod	= tcu::clampLodBounds(lodBounds + lodBias, tcu::Vec2(minLod, sampleParams.maxLod), lodPrec);
+				const tcu::Vec2	clampedLod	= tcu::clampLodBounds(lodBounds + lodBias, tcu::Vec2(sampleParams.minLod, sampleParams.maxLod), lodPrec);
 				const bool		isOk		= tcu::isTexCompareResultValid(src, sampleParams.sampler, comparePrec, coord, clampedLod, sampleParams.ref, resPix.x());
 
 				if (!isOk)

@@ -42,7 +42,6 @@
 #include "vkImageUtil.hpp"
 #include "vkPrograms.hpp"
 #include "vkQueryUtil.hpp"
-#include "vkDeviceUtil.hpp"
 #include "vkRef.hpp"
 #include "vkRefUtil.hpp"
 #include "vkTypeUtil.hpp"
@@ -90,8 +89,7 @@ typedef void(*FillBufferProcPtr)(void*, vk::VkDeviceSize, const void* const);
 
 // An utility function for creating a buffer
 // This function not only allocates memory for the buffer but also fills buffer up with a data
-void createTestBuffer (Context&									context,
-					   const vk::DeviceInterface&				deviceInterface,
+void createTestBuffer (const vk::DeviceInterface&				deviceInterface,
 					   const VkDevice&							device,
 					   VkDeviceSize								accessRange,
 					   VkBufferUsageFlags						usage,
@@ -124,13 +122,7 @@ void createTestBuffer (Context&									context,
 	data.maxAccessRange = deMinu64(data.allocSize, deMinu64(bufferParams.size, accessRange));
 
 	VK_CHECK(deviceInterface.bindBufferMemory(device, *buffer, bufferAlloc->getMemory(), bufferAlloc->getOffset()));
-#ifdef CTS_USES_VULKANSC
-	if(context.getTestContext().getCommandLine().isSubProcess())
-		fillBufferProc(bufferAlloc->getHostPtr(), bufferMemoryReqs.size, blob);
-#else
 	fillBufferProc(bufferAlloc->getHostPtr(), bufferMemoryReqs.size, blob);
-	DE_UNREF(context);
-#endif // CTS_USES_VULKANCSC
 	flushMappedMemoryRange(deviceInterface, device, bufferAlloc->getMemory(), bufferAlloc->getOffset(), VK_WHOLE_SIZE);
 }
 
@@ -144,9 +136,9 @@ void populateBufferWithValues (void*				buffer,
 
 // An adapter function matching FillBufferProcPtr interface. Fills a buffer with 0xBABABABABABA... pattern. Used to fill up output buffers.
 // Since this pattern cannot show up in generated test data it should not show up in the valid output.
-void populateBufferWithFiller (void*					buffer,
-							   VkDeviceSize				size,
-							   const void* const		blob)
+void populateBufferWithDummy (void*					buffer,
+							  VkDeviceSize			size,
+							  const void* const		blob)
 {
 	DE_UNREF(blob);
 	deMemset(buffer, 0xBA, static_cast<size_t>(size));
@@ -275,7 +267,7 @@ private:
 	const bool					m_accessOutOfBackingMemory;
 };
 
-// In case I detect that some prerequisites are not fullfilled I am creating this lightweight empty test instance instead of AccessInstance. Should be bit faster that way.
+// In case I detect that some prerequisites are not fullfilled I am creating this lightweight dummy test instance instead of AccessInstance. Should be bit faster that way.
 class NotSupportedInstance : public vkt::TestInstance
 {
 public:
@@ -305,11 +297,6 @@ class AccessInstance : public vkt::TestInstance
 public:
 								AccessInstance				(Context&			context,
 															 Move<VkDevice>		device,
-#ifndef CTS_USES_VULKANSC
-															 de::MovePtr<vk::DeviceDriver>		deviceDriver,
-#else
-															 de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	deviceDriver,
-#endif // CTS_USES_VULKANSC
 															 ShaderType			shaderType,
 															 VkShaderStageFlags	shaderStage,
 															 VkFormat			bufferFormat,
@@ -318,7 +305,7 @@ public:
 															 VkDeviceSize		outBufferAccessRange,
 															 bool				accessOutOfBackingMemory);
 
-	virtual						~AccessInstance				(void);
+	virtual						~AccessInstance				(void) {}
 
 	virtual tcu::TestStatus		iterate						(void);
 
@@ -332,12 +319,7 @@ private:
 															 VkDeviceSize		valueSize);
 
 protected:
-	Move<VkDevice>							m_device;
-#ifndef CTS_USES_VULKANSC
-	de::MovePtr<vk::DeviceDriver>			m_deviceDriver;
-#else
-	de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	m_deviceDriver;
-#endif // CTS_USES_VULKANSC
+	Move<VkDevice>				m_device;
 	de::MovePtr<TestEnvironment>m_testEnvironment;
 
 	const ShaderType			m_shaderType;
@@ -377,11 +359,6 @@ class ReadInstance: public AccessInstance
 public:
 								ReadInstance			(Context&				context,
 														 Move<VkDevice>			device,
-#ifndef CTS_USES_VULKANSC
-														 de::MovePtr<vk::DeviceDriver>		deviceDriver,
-#else
-														 de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	deviceDriver,
-#endif // CTS_USES_VULKANSC
 														 ShaderType				shaderType,
 														 VkShaderStageFlags		shaderStage,
 														 VkFormat				bufferFormat,
@@ -397,11 +374,6 @@ class WriteInstance: public AccessInstance
 public:
 								WriteInstance			(Context&				context,
 														 Move<VkDevice>			device,
-#ifndef CTS_USES_VULKANSC
-														 de::MovePtr<vk::DeviceDriver>		deviceDriver,
-#else
-														 de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	deviceDriver,
-#endif // CTS_USES_VULKANSC
 														 ShaderType				shaderType,
 														 VkShaderStageFlags		shaderStage,
 														 VkFormat				bufferFormat,
@@ -846,7 +818,7 @@ public:
 };
 
 // A routing generating SPIRV code for all test cases in this group
-std::string MakeShader(VkShaderStageFlags shaderStage, ShaderType shaderType, VkFormat bufferFormat, bool reads, bool unused)
+std::string MakeShader(VkShaderStageFlags shaderStage, ShaderType shaderType, VkFormat bufferFormat, bool reads, bool dummy)
 {
 	const bool					isR64				= (bufferFormat == VK_FORMAT_R64_UINT || bufferFormat == VK_FORMAT_R64_SINT);
 	// faster to write
@@ -902,9 +874,9 @@ std::string MakeShader(VkShaderStageFlags shaderStage, ShaderType shaderType, Vk
 	}
 
 	// If we are testing vertex shader or fragment shader we need to provide the other one for the pipeline too.
-	// So the not tested one is 'unused'. It is then a minimal/simplest possible pass-through shader.
-	// If we are testing compute shader we dont need unused shader at all.
-	if (unused)
+	// So the not tested one is 'dummy'. It is then a minimal/simplest possible pass-through shader.
+	// If we are testing compute shader we dont need dummy shader at all.
+	if (dummy)
 	{
 		if (shaderStage == VK_SHADER_STAGE_FRAGMENT_BIT)
 		{
@@ -1272,7 +1244,7 @@ std::string MakeShader(VkShaderStageFlags shaderStage, ShaderType shaderType, Vk
 		}
 	}
 
-	// This is common for test shaders and unused ones
+	// This is common for test shaders and dummy ones
 	// We need to fill stage ouput from shader properly
 	// output vertices positions in vertex shader
 	if (shaderStage == VK_SHADER_STAGE_VERTEX_BIT)
@@ -1315,13 +1287,7 @@ RobustReadTest::RobustReadTest (tcu::TestContext&		testContext,
 TestInstance* RobustReadTest::createInstance (Context& context) const
 {
 	auto device = createRobustBufferAccessVariablePointersDevice(context);
-#ifndef CTS_USES_VULKANSC
-	de::MovePtr<vk::DeviceDriver>	deviceDriver = de::MovePtr<DeviceDriver>(new DeviceDriver(context.getPlatformInterface(), context.getInstance(), *device));
-#else
-	de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	deviceDriver = de::MovePtr<DeviceDriverSC, DeinitDeviceDeleter>(new DeviceDriverSC(context.getPlatformInterface(), context.getInstance(), *device, context.getTestContext().getCommandLine(), context.getResourceInterface(), context.getDeviceVulkanSC10Properties(), context.getDeviceProperties()), vk::DeinitDeviceDeleter(context.getResourceInterface().get(), *device));
-#endif // CTS_USES_VULKANSC
-
-	return new ReadInstance(context, device, deviceDriver, m_shaderType, m_shaderStage, m_bufferFormat, m_readAccessRange, m_accessOutOfBackingMemory);
+	return new ReadInstance(context, device, m_shaderType, m_shaderStage, m_bufferFormat, m_readAccessRange, m_accessOutOfBackingMemory);
 }
 
 void RobustReadTest::initPrograms(SourceCollections&	programCollection) const
@@ -1355,13 +1321,7 @@ RobustWriteTest::RobustWriteTest (tcu::TestContext&		testContext,
 TestInstance* RobustWriteTest::createInstance (Context& context) const
 {
 	auto device = createRobustBufferAccessVariablePointersDevice(context);
-#ifndef CTS_USES_VULKANSC
-	de::MovePtr<vk::DeviceDriver>	deviceDriver = de::MovePtr<DeviceDriver>(new DeviceDriver(context.getPlatformInterface(), context.getInstance(), *device));
-#else
-	de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	deviceDriver = de::MovePtr<DeviceDriverSC, DeinitDeviceDeleter>(new DeviceDriverSC(context.getPlatformInterface(), context.getInstance(), *device, context.getTestContext().getCommandLine(), context.getResourceInterface(), context.getDeviceVulkanSC10Properties(), context.getDeviceProperties()), vk::DeinitDeviceDeleter(context.getResourceInterface().get(), *device));
-#endif // CTS_USES_VULKANSC
-
-	return new WriteInstance(context, device, deviceDriver, m_shaderType, m_shaderStage, m_bufferFormat, m_writeAccessRange, m_accessOutOfBackingMemory);
+	return new WriteInstance(context, device, m_shaderType, m_shaderStage, m_bufferFormat, m_writeAccessRange, m_accessOutOfBackingMemory);
 }
 
 void RobustWriteTest::initPrograms(SourceCollections&	programCollection) const
@@ -1379,12 +1339,6 @@ void RobustWriteTest::initPrograms(SourceCollections&	programCollection) const
 
 AccessInstance::AccessInstance (Context&			context,
 								Move<VkDevice>		device,
-#ifndef CTS_USES_VULKANSC
-								de::MovePtr<vk::DeviceDriver>		deviceDriver,
-#else
-								de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	deviceDriver,
-#endif // CTS_USES_VULKANSC
-
 								ShaderType			shaderType,
 								VkShaderStageFlags	shaderStage,
 								VkFormat			bufferFormat,
@@ -1394,7 +1348,6 @@ AccessInstance::AccessInstance (Context&			context,
 								bool				accessOutOfBackingMemory)
 	: vkt::TestInstance				(context)
 	, m_device						(device)
-	, m_deviceDriver				(deviceDriver)
 	, m_shaderType					(shaderType)
 	, m_shaderStage					(shaderStage)
 	, m_bufferFormat				(bufferFormat)
@@ -1402,12 +1355,9 @@ AccessInstance::AccessInstance (Context&			context,
 	, m_accessOutOfBackingMemory	(accessOutOfBackingMemory)
 {
 	tcu::TestLog&									log						= context.getTestContext().getLog();
-	const DeviceInterface&							vk						= *m_deviceDriver;
-	const auto&										vki						= context.getInstanceInterface();
-	const auto										instance				= context.getInstance();
+	const DeviceInterface&							vk						= context.getDeviceInterface();
 	const deUint32									queueFamilyIndex		= context.getUniversalQueueFamilyIndex();
-	const VkPhysicalDevice							physicalDevice			= chooseDevice(vki, instance, context.getTestContext().getCommandLine());
-	SimpleAllocator									memAlloc				(vk, *m_device, getPhysicalDeviceMemoryProperties(vki, physicalDevice));
+	SimpleAllocator									memAlloc				(vk, *m_device, getPhysicalDeviceMemoryProperties(m_context.getInstanceInterface(), m_context.getPhysicalDevice()));
 
 	DE_ASSERT(RobustAccessWithPointersTest::s_numberOfBytesAccessed % sizeof(deUint32) == 0);
 	DE_ASSERT(inBufferAccessRange <= RobustAccessWithPointersTest::s_numberOfBytesAccessed);
@@ -1434,8 +1384,8 @@ AccessInstance::AccessInstance (Context&			context,
 		}
 	}
 
-	createTestBuffer(context, vk, *m_device, inBufferAccessRange, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, memAlloc, m_inBuffer, m_inBufferAlloc, m_inBufferAccess, &populateBufferWithValues, &m_bufferFormat);
-	createTestBuffer(context, vk, *m_device, outBufferAccessRange, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, memAlloc, m_outBuffer, m_outBufferAlloc, m_outBufferAccess, &populateBufferWithFiller, DE_NULL);
+	createTestBuffer(vk, *m_device, inBufferAccessRange, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, memAlloc, m_inBuffer, m_inBufferAlloc, m_inBufferAccess, &populateBufferWithValues, &m_bufferFormat);
+	createTestBuffer(vk, *m_device, outBufferAccessRange, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, memAlloc, m_outBuffer, m_outBufferAlloc, m_outBufferAccess, &populateBufferWithDummy, DE_NULL);
 
 	deInt32 indices[] = {
 		(m_accessOutOfBackingMemory && (m_bufferAccessType == BUFFER_ACCESS_TYPE_READ_FROM_STORAGE)) ? static_cast<deInt32>(RobustAccessWithPointersTest::s_testArraySize) - 1 : 0,
@@ -1443,7 +1393,7 @@ AccessInstance::AccessInstance (Context&			context,
 		0
 	};
 	AccessRangesData indicesAccess;
-	createTestBuffer(context, vk, *m_device, 3 * sizeof(deInt32), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, memAlloc, m_indicesBuffer, m_indicesBufferAlloc, indicesAccess, &populateBufferWithCopy, &indices);
+	createTestBuffer(vk, *m_device, 3 * sizeof(deInt32), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, memAlloc, m_indicesBuffer, m_indicesBufferAlloc, indicesAccess, &populateBufferWithCopy, &indices);
 
 	log << tcu::TestLog::Message << "input  buffer - alloc size: " << m_inBufferAccess.allocSize << tcu::TestLog::EndMessage;
 	log << tcu::TestLog::Message << "input  buffer - max access range: " << m_inBufferAccess.maxAccessRange << tcu::TestLog::EndMessage;
@@ -1506,7 +1456,7 @@ AccessInstance::AccessInstance (Context&			context,
 
 	if (m_shaderStage == VK_SHADER_STAGE_COMPUTE_BIT)
 	{
-		m_testEnvironment = de::MovePtr<TestEnvironment>(new ComputeEnvironment(m_context, *m_deviceDriver, *m_device, *m_descriptorSetLayout, *m_descriptorSet));
+		m_testEnvironment = de::MovePtr<TestEnvironment>(new ComputeEnvironment(m_context, *m_device, *m_descriptorSetLayout, *m_descriptorSet));
 	}
 	else
 	{
@@ -1535,7 +1485,7 @@ AccessInstance::AccessInstance (Context&			context,
 			Vec4( 1.0f, -1.0f, 0.0f, 1.0f),
 		};
 		const VkDeviceSize							vertexBufferSize = static_cast<VkDeviceSize>(sizeof(vertices));
-		createTestBuffer(context, vk, *m_device, vertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, memAlloc, m_vertexBuffer, m_vertexBufferAlloc, vertexAccess, &populateBufferWithCopy, &vertices);
+		createTestBuffer(vk, *m_device, vertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, memAlloc, m_vertexBuffer, m_vertexBufferAlloc, vertexAccess, &populateBufferWithCopy, &vertices);
 
 		const GraphicsEnvironment::DrawConfig		drawWithOneVertexBuffer =
 		{
@@ -1547,7 +1497,6 @@ AccessInstance::AccessInstance (Context&			context,
 		};
 
 		m_testEnvironment = de::MovePtr<TestEnvironment>(new GraphicsEnvironment(m_context,
-																				 *m_deviceDriver,
 																				 *m_device,
 																				 *m_descriptorSetLayout,
 																				 *m_descriptorSet,
@@ -1555,10 +1504,6 @@ AccessInstance::AccessInstance (Context&			context,
 																				 GraphicsEnvironment::VertexAttributes(1, vertexInputAttributeDescription),
 																				 drawWithOneVertexBuffer));
 	}
-}
-
-AccessInstance::~AccessInstance()
-{
 }
 
 // Verifies if the buffer has the value initialized by BufferAccessInstance::populateReadBuffer at a given offset.
@@ -1607,7 +1552,7 @@ bool AccessInstance::isOutBufferValueUnchanged (VkDeviceSize offsetInBytes, VkDe
 
 tcu::TestStatus AccessInstance::iterate (void)
 {
-	const DeviceInterface&		vk			= *m_deviceDriver;
+	const DeviceInterface&		vk			= m_context.getDeviceInterface();
 	const vk::VkCommandBuffer	cmdBuffer	= m_testEnvironment->getCommandBuffer();
 
 	// Submit command buffer
@@ -1856,11 +1801,6 @@ bool AccessInstance::verifyResult (bool splitAccess)
 
 ReadInstance::ReadInstance (Context&				context,
 							Move<VkDevice>			device,
-#ifndef CTS_USES_VULKANSC
-							de::MovePtr<vk::DeviceDriver>	deviceDriver,
-#else
-							de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	deviceDriver,
-#endif // CTS_USES_VULKANSC
 							ShaderType				shaderType,
 							VkShaderStageFlags		shaderStage,
 							VkFormat				bufferFormat,
@@ -1868,7 +1808,7 @@ ReadInstance::ReadInstance (Context&				context,
 							VkDeviceSize			inBufferAccessRange,
 							bool					accessOutOfBackingMemory)
 
-	: AccessInstance	(context, device, deviceDriver, shaderType, shaderStage, bufferFormat,
+	: AccessInstance	(context, device, shaderType, shaderStage, bufferFormat,
 						 BUFFER_ACCESS_TYPE_READ_FROM_STORAGE,
 						 inBufferAccessRange, RobustAccessWithPointersTest::s_numberOfBytesAccessed,
 						 accessOutOfBackingMemory)
@@ -1879,18 +1819,13 @@ ReadInstance::ReadInstance (Context&				context,
 
 WriteInstance::WriteInstance (Context&				context,
 							  Move<VkDevice>		device,
-#ifndef CTS_USES_VULKANSC
-							  de::MovePtr<vk::DeviceDriver>		deviceDriver,
-#else
-							  de::MovePtr<vk::DeviceDriverSC, vk::DeinitDeviceDeleter>	deviceDriver,
-#endif // CTS_USES_VULKANSC
 							  ShaderType			shaderType,
 							  VkShaderStageFlags	shaderStage,
 							  VkFormat				bufferFormat,
 							  VkDeviceSize			writeBufferAccessRange,
 							  bool					accessOutOfBackingMemory)
 
-	: AccessInstance	(context, device, deviceDriver, shaderType, shaderStage, bufferFormat,
+	: AccessInstance	(context, device, shaderType, shaderStage, bufferFormat,
 						 BUFFER_ACCESS_TYPE_WRITE_TO_STORAGE,
 						 RobustAccessWithPointersTest::s_numberOfBytesAccessed, writeBufferAccessRange,
 						 accessOutOfBackingMemory)

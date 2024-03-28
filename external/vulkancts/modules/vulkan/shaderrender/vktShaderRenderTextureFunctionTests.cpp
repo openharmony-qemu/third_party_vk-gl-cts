@@ -29,7 +29,6 @@
 #include "tcuTexture.hpp"
 #include "tcuTextureUtil.hpp"
 #include "tcuTestLog.hpp"
-#include "tcuCommandLine.hpp"
 #include "glwEnums.hpp"
 #include "deMath.h"
 #include "vkImageUtil.hpp"
@@ -722,17 +721,12 @@ static void checkMutableComparisonSamplersSupport(Context& context, const Textur
 	// when compare mode is not none then ShaderRenderCaseInstance::createSamplerUniform
 	// uses mapSampler utill from vkImageUtil that sets compareEnable to true
 	// for portability this needs to be under feature flag
-#ifndef CTS_USES_VULKANSC
 	if (context.isDeviceFunctionalitySupported("VK_KHR_portability_subset") &&
 	   !context.getPortabilitySubsetFeatures().mutableComparisonSamplers &&
 	   (textureSpec.sampler.compare != tcu::Sampler::COMPAREMODE_NONE))
 	{
 		TCU_THROW(NotSupportedError, "VK_KHR_portability_subset: mutableComparisonSamplers are not supported by this implementation");
 	}
-#else
-	DE_UNREF(context);
-	DE_UNREF(textureSpec);
-#endif // CTS_USES_VULKANSC
 }
 
 class ShaderTextureFunctionInstance : public ShaderRenderCaseInstance
@@ -1790,13 +1784,6 @@ TextureSizeInstance::TextureSizeInstance (Context&					context,
 {
 	deMemset(&m_testSize, 0, sizeof(TestSize));
 
-#ifdef CTS_USES_VULKANSC
-	const VkDevice			vkDevice			= getDevice();
-	const DeviceInterface&	vk					= getDeviceInterface();
-	const deUint32			queueFamilyIndex	= getUniversalQueueFamilyIndex();
-	m_externalCommandPool						= de::SharedPtr<Unique<VkCommandPool>>(new vk::Unique<VkCommandPool>(createCommandPool(vk, vkDevice, VK_COMMAND_POOL_CREATE_TRANSIENT_BIT, queueFamilyIndex)));
-#endif // CTS_USES_VULKANSC
-
 	m_renderSize = tcu::UVec2(1, 1);
 }
 
@@ -1943,14 +1930,9 @@ tcu::TestStatus TextureSizeInstance::iterate (void)
 		// set current test size
 		m_testSize = testSizes[m_iterationCounter - 1];
 
-		bool result = testTextureSize();
-#ifdef CTS_USES_VULKANSC
-		if (m_context.getTestContext().getCommandLine().isSubProcess())
-#endif // CTS_USES_VULKANSC
-		{
-			if (!result)
-				return tcu::TestStatus::fail("Got unexpected result");
-		}
+		if (!testTextureSize())
+			return tcu::TestStatus::fail("Got unexpected result");
+
 		return tcu::TestStatus::incomplete();
 	}
 }
@@ -2174,14 +2156,9 @@ tcu::TestStatus TextureSizeMSInstance::iterate (void)
 
 	if (m_iterationCounter++ <  m_iterations.size() * DE_LENGTH_OF_ARRAY(testSizes))
 	{
-		bool result = testSize(m_iterations[sampleIdx], testSizes[dimIdx]);
-#ifdef CTS_USES_VULKANSC
-		if (m_context.getTestContext().getCommandLine().isSubProcess())
-#endif // CTS_USES_VULKANSC
-		{
-			if (!result)
-				return tcu::TestStatus::fail("Got unexpected result");
-		}
+		if (!testSize(m_iterations[sampleIdx], testSizes[dimIdx]))
+			return tcu::TestStatus::fail("Got unexpected result");
+
 		return tcu::TestStatus::incomplete();
 	}
 	else
@@ -2392,22 +2369,17 @@ tcu::TestStatus TextureSamplesInstance::iterate (void)
 		const tcu::TextureLevel&	result				= getResultImage();
 		tcu::IVec4					output				= result.getAccess().getPixelInt(0, 0);
 
-#ifdef CTS_USES_VULKANSC
-		if (m_context.getTestContext().getCommandLine().isSubProcess())
-#endif // CTS_USES_VULKANSC
+		if (output.x() == (int)m_iterations[m_iterationCounter])
 		{
-			if (output.x() == (int)m_iterations[m_iterationCounter])
-			{
-				// success
-				log << tcu::TestLog::Message << "Passed" << tcu::TestLog::EndMessage;
-			}
-			else
-			{
-				// failure
-				log << tcu::TestLog::Message << "Result: " << output.x() << tcu::TestLog::EndMessage;
-				log << tcu::TestLog::Message << "Failed" << tcu::TestLog::EndMessage;
-				return tcu::TestStatus::fail("Got unexpected result");
-			}
+			// success
+			log << tcu::TestLog::Message << "Passed" << tcu::TestLog::EndMessage;
+		}
+		else
+		{
+			// failure
+			log << tcu::TestLog::Message << "Result: " << output.x() << tcu::TestLog::EndMessage;
+			log << tcu::TestLog::Message << "Failed" << tcu::TestLog::EndMessage;
+			return tcu::TestStatus::fail("Got unexpected result");
 		}
 
 		m_iterationCounter++;
@@ -2469,14 +2441,7 @@ TextureQueryLevelsInstance::TextureQueryLevelsInstance (Context&				context,
 {
 	deMemset(&m_testSize, 0, sizeof(TestSize));
 
-	m_renderSize								= tcu::UVec2(1, 1);
-
-#ifdef CTS_USES_VULKANSC
-	const VkDevice			vkDevice			= getDevice();
-	const DeviceInterface&	vk					= getDeviceInterface();
-	const deUint32			queueFamilyIndex	= getUniversalQueueFamilyIndex();
-	m_externalCommandPool						= de::SharedPtr<Unique<VkCommandPool>>(new vk::Unique<VkCommandPool>(createCommandPool(vk, vkDevice, VK_COMMAND_POOL_CREATE_TRANSIENT_BIT, queueFamilyIndex)));
-#endif // CTS_USES_VULKANSC
+	m_renderSize = tcu::UVec2(1, 1);
 }
 
 TextureQueryLevelsInstance::~TextureQueryLevelsInstance (void)
@@ -2550,14 +2515,9 @@ tcu::TestStatus TextureQueryLevelsInstance::iterate (void)
 		// set current test size
 		m_testSize = testSizes[m_iterationCounter - 1];
 
-		bool result = testTextureLevels();
-#ifdef CTS_USES_VULKANSC
-		if (m_context.getTestContext().getCommandLine().isSubProcess())
-#endif // CTS_USES_VULKANSC
-		{
-			if (!result)
-				return tcu::TestStatus::fail("Got unexpected result");
-		}
+		if (!testTextureLevels())
+			return tcu::TestStatus::fail("Got unexpected result");
+
 		return tcu::TestStatus::incomplete();
 	}
 }
@@ -3153,8 +3113,6 @@ struct TexFuncCaseSpec
 #define GRADCLAMP_CASE_SPEC(NAME, FUNC, MINCOORD, MAXCOORD, MINDX, MAXDX, MINDY, MAXDY, USEOFFSET, OFFSET, LODCLAMP, TEXSPEC, EVALFUNC, FLAGS) \
 	{ #NAME, TextureLookupSpec(FUNC, MINCOORD, MAXCOORD, false, 0.0f, 0.0f, MINDX, MAXDX, MINDY, MAXDY, USEOFFSET, OFFSET, true, LODCLAMP), TEXSPEC, EVALFUNC, FLAGS }
 
-#ifndef CTS_USES_VULKANSC
-
 class SparseShaderTextureFunctionInstance : public ShaderTextureFunctionInstance
 {
 public:
@@ -3455,8 +3413,6 @@ void SparseShaderTextureFunctionCase::checkSupport(Context& context) const
 	checkMutableComparisonSamplersSupport(context, m_textureSpec);
 }
 
-#endif // CTS_USES_VULKANSC
-
 static void createCaseGroup (tcu::TestCaseGroup* parent, const char* groupName, const char* groupDesc, const TexFuncCaseSpec* cases, int numCases)
 {
 	de::MovePtr<tcu::TestCaseGroup>	group	(new tcu::TestCaseGroup(parent->getTestContext(), groupName, groupDesc));
@@ -3464,29 +3420,23 @@ static void createCaseGroup (tcu::TestCaseGroup* parent, const char* groupName, 
 	for (int ndx = 0; ndx < numCases; ndx++)
 	{
 		std::string	name			= cases[ndx].name;
-#ifndef CTS_USES_VULKANSC
 		bool		sparseSupported	= !functionHasProj(cases[ndx].lookupSpec.function)		&&
 									  TEXTURETYPE_1D			!= cases[ndx].texSpec.type	&&
 									  TEXTURETYPE_1D_ARRAY		!= cases[ndx].texSpec.type	&&
 									  TEXTURETYPE_CUBE_ARRAY	!= cases[ndx].texSpec.type;
-#endif // CTS_USES_VULKANSC
 
 		if (cases[ndx].flags & VERTEX)
 		{
-#ifndef CTS_USES_VULKANSC
 			if (sparseSupported)
 				group->addChild(new SparseShaderTextureFunctionCase(parent->getTestContext(), ("sparse_" + name + "_vertex"),   "", cases[ndx].lookupSpec, cases[ndx].texSpec, cases[ndx].evalFunc, true ));
-#endif // CTS_USES_VULKANSC
 
 			group->addChild(new ShaderTextureFunctionCase(parent->getTestContext(), (name + "_vertex"),   "", cases[ndx].lookupSpec, cases[ndx].texSpec, cases[ndx].evalFunc, true ));
 		}
 
 		if (cases[ndx].flags & FRAGMENT)
 		{
-#ifndef CTS_USES_VULKANSC
 			if (sparseSupported)
 				group->addChild(new SparseShaderTextureFunctionCase(parent->getTestContext(), ("sparse_" + name + "_fragment"), "", cases[ndx].lookupSpec, cases[ndx].texSpec, cases[ndx].evalFunc, false));
-#endif // CTS_USES_VULKANSC
 
 			group->addChild(new ShaderTextureFunctionCase(parent->getTestContext(), (name + "_fragment"), "", cases[ndx].lookupSpec, cases[ndx].texSpec, cases[ndx].evalFunc, false));
 		}

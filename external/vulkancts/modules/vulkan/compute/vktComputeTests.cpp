@@ -27,9 +27,7 @@
 #include "vktComputeIndirectComputeDispatchTests.hpp"
 #include "vktComputeShaderBuiltinVarTests.hpp"
 #include "vktComputeZeroInitializeWorkgroupMemoryTests.hpp"
-#ifndef CTS_USES_VULKANSC
 #include "vktComputeWorkgroupMemoryExplicitLayoutTests.hpp"
-#endif // CTS_USES_VULKANSC
 #include "vktTestGroupUtil.hpp"
 
 namespace vkt
@@ -46,15 +44,11 @@ void createChildren (tcu::TestCaseGroup* computeTests)
 
 	computeTests->addChild(createBasicComputeShaderTests(testCtx));
 	computeTests->addChild(createBasicDeviceGroupComputeShaderTests(testCtx));
-#ifndef CTS_USES_VULKANSC
 	computeTests->addChild(createCooperativeMatrixTests(testCtx));
-#endif
 	computeTests->addChild(createIndirectComputeDispatchTests(testCtx));
 	computeTests->addChild(createComputeShaderBuiltinVarTests(testCtx));
 	computeTests->addChild(createZeroInitializeWorkgroupMemoryTests(testCtx));
-#ifndef CTS_USES_VULKANSC
 	computeTests->addChild(createWorkgroupMemoryExplicitLayoutTests(testCtx));
-#endif // CTS_USES_VULKANSC
 }
 
 } // anonymous

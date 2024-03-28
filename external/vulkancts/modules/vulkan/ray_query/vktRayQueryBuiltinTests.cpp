@@ -283,6 +283,35 @@ namespace vkt
 				return imageCreateInfo;
 			}
 
+			Move<VkPipeline> makeComputePipeline(const DeviceInterface& vk,
+				const VkDevice				device,
+				const VkPipelineLayout		pipelineLayout,
+				const VkShaderModule			shaderModule)
+			{
+				const VkPipelineShaderStageCreateInfo pipelineShaderStageParams =
+				{
+					VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,	// VkStructureType						sType;
+					DE_NULL,												// const void*							pNext;
+					0u,														// VkPipelineShaderStageCreateFlags		flags;
+					VK_SHADER_STAGE_COMPUTE_BIT,							// VkShaderStageFlagBits				stage;
+					shaderModule,											// VkShaderModule						module;
+					"main",													// const char*							pName;
+					DE_NULL,												// const VkSpecializationInfo*			pSpecializationInfo;
+				};
+				const VkComputePipelineCreateInfo pipelineCreateInfo =
+				{
+					VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,		// VkStructureType					sType;
+					DE_NULL,											// const void*						pNext;
+					0u,													// VkPipelineCreateFlags			flags;
+					pipelineShaderStageParams,							// VkPipelineShaderStageCreateInfo	stage;
+					pipelineLayout,										// VkPipelineLayout					layout;
+					DE_NULL,											// VkPipeline						basePipelineHandle;
+					0,													// deInt32							basePipelineIndex;
+				};
+
+				return createComputePipeline(vk, device, DE_NULL, &pipelineCreateInfo);
+			}
+
 			static const std::string getMissPassthrough(void)
 			{
 				const std::string missPassthrough =
@@ -3975,7 +4004,7 @@ namespace vkt
 				const auto	physicalDevice		= context.getPhysicalDevice();
 				const auto	supportedExtensions	= enumerateDeviceExtensionProperties(vki, physicalDevice, nullptr);
 
-				if (!isExtensionStructSupported(supportedExtensions, RequiredExtension("VK_EXT_robustness2")))
+				if (!isExtensionSupported(supportedExtensions, RequiredExtension("VK_EXT_robustness2")))
 					TCU_THROW(NotSupportedError, "VK_EXT_robustness2 not supported");
 
 				VkPhysicalDeviceRobustness2FeaturesEXT	robustness2Features	= initVulkanStructure();
@@ -3993,6 +4022,7 @@ namespace vkt
 				const auto&	vki					= context.getInstanceInterface();
 				const auto	instance			= context.getInstance();
 				const auto	physicalDevice		= context.getPhysicalDevice();
+				const auto	supportedExtensions	= enumerateDeviceExtensionProperties(vki, physicalDevice, nullptr);
 				const auto	queueFamilyIndex	= context.getUniversalQueueFamilyIndex();
 				const auto	queuePriority		= 1.0f;
 				bool		accelStructSupport	= false;
@@ -4006,17 +4036,19 @@ namespace vkt
 				VkPhysicalDeviceRobustness2FeaturesEXT				robustness2Features				= initVulkanStructure();
 				std::vector<const char*>							deviceExtensions;
 
-				if (context.isDeviceFunctionalitySupported("VK_KHR_deferred_host_operations"))
+				if (isExtensionSupported(supportedExtensions, RequiredExtension("VK_KHR_deferred_host_operations")))
 				{
 					deviceExtensions.push_back("VK_KHR_deferred_host_operations");
 				}
-				if (context.isDeviceFunctionalitySupported("VK_KHR_buffer_device_address"))
+
+				if (isExtensionSupported(supportedExtensions, RequiredExtension("VK_KHR_buffer_device_address")))
 				{
 					deviceAddressFeatures.pNext = features2.pNext;
 					features2.pNext = &deviceAddressFeatures;
 					deviceExtensions.push_back("VK_KHR_buffer_device_address");
 				}
-				if (context.isDeviceFunctionalitySupported("VK_KHR_acceleration_structure"))
+
+				if (isExtensionSupported(supportedExtensions, RequiredExtension("VK_KHR_acceleration_structure")))
 				{
 					accelerationStructureFeatures.pNext = features2.pNext;
 					features2.pNext = &accelerationStructureFeatures;
@@ -4024,14 +4056,14 @@ namespace vkt
 					accelStructSupport = true;
 				}
 
-				if (context.isDeviceFunctionalitySupported("VK_KHR_ray_query"))
+				if (isExtensionSupported(supportedExtensions, RequiredExtension("VK_KHR_ray_query")))
 				{
 					rayQueryFeatures.pNext = features2.pNext;
 					features2.pNext = &rayQueryFeatures;
 					deviceExtensions.push_back("VK_KHR_ray_query");
 				}
 
-				if (context.isDeviceFunctionalitySupported("VK_KHR_ray_tracing_pipeline"))
+				if (isExtensionSupported(supportedExtensions, RequiredExtension("VK_KHR_ray_tracing_pipeline")))
 				{
 					raytracingPipelineFeatures.pNext = features2.pNext;
 					features2.pNext = &raytracingPipelineFeatures;

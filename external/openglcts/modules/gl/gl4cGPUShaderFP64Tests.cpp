@@ -5304,27 +5304,27 @@ void GPUShaderFP64Test3::testInit()
 
 	/* Uniform block declaration with std140 offsets calculated
 	 *                       | align | loc_req | begins | ends | offset in bytes | imp |
-	 * ivec3   unused1[3]    |     4 |      12 |      0 |   12 |               0 |     |
+	 * ivec3   dummy1[3]     |     4 |      12 |      0 |   12 |               0 |     |
 	 * double  double_value  |     2 |       2 |     12 |   14 |              48 | XXX |
-	 * bool    unused2       |     1 |       1 |     14 |   15 |              56 |     |
+	 * bool    dummy2        |     1 |       1 |     14 |   15 |              56 |     |
 	 * dvec2   dvec2_value   |     4 |       4 |     16 |   20 |              64 | XXX |
-	 * bvec3   unused3       |     4 |       4 |     20 |   24 |              80 |     |
+	 * bvec3   dummy3        |     4 |       4 |     20 |   24 |              80 |     |
 	 * dvec3   dvec3_value   |     8 |       8 |     24 |   32 |              96 | XXX |
-	 * int     unused4[3]    |     4 |      12 |     32 |   44 |             128 |     |
+	 * int     dummy4[3]     |     4 |      12 |     32 |   44 |             128 |     |
 	 * dvec4   dvec4_value   |     8 |       8 |     48 |   56 |             192 | XXX |
-	 * bool    unused5       |     1 |       1 |     56 |   57 |             224 |     |
-	 * bool    unused6[2]    |     4 |       8 |     60 |   68 |             240 |     |
+	 * bool    dummy5        |     1 |       1 |     56 |   57 |             224 |     |
+	 * bool    dummy6[2]     |     4 |       8 |     60 |   68 |             240 |     |
 	 * dmat2   dmat2_value   |     4 |       8 |     68 |   76 |             272 | XXX |
 	 * dmat3   dmat3_value   |     8 |      24 |     80 |  104 |             320 | XXX |
-	 * bool    unused7       |     1 |       1 |    104 |  105 |             416 |     |
+	 * bool    dummy7        |     1 |       1 |    104 |  105 |             416 |     |
 	 * dmat4   dmat4_value   |     8 |      32 |    112 |  144 |             448 | XXX |
 	 * dmat2x3 dmat2x3_value |     8 |      16 |    144 |  160 |             576 | XXX |
-	 * uvec3   unused8       |     4 |       4 |    160 |  164 |             640 |     |
+	 * uvec3   dummy8        |     4 |       4 |    160 |  164 |             640 |     |
 	 * dmat2x4 dmat2x4_value |     8 |      16 |    168 |  184 |             672 | XXX |
 	 * dmat3x2 dmat3x2_value |     4 |      12 |    184 |  196 |             736 | XXX |
-	 * bool    unused9       |     1 |       1 |    196 |  197 |             784 |     |
+	 * bool    dummy9        |     1 |       1 |    196 |  197 |             784 |     |
 	 * dmat3x4 dmat3x4_value |     8 |      24 |    200 |  224 |             800 | XXX |
-	 * int     unused10      |     1 |       1 |    224 |  225 |             896 |     |
+	 * int     dummy10       |     1 |       1 |    224 |  225 |             896 |     |
 	 * dmat4x2 dmat4x2_value |     4 |      16 |    228 |  244 |             912 | XXX |
 	 * dmat4x3 dmat4x3_value |     8 |      32 |    248 |  280 |             992 | XXX |
 	 */
@@ -5690,27 +5690,27 @@ void GPUShaderFP64Test3::writeUniformBlock(std::ostream& stream, uniformDataLayo
 
 	stream << "layout(" << layout << ") uniform " << m_uniform_block_name << "\n"
 																			 "{\n"
-																			 "    ivec3   unused1[3];\n"
+																			 "    ivec3   dummy1[3];\n"
 																			 "    double  double_value;\n"
-																			 "    bool    unused2;\n"
+																			 "    bool    dummy2;\n"
 																			 "    dvec2   dvec2_value;\n"
-																			 "    bvec3   unused3;\n"
+																			 "    bvec3   dummy3;\n"
 																			 "    dvec3   dvec3_value;\n"
-																			 "    int     unused4[3];\n"
+																			 "    int     dummy4[3];\n"
 																			 "    dvec4   dvec4_value;\n"
-																			 "    bool    unused5;\n"
-																			 "    bool    unused6[2];\n"
+																			 "    bool    dummy5;\n"
+																			 "    bool    dummy6[2];\n"
 																			 "    dmat2   dmat2_value;\n"
 																			 "    dmat3   dmat3_value;\n"
-																			 "    bool    unused7;\n"
+																			 "    bool    dummy7;\n"
 																			 "    dmat4   dmat4_value;\n"
 																			 "    dmat2x3 dmat2x3_value;\n"
-																			 "    uvec3   unused8;\n"
+																			 "    uvec3   dummy8;\n"
 																			 "    dmat2x4 dmat2x4_value;\n"
 																			 "    dmat3x2 dmat3x2_value;\n"
-																			 "    bool    unused9;\n"
+																			 "    bool    dummy9;\n"
 																			 "    dmat3x4 dmat3x4_value;\n"
-																			 "    int     unused10;\n"
+																			 "    int     dummy10;\n"
 																			 "    dmat4x2 dmat4x2_value;\n"
 																			 "    dmat4x3 dmat4x3_value;\n"
 																			 "} "
@@ -10289,6 +10289,7 @@ void GPUShaderFP64Test7::releaseXFBVaryingNames()
 void GPUShaderFP64Test7::setInputAttributeValues(const _variables& variables)
 {
 	const glw::Functions& gl	  = m_context.getRenderContext().getFunctions();
+	unsigned int		  counter = 6;
 
 	for (_variables_const_iterator variable_iterator = variables.begin(); variable_iterator != variables.end();
 		 variable_iterator++)
@@ -10360,6 +10361,8 @@ void GPUShaderFP64Test7::setInputAttributeValues(const _variables& variables)
 			/* Make sure VAAs are disabled */
 			gl.disableVertexAttribArray(variable.attribute_location + index);
 			GLU_EXPECT_NO_ERROR(gl.getError(), "glDisableVertexAttribArray() call failed.");
+
+			counter += n_components;
 		} /* for (all array indices) */
 	}	 /* for (all variables) */
 }
@@ -12349,45 +12352,32 @@ template <int Size>
 static tcu::Matrix<glw::GLdouble, Size - 1, Size - 1> eliminate(const tcu::Matrix<glw::GLdouble, Size, Size>& matrix,
 																glw::GLuint column, glw::GLuint row)
 {
-	// GCC sometimes diagnoses an incorrect out of bounds write here. The code has been verified to be correct.
-#if (DE_COMPILER == DE_COMPILER_GCC)
-#	pragma GCC diagnostic push
-#	pragma GCC diagnostic ignored "-Warray-bounds"
-#endif
-
-	const glw::GLint eCol = static_cast<glw::GLint>(column);
-	const glw::GLint eRow = static_cast<glw::GLint>(row);
-
 	tcu::Matrix<glw::GLdouble, Size - 1, Size - 1> result;
 
-	for (glw::GLint c = 0; c < Size; ++c)
+	for (glw::GLuint c = 0; c < Size; ++c)
 	{
 		/* Skip eliminated column */
-		if (eCol == c)
+		if (column == c)
 		{
 			continue;
 		}
 
-		for (glw::GLint r = 0; r < Size; ++r)
+		for (glw::GLuint r = 0; r < Size; ++r)
 		{
 			/* Skip eliminated row */
-			if (eRow == r)
+			if (row == r)
 			{
 				continue;
 			}
 
-			const glw::GLint r_offset = (r > eRow) ? -1 : 0;
-			const glw::GLint c_offset = (c > eCol) ? -1 : 0;
+			const glw::GLint r_offset = (r > row) ? -1 : 0;
+			const glw::GLint c_offset = (c > column) ? -1 : 0;
 
 			result(r + r_offset, c + c_offset) = matrix(r, c);
 		}
 	}
 
 	return result;
-
-#if (DE_COMPILER == DE_COMPILER_GCC)
-#	pragma GCC diagnostic pop
-#endif
 }
 
 template <int Size>
@@ -15300,12 +15290,10 @@ bool BuiltinFunctionTest::isResultEdgeCase(const functionObject& function_object
 
 			// if coresponding components of arguments are equal and if component of first argument
 			// and component of result are equal then expected result must be corrected
-                        bool possible_edge_case = m_epsilon > de::abs((argument_1_component / argument_2_component) -
-                                                                      round(argument_1_component / argument_2_component));
-                        edge_case_present = possible_edge_case &&
-                                            (m_epsilon > de::abs(argument_2_component - actual_result_component));
+			edge_case_present = (m_epsilon > de::abs(argument_1_component - argument_2_component)) &&
+								(m_epsilon > de::abs(argument_1_component - actual_result_component));
 			recheck |= edge_case_present;
-                        corrected_expected_result[component] = edge_case_present ? argument_2_component : expected_result_component;
+			corrected_expected_result[component] = edge_case_present ? argument_1_component : expected_result_component;
 		}
 
 		// recheck test result with corrected expected result

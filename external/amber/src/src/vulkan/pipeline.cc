@@ -430,9 +430,7 @@ Result Pipeline::SendDescriptorDataToDeviceIfNeeded() {
             "Vulkan: Pipeline::SendDescriptorDataToDeviceIfNeeded() "
             "descriptor's transfer resource is not found");
       }
-      Result r = descriptor_transfer_resources_[buffer]->Initialize();
-      if (!r.IsSuccess())
-         return r;
+      descriptor_transfer_resources_[buffer]->Initialize();
     }
 
     // Note that if a buffer for a descriptor is host accessible and

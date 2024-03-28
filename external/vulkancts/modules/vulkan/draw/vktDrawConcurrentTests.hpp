@@ -25,7 +25,6 @@
  *//*--------------------------------------------------------------------*/
 
 #include "vktTestCase.hpp"
-#include "vktDrawGroupParams.hpp"
 
 namespace vkt
 {
@@ -34,7 +33,7 @@ namespace Draw
 class ConcurrentDrawTests : public tcu::TestCaseGroup
 {
 public:
-						ConcurrentDrawTests		(tcu::TestContext &testCtx, const SharedGroupParams groupParams);
+						ConcurrentDrawTests		(tcu::TestContext &testCtx, bool useDynamicRendering);
 						~ConcurrentDrawTests	(void) = default;
 	void				init					(void);
 
@@ -43,7 +42,7 @@ private:
 	ConcurrentDrawTests&	operator=			(const ConcurrentDrawTests &other);
 
 private:
-	const SharedGroupParams m_groupParams;
+	const bool m_useDynamicRendering;
 };
 } // Draw
 } // vkt
