@@ -21,6 +21,32 @@ ohos_shared_library("rosen_context") {
 
   external_deps = [ "graphic_surface:surface" ]
 
+  # defines = [
+  #   "EGL_EGLEXT_PROTOTYPES",
+  # ]
+
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("testcc") {
+  sources = [ "testcc.cpp" ]
+  include_dirs = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
+    "//foundation/graphic/graphic_2d/rosen/include",
+    "//drivers/peripheral/display/interfaces/include",
+    "//foundation/multimedia/image_standard/interfaces/innerkits/include",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/platform/ohos",
+  ]
+
+  deps = [
+    # "//commonlibrary/c_utils/base:utils",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    ":rosen_context",
+  ]
+
+  external_deps = [ "graphic_surface:surface" ]
+
   part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
