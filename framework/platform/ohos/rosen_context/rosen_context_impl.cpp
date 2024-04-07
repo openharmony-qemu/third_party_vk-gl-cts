@@ -27,6 +27,41 @@ RosenContextImpl::RosenContextImpl()
     InitProducer();
 }
 
+#define PRINT_EGL_CONFIG(type)                             \
+    {                                                      \
+        int32_t value;                                     \
+        eglGetConfigAttrib(eglDisplay, cfg, type, &value); \
+        printf("  %s: %d\n", #type, value);                \
+    }
+void PrintEglConfig(void *eglDisplay, EGLConfig cfg)
+{
+    // 打印颜色缓冲区属性
+    PRINT_EGL_CONFIG(EGL_BUFFER_SIZE)
+    PRINT_EGL_CONFIG(EGL_RED_SIZE)
+    PRINT_EGL_CONFIG(EGL_GREEN_SIZE)
+    PRINT_EGL_CONFIG(EGL_BLUE_SIZE)
+    PRINT_EGL_CONFIG(EGL_ALPHA_SIZE)
+    PRINT_EGL_CONFIG(EGL_DEPTH_SIZE)
+    PRINT_EGL_CONFIG(EGL_STENCIL_SIZE)
+
+    // 打印其他属性
+    PRINT_EGL_CONFIG(EGL_CONFIG_CAVEAT)
+    PRINT_EGL_CONFIG(EGL_CONFIG_ID)
+    PRINT_EGL_CONFIG(EGL_LEVEL)
+    PRINT_EGL_CONFIG(EGL_MAX_PBUFFER_WIDTH)
+    PRINT_EGL_CONFIG(EGL_MAX_PBUFFER_HEIGHT)
+    PRINT_EGL_CONFIG(EGL_MAX_PBUFFER_PIXELS)
+    PRINT_EGL_CONFIG(EGL_NATIVE_VISUAL_ID)
+    PRINT_EGL_CONFIG(EGL_SAMPLES)
+    PRINT_EGL_CONFIG(EGL_SAMPLE_BUFFERS)
+    PRINT_EGL_CONFIG(EGL_SURFACE_TYPE)
+    PRINT_EGL_CONFIG(EGL_RENDERABLE_TYPE)
+    PRINT_EGL_CONFIG(EGL_TRANSPARENT_TYPE)
+    PRINT_EGL_CONFIG(EGL_TRANSPARENT_RED_VALUE)
+    PRINT_EGL_CONFIG(EGL_TRANSPARENT_GREEN_VALUE)
+    PRINT_EGL_CONFIG(EGL_TRANSPARENT_BLUE_VALUE)
+}
+
 void RosenContextImpl::ShowConfig(EGLConfig cfg)
 {
     EGLint red, green, blue, alpha, depth, stencil, samples, sft, rt;
@@ -58,7 +93,8 @@ void RosenContextImpl::InitProducer()
 
 bool RosenContextImpl::InitEgl()
 {
-    if(eglInited_) {
+    if (eglInited_)
+    {
         return true;
     }
     eglDisplay_ = eglGetDisplay(EGL_DEFAULT_DISPLAY);
@@ -82,6 +118,7 @@ bool RosenContextImpl::InitEgl()
     eglGetConfigs(eglDisplay_, allConfigs_, configCount_, &configCount_);
 
     printf("config count : %d\n", configCount_);
+    printf("%8s%8s%8s%8s%8s%8s%8s%8s%8s\n", "red", "green", "blue", "alpha", "depth", "stencil", "samples", "sft", "rt");
     for (int i = 0; i < configCount_; i++)
     {
         ShowConfig(allConfigs_[i]);
@@ -279,17 +316,17 @@ bool RosenContextImpl::InitNativeWindow()
     if (pixelFormat_.redBits == 8 && pixelFormat_.greenBits == 8 && pixelFormat_.blueBits == 8 && pixelFormat_.alphaBits == 8)
     {
         NativeWindowHandleOpt(nativeWindow_, SET_FORMAT, GRAPHIC_PIXEL_FMT_RGBA_8888);
-        //NativeWindowHandleOpt(nativeWindow_, SET_FORMAT, PIXEL_FMT_RGBA_8888);
+        // NativeWindowHandleOpt(nativeWindow_, SET_FORMAT, PIXEL_FMT_RGBA_8888);
     }
     else if (pixelFormat_.redBits == 5 && pixelFormat_.greenBits == 6 && pixelFormat_.blueBits == 5 && pixelFormat_.alphaBits == 0)
     {
         NativeWindowHandleOpt(nativeWindow_, SET_FORMAT, GRAPHIC_PIXEL_FMT_RGB_565);
-        //NativeWindowHandleOpt(nativeWindow_, SET_FORMAT, PIXEL_FMT_RGB_565);
+        // NativeWindowHandleOpt(nativeWindow_, SET_FORMAT, PIXEL_FMT_RGB_565);
     }
     else if (pixelFormat_.redBits == 4 && pixelFormat_.greenBits == 4 && pixelFormat_.blueBits == 4 && pixelFormat_.alphaBits == 4)
     {
         NativeWindowHandleOpt(nativeWindow_, SET_FORMAT, GRAPHIC_PIXEL_FMT_RGBA_4444);
-        //NativeWindowHandleOpt(nativeWindow_, SET_FORMAT, PIXEL_FMT_RGBA_4444);
+        // NativeWindowHandleOpt(nativeWindow_, SET_FORMAT, PIXEL_FMT_RGBA_4444);
     }
     printf("native window ok\n");
     return true;
@@ -297,11 +334,12 @@ bool RosenContextImpl::InitNativeWindow()
 
 bool RosenContextImpl::InitEglSurface()
 {
-    if(eglSurface_ != EGL_NO_SURFACE) {
+    if (eglSurface_ != EGL_NO_SURFACE)
+    {
         eglDestroySurface(eglDisplay_, eglSurface_);
         eglSurface_ = EGL_NO_SURFACE;
     }
-    
+
     eglMakeCurrent(eglDisplay_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 
     std::vector<EGLint> surfaceAttribs;
@@ -312,7 +350,7 @@ bool RosenContextImpl::InitEglSurface()
         break;
     case RCI_SURFACE_TYPE::WINDOW:
         // surfaceAttribs.push_back(EGL_GL_COLORSPACE_KHR);
-        //TODO: EGL_GL_COLORSPACE_LINEAR_KHR, EGL_GL_COLORSPACE_SRGB_KHR
+        // TODO: EGL_GL_COLORSPACE_LINEAR_KHR, EGL_GL_COLORSPACE_SRGB_KHR
         // surfaceAttribs.push_back(EGL_GL_COLORSPACE_LINEAR_KHR);
         surfaceAttribs.push_back(EGL_NONE);
 
@@ -338,11 +376,12 @@ bool RosenContextImpl::InitEglSurface()
 
 bool RosenContextImpl::InitEglContext()
 {
-    if(eglContext_ != EGL_NO_CONTEXT) {
+    if (eglContext_ != EGL_NO_CONTEXT)
+    {
         eglDestroyContext(eglDisplay_, eglContext_);
         eglContext_ = EGL_NO_CONTEXT;
     }
-    
+
     std::vector<EGLint> contextAttribs;
     contextAttribs.push_back(EGL_CONTEXT_MAJOR_VERSION_KHR);
     contextAttribs.push_back(static_cast<int>(glesVersion_) / 10);
@@ -409,17 +448,18 @@ int32_t RosenContextImpl::GetAttrib(int32_t attrType)
     return ret;
 }
 
-uint64_t RosenContextImpl::CreateWindow(uint32_t x,uint32_t y,uint32_t width,uint32_t height)
+uint64_t RosenContextImpl::CreateWindow(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 {
     static uint64_t windowId = 1;
     uint64_t wid = windowId++;
 
     // printf("impl create window %llu\n",wid);
-    if(displayNode_==nullptr){
+    if (displayNode_ == nullptr)
+    {
         displayNode_ = RSDisplayNode::Create(RSDisplayNodeConfig());
     }
     vulkanWindows_[wid].surfaceNode_ = RSSurfaceNode::Create(RSSurfaceNodeConfig());
-    vulkanWindows_[wid].surfaceNode_->SetBounds(x,y,width,height);
+    vulkanWindows_[wid].surfaceNode_->SetBounds(x, y, width, height);
     displayNode_->AddChild(vulkanWindows_[wid].surfaceNode_, -1);
 
     std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(vulkanWindows_[wid].surfaceNode_);
@@ -442,3 +482,462 @@ void RosenContextImpl::DestoryWindow(uint64_t windowId)
     displayNode_->RemoveChild(vulkanWindows_[windowId].surfaceNode_);
     vulkanWindows_.erase(windowId);
 }
+
+void RosenContextImpl::OhosWindowResize(int32_t w, int32_t h)
+{
+    printf("RosenContextImpl::OhosWindowResize %d %d\n", w, h);
+    width_ = w;
+    height_ = h;
+}
+
+void *RosenContextImpl::GetNativeWindowEx()
+{
+    printf("RosenContextImpl::GetNativeWindowEx\n");
+    if (nativeWindow_ == nullptr)
+    {
+        nativeWindow_ = CreateNativeWindowFromSurface(&producer_);
+    }
+    if (width_ > 0 && height_ > 0)
+    {
+        NativeWindowHandleOpt(nativeWindow_, SET_BUFFER_GEOMETRY, width_, height_);
+    }
+
+    return nativeWindow_;
+}
+
+// implemented2_BEGIN
+uint32_t RosenContextImpl::OH_bindAPI(uint32_t api)
+{
+    auto ret = eglBindAPI(api);
+    // std::cout<<" ! bindAPI("<<"api="<<api<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_bindTexImage(void* dpy, void* surface, int32_t buffer)
+{
+    auto ret = eglBindTexImage(dpy, surface, buffer);
+    // std::cout<<" ! bindTexImage("<<"dpy="<<dpy<<", "<<"surface="<<surface<<", "<<"buffer="<<buffer<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_chooseConfig(void* dpy, const int32_t *attrib_list, void* *configs, int32_t config_size, int32_t *num_config)
+{
+    auto ret = eglChooseConfig(dpy, attrib_list, configs, config_size, num_config);
+    // std::cout<<" ! chooseConfig("<<"dpy="<<dpy<<", "<<"attrib_list="<<attrib_list<<", "<<"configs="<<configs<<", "<<"config_size="<<config_size<<", "<<"num_config="<<num_config<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+int32_t RosenContextImpl::OH_clientWaitSync(void* dpy, void* sync, int32_t flags, uint64_t timeout)
+{
+    auto ret = eglClientWaitSync(dpy, sync, flags, timeout);
+    // std::cout<<" ! clientWaitSync("<<"dpy="<<dpy<<", "<<"sync="<<sync<<", "<<"flags="<<flags<<", "<<"timeout="<<timeout<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+int32_t RosenContextImpl::OH_clientWaitSyncKHR(void* dpy, void* sync, int32_t flags, uint64_t timeout)
+{
+    printf("eglClientWaitSyncKHR is not declared\n");
+    return 0;
+}
+
+uint32_t RosenContextImpl::OH_copyBuffers(void* dpy, void* surface, void* target)
+{
+    auto ret = eglCopyBuffers(dpy, surface, target);
+    // std::cout<<" ! copyBuffers("<<"dpy="<<dpy<<", "<<"surface="<<surface<<", "<<"target="<<target<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+void* RosenContextImpl::OH_createContext(void* dpy, void* config, void* share_context, const int32_t *attrib_list)
+{
+    auto ret = eglCreateContext(dpy, config, share_context, attrib_list);
+    // std::cout<<" ! createContext("<<"dpy="<<dpy<<", "<<"config="<<config<<", "<<"share_context="<<share_context<<", "<<"attrib_list="<<attrib_list<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+void* RosenContextImpl::OH_createImage(void* dpy, void* ctx, uint32_t target, void* buffer, const int *attrib_list)
+{
+    auto ret = eglCreateImage(dpy, ctx, target, buffer, attrib_list);
+    // std::cout<<" ! createImage("<<"dpy="<<dpy<<", "<<"ctx="<<ctx<<", "<<"target="<<target<<", "<<"buffer="<<buffer<<", "<<"attrib_list="<<attrib_list<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+void* RosenContextImpl::OH_createImageKHR(void* dpy, void* ctx, uint32_t target, void* buffer, const int32_t *attrib_list)
+{
+    printf("eglCreateImageKHR is not declared\n");
+    return 0;
+}
+
+void* RosenContextImpl::OH_createPbufferFromClientBuffer(void* dpy, uint32_t buftype, void* buffer, void* config, const int32_t *attrib_list)
+{
+    auto ret = eglCreatePbufferFromClientBuffer(dpy, buftype, buffer, config, attrib_list);
+    // std::cout<<" ! createPbufferFromClientBuffer("<<"dpy="<<dpy<<", "<<"buftype="<<buftype<<", "<<"buffer="<<buffer<<", "<<"config="<<config<<", "<<"attrib_list="<<attrib_list<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+void* RosenContextImpl::OH_createPbufferSurface(void* dpy, void* config, const int32_t *attrib_list)
+{
+    auto ret = eglCreatePbufferSurface(dpy, config, attrib_list);
+    // std::cout<<" ! createPbufferSurface("<<"dpy="<<dpy<<", "<<"config="<<config<<", "<<"attrib_list="<<attrib_list<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+void* RosenContextImpl::OH_createPixmapSurface(void* dpy, void* config, void* pixmap, const int32_t *attrib_list)
+{
+    auto ret = eglCreatePixmapSurface(dpy, config, pixmap, attrib_list);
+    // std::cout<<" ! createPixmapSurface("<<"dpy="<<dpy<<", "<<"config="<<config<<", "<<"pixmap="<<pixmap<<", "<<"attrib_list="<<attrib_list<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+void* RosenContextImpl::OH_createPlatformPixmapSurface(void* dpy, void* config, void *native_pixmap, const int *attrib_list)
+{
+    auto ret = eglCreatePlatformPixmapSurface(dpy, config, native_pixmap, attrib_list);
+    // std::cout<<" ! createPlatformPixmapSurface("<<"dpy="<<dpy<<", "<<"config="<<config<<", "<<"native_pixmap="<<native_pixmap<<", "<<"attrib_list="<<attrib_list<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+void* RosenContextImpl::OH_createPlatformPixmapSurfaceEXT(void* dpy, void* config, void *native_pixmap, const int32_t *attrib_list)
+{
+    printf("eglCreatePlatformPixmapSurfaceEXT is not declared\n");
+    return 0;
+}
+
+void* RosenContextImpl::OH_createPlatformWindowSurface(void* dpy, void* config, void *native_window, const int *attrib_list)
+{
+    auto ret = eglCreatePlatformWindowSurface(dpy, config, native_window, attrib_list);
+    // std::cout<<" ! createPlatformWindowSurface("<<"dpy="<<dpy<<", "<<"config="<<config<<", "<<"native_window="<<native_window<<", "<<"attrib_list="<<attrib_list<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+void* RosenContextImpl::OH_createPlatformWindowSurfaceEXT(void* dpy, void* config, void *native_window, const int32_t *attrib_list)
+{
+    printf("eglCreatePlatformWindowSurfaceEXT is not declared\n");
+    return 0;
+}
+
+void* RosenContextImpl::OH_createSync(void* dpy, uint32_t type, const int *attrib_list)
+{
+    auto ret = eglCreateSync(dpy, type, attrib_list);
+    // std::cout<<" ! createSync("<<"dpy="<<dpy<<", "<<"type="<<type<<", "<<"attrib_list="<<attrib_list<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+void* RosenContextImpl::OH_createSyncKHR(void* dpy, uint32_t type, const int32_t *attrib_list)
+{
+    printf("eglCreateSyncKHR is not declared\n");
+    return 0;
+}
+
+void* RosenContextImpl::OH_createWindowSurface(void* dpy, void* config, void* win, const int32_t *attrib_list)
+{
+    EGLint red, green, blue, alpha, stencil;
+    eglGetConfigAttrib(dpy, config, EGL_RED_SIZE, &red);
+    eglGetConfigAttrib(dpy, config, EGL_GREEN_SIZE, &green);
+    eglGetConfigAttrib(dpy, config, EGL_BLUE_SIZE, &blue);
+    eglGetConfigAttrib(dpy, config, EGL_ALPHA_SIZE, &alpha);
+    eglGetConfigAttrib(dpy, config, EGL_STENCIL_SIZE, &stencil);
+
+    NativeWindowHandleOpt(nativeWindow_, SET_STRIDE, stencil);
+    if (red == 8 && green == 8 && blue == 8 && alpha == 8)
+    {
+        NativeWindowHandleOpt((OHNativeWindow *)win, SET_FORMAT, GRAPHIC_PIXEL_FMT_RGBA_8888);
+    }
+    else if (red == 8 && green == 8 && blue == 8 && alpha == 0)
+    {
+        NativeWindowHandleOpt((OHNativeWindow *)win, SET_FORMAT, GRAPHIC_PIXEL_FMT_RGB_888);
+    }
+    else if (red == 5 && green == 6 && blue == 5 && alpha == 8)
+    {
+        NativeWindowHandleOpt((OHNativeWindow *)win, SET_FORMAT, GRAPHIC_PIXEL_FMT_RGBA_5658);
+    }
+    else if (red == 5 && green == 6 && blue == 5 && alpha == 0)
+    {
+        NativeWindowHandleOpt((OHNativeWindow *)win, SET_FORMAT, GRAPHIC_PIXEL_FMT_RGB_565);
+    }
+    else if (red == 4 && green == 4 && blue == 4 && alpha == 4)
+    {
+        NativeWindowHandleOpt((OHNativeWindow *)win, SET_FORMAT, GRAPHIC_PIXEL_FMT_RGBA_4444);
+    }
+    else if (red == 4 && green == 4 && blue == 4 && alpha == 0)
+    {
+        NativeWindowHandleOpt((OHNativeWindow *)win, SET_FORMAT, GRAPHIC_PIXEL_FMT_RGB_444);
+    }
+    else
+    {
+        printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+    }
+    auto ret = eglCreateWindowSurface(dpy, config, (NativeWindow *)win, attrib_list);
+    // std::cout<<" ! createWindowSurface("<<"dpy="<<dpy<<", "<<"config="<<config<<", "<<"win="<<win<<", "<<"attrib_list="<<attrib_list<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_destroyContext(void* dpy, void* ctx)
+{
+    auto ret = eglDestroyContext(dpy, ctx);
+    // std::cout<<" ! destroyContext("<<"dpy="<<dpy<<", "<<"ctx="<<ctx<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_destroyImage(void* dpy, void* image)
+{
+    auto ret = eglDestroyImage(dpy, image);
+    // std::cout<<" ! destroyImage("<<"dpy="<<dpy<<", "<<"image="<<image<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_destroyImageKHR(void* dpy, void* image)
+{
+    printf("eglDestroyImageKHR is not declared\n");
+    return 0;
+}
+
+uint32_t RosenContextImpl::OH_destroySurface(void* dpy, void* surface)
+{
+    auto ret = eglDestroySurface(dpy, surface);
+    // std::cout<<" ! destroySurface("<<"dpy="<<dpy<<", "<<"surface="<<surface<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_destroySync(void* dpy, void* sync)
+{
+    auto ret = eglDestroySync(dpy, sync);
+    // std::cout<<" ! destroySync("<<"dpy="<<dpy<<", "<<"sync="<<sync<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_destroySyncKHR(void* dpy, void* sync)
+{
+    printf("eglDestroySyncKHR is not declared\n");
+    return 0;
+}
+
+uint32_t RosenContextImpl::OH_getConfigAttrib(void* dpy, void* config, int32_t attribute, int32_t *value)
+{
+    auto ret = eglGetConfigAttrib(dpy, config, attribute, value);
+    // std::cout<<" ! getConfigAttrib("<<"dpy="<<dpy<<", "<<"config="<<config<<", "<<"attribute="<<attribute<<", "<<"value="<<value<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_getConfigs(void* dpy, void* *configs, int32_t config_size, int32_t *num_config)
+{
+    auto ret = eglGetConfigs(dpy, configs, config_size, num_config);
+    // std::cout<<" ! getConfigs("<<"dpy="<<dpy<<", "<<"configs="<<configs<<", "<<"config_size="<<config_size<<", "<<"num_config="<<num_config<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+void* RosenContextImpl::OH_getCurrentContext()
+{
+    auto ret = eglGetCurrentContext();
+    // std::cout<<" ! getCurrentContext("<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+void* RosenContextImpl::OH_getCurrentDisplay()
+{
+    auto ret = eglGetCurrentDisplay();
+    // std::cout<<" ! getCurrentDisplay("<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+void* RosenContextImpl::OH_getCurrentSurface(int32_t readdraw)
+{
+    auto ret = eglGetCurrentSurface(readdraw);
+    // std::cout<<" ! getCurrentSurface("<<"readdraw="<<readdraw<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+void* RosenContextImpl::OH_getDisplay(void* display_id)
+{
+    auto ret = eglGetDisplay(display_id);
+    // std::cout<<" ! getDisplay("<<"display_id="<<display_id<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+int32_t RosenContextImpl::OH_getError()
+{
+    auto ret = eglGetError();
+    // std::cout<<" ! getError("<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+void* RosenContextImpl::OH_getPlatformDisplay(uint32_t platform, void *native_display, const int *attrib_list)
+{
+    auto ret = eglGetPlatformDisplay(platform, native_display, attrib_list);
+    // std::cout<<" ! getPlatformDisplay("<<"platform="<<platform<<", "<<"native_display="<<native_display<<", "<<"attrib_list="<<attrib_list<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+void* RosenContextImpl::OH_getPlatformDisplayEXT(uint32_t platform, void *native_display, const int32_t *attrib_list)
+{
+    printf("eglGetPlatformDisplayEXT is not declared\n");
+    return 0;
+}
+
+FunctionPointer RosenContextImpl::OH_getProcAddress(const char *procname)
+{
+    auto ret = eglGetProcAddress(procname);
+    // std::cout<<" ! getProcAddress("<<"procname="<<procname<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_getSyncAttrib(void* dpy, void* sync, int32_t attribute, int *value)
+{
+    auto ret = eglGetSyncAttrib(dpy, sync, attribute, value);
+    // std::cout<<" ! getSyncAttrib("<<"dpy="<<dpy<<", "<<"sync="<<sync<<", "<<"attribute="<<attribute<<", "<<"value="<<value<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_getSyncAttribKHR(void* dpy, void* sync, int32_t attribute, int32_t *value)
+{
+    printf("eglGetSyncAttribKHR is not declared\n");
+    return 0;
+}
+
+uint32_t RosenContextImpl::OH_initialize(void* dpy, int32_t *major, int32_t *minor)
+{
+    auto ret = eglInitialize(dpy, major, minor);
+    // std::cout<<" ! initialize("<<"dpy="<<dpy<<", "<<"major="<<major<<", "<<"minor="<<minor<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_lockSurfaceKHR(void* dpy, void* surface, const int32_t *attrib_list)
+{
+    printf("eglLockSurfaceKHR is not declared\n");
+    return 0;
+}
+
+uint32_t RosenContextImpl::OH_makeCurrent(void* dpy, void* draw, void* read, void* ctx)
+{
+    auto ret = eglMakeCurrent(dpy, draw, read, ctx);
+    // std::cout<<" ! makeCurrent("<<"dpy="<<dpy<<", "<<"draw="<<draw<<", "<<"read="<<read<<", "<<"ctx="<<ctx<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_queryAPI()
+{
+    auto ret = eglQueryAPI();
+    // std::cout<<" ! queryAPI("<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_queryContext(void* dpy, void* ctx, int32_t attribute, int32_t *value)
+{
+    auto ret = eglQueryContext(dpy, ctx, attribute, value);
+    // std::cout<<" ! queryContext("<<"dpy="<<dpy<<", "<<"ctx="<<ctx<<", "<<"attribute="<<attribute<<", "<<"value="<<value<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+const char* RosenContextImpl::OH_queryString(void* dpy, int32_t name)
+{
+    auto ret = eglQueryString(dpy, name);
+    // std::cout<<" ! queryString("<<"dpy="<<dpy<<", "<<"name="<<name<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_querySurface(void* dpy, void* surface, int32_t attribute, int32_t *value)
+{
+    auto ret = eglQuerySurface(dpy, surface, attribute, value);
+    // std::cout<<" ! querySurface("<<"dpy="<<dpy<<", "<<"surface="<<surface<<", "<<"attribute="<<attribute<<", "<<"value="<<value<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_releaseTexImage(void* dpy, void* surface, int32_t buffer)
+{
+    auto ret = eglReleaseTexImage(dpy, surface, buffer);
+    // std::cout<<" ! releaseTexImage("<<"dpy="<<dpy<<", "<<"surface="<<surface<<", "<<"buffer="<<buffer<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_releaseThread()
+{
+    auto ret = eglReleaseThread();
+    // std::cout<<" ! releaseThread("<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_setDamageRegionKHR(void* dpy, void* surface, int32_t *rects, int32_t n_rects)
+{
+    printf("eglSetDamageRegionKHR is not declared\n");
+    return 0;
+}
+
+uint32_t RosenContextImpl::OH_signalSyncKHR(void* dpy, void* sync, uint32_t mode)
+{
+    printf("eglSignalSyncKHR is not declared\n");
+    return 0;
+}
+
+uint32_t RosenContextImpl::OH_surfaceAttrib(void* dpy, void* surface, int32_t attribute, int32_t value)
+{
+    auto ret = eglSurfaceAttrib(dpy, surface, attribute, value);
+    // std::cout<<" ! surfaceAttrib("<<"dpy="<<dpy<<", "<<"surface="<<surface<<", "<<"attribute="<<attribute<<", "<<"value="<<value<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_swapBuffers(void* dpy, void* surface)
+{
+    auto ret = eglSwapBuffers(dpy, surface);
+    // std::cout<<" ! swapBuffers("<<"dpy="<<dpy<<", "<<"surface="<<surface<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_swapBuffersWithDamageKHR(void* dpy, void* surface, int32_t *rects, int32_t n_rects)
+{
+    printf("eglSwapBuffersWithDamageKHR is not declared\n");
+    return 0;
+}
+
+uint32_t RosenContextImpl::OH_swapInterval(void* dpy, int32_t interval)
+{
+    auto ret = eglSwapInterval(dpy, interval);
+    // std::cout<<" ! swapInterval("<<"dpy="<<dpy<<", "<<"interval="<<interval<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_terminate(void* dpy)
+{
+    auto ret = eglTerminate(dpy);
+    // std::cout<<" ! terminate("<<"dpy="<<dpy<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_unlockSurfaceKHR(void* dpy, void* surface)
+{
+    printf("eglUnlockSurfaceKHR is not declared\n");
+    return 0;
+}
+
+uint32_t RosenContextImpl::OH_waitClient()
+{
+    auto ret = eglWaitClient();
+    // std::cout<<" ! waitClient("<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_waitGL()
+{
+    auto ret = eglWaitGL();
+    // std::cout<<" ! waitGL("<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_waitNative(int32_t engine)
+{
+    auto ret = eglWaitNative(engine);
+    // std::cout<<" ! waitNative("<<"engine="<<engine<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+uint32_t RosenContextImpl::OH_waitSync(void* dpy, void* sync, int32_t flags)
+{
+    auto ret = eglWaitSync(dpy, sync, flags);
+    // std::cout<<" ! waitSync("<<"dpy="<<dpy<<", "<<"sync="<<sync<<", "<<"flags="<<flags<<")" << "=" << ret << std::endl;
+    return ret;
+}
+
+int32_t RosenContextImpl::OH_waitSyncKHR(void* dpy, void* sync, int32_t flags)
+{
+    printf("eglWaitSyncKHR is not declared\n");
+    return 0;
+}
+
+// implemented2_END

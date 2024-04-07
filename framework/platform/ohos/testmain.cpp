@@ -31,6 +31,7 @@
 #include "external/openglcts/modules/gles32/es32cTestPackage.hpp"
 #include "external/openglcts/modules/gles31/es31cTestPackage.hpp"
 
+#include "modules/egl/teglTestPackage.hpp"
 #include "modules/gles2/tes2TestPackage.hpp"
 #include "modules/gles3/tes3TestPackage.hpp"
 #include "modules/gles31/tes31TestPackage.hpp"
@@ -70,6 +71,10 @@ static tcu::TestPackage* createdEQPES31Package(tcu::TestContext& testCtx)
 {
 	return new deqp::gles31::TestPackage(testCtx);
 }
+static tcu::TestPackage* createdEQPEGLPackage(tcu::TestContext& testCtx)
+{
+       return new deqp::egl::TestPackage(testCtx);
+}
 
 // Implement this in your platform port.
 
@@ -95,6 +100,7 @@ KHR-GLES32
     registry->registerPackage("dEQP-GLES2", createdEQPES2Package);
     registry->registerPackage("dEQP-GLES3", createdEQPES30Package);
     registry->registerPackage("dEQP-GLES31", createdEQPES31Package);
+    registry->registerPackage("dEQP-EGL", createdEQPEGLPackage);
 }
 
 bool GetCasePath(tcu::TestNode *node, std::vector<tcu::TestNode *> &casePath, std::vector<std::string> &namePath, uint32_t deep = 0)

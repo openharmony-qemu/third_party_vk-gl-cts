@@ -49,7 +49,7 @@ class OhosWindow : public NativeWindow
 public:
     static const Capability    CAPABILITIES        = Capability(CAPABILITY_CREATE_SURFACE_LEGACY |
                                                              CAPABILITY_CREATE_SURFACE_PLATFORM |
-                                                             CAPABILITY_CREATE_SURFACE_PLATFORM_EXTENSION |
+                                                            //  CAPABILITY_CREATE_SURFACE_PLATFORM_EXTENSION |
                                                              CAPABILITY_GET_SURFACE_SIZE |
                                                              CAPABILITY_SET_SURFACE_SIZE |
                                                              CAPABILITY_GET_SCREEN_SIZE);
