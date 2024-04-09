@@ -75,7 +75,7 @@ public:
     virtual void SwapBuffer() = 0;
 
     virtual int32_t GetAttrib(int32_t attrType) = 0;
-    
+
     virtual uint64_t CreateWindow(uint32_t x,uint32_t y,uint32_t width,uint32_t height) = 0;
     virtual void *GetNativeWindow(uint64_t windowId) = 0;
     virtual void DestoryWindow(uint64_t windowId) = 0;
@@ -145,6 +145,7 @@ public:
     virtual uint32_t OH_waitSync(void* dpy, void* sync, int32_t flags) = 0;
     virtual int32_t OH_waitSyncKHR(void* dpy, void* sync, int32_t flags) = 0;
 // interface_END
+
 };
 
 }
