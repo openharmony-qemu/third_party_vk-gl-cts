@@ -20,6 +20,8 @@
 #include "eglwEnums.hpp"
 #include "deUniquePtr.hpp"
 
+#include "ohos_context_i.h"
+
 namespace tcu
 {
 namespace OHOS_ROSEN
@@ -48,6 +50,7 @@ OhosWindow::OhosWindow (OhosDisplay& display, const WindowParams& params)
     if (display.getPlatformNative() != nullptr) {
         printf("OhosWindow params: width=%d, height=%d\n", params.width, params.height);
     }
+    OHOS::OhosContextI::GetInstance().OhosWindowResize(params.width,params.height);
     printf("OhosWindow::OhosWindow\n");
 }
 
@@ -55,7 +58,7 @@ eglw::EGLNativeWindowType OhosWindow::getLegacyNative (void)
 { 
     //TODO: 创建rosen window
     printf("OhosWindow::getLegacyNative\n");
-    return nullptr; 
+    return OHOS::OhosContextI::GetInstance().GetNativeWindowEx(); 
 }
 
 void* OhosWindow::getPlatformExtension (void)

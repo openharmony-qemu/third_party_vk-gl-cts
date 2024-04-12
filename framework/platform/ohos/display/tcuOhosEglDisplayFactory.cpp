@@ -46,7 +46,7 @@ OhosDisplayFactory::OhosDisplayFactory (void)
 {
     //TODO: 增加window，pixmap factory
     m_nativeWindowRegistry.registerFactory(new OhosWindowFactory());
-    m_nativePixmapRegistry.registerFactory(new OhosPixmapFactory());
+    // m_nativePixmapRegistry.registerFactory(new OhosPixmapFactory());
 }
 
 NativeDisplay* OhosDisplayFactory::createDisplay (const eglw::EGLAttrib* attribList) const
