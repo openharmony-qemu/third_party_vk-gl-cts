@@ -1,4 +1,4 @@
-// Copyright 2018-2022 The Khronos Group Inc.
+// Copyright 2018-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -12,7 +12,7 @@ Ray traversal cannot be started by a Vulkan API command directly - a shader
 must execute
 ifdef::VK_KHR_ray_query[code:OpRayQueryProceedKHR]
 ifdef::VK_KHR_ray_query+VK_KHR_ray_tracing_pipeline[or]
-ifdef::VK_KHR_ray_tracing_pipeline[code:OpTraceRayKHR]
+ifdef::VK_KHR_ray_tracing_pipeline[a <<glossary-pipeline-trace-ray, pipeline trace ray>> instruction]
 .
 ifdef::VK_KHR_ray_tracing_pipeline[]
 When the <<features-rayTracingPipeline, pname:rayTracingPipeline>> feature
@@ -33,6 +33,19 @@ acceleration structure.
 A ray that intersects an instance will be transformed into the space of the
 instance to continue traversal within that instance; therefore the transform
 matrix stored in the instance must be invertible.
+
+In case multiple instances are intersected by a ray, the ray transformation
+into the space of the instance is invariant under the order in which these
+instances are encountered in the top-level acceleration structure.
+
+[NOTE]
+.Note
+====
+Applying multiple forward and reverse transforms to a ray to transition from
+one instance to another could result in accumulated errors.
+Thus an implementation should behave as if the ray is transformed from the
+origin for each instance independently.
+====
 
 Next, rays are tested against geometries in an bottom-level acceleration
 structure to determine if a hit occurred between them, initially based only
@@ -192,9 +205,9 @@ For triangle intersection candidates, the [eq]#b# and [eq]#c#
 <<primsrast-polygon-barycentrics,barycentric coordinates>> on the triangle
 where the above condition is met are made available to future shading.
 ifdef::VK_KHR_ray_tracing_pipeline[]
-If the ray was traced with code:OpTraceRayKHR, these values are available as
-a vector of 2 32-bit floating point values in the code:HitAttributeKHR
-storage class.
+If the ray was traced with a <<glossary-pipeline-trace-ray, pipeline trace
+ray>> instruction, these values are available as a vector of 2 32-bit
+floating point values in the code:HitAttributeKHR storage class.
 endif::VK_KHR_ray_tracing_pipeline[]
 
 Once an intersection candidate is determined, it proceeds through the
@@ -260,16 +273,18 @@ trace instruction, and the intersection is with a triangle primitive, the
 intersection is dropped, and no further processing of this intersection
 occurs.
 If ename:VK_PIPELINE_CREATE_RAY_TRACING_SKIP_TRIANGLES_BIT_KHR was included
-in the pipeline, traversal with code:OpTraceRayKHR calls will all behave as
-if code:SkipTrianglesKHR was included in its `Ray Flags` operand.
+in the pipeline, traversal with <<glossary-pipeline-trace-ray, pipeline
+trace ray>> instructions will all behave as if code:SkipTrianglesKHR was
+included in their `Ray Flags` operand.
 
 If code:SkipAABBsKHR was included in the `Ray Flags` operand of the ray
 trace instruction, and the intersection is with an AABB primitive, the
 intersection is dropped, and no further processing of this intersection
 occurs.
 If ename:VK_PIPELINE_CREATE_RAY_TRACING_SKIP_AABBS_BIT_KHR was included in
-the pipeline, traversal with code:OpTraceRayKHR calls will all behave as if
-code:SkipAABBsKHR was included in its `Ray Flags` operand.
+the pipeline, traversal with <<glossary-pipeline-trace-ray, pipeline trace
+ray>> instructions will all behave as if code:SkipAABBsKHR was included in
+their `Ray Flags` operand.
 
 
 === Ray Mask Culling
@@ -338,11 +353,11 @@ of this.
 ====
 
 ifdef::VK_KHR_ray_tracing_pipeline[]
-If the ray was traced with code:OpTraceRayKHR, the code:HitKindKHR built-in
-is set to code:HitKindFrontFacingTriangleKHR if the intersection is with
-front-facing geometry, and code:HitKindBackFacingTriangleKHR if the
-intersection is with back-facing geometry, for shader stages considering
-this intersection.
+If the ray was traced with a <<glossary-pipeline-trace-ray, pipeline trace
+ray>> instruction, the code:HitKindKHR built-in is set to
+code:HitKindFrontFacingTriangleKHR if the intersection is with front-facing
+geometry, and code:HitKindBackFacingTriangleKHR if the intersection is with
+back-facing geometry, for shader stages considering this intersection.
 endif::VK_KHR_ray_tracing_pipeline[]
 
 ifdef::VK_KHR_ray_query[]
@@ -449,8 +464,7 @@ finer-grained opacity information.
 If the intersection candidate is with a geometry with an associated opacity
 micromap and ename:VK_GEOMETRY_INSTANCE_DISABLE_OPACITY_MICROMAPS_EXT is not
 set in its instance then the micromap is used to determine geometry opacity
-instead of the ename:VK_GEOMETRY_INSTANCE_FORCE_OPAQUE_BIT_KHR and
-ename:VK_GEOMETRY_INSTANCE_FORCE_NO_OPAQUE_BIT_KHR values in the geometry.
+instead of the ename:VK_GEOMETRY_OPAQUE_BIT_KHR flag in the geometry.
 
 The opacity information in the micromap object is accessed using the
 candidate intersection [eq]#u# and [eq]#v# coordinates.
@@ -481,6 +495,8 @@ instance of the candidate intersection or
 ename:ForceOpacityMicromap2StateEXT ray flags on the ray.
 If either is set, the opacity micromap information is interpreted in 2 state
 override mode.
+If the result of the micromap lookup is to treat the intersection candidate
+as ignored, no further processing of that candidate is done.
 
 If the associated opacity micromap has format
 ename:VK_OPACITY_MICROMAP_FORMAT_2_STATE_EXT, each element of the micromap
@@ -530,9 +546,10 @@ To avoid propagating false intersections the application should: verify the
 intersection candidate before reporting any hits.
 
 ifdef::VK_KHR_ray_tracing_pipeline[]
-If the ray was traced with code:OpTraceRayKHR, an <<shaders-intersection,
-intersection shader>> is invoked from the <<shader-binding-table>> according
-to the <<shader-binding-table-indexing-rules, specified indexing>> for the
+If the ray was traced with a <<glossary-pipeline-trace-ray, pipeline trace
+ray>> instruction, an <<shaders-intersection, intersection shader>> is
+invoked from the <<shader-binding-table>> according to the
+<<shader-binding-table-indexing-rules, specified indexing>> for the
 intersected geometry.
 If this shader calls code:OpReportIntersectionKHR, a new intersection
 candidate is generated as described
@@ -567,9 +584,10 @@ code:OpRayQueryProceedKHR with the same ray query, or intersection can: be
 terminated with code:OpRayQueryTerminateKHR.
 endif::VK_KHR_ray_query[]
 ifdef::VK_KHR_ray_tracing_pipeline+VK_KHR_ray_query[]
-Unlike rays traced with code:OpTraceRayKHR, candidates generated in this way
-skip generated intersection candidate confirmation; applications should:
-make this determination before generating the intersection.
+Unlike rays traced with a <<glossary-pipeline-trace-ray, pipeline trace
+ray>> instruction, candidates generated in this way skip generated
+intersection candidate confirmation; applications should: make this
+determination before generating the intersection.
 endif::VK_KHR_ray_tracing_pipeline+VK_KHR_ray_query[]
 
 This operation may: be executed multiple times for the same intersection
@@ -590,9 +608,9 @@ For non-opaque intersection candidates, shader code is executed to determine
 whether a hit occurred or not.
 
 ifdef::VK_KHR_ray_tracing_pipeline[]
-If the ray was traced with code:OpTraceRayKHR, an <<shaders-any-hit, any-hit
-shader>> is invoked from the <<shader-binding-table>> according to the
-specified indexing.
+If the ray was traced with a <<glossary-pipeline-trace-ray, pipeline trace
+ray>> instruction, an <<shaders-any-hit, any-hit shader>> is invoked from
+the <<shader-binding-table>> according to the specified indexing.
 If this shader calls code:OpIgnoreIntersectionKHR, the candidate is dropped
 and no further processing of the candidate occurs.
 If the <<shaders-any-hit, any-hit shader>> identified is
@@ -653,22 +671,25 @@ If a closest hit result was identified by <<ray-closest-hit-determination>>,
 a closest hit has occurred, otherwise the final result is a miss.
 
 ifdef::VK_KHR_ray_tracing_pipeline[]
-For rays traced with code:OpTraceRayKHR, if a closest hit result was
-identified, a <<shaders-closest-hit, closest hit shader>> is invoked from
-the <<shader-binding-table>> according to the
+For rays traced with <<glossary-pipeline-trace-ray, pipeline trace ray>>
+instructions which can: invoke a closest hit shader, if a closest hit result
+was identified, a <<shaders-closest-hit, closest hit shader>> is invoked
+from the <<shader-binding-table>> according to the
 <<shader-binding-table-indexing-rules, specified indexing>> for the
 intersected geometry.
-Control returns to the shader that executed code:OpTraceRayKHR once this
+Control returns to the shader that executed the
+<<glossary-pipeline-trace-ray, pipeline trace ray>> instruction once this
 shader returns.
 This shader is skipped if either the ray flags included
 code:SkipClosestHitShaderKHR, or if the <<shaders-closest-hit, closest hit
 shader>> identified is ename:VK_SHADER_UNUSED_KHR.
 
-For rays traced with code:OpTraceRayKHR where no hit result was identified,
-the <<shaders-miss, miss shader>> identified by the `Miss Index` parameter
-of code:OpTraceRayKHR is invoked.
-Control returns to the shader that executed code:OpTraceRayKHR once this
-shader returns.
+For rays traced with a <<glossary-pipeline-trace-ray, pipeline trace ray>>
+instruction where no hit result was identified, the <<shaders-miss, miss
+shader>> identified by the `Miss Index` parameter of the instruction is
+invoked.
+Control returns to the shader that executed the pipeline trace ray
+instruction once this shader returns.
 This shader is skipped if the miss shader identified is
 ename:VK_SHADER_UNUSED_KHR.
 endif::VK_KHR_ray_tracing_pipeline[]

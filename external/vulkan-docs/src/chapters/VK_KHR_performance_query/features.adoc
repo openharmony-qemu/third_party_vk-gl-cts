@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Khronos Group Inc.
+// Copyright 2019-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -11,7 +11,7 @@ include::{generated}/api/structs/VkPhysicalDevicePerformanceQueryFeaturesKHR.ado
 
 This structure describes the following features:
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 // tag::VK_KHR_performance_query-features[]

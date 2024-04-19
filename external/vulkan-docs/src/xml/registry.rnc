@@ -1,10 +1,7 @@
-# Copyright 2013-2022 The Khronos Group Inc.
-#
+# Copyright 2013-2024 The Khronos Group Inc.
 # SPDX-License-Identifier: Apache-2.0
 
-# Relax NG schema for Khronos Vulkan API Registry XML
-#
-# See https://www.khronos.org/vulkan/
+# Relax NG schema for Khronos API Registry XML
 #
 # This definition is subject to change (mostly in the form of additions)
 
@@ -23,6 +20,7 @@ start = element registry {
         Feature           * |
         Extensions        * |
         Formats           * |
+        Sync              * |
         SpirvExtensions   * |
         SpirvCapabilities *
     ) *
@@ -77,7 +75,6 @@ Types = element types {
 #   requires - name of another type definition required by this one
 #   bitvalues - for a *Flags type, name of an enum definition that
 #       defines the valid values for parameters of that type
-#   name - name of the type being defined
 #   category - if present, 'enum' indicates a matching <enums>
 #       block to generate an enumerated type for, and 'struct'
 #       causes special interpretation of the contents of the type
@@ -85,6 +82,8 @@ Types = element types {
 #       Other allowed values are 'include', 'define', 'handle' and 'bitmask',
 #       which do not change syntactic interpretation but allow organization
 #       in the generated header.
+#   deprecated - denotes that this type is deprecated, and why.
+#       Valid values: 'aliased', 'true'.
 #   parent - only applicable if category is 'handle'. Notes another type with
 #       the 'handle' category that acts as a parent object for this type.
 #   returnedonly - only applicable if category is 'struct'. Notes that this
@@ -116,6 +115,8 @@ Types = element types {
 #           or a latex equation (prefixed with 'latexmath:')
 #       altlen - if len has latexmath equations, this contains equivalent C99
 #                expressions separated by commas.
+#       deprecated - denotes that this member is deprecated, and why.
+#           Valid values: 'ignored', 'true'.
 #       externsync - denotes that the member should be externally synchronized
 #           when accessed by Vulkan
 #       optional - whether this value can be omitted by providing NULL (for
@@ -128,7 +129,7 @@ Types = element types {
 #       limittype - only applicable for members of VkPhysicalDeviceProperties and
 #           VkPhysicalDeviceProperties2, their substructures, and extensions.
 #           Specifies the type of a device limit.
-#           Valid values: 'min', 'max', 'pot', 'mul', 'bits', bitmask', 'range', 'struct', 'exact', 'noauto'
+#           Valid values: 'min', 'max', 'not', 'pot', 'mul', 'bits', bitmask', 'range', 'struct', 'exact', 'noauto'
 #       objecttype - only applicable for members representing a handle as
 #           a uint64_t value. Specifies the name of another member which is
 #           a VkObjectType or VkDebugReportObjectTypeEXT value specifying
@@ -148,6 +149,7 @@ Type = element type {
     attribute bitvalues { text } ? ,
     attribute name { TypeName } ? ,
     attribute category { text } ? ,
+    attribute deprecated { text } ? ,
     attribute parent { TypeName } ? ,
     attribute returnedonly { text } ? ,
     attribute structextends { text } ? ,
@@ -181,6 +183,7 @@ Type = element type {
                 attribute values { text } ? ,
                 attribute limittype { text } ? ,
                 attribute objecttype { text } ? ,
+                attribute deprecated { text } ? ,
                 mixed {
                     element type { TypeName } ? ,
                     element name { text } ? ,
@@ -196,18 +199,13 @@ Type = element type {
 # <enums> defines a group of enumerants
 #   name - identifies a type name associated with this group. Should
 #       match a <type> name to trigger generation of the type.
-#   start, end - beginning and end of a numeric range
-#   vendor - owner of the numeric range
 #   type - 'enum' or 'bitmask', if present
 #   bitwidth - bit width of the enum value type.
 #   comment - descriptive text with no semantic meaning
 Enums = element enums {
     attribute name { text } ? ,
     attribute type { text } ? ,
-    attribute start { Integer } ? ,
-    attribute end { Integer } ? ,
     attribute bitwidth { Integer } ? ,
-    Vendor ? ,
     Comment ? ,
     (
         Enum |
@@ -246,6 +244,8 @@ Enums = element enums {
 #   alias - another enumerant this is semantically identical to
 #   protect - additional #ifdef symbol to place around the enum
 #   comment - descriptive text with no semantic meaning
+#   deprecated - denotes that this enum is deprecated, and why.
+#       Valid values: 'aliased', 'ignored', 'true'.
 Enum = element enum {
     (
       (
@@ -272,6 +272,7 @@ Enum = element enum {
       attribute api { text } ? &
       attribute type { TypeSuffix } ? &
       attribute name { text } &
+      attribute deprecated { text } ? &
       Comment ?
     )
 }
@@ -422,7 +423,7 @@ Feature = element feature {
     (
         element require {
             ProfileName ? ,
-            ExtensionName ? ,
+            Depends ? ,
             Comment ? ,
             (
                 InterfaceElement |
@@ -460,20 +461,20 @@ Extensions = element extensions {
 #   author - name of the author (usually a company or project name)
 #   contact - contact responsible for the tag (name and contact information)
 #   type - 'device' or 'instance', if present
-#   requires - commas-separated list of extension names required by this
-#       extension
-#   requiresCore - core version of Vulkan required by the extension, e.g.
-#       "1.1". Defaults to "1.0".
-#   supported - profile name(s) supporting this extension, e.g. 'vulkan'
-#       or 'disabled' to never generate output.
-#   promotedto - Vulkan version or a name of an extension that this
+#   depends - boolean expression of API and/or extension names
+#       upon which this extension depends.
+#   supported - comma-separated list of API name(s) supporting this extension,
+#       e.g. 'vulkan', or 'disabled' to never generate output.
+#   ratified - comma-separated list of API name(s) for which this extension
+#       has been ratified by Khronos. Defaults to "" if not specified.
+#   promotedto - API version or a name of an extension that this
 #       extension was promoted to; e.g. 'VK_VERSION_1_1', or
 #       'VK_KHR_draw_indirect_county'
-#   deprecatedby - Vulkan version or a name of an extension that deprecates
-#       this extension. It may be empty string.
+#   deprecatedby - API version or a name of an extension that deprecates
+#       this extension. It may be an empty string.
 #       e.g. 'VK_VERSION_1_1', or 'VK_EXT_debug_utils', or ''
 #   obsoletedby - Vulkan version or a name of an extension that obsoletes
-#       this extension. It may be empty string.
+#       this extension. It may be an empty string.
 #       e.g. 'VK_VERSION_1_1', or 'VK_EXT_debug_utils', or ''
 #   provisional - 'true' if this extension is released provisionally
 #   specialuse - contains one or more tokens separated by commas, indicating
@@ -492,9 +493,9 @@ Extension = element extension {
     attribute author { text } ? ,
     attribute contact { text } ? ,
     attribute type { text } ? ,
-    attribute requires { text } ? ,
-    attribute requiresCore { text } ? ,
+    attribute depends { text } ?,
     attribute supported { StringGroup } ? ,
+    attribute ratified { text } ? ,
     attribute promotedto { text } ? ,
     attribute deprecatedby { text } ? ,
     attribute obsoletedby { text } ? ,
@@ -505,8 +506,7 @@ Extension = element extension {
         element require {
             attribute api { text } ? ,
             ProfileName ? ,
-            ExtensionName ? ,
-            FeatureName ? ,
+            Depends ? ,
             Comment ? ,
             (
                 InterfaceElement |
@@ -575,6 +575,55 @@ Plane = element plane {
 # labels a SPIR-V Image Format
 SpirvImageFormat = element spirvimageformat {
     Name
+}
+
+# <sync> is a set of all sync objects
+Sync = element sync {
+    Comment ? ,
+    SyncStage *,
+    SyncAccess *,
+    SyncPipeline *
+}
+
+SyncSupport = element syncsupport {
+    attribute queues { text } ? ,
+    attribute stage { text } ?
+}
+
+SyncEquivalent = element syncequivalent {
+    attribute stage { text } ?,
+    attribute access { text } ?
+}
+
+# describes all Pipeline Stages
+SyncStage = element syncstage {
+    Name ,
+    attribute alias { text } ? ,
+    SyncSupport ? ,
+    SyncEquivalent ?
+}
+
+# describes all Access Flags
+SyncAccess = element syncaccess {
+    element comment { text } ?,
+    Name ,
+    attribute alias { text } ? ,
+    SyncSupport ? ,
+    SyncEquivalent ?
+}
+
+SyncPipelineStage = element syncpipelinestage {
+    attribute order { text } ? ,
+    attribute before { text } ? ,
+    attribute after { text } ?,
+    text
+}
+
+# describes pipelines
+SyncPipeline = element syncpipeline {
+    Name ,
+    attribute depends { text } ? ,
+    SyncPipelineStage *
 }
 
 # Each <spirvextension> define a SPIR-V extension that can be used in the API.
@@ -676,7 +725,8 @@ StringGroup = text
 # Repeatedly used attributes
 ProfileName = attribute profile { text }
 ExtensionName = attribute extension { text }
-FeatureName = attribute feature { text }
+# Boolean expression of core version and extension names using (),+ operators
+Depends = attribute depends { text }
 Vendor = attribute vendor { text }
 Comment = attribute comment { text }
 Name = attribute name { text }

@@ -1,4 +1,4 @@
-// Copyright 2020-2022 The Khronos Group Inc.
+// Copyright 2020-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -24,32 +24,24 @@
     pname:srcImageLayout must: specify the layout of the image subresources
     of pname:srcImage specified in pname:pRegions at the time this command
     is executed on a sname:VkDevice
-ifndef::VK_KHR_shared_presentable_image[]
-  * [[VUID-{refpage}-srcImageLayout-00261]]
-    pname:srcImageLayout must: be ename:VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
-    or ename:VK_IMAGE_LAYOUT_GENERAL
-endif::VK_KHR_shared_presentable_image[]
-ifdef::VK_KHR_shared_presentable_image[]
   * [[VUID-{refpage}-srcImageLayout-01400]]
-    pname:srcImageLayout must: be ename:VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR,
+    pname:srcImageLayout must: be
+ifdef::VK_KHR_shared_presentable_image[]
+    ename:VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR,
+endif::VK_KHR_shared_presentable_image[]
     ename:VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL or
     ename:VK_IMAGE_LAYOUT_GENERAL
-endif::VK_KHR_shared_presentable_image[]
   * [[VUID-{refpage}-dstImageLayout-00262]]
     pname:dstImageLayout must: specify the layout of the image subresources
     of pname:dstImage specified in pname:pRegions at the time this command
     is executed on a sname:VkDevice
-ifndef::VK_KHR_shared_presentable_image[]
-  * [[VUID-{refpage}-dstImageLayout-00263]]
-    pname:dstImageLayout must: be ename:VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
-    or ename:VK_IMAGE_LAYOUT_GENERAL
-endif::VK_KHR_shared_presentable_image[]
-ifdef::VK_KHR_shared_presentable_image[]
   * [[VUID-{refpage}-dstImageLayout-01401]]
-    pname:dstImageLayout must: be ename:VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR,
+    pname:dstImageLayout must: be
+ifdef::VK_KHR_shared_presentable_image[]
+    ename:VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR,
+endif::VK_KHR_shared_presentable_image[]
     ename:VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL or
     ename:VK_IMAGE_LAYOUT_GENERAL
-endif::VK_KHR_shared_presentable_image[]
   * [[VUID-{refpage}-dstImage-02003]]
     The <<resources-image-format-features,format features>> of
     pname:dstImage must: contain
@@ -74,12 +66,20 @@ endif::VK_NV_linear_color_attachment[]
     pname:pRegions must: be less than the pname:mipLevels specified in
     slink:VkImageCreateInfo when pname:dstImage was created
   * [[VUID-{refpage}-srcSubresource-01711]]
-    The [eq]#pname:srcSubresource.baseArrayLayer {plus}
+ifdef::VK_KHR_maintenance5[]
+    If pname:srcSubresource.layerCount is not
+    ename:VK_REMAINING_ARRAY_LAYERS,
+endif::VK_KHR_maintenance5[]
+    [eq]#pname:srcSubresource.baseArrayLayer {plus}
     pname:srcSubresource.layerCount# of each element of pname:pRegions must:
     be less than or equal to the pname:arrayLayers specified in
     slink:VkImageCreateInfo when pname:srcImage was created
   * [[VUID-{refpage}-dstSubresource-01712]]
-    The [eq]#pname:dstSubresource.baseArrayLayer {plus}
+ifdef::VK_KHR_maintenance5[]
+    If pname:dstSubresource.layerCount is not
+    ename:VK_REMAINING_ARRAY_LAYERS,
+endif::VK_KHR_maintenance5[]
+    [eq]#pname:dstSubresource.baseArrayLayer {plus}
     pname:dstSubresource.layerCount# of each element of pname:pRegions must:
     be less than or equal to the pname:arrayLayers specified in
     slink:VkImageCreateInfo when pname:dstImage was created
@@ -89,15 +89,12 @@ ifdef::VK_EXT_fragment_density_map[]
     pname:flags containing ename:VK_IMAGE_CREATE_SUBSAMPLED_BIT_EXT
 endif::VK_EXT_fragment_density_map[]
   * [[VUID-{refpage}-srcImage-04446]]
-    If either pname:srcImage or pname:dstImage are of type
-    ename:VK_IMAGE_TYPE_3D, then for each element of pname:pRegions,
-    pname:srcSubresource.baseArrayLayer must: be `0` and
-    pname:srcSubresource.layerCount must: be `1`
+    If pname:dstImage is of type ename:VK_IMAGE_TYPE_3D, then for each
+    element of pname:pRegions, pname:srcSubresource.layerCount must: be `1`
   * [[VUID-{refpage}-srcImage-04447]]
-    If either pname:srcImage or pname:dstImage are of type
-    ename:VK_IMAGE_TYPE_3D, then for each element of pname:pRegions,
-    pname:dstSubresource.baseArrayLayer must: be `0` and
-    pname:dstSubresource.layerCount must: be `1`
+    If pname:dstImage is of type ename:VK_IMAGE_TYPE_3D, then for each
+    element of pname:pRegions, pname:dstSubresource.baseArrayLayer must: be
+    `0` and pname:dstSubresource.layerCount must: be `1`
   * [[VUID-{refpage}-srcOffset-00269]]
     For each element of pname:pRegions, pname:srcOffset.x and
     [eq]#(pname:extent.width {plus} pname:srcOffset.x)# must: both be

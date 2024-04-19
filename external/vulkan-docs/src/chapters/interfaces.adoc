@@ -1,4 +1,4 @@
-// Copyright 2015-2022 The Khronos Group Inc.
+// Copyright 2015-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -6,12 +6,15 @@
 = Shader Interfaces
 
 When a pipeline is created, the set of shaders specified in the
-corresponding stext:Vk*PipelineCreateInfo structure are implicitly linked at
+corresponding stext:VkPipelineCreateInfo structure are implicitly linked at
 a number of different interfaces.
 
   * <<interfaces-iointerfaces,Shader Input and Output Interface>>
   * <<interfaces-vertexinput,Vertex Input Interface>>
   * <<interfaces-fragmentoutput,Fragment Output Interface>>
+ifdef::VK_EXT_shader_tile_image[]
+  * <<interfaces-fragmenttileimage,Fragment Tile Image Interface>>
+endif::VK_EXT_shader_tile_image[]
   * <<interfaces-inputattachment,Fragment Input Attachment Interface>>
 ifdef::VK_NV_ray_tracing,VK_KHR_ray_tracing_pipeline[]
   * <<interfaces-raypipeline, Ray Tracing Pipeline Interface>>
@@ -20,6 +23,14 @@ endif::VK_NV_ray_tracing,VK_KHR_ray_tracing_pipeline[]
 ifdef::VK_NV_geometry_shader_passthrough[]
   * <<geometry-passthrough-passthrough,Geometry Shader Passthrough>>
 endif::VK_NV_geometry_shader_passthrough[]
+
+ifdef::VKSC_VERSION_1_0[]
+In Vulkan SC, the pipeline compilation process occurs
+<<pipelines-offline-compilation,offline>> using the implementation-provided
+pipeline cache compiler.
+The set of shaders being used to create a pipeline can: be specified using
+the pipeline JSON schema.
+endif::VKSC_VERSION_1_0[]
 
 This chapter describes valid uses for a set of SPIR-V decorations.
 Any other use of one of these decorations is invalid, with the exception
@@ -79,7 +90,13 @@ They must:
   * be declared in a block whose top-level members are the built-ins.
 
 There must: be no more than one built-in interface block per shader per
-interface.
+interface
+ifdef::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
+, except for the mesh output interface where there must: be at most one
+built-in interface block decorated with the code:PerPrimitiveEXT decoration
+and at most one built-in interface block without this decoration
+endif::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
+.
 
 Built-ins must: not have any code:Location or code:Component decorations.
 
@@ -89,12 +106,11 @@ Built-ins must: not have any code:Location or code:Component decorations.
 
 The non-built-in variables listed by code:OpEntryPoint with the code:Input
 or code:Output storage class form the _user-defined variable interface_.
-These must: have SPIR-V numerical types or, recursively, composite types of
-such types.
+These must: have <<formats-numericformat, numeric type>> or, recursively,
+composite types of such types.
 ifdef::VK_VERSION_1_1,VK_KHR_16bit_storage[]
-By default, the components of such types have a width of 32 or 64 bits.
 If an implementation supports <<features-storageInputOutput16,
-pname:storageInputOutput16>>, components can: also have a width of 16 bits.
+pname:storageInputOutput16>>, components can: have a width of 16 bits.
 endif::VK_VERSION_1_1,VK_KHR_16bit_storage[]
 These variables must: be identified with a code:Location decoration and can:
 also be identified with a code:Component decoration.
@@ -178,19 +194,18 @@ write to a matching output variable, as described above.
 [[interfaces-iointerfaces-locations]]
 === Location Assignment
 
-This section describes location assignments for user-defined variables and
-how many locations are consumed by a given user-variable type.
+This section describes code:Location assignments for user-defined variables
+and how many code:Location slots are consumed by a given user-variable type.
 <<interfaces-iointerfaces-matching, As mentioned above>>, some inputs and
 outputs have an additional level of arrayness relative to other shader
 inputs and outputs.
 This outer array level is removed from the type before considering how many
-locations the type consumes.
+code:Location slots the type consumes.
 
 The code:Location value specifies an interface slot comprised of a 32-bit
 four-component vector conveyed between stages.
-The code:Component specifies
-<<interfaces-iointerfaces-components,components>> within these vector
-locations.
+The code:Component specifies <<interfaces-iointerfaces-components, word
+components>> within these vector code:Location slots.
 Only types with widths of
 ifdef::VK_VERSION_1_1,VK_KHR_16bit_storage[]
 16,
@@ -198,7 +213,7 @@ endif::VK_VERSION_1_1,VK_KHR_16bit_storage[]
 32 or 64 are supported in shader interfaces.
 
 Inputs and outputs of the following types consume a single interface
-location:
+code:Location:
 
 ifdef::VK_VERSION_1_1,VK_KHR_16bit_storage[]
   * 16-bit scalar and vector types, and
@@ -206,20 +221,21 @@ endif::VK_VERSION_1_1,VK_KHR_16bit_storage[]
   * 32-bit scalar and vector types, and
   * 64-bit scalar and 2-component vector types.
 
-64-bit three- and four-component vectors consume two consecutive locations.
+64-bit three- and four-component vectors consume two consecutive
+code:Location slots.
 
 If a declared input or output is an array of size _n_ and each element takes
-_m_ locations, it will be assigned _m_ {times} _n_ consecutive locations
-starting with the location specified.
+_m_ code:Location slots, it will be assigned _m_ {times} _n_ consecutive
+code:Location slots starting with the specified code:Location.
 
 If the declared input or output is an _n_ {times} _m_
 ifdef::VK_VERSION_1_1,VK_KHR_16bit_storage[]
 16-,
 endif::VK_VERSION_1_1,VK_KHR_16bit_storage[]
-32- or 64-bit matrix, it will be assigned multiple locations starting with
-the location specified.
-The number of locations assigned for each matrix will be the same as for an
-_n_-element array of _m_-component vectors.
+32- or 64-bit matrix, it will be assigned multiple code:Location slots
+starting with the specified code:Location.
+The number of code:Location slots assigned for each matrix will be the same
+as for an _n_-element array of _m_-component vectors.
 
 An code:OpVariable with a structure type that is not a block must: be
 decorated with a code:Location.
@@ -227,9 +243,9 @@ decorated with a code:Location.
 When an code:OpVariable with a structure type (either block or non-block) is
 decorated with a code:Location, the members in the structure type must: not
 be decorated with a code:Location.
-The code:OpVariable's members are assigned consecutive locations in
-declaration order, starting from the first member, which is assigned the
-location decoration from the code:OpVariable.
+The code:OpVariable's members are assigned consecutive code:Location slots
+in declaration order, starting from the first member, which is assigned the
+code:Location decoration from the code:OpVariable.
 
 When a block-type code:OpVariable is declared without a code:Location
 decoration, each member in its structure type must: be decorated with a
@@ -237,25 +253,27 @@ code:Location.
 Types nested deeper than the top-level members must: not have code:Location
 decorations.
 
-The locations consumed by block and structure members are determined by
-applying the rules above in a depth-first traversal of the instantiated
-members as though the structure or block member were declared as an input or
-output variable of the same type.
+The code:Location slots consumed by block and structure members are
+determined by applying the rules above in a depth-first traversal of the
+instantiated members as though the structure or block member were declared
+as an input or output variable of the same type.
 
 Any two inputs listed as operands on the same code:OpEntryPoint must: not be
-assigned the same location, either explicitly or implicitly.
+assigned the same code:Location slot and code:Component word, either
+explicitly or implicitly.
 Any two outputs listed as operands on the same code:OpEntryPoint must: not
-be assigned the same location, either explicitly or implicitly.
+be assigned the same code:Location slot and code:Component word, either
+explicitly or implicitly.
 
-The number of input and output locations available for a shader input or
-output interface are limited, and dependent on the shader stage as described
-in <<interfaces-iointerfaces-limits>>.
+The number of input and output code:Location slots available for a shader
+input or output interface is limited, and dependent on the shader stage as
+described in <<interfaces-iointerfaces-limits>>.
 All variables in both the <<interfaces-builtin-variables,built-in interface
 block>> and the <<interfaces-iointerfaces-user,user-defined variable
 interface>> count against these limits.
 Each effective code:Location must: have a value less than the number of
-locations available for the given interface, as specified in the "`Locations
-Available`" column in <<interfaces-iointerfaces-limits>>.
+code:Location slots available for the given interface, as specified in the
+"`Locations Available`" column in <<interfaces-iointerfaces-limits>>.
 
 
 [[interfaces-iointerfaces-limits]]
@@ -282,6 +300,9 @@ ifdef::VK_NV_mesh_shader[]
 | mesh output                   | pname:maxFragmentInputComponents / 4
 endif::VK_NV_mesh_shader[]
 endif::VK_EXT_mesh_shader[]
+ifdef::VK_HUAWEI_cluster_culling_shader[]
+| cluster culling output        | pname:maxOutputClusterCount
+endif::VK_HUAWEI_cluster_culling_shader[]
 |====
 
 
@@ -289,11 +310,11 @@ endif::VK_EXT_mesh_shader[]
 === Component Assignment
 
 The code:Component decoration allows the code:Location to be more finely
-specified for scalars and vectors, down to the individual components within
-a location that are consumed.
-The components within a location are 0, 1, 2, and 3.
-A variable or block member starting at component N will consume components
-N, N+1, N+2, ...
+specified for scalars and vectors, down to the individual code:Component
+word within a code:Location slot that are consumed.
+The code:Component word within a code:Location are 0, 1, 2, and 3.
+A variable or block member starting at code:Component N will consume
+code:Component words N, N+1, N+2, ...
 up through its size.
 ifdef::VK_VERSION_1_1,VK_KHR_16bit_storage[]
 For 16-, and 32-bit types,
@@ -301,15 +322,16 @@ endif::VK_VERSION_1_1,VK_KHR_16bit_storage[]
 ifndef::VK_VERSION_1_1,VK_KHR_16bit_storage[]
 For single precision types,
 endif::VK_VERSION_1_1,VK_KHR_16bit_storage[]
-it is invalid if this sequence of components gets larger than 3.
-A scalar 64-bit type will consume two of these components in sequence, and a
-two-component 64-bit vector type will consume all four components available
-within a location.
-A three- or four-component 64-bit vector type must: not specify a
+it is invalid if this sequence of code:Component words gets larger than 3.
+A scalar 64-bit type will consume two of these code:Component words in
+sequence, and a two-component 64-bit vector type will consume all four
+code:Component words available within a code:Location.
+A three- or four-component 64-bit vector type must: not specify a non-zero
 code:Component decoration.
-A three-component 64-bit vector type will consume all four components of the
-first location and components 0 and 1 of the second location.
-This leaves components 2 and 3 available for other component-qualified
+A three-component 64-bit vector type will consume all four code:Component
+words of the first code:Location and code:Component 0 and 1 of the second
+code:Location.
+This leaves code:Component 2 and 3 available for other component-qualified
 declarations.
 
 A scalar or two-component 64-bit data type must: not specify a
@@ -317,6 +339,9 @@ code:Component decoration of 1 or 3.
 A code:Component decoration must: not be specified for any type that is not
 a scalar or vector.
 
+A four-component 64-bit data type will consume all four code:Component words
+of the first code:Location and all four code:Component words of the second
+code:Location.
 
 [[interfaces-vertexinput]]
 == Vertex Input Interface
@@ -336,7 +361,7 @@ also be identified with a code:Component decoration.
 For the purposes of interface matching: variables declared without a
 code:Component decoration are considered to have a code:Component decoration
 of zero.
-The number of available vertex input locations is given by the
+The number of available vertex input code:Location slots is given by the
 pname:maxVertexInputAttributes member of the sname:VkPhysicalDeviceLimits
 structure.
 
@@ -368,28 +393,36 @@ considered to have an code:Index decoration of zero.
 A fragment shader output variable identified with a code:Location decoration
 of _i_ is associated with
 ifdef::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
-the element of slink:VkRenderingInfo::pname:pColorAttachments with a
-pname:location equal to _i_.
+the color attachment indicated by
+slink:VkRenderingInfo::pname:pColorAttachments[_i_].
 When using render pass objects, it is associated with
 endif::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
-the color attachment indicated by pname:pColorAttachments[_i_].
+the color attachment indicated by
+slink:VkSubpassDescription::pname:pColorAttachments[_i_].
 Values are written to those attachments after passing through the blending
 unit as described in <<framebuffer-blending>>, if enabled.
 Locations are consumed as described in
 <<interfaces-iointerfaces-locations,Location Assignment>>.
-The number of available fragment output locations is given by the
+The number of available fragment output code:Location slots is given by the
 pname:maxFragmentOutputAttachments member of the
 sname:VkPhysicalDeviceLimits structure.
 
+When an active fragment shader invocation finishes, the values of all
+fragment shader outputs are copied out and used as blend inputs or color
+attachments writes.
+If the invocation does not set a value for them, the input values to those
+blending or color attachment writes are undefined:.
+
 Components of the output variables are assigned as described in
 <<interfaces-iointerfaces-components,Component Assignment>>.
-Output components identified as 0, 1, 2, and 3 will be directed to the R, G,
-B, and A inputs to the blending unit, respectively, or to the output
-attachment if blending is disabled.
-If two variables are placed within the same location, they must: have the
-same underlying type (floating-point or integer).
-The input values to blending or color attachment writes are undefined: for
-components which do not correspond to a fragment shader output.
+Output code:Component words identified as 0, 1, 2, and 3 will be directed to
+the R, G, B, and A inputs to the blending unit, respectively, or to the
+output attachment if blending is disabled.
+If two variables are placed within the same code:Location, they must: have
+the same underlying type (floating-point or integer).
+code:Component words which do not correspond to any fragment shader output
+will also result in undefined: values for blending or color attachment
+writes.
 
 Fragment outputs identified with an code:Index of zero are directed to the
 first input of the blending unit associated with the corresponding
@@ -397,9 +430,9 @@ code:Location.
 Outputs identified with an code:Index of one are directed to the second
 input of the corresponding blending unit.
 
-No _component aliasing_ of output variables is allowed, that is there must:
-not be two output variables which have the same location, component, and
-index, either explicitly declared or implied.
+There must: be no output variable which has the same code:Location,
+code:Component, and code:Index as any other, either explicitly declared or
+implied.
 
 Output values written by a fragment shader must: be declared with either
 code:OpTypeFloat or code:OpTypeInt, and a code:Width of 32.
@@ -453,6 +486,43 @@ the vendor's OpenGL implementation, if any.
 ====
 endif::VK_EXT_legacy_dithering[]
 
+ifdef::VK_EXT_shader_tile_image[]
+[[interfaces-fragmenttileimage]]
+== Fragment Tile Image Interface
+
+When a fragment stage is present in a pipeline, the fragment shader tile
+image variables decorated with code:Location form an interface with the
+color attachments defined by the render pass instance.
+The fragment shader tile image variables are matched by code:Location
+decorations to the color attachments specified in the
+pname:pColorAttachments array of the slink:VkRenderingInfoKHR structure
+describing the render pass instance the fragment shader is executed in.
+
+The fragment shader variables listed by code:OpEntryPoint with the
+code:TileImageEXT storage class and a decoration of code:Location form the
+_fragment tile image interface_.
+These variables must: be declared with a type of code:OpTypeImage, and a
+code:Dim operand of code:TileImageDataEXT.
+The code:Component decoration is not supported for these variables.
+
+Reading from a tile image variable with a code:Location decoration of _i_
+reads from the color attachment identified by the element of
+slink:VkRenderingInfoKHR::pname:pColorAttachments with a pname:location
+equal to _i_.
+If the tile image variable is declared as an array of size N, it consumes N
+consecutive tile image locations, starting with the index specified.
+There must: not be more than one tile image variable with the same
+code:Location whether explicitly declared or implied by an array
+declaration.
+The number of available tile image locations is the same as the number of
+available fragment output locations as given by the
+pname:maxFragmentOutputAttachments member of the
+sname:VkPhysicalDeviceLimits structure.
+
+The basic data type (floating-point, integer, unsigned integer) of the tile
+image variable must: match the basic format of the corresponding color
+attachment, or the values read from the tile image variables are undefined:.
+endif::VK_EXT_shader_tile_image[]
 
 [[interfaces-inputattachment]]
 == Fragment Input Attachment Interface
@@ -487,20 +557,21 @@ If the subpass input variable is declared as an array of size N, it consumes
 N consecutive input attachments, starting with the index specified.
 There must: not be more than one input variable with the same
 code:InputAttachmentIndex whether explicitly declared or implied by an array
-declaration.
+declaration per image aspect.
+A multi-aspect image (e.g. a depth/stencil format) can: use the same input
+variable.
 The number of available input attachment indices is given by the
 pname:maxPerStageDescriptorInputAttachments member of the
 sname:VkPhysicalDeviceLimits structure.
 
 Variables identified with the code:InputAttachmentIndex must: only be used
 by a fragment stage.
-The basic data type (floating-point, integer, unsigned integer) of the
-subpass input must: match the basic format of the corresponding input
-attachment, or the values of subpass loads from these variables are
-undefined:.
+The <<formats-numericformat, numeric format>> of the subpass input must:
+match the format of the corresponding input attachment, or the values of
+subpass loads from these variables are undefined:.
 If the framebuffer attachment contains both depth and stencil aspects, the
-basic data type of the subpass input determines if depth or stencil aspect
-is accessed by the shader.
+numeric format of the subpass input determines if depth or stencil aspect is
+accessed by the shader.
 
 See <<descriptorsets-inputattachment>> for more details.
 
@@ -1200,36 +1271,36 @@ If the struct is contained in pointer types of multiple storage classes, it
 must: satisfy the requirements for every storage class used to reference it.
 
 ifdef::VK_VERSION_1_2,VK_EXT_scalar_block_layout[]
-. If the code:scalarBlockLayout feature is enabled on the device and the
-  storage class is code:Uniform, code:StorageBuffer,
+  . If the code:scalarBlockLayout feature is enabled on the device and the
+    storage class is code:Uniform, code:StorageBuffer,
 ifdef::VK_VERSION_1_2,VK_EXT_buffer_device_address,VK_KHR_buffer_device_address[]
-  code:PhysicalStorageBuffer,
+    code:PhysicalStorageBuffer,
 endif::VK_VERSION_1_2,VK_EXT_buffer_device_address,VK_KHR_buffer_device_address[]
 ifdef::VK_KHR_ray_tracing_pipeline[]
-  code:ShaderRecordBufferKHR,
+    code:ShaderRecordBufferKHR,
 endif::VK_KHR_ray_tracing_pipeline[]
-  or code:PushConstant then every member must: be aligned according to its
-  scalar alignment.
+    or code:PushConstant then every member must: be aligned according to its
+    scalar alignment.
 endif::VK_VERSION_1_2,VK_EXT_scalar_block_layout[]
 ifdef::VK_KHR_workgroup_memory_explicit_layout[]
-. If the code:workgroupMemoryExplicitLayoutScalarBlockLayout feature is
-  enabled on the device and the storage class is code:Workgroup then every
-  member must: be aligned according to its scalar alignment.
+  . If the code:workgroupMemoryExplicitLayoutScalarBlockLayout feature is
+    enabled on the device and the storage class is code:Workgroup then every
+    member must: be aligned according to its scalar alignment.
 endif::VK_KHR_workgroup_memory_explicit_layout[]
 ifdef::VK_VERSION_1_1,VK_KHR_relaxed_block_layout[]
-. All vectors must: be aligned according to their scalar alignment.
+  . All vectors must: be aligned according to their scalar alignment.
 endif::VK_VERSION_1_1,VK_KHR_relaxed_block_layout[]
 ifdef::VK_VERSION_1_2,VK_KHR_uniform_buffer_standard_layout[]
-. If the pname:uniformBufferStandardLayout feature is not enabled on the
-  device, then any
+  . If the pname:uniformBufferStandardLayout feature is not enabled on the
+    device, then any
 endif::VK_VERSION_1_2,VK_KHR_uniform_buffer_standard_layout[]
 ifndef::VK_VERSION_1_2,VK_KHR_uniform_buffer_standard_layout[]
-. Any
+  . Any
 endif::VK_VERSION_1_2,VK_KHR_uniform_buffer_standard_layout[]
-  member of an code:OpTypeStruct with a storage class of code:Uniform and a
-  decoration of code:Block must: be aligned according to its extended
-  alignment.
-. Every other member must: be aligned according to its base alignment.
+    member of an code:OpTypeStruct with a storage class of code:Uniform and
+    a decoration of code:Block must: be aligned according to its extended
+    alignment.
+  . Every other member must: be aligned according to its base alignment.
 
 ifdef::VK_VERSION_1_2,VK_EXT_scalar_block_layout[]
 [NOTE]
@@ -1256,7 +1327,7 @@ ifdef::VK_VERSION_1_2,VK_EXT_buffer_device_address,VK_KHR_buffer_device_address[
     code:PhysicalStorageBuffer,
 endif::VK_VERSION_1_2,VK_EXT_buffer_device_address,VK_KHR_buffer_device_address[]
 ifdef::VK_KHR_ray_tracing_pipeline[]
-  code:ShaderRecordBufferKHR,
+    code:ShaderRecordBufferKHR,
 endif::VK_KHR_ray_tracing_pipeline[]
     or code:PushConstant, and the code:scalarBlockLayout feature is not
     enabled on the device.
@@ -1628,6 +1699,7 @@ the structure consumed by an _indirect drawing command_.
 --
 endif::VK_VERSION_1_1,VK_KHR_shader_draw_parameters[]
 
+[[interfaces-builtin-variables-clipdistance]]
 [open,refpage='ClipDistance',desc='Application-specified clip distances',type='builtins']
 --
 :refpage: ClipDistance
@@ -1715,6 +1787,62 @@ The per-view clip distances have the same semantics as code:ClipDistance.
 --
 endif::VK_NV_mesh_shader[]
 
+
+ifdef::VK_HUAWEI_cluster_culling_shader[]
+[[interfaces-builtin-variables-clusteridhuawei]]
+[open,refpage='ClusterIDHUAWEI',desc='cluster culling shader output variable',type='builtins']
+--
+:refpage: ClusterIDHUAWEI
+
+code:ClusterIDHUAWEI::
+
+The code:ClusterIDHUAWEI decoration can be used to decorate a cluster
+culling shader output variable,this variable will contain an integer value
+that specifies the id of cluster being rendered by this drawing command.
+When Cluster Culling Shader enable, code:ClusterIDHUAWEI will replace
+gl_DrawID pass to vertex shader for cluster-related information fetching.
+
+
+.Valid Usage
+****
+  * [[VUID-{refpage}-ClusterIDHUAWEI-07797]]
+    The code:ClusterIDHUAWEI decoration must: be used only within the
+    code:ClusterCullingHUAWEI {ExecutionModel}
+  * [[VUID-{refpage}-ClusterIDHUAWEI-07798]]
+    The variable decorated with code:ClusterIDHUAWEI must: be declared as a
+    scalar 32-bit integer value
+****
+--
+endif::VK_HUAWEI_cluster_culling_shader[]
+
+ifdef::VK_HUAWEI_cluster_culling_shader[]
+[[interfaces-builtin-variables-clustershadingratehuawei]]
+[open,refpage='ClusterShadingRateHUAWEI',desc='cluster culling shader output variable',type='builtins']
+--
+:refpage: ClusterShadingRateHUAWEI
+
+code:ClusterShadingRateHUAWEI::
+
+The code:ClusterShadingRateHUAWEI decoration can be used to decorate a
+cluster culling shader output variable.
+This variable will contain an integer value specifying the shading rate of a
+rendering cluster.
+
+.Valid Usage
+****
+  * [[VUID-{refpage}-ClusterShadingRateHUAWEI-09448]]
+    The code:ClusterShadingRateHUAWEI decoration must: be used only within
+    the code:ClusterCullingHUAWEI {ExecutionModel}
+  * [[VUID-{refpage}-ClusterShadingRateHUAWEI-09449]]
+    The variable decorated with code:ClusterShadingRateHUAWEI must: be
+    declared as a scalar 32-bit integer value
+****
+--
+endif::VK_HUAWEI_cluster_culling_shader[]
+
+
+
+[[interfaces-builtin-variables-culldistance]]
 [open,refpage='CullDistance',desc='Application-specified cull distances',type='builtins']
 --
 :refpage: CullDistance
@@ -1804,7 +1932,7 @@ ifdef::VK_EXT_mesh_shader[]
 :refpage: CullPrimitiveEXT
 
 code:CullPrimitiveEXT::
-+
+
 Decorating a variable with the code:CullPrimitiveEXT built-in decoration
 will make that variable contain the culling state of output primitives.
 If the per-primitive boolean value is code:true, the primitive will be
@@ -1926,17 +2054,17 @@ code:DrawIndex::
 
 Decorating a variable with the code:DrawIndex built-in will make that
 variable contain the integer value corresponding to the zero-based index of
-the drawing command that invoked the current
+the draw that invoked the current
 ifdef::VK_NV_mesh_shader,VK_EXT_mesh_shader[task, mesh, or]
 vertex shader invocation.
 For _indirect drawing commands_, code:DrawIndex begins at zero and
-increments by one for each drawing command executed.
-The number of drawing commands is given by the pname:drawCount parameter.
+increments by one for each draw executed.
+The number of draws is given by the pname:drawCount parameter.
 For _direct drawing commands_,
 ifdef::VK_EXT_multi_draw[]
 if flink:vkCmdDrawMultiEXT or flink:vkCmdDrawMultiIndexedEXT is used, this
 variable contains the integer value corresponding to the zero-based index of
-the draw command.
+the draw.
 Otherwise
 endif::VK_EXT_multi_draw[]
 code:DrawIndex is always zero.
@@ -1963,6 +2091,34 @@ endif::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
 --
 endif::VK_VERSION_1_1,VK_KHR_shader_draw_parameters[]
 
+ifdef::VK_HUAWEI_cluster_culling_shader[]
+[[interfaces-builtin-variables-firstindexhuawei]]
+[open,refpage='FirstIndexHUAWEI',desc='cluster culling shader output variable',type='builtins']
+--
+:refpage: FirstIndexHUAWEI
+
+code:FirstIndexHUAWEI::
+
+The code:FirstIndexHUAWEI decoration can be used to decorate a cluster
+culling shader output variable,this indexed mode specific variable will
+contain an integer value that specifies the base index within the index
+buffer corresponding to a cluster.
+
+
+.Valid Usage
+****
+  * [[VUID-{refpage}-FirstIndexHUAWEI-07799]]
+    The code:FirstIndexHUAWEI decoration must: be used only within the
+    code:ClusterCullingHUAWEI {ExecutionModel}
+  * [[VUID-{refpage}-FirstIndexHUAWEI-07800]]
+    The variable decorated with code:FirstIndexHUAWEI must: be declared as a
+    scalar 32-bit integer value
+****
+--
+endif::VK_HUAWEI_cluster_culling_shader[]
+
+
+[[interfaces-builtin-variables-fragcoord]]
 [open,refpage='FragCoord',desc='Screen-space coordinate of the fragment center',type='builtins']
 --
 :refpage: FragCoord
@@ -2038,6 +2194,57 @@ for details.
     declared
 ****
 --
+
+ifdef::VK_HUAWEI_cluster_culling_shader[]
+[[interfaces-builtin-variables-firstinstancehuawei]]
+[open,refpage='FirstInstanceHUAWEI',desc='cluster culling shader output variable',type='builtins']
+--
+:refpage: FirstInstanceHUAWEI
+
+code:FirstInstanceHUAWEI::
+
+The code:FirstInstanceHUAWEI decoration can be used to decorate a cluster
+culling shader output variable,this variable will contain an integer value
+that specifies the instance ID of the first instance to draw.
+
+.Valid Usage
+****
+  * [[VUID-{refpage}-FirstInstanceHUAWEI-07801]]
+    The code:FirstInstanceHUAWEI decoration must: be used only within the
+    code:ClusterCullingHUAWEI {ExecutionModel}
+  * [[VUID-{refpage}-FirstInstanceHUAWEI-07802]]
+    The variable decorated with code:FirstInstanceHUAWEI must: be declared
+    as a scalar 32-bit integer value
+****
+--
+endif::VK_HUAWEI_cluster_culling_shader[]
+
+
+ifdef::VK_HUAWEI_cluster_culling_shader[]
+[[interfaces-builtin-variables-firstvertexhuawei]]
+[open,refpage='FirstVertexHUAWEI',desc='cluster culling shader output variable',type='builtins']
+--
+:refpage: FirstVertexHUAWEI
+
+code:FirstVertexHUAWEI::
+
+The code:FirstVertexHUAWEI decoration can be used to decorate a cluster
+culling shader output variable,this non-indexed mode specific variable will
+contain an integer value that specifies the index of the first vertex in a
+cluster to draw.
+
+.Valid Usage
+****
+  * [[VUID-{refpage}-FirstVertexHUAWEI-07803]]
+    The code:FirstVertexHUAWEI decoration must: be used only within the
+    code:FirstVertexHUAWEI {ExecutionModel}
+  * [[VUID-{refpage}-FirstVertexHUAWEI-07804]]
+    The variable decorated with code:FirstVertexHUAWEI must: be declared as
+    a scalar 32-bit integer value
+****
+--
+endif::VK_HUAWEI_cluster_culling_shader[]
+
 
 ifdef::VK_EXT_fragment_density_map[]
 [[interfaces-builtin-variables-fraginvocationcount]]
@@ -2171,6 +2378,7 @@ make that variable contain the width and height of the fragment.
 endif::VK_NV_shading_rate_image[]
 
 
+[[interfaces-builtin-variables-frontfacing]]
 [open,refpage='FrontFacing',desc='Front face determination of a fragment',type='builtins']
 --
 :refpage: FrontFacing
@@ -2237,6 +2445,7 @@ endif::VK_EXT_post_depth_coverage[]
 --
 endif::VK_EXT_conservative_rasterization[]
 
+[[interfaces-builtin-variables-globalinvocationid]]
 [open,refpage='GlobalInvocationId',desc='Global invocation ID',type='builtins']
 --
 :refpage: GlobalInvocationId
@@ -2264,6 +2473,7 @@ the size of the local workgroup plus code:LocalInvocationId.
 ****
 --
 
+[[interfaces-builtin-variables-helperinvocation]]
 [open,refpage='HelperInvocation',desc='Indication of whether a fragment shader is a helper invocation',type='builtins']
 --
 :refpage: HelperInvocation
@@ -2355,6 +2565,45 @@ variable decorated with the code:RayTmaxKHR decoration.
 --
 endif::VK_NV_ray_tracing[]
 
+ifdef::VK_KHR_ray_tracing_position_fetch[]
+[[interfaces-builtin-variables-hittrianglevertexpositions]]
+[open,refpage='HitTriangleVertexPositionsKHR',desc='Vertices of an intersected triangle',type='builtins']
+--
+:refpage: HitTriangleVertexPositionsKHR
+
+code:HitTriangleVertexPositionsKHR::
+
+A variable decorated with the code:HitTriangleVertexPositionsKHR decoration
+will specify the object space vertices of the triangle at the current
+intersection in application-provided order.
+The positions returned are transformed by the geometry transform, which is
+performed at standard <<fundamentals-floatingpoint, floating point>>
+precision, but without a specifically defined order of floating point
+operations to perform the matrix multiplication.
+
+.Valid Usage
+****
+  * [[VUID-{refpage}-HitTriangleVertexPositionsKHR-08747]]
+    The code:HitTriangleVertexPositionsKHR decoration must: be used only
+    within the code:AnyHitKHR or code:ClosestHitKHR {ExecutionModel}
+  * [[VUID-{refpage}-HitTriangleVertexPositionsKHR-08748]]
+    The variable decorated with code:HitTriangleVertexPositionsKHR must: be
+    declared using the code:Input {StorageClass}
+  * [[VUID-{refpage}-HitTriangleVertexPositionsKHR-08749]]
+    The variable decorated with code:HitTriangleVertexPositionsKHR must: be
+    declared as an array of three vectors of three 32-bit float values
+  * [[VUID-{refpage}-HitTriangleVertexPositionsKHR-08750]]
+    The variable decorated with code:HitTriangleVertexPositionsKHR must: be
+    used only if the value of code:HitKindKHR is
+    code:HitKindFrontFacingTriangleKHR or code:HitKindBackFacingTriangleKHR
+  * [[VUID-{refpage}-None-08751]]
+    The acceleration structure corresponding to the current intersection
+    must: have been built with
+    ename:VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_DATA_ACCESS_KHR
+****
+--
+endif::VK_KHR_ray_tracing_position_fetch[]
+
 [[interfaces-builtin-variables-incomingrayflags]]
 [open,refpage='IncomingRayFlagsKHR',desc='Flags used to trace a ray',type='builtins']
 --
@@ -2381,6 +2630,55 @@ corresponding flags to be set in variables with this decoration.
     as a scalar 32-bit integer value
 ****
 --
+
+ifdef::VK_HUAWEI_cluster_culling_shader[]
+[[interfaces-builtin-variables-indexcounthuawei]]
+[open,refpage='IndexCountHUAWEI',desc='cluster culling shader output variable',type='builtins']
+--
+:refpage: IndexCountHUAWEI
+
+code:IndexCountHUAWEI::
+
+The code:IndexCountHUAWEI decoration can be used to decorate a cluster
+culling shader output variable,this indexed mode specific variable will
+contain an integer value that specifies the number of indexed vertices in a
+cluster to draw.
+
+.Valid Usage
+****
+  * [[VUID-{refpage}-IndexCountHUAWEI-07805]]
+    The code:IndexCountHUAWEI decoration must: be used only within the
+    code:ClusterCullingHUAWEI {ExecutionModel}
+  * [[VUID-{refpage}-IndexCountHUAWEI-07806]]
+    The variable decorated with code:IndexCountHUAWEI must: be declared as a
+    scalar 32-bit integer value
+****
+--
+endif::VK_HUAWEI_cluster_culling_shader[]
+
+ifdef::VK_HUAWEI_cluster_culling_shader[]
+[[interfaces-builtin-variables-instancecounthuawei]]
+[open,refpage='InstanceCountHUAWEI',desc='cluster culling shader output variable',type='builtins']
+--
+:refpage: InstanceCountHUAWEI
+
+code:InstanceCountHUAWEI::
+
+The code:InstanceCountHUAWEI decoration can be used to decorate a cluster
+culling shader output variable,this variable will contain an integer value
+that specifies the number of instance to draw in a cluster.
+
+.Valid Usage
+****
+  * [[VUID-{refpage}-InstanceCountHUAWEI-07807]]
+    The code:InstanceCountHUAWEI decoration must: be used only within the
+    code:ClusterCullingHUAWEI {ExecutionModel}
+  * [[VUID-{refpage}-InstanceCountHUAWEI-07808]]
+    The variable decorated with code:InstanceCountHUAWEI must: be declared
+    as a scalar 32-bit integer value
+****
+--
+endif::VK_HUAWEI_cluster_culling_shader[]
 
 [[interfaces-builtin-variables-instancecustomindex]]
 [open,refpage='InstanceCustomIndexKHR',desc='Custom index associated with an intersected instance',type='builtins']
@@ -2439,6 +2737,7 @@ index of the instance that intersects the current ray.
 --
 endif::VK_NV_ray_tracing,VK_KHR_ray_tracing_pipeline[]
 
+[[interfaces-builtin-variables-invocationid]]
 [open,refpage='InvocationId',desc='Invocation ID in a geometry or tessellation control shader',type='builtins']
 --
 :refpage: InvocationId
@@ -2502,6 +2801,7 @@ code:InvocationsPerPixelNV will be one.
 --
 endif::VK_NV_shading_rate_image[]
 
+[[interfaces-builtin-variables-instanceindex]]
 [open,refpage='InstanceIndex',desc='Index of an instance',type='builtins']
 --
 :refpage: InstanceIndex
@@ -2596,7 +2896,8 @@ endif::VK_NV_ray_tracing,VK_KHR_ray_tracing_pipeline[]
 
 code:Layer::
 +
-~~~~
+[open]
+----
 Decorating a variable with the code:Layer built-in decoration will make that
 variable contain the select layer of a multi-layer framebuffer attachment.
 
@@ -2647,7 +2948,7 @@ endif::VK_NV_viewport_array2[]
 
 In a fragment shader, a variable decorated with code:Layer contains the
 layer index of the primitive that the fragment invocation belongs to.
-~~~~
+----
 
 .Valid Usage
 ****
@@ -2708,6 +3009,7 @@ The per-view layer has the same semantics as code:Layer, for each view.
 --
 endif::VK_NV_mesh_shader[]
 
+[[interfaces-builtin-variables-localinvocationid]]
 [open,refpage='LocalInvocationId',desc='Local invocation ID',type='builtins']
 --
 :refpage: LocalInvocationId
@@ -2716,6 +3018,7 @@ code:LocalInvocationId::
 
 Decorating a variable with the code:LocalInvocationId built-in decoration
 will make that variable contain the location of the current
+ifdef::VK_HUAWEI_cluster_culling_shader[cluster culling, ]
 ifdef::VK_NV_mesh_shader,VK_EXT_mesh_shader[task, mesh, or]
 compute shader invocation within the local workgroup.
 Each component ranges from zero through to the size of the workgroup in that
@@ -2747,6 +3050,7 @@ code:LocalInvocationId.y and code:LocalInvocationId.z will be zero.
 ****
 --
 
+[[interfaces-builtin-variables-localinvocationindex]]
 [open,refpage='LocalInvocationIndex',desc='Linear local invocation index',type='builtins']
 --
 :refpage: LocalInvocationIndex
@@ -2841,6 +3145,7 @@ decorated with code:PerViewNV will take on the value of array element
 endif::VK_NV_mesh_shader[]
 
 ifdef::VK_VERSION_1_1[]
+[[interfaces-builtin-variables-numsubgroups]]
 [open,refpage='NumSubgroups',desc='Number of subgroups in a workgroup',type='builtins']
 --
 :refpage: NumSubgroups
@@ -2866,6 +3171,7 @@ make that variable contain the number of subgroups in the local workgroup.
 --
 endif::VK_VERSION_1_1[]
 
+[[interfaces-builtin-variables-numworkgroups]]
 [open,refpage='NumWorkgroups',desc='Number of workgroups in a dispatch',type='builtins']
 --
 :refpage: NumWorkgroups
@@ -2971,6 +3277,7 @@ the instance of the current intersection.
 --
 endif::VK_NV_ray_tracing,VK_KHR_ray_tracing_pipeline[]
 
+[[interfaces-builtin-variables-patchvertices]]
 [open,refpage='PatchVertices',desc='Number of vertices in an input patch',type='builtins']
 --
 :refpage: PatchVertices
@@ -3003,6 +3310,7 @@ will also differ.
 ****
 --
 
+[[interfaces-builtin-variables-pointcoord]]
 [open,refpage='PointCoord',desc='Fragment coordinates in screen-space within a point primitive',type='builtins']
 --
 :refpage: PointCoord
@@ -3039,6 +3347,7 @@ Depending on how the point is rasterized, code:PointCoord may: never reach
 ****
 --
 
+[[interfaces-builtin-variables-pointsize]]
 [open,refpage='PointSize',desc='Size of a point primitive',type='builtins']
 --
 :refpage: PointSize
@@ -3046,11 +3355,23 @@ Depending on how the point is rasterized, code:PointCoord may: never reach
 code:PointSize::
 
 Decorating a variable with the code:PointSize built-in decoration will make
-that variable contain the size of point primitives.
+that variable contain the size of point primitives
+ifdef::VK_KHR_maintenance5[]
+or the final rasterization of polygons if <<primsrast-polygonmode, polygon
+mode>> is ename:VK_POLYGON_MODE_POINT when
+sname:VkPhysicalDeviceMaintenance5PropertiesKHR::pname:polygonModePointSize
+is set to ename:VK_TRUE
+endif::VK_KHR_maintenance5[]
+.
 The value written to the variable decorated with code:PointSize by the last
 <<pipelines-graphics-subsets-pre-rasterization,pre-rasterization shader
 stage>> in the pipeline is used as the framebuffer-space size of points
 produced by rasterization.
+ifdef::VK_KHR_maintenance5[]
+If <<features-maintenance5, pname:maintenance5>> is enabled and a value is
+not written to a variable decorated with code:PointSize, a value of 1.0 is
+used as the size of points.
+endif::VK_KHR_maintenance5[]
 
 [NOTE]
 .Note
@@ -3081,6 +3402,7 @@ code:PointSize from the previous shader stage.
 ****
 --
 
+[[interfaces-builtin-variables-position]]
 [open,refpage='Position',desc='Vertex position',type='builtins']
 --
 :refpage: Position
@@ -3212,6 +3534,7 @@ stages.
 --
 endif::VK_NV_mesh_shader[]
 
+[[interfaces-builtin-variables-primitiveid]]
 [open,refpage='PrimitiveId',desc='Primitive ID',type='builtins']
 --
 :refpage: PrimitiveId
@@ -3332,8 +3655,8 @@ Decorating a variable with the code:PrimitiveIndicesNV decoration will make
 that variable contain the output array of vertex index values.
 Depending on the output primitive type declared using the execution mode,
 the indices are split into groups of one (code:OutputPoints), two
-(code:OutputLinesNV), or three (code:OutputTriangles) indices and each group
-generates a primitive.
+(code:OutputLinesNV), or three (code:OutputTrianglesNV) indices and each
+group generates a primitive.
 
 .Valid Usage
 ****
@@ -3352,15 +3675,15 @@ generates a primitive.
     specified by the code:OutputVertices {ExecutionMode}
   * [[VUID-{refpage}-OutputPoints-04342]]
     If the {ExecutionMode} is code:OutputPoints, then the array decorated
-    with code:PrimitiveIndicesNV must be the size of the value specified by
+    with code:PrimitiveIndicesNV must: be the size of the value specified by
     code:OutputPrimitivesNV
   * [[VUID-{refpage}-OutputLinesNV-04343]]
     If the {ExecutionMode} is code:OutputLinesNV, then the array decorated
-    with code:PrimitiveIndicesNV must be the size of two times the value
+    with code:PrimitiveIndicesNV must: be the size of two times the value
     specified by code:OutputPrimitivesNV
   * [[VUID-{refpage}-OutputTrianglesNV-04344]]
     If the {ExecutionMode} is code:OutputTrianglesNV, then the array
-    decorated with code:PrimitiveIndicesNV must be the size of three times
+    decorated with code:PrimitiveIndicesNV must: be the size of three times
     the value specified by code:OutputPrimitivesNV
 ****
 --
@@ -3578,7 +3901,8 @@ A variable decorated with the code:RayTmaxKHR decoration will contain the
 parametric [eq]#t~max~# value of the ray being processed.
 The value is independent of the space in which the ray origin and direction
 exist.
-The value is initialized to the parameter passed into code:OpTraceRayKHR.
+The value is initialized to the parameter passed into the
+<<glossary-pipeline-trace-ray, pipeline trace ray>> instruction.
 +
 The [eq]#t~max~# value changes throughout the lifetime of the ray that
 produced the intersection.
@@ -3591,8 +3915,8 @@ primitive intersected so far or the initial value.
 The value can change in the intersection shader after calling
 code:OpReportIntersectionKHR if the corresponding any-hit shader does not
 ignore the intersection.
-In a miss shader, the value is identical to the parameter passed into
-code:OpTraceRayKHR.
+In a miss shader, the value is identical to the parameter passed into the
+<<glossary-pipeline-trace-ray, pipeline trace ray>> instruction.
 
 .Valid Usage
 ****
@@ -3620,7 +3944,8 @@ A variable decorated with the code:RayTminKHR decoration will contain the
 parametric [eq]#t~min~# value of the ray being processed.
 The value is independent of the space in which the ray origin and direction
 exist.
-The value is the parameter passed into code:OpTraceRayKHR.
+The value is the parameter passed into the <<glossary-pipeline-trace-ray,
+pipeline trace ray>> instruction.
 +
 The [eq]#t~min~# value remains constant for the duration of the ray query.
 
@@ -3640,6 +3965,7 @@ The [eq]#t~min~# value remains constant for the duration of the ray query.
 --
 endif::VK_NV_ray_tracing,VK_KHR_ray_tracing_pipeline[]
 
+[[interfaces-builtin-variables-sampleid]]
 [open,refpage='SampleId',desc='Sample ID within a fragment',type='builtins']
 --
 :refpage: SampleId
@@ -3723,6 +4049,7 @@ the processing of a fragment.
 ****
 --
 
+[[interfaces-builtin-variables-sampleposition]]
 [open,refpage='SamplePosition',desc='Position of a shaded sample',type='builtins']
 --
 :refpage: SamplePosition
@@ -3770,6 +4097,7 @@ endif::VK_EXT_sample_locations[]
 --
 
 ifdef::VK_KHR_fragment_shading_rate[]
+[[interfaces-builtin-variables-shadingratekhr]]
 [open,refpage='ShadingRateKHR',desc='Shading rate of a fragment',type='builtins']
 --
 :refpage: ShadingRateKHR
@@ -3842,6 +4170,7 @@ This variable is in the range [eq]#[0, code:SMCountNV-1]#.
 endif::VK_NV_shader_sm_builtins[]
 
 ifdef::VK_VERSION_1_1[]
+[[interfaces-builtin-variables-subgroupid]]
 [open,refpage='SubgroupId',desc='Subgroup ID ',type='builtins']
 --
 :refpage: SubgroupId
@@ -4041,8 +4370,12 @@ endif::VK_VERSION_1_3,VK_EXT_subgroup_size_control[]
 There is no direct relationship between code:SubgroupLocalInvocationId and
 code:LocalInvocationId or code:LocalInvocationIndex.
 ifdef::VK_VERSION_1_3,VK_EXT_subgroup_size_control[]
-If the pipeline was created with full subgroups applications can compute
-their own local invocation index to serve the same purpose:
+If the pipeline
+ifdef::VK_EXT_shader_object[]
+or shader object
+endif::VK_EXT_shader_object[]
+was created with full subgroups applications can compute their own local
+invocation index to serve the same purpose:
 
 [eq]#index = code:SubgroupLocalInvocationId + code:SubgroupId {times}
 code:SubgroupSize#
@@ -4057,7 +4390,13 @@ ifdef::VK_VERSION_1_3[]
 [NOTE]
 .Note
 ====
-ename:VK_PIPELINE_SHADER_STAGE_CREATE_REQUIRE_FULL_SUBGROUPS_BIT is
+ename:VK_PIPELINE_SHADER_STAGE_CREATE_REQUIRE_FULL_SUBGROUPS_BIT
+ifndef::VK_EXT_shader_object[]
+is
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_shader_object[]
+and ename:VK_SHADER_CREATE_REQUIRE_FULL_SUBGROUPS_BIT_EXT are
+endif::VK_EXT_shader_object[]
 effectively deprecated when compiling SPIR-V 1.6 shaders, as this behavior
 is the default for Vulkan with SPIR-V 1.6.
 This is more aligned with developer expectations, and avoids applications
@@ -4092,6 +4431,10 @@ ifdef::VK_VERSION_1_3,VK_EXT_subgroup_size_control[]
 If the pipeline was created with the
 ename:VK_PIPELINE_SHADER_STAGE_CREATE_ALLOW_VARYING_SUBGROUP_SIZE_BIT flag
 set,
+ifdef::VK_EXT_shader_object[]
+or the shader object was created with the
+ename:VK_SHADER_CREATE_ALLOW_VARYING_SUBGROUP_SIZE_BIT_EXT flag set,
+endif::VK_EXT_shader_object[]
 ifdef::VK_VERSION_1_3[]
 or the SPIR-V pname:module is at least version 1.6,
 endif::VK_VERSION_1_3[]
@@ -4107,18 +4450,28 @@ In compute dispatches, code:SubgroupSize must: be uniform with
 <<shaders-scope-command, command scope>>.
 +
 If the pipeline was created with a chained
-slink:VkPipelineShaderStageRequiredSubgroupSizeCreateInfo structure, the
-code:SubgroupSize decorated variable will match
+slink:VkPipelineShaderStageRequiredSubgroupSizeCreateInfo structure,
+ifdef::VK_EXT_shader_object[]
+or the shader object was created with a chained
+slink:VkShaderRequiredSubgroupSizeCreateInfoEXT structure,
+endif::VK_EXT_shader_object[]
+the code:SubgroupSize decorated variable will match
 <<pipelines-required-subgroup-size, pname:requiredSubgroupSize>>.
 +
-If the pipeline stage
+If
 ifdef::VK_VERSION_1_3[]
 SPIR-V pname:module is less than version 1.6 and
 endif::VK_VERSION_1_3[]
-was not created with the
+the pipeline was not created with the
 ename:VK_PIPELINE_SHADER_STAGE_CREATE_ALLOW_VARYING_SUBGROUP_SIZE_BIT flag
 set and no slink:VkPipelineShaderStageRequiredSubgroupSizeCreateInfo
-structure was chained, the
+structure was chained,
+ifdef::VK_EXT_shader_object[]
+and the shader was not created with the
+ename:VK_SHADER_CREATE_ALLOW_VARYING_SUBGROUP_SIZE_BIT_EXT flag set and no
+slink:VkShaderRequiredSubgroupSizeCreateInfoEXT structure was chained,
+endif::VK_EXT_shader_object[]
+the
 endif::VK_VERSION_1_3,VK_EXT_subgroup_size_control[]
 ifndef::VK_VERSION_1_3,VK_EXT_subgroup_size_control[]
 The
@@ -4180,6 +4533,7 @@ that get generated upon completion of the task shader.
 --
 endif::VK_NV_mesh_shader[]
 
+[[interfaces-builtin-variables-tesscoord]]
 [open,refpage='TessCoord',desc='Barycentric coordinate of a tessellated vertex within a patch',type='builtins']
 --
 :refpage: TessCoord
@@ -4208,6 +4562,7 @@ component is always zero.
 ****
 --
 
+[[interfaces-builtin-variables-tesslevelouter]]
 [open,refpage='TessLevelOuter',desc='Outer tessellation levels',type='builtins']
 --
 :refpage: TessLevelOuter
@@ -4247,6 +4602,7 @@ shader.
 ****
 --
 
+[[interfaces-builtin-variables-tesslevelinner]]
 [open,refpage='TessLevelInner',desc='Inner tessellation levels',type='builtins']
 --
 :refpage: TessLevelInner
@@ -4286,6 +4642,32 @@ shader.
 ****
 --
 
+ifdef::VK_HUAWEI_cluster_culling_shader[]
+[[interfaces-builtin-variables-vertexcounthuawei]]
+[open,refpage='VertexCountHUAWEI',desc='cluster culling shader output variable',type='builtins']
+--
+:refpage: VertexCountHUAWEI
+
+code:VertexCountHUAWEI::
+
+The code:VertexCountHUAWEI decoration can be used to decorate a cluster
+culling shader output variable,this non-indexed mode specific variable will
+contain an integer value that specifies the number of vertices in a cluster
+to draw.
+
+.Valid Usage
+****
+  * [[VUID-{refpage}-VertexCountHUAWEI-07809]]
+    The code:VertexCountHUAWEI decoration must: be used only within the
+    code:ClusterCullingHUAWEI {ExecutionModel}
+  * [[VUID-{refpage}-VertexCountHUAWEI-07810]]
+    The variable decorated with code:VertexCountHUAWEI must: be declared as
+    a scalar 32-bit integer value
+****
+--
+endif::VK_HUAWEI_cluster_culling_shader[]
+
+[[interfaces-builtin-variables-vertexindex]]
 [open,refpage='VertexIndex',desc='Vertex index of a shader invocation',type='builtins']
 --
 :refpage: VertexIndex
@@ -4323,6 +4705,31 @@ code:VertexIndex starts at the same starting value for each instance.
     scalar 32-bit integer value
 ****
 --
+
+ifdef::VK_HUAWEI_cluster_culling_shader[]
+[[interfaces-builtin-variables-vertexoffsethuawei]]
+[open,refpage='VertexOffsetHUAWEI',desc='cluster culling shader output variable',type='builtins']
+--
+:refpage: VertexOffsetHUAWEI
+
+code:VertexOffsetHUAWEI::
+
+The code:VertexOffsetHUAWEI decoration can be used to decorate a cluster
+culling shader output variable,this indexed mode specific variable will
+contain an integer value that specifies a offset value added to the vertex
+index of a cluster before indexing into the vertex buffer.
+
+.Valid Usage
+****
+  * [[VUID-{refpage}-VertexOffsetHUAWEI-07811]]
+    The code:VertexOffsetHUAWEI decoration must: be used only within the
+    code:ClusterCullingHUAWEI {ExecutionModel}
+  * [[VUID-{refpage}-VertexOffsetHUAWEI-07812]]
+    The variable decorated with code:VertexOffsetHUAWEI must: be declared as
+    a scalar 32-bit integer value
+****
+--
+endif::VK_HUAWEI_cluster_culling_shader[]
 
 ifdef::VK_VERSION_1_1,VK_KHR_multiview[]
 [[interfaces-builtin-variables-viewindex]]
@@ -4411,8 +4818,8 @@ contains the viewport index of the primitive that the fragment invocation
 belongs to.
 ifdef::VK_QCOM_multiview_per_view_viewports[]
 +
-If <<features-multiview-per-view-viewports, multiviewPerViewViewports>> is
-enabled, and if the last active
+If <<features-multiview-per-view-viewports,
+pname:multiviewPerViewViewports>> is enabled, and if the last active
 <<pipelines-graphics-subsets-pre-rasterization,pre-rasterization shader
 stage>> shader entry point's interface does not include a variable decorated
 with code:ViewportIndex, then the value of code:ViewIndex is used as an
@@ -4627,6 +5034,7 @@ This variable is in the range [eq]#[0, code:WarpsPerSMNV-1]#.
 --
 endif::VK_NV_shader_sm_builtins[]
 
+[[interfaces-builtin-variables-workgroupid]]
 [open,refpage='WorkgroupId',desc='Workgroup ID of a shader',type='builtins']
 --
 :refpage: WorkgroupId
@@ -4654,12 +5062,14 @@ based on the parameters passed into the dispatching commands.
 ****
 --
 
+[[interfaces-builtin-variables-workgroupsize]]
 [open,refpage='WorkgroupSize',desc='Size of a workgroup',type='builtins']
 --
 :refpage: WorkgroupSize
 
 code:WorkgroupSize::
 
+ifdef::VK_VERSION_1_3[]
 [NOTE]
 .Note
 ====
@@ -4668,6 +5078,7 @@ code:LocalSizeId Execution Mode instead.
 Support for code:LocalSizeId was added with `apiext:VK_KHR_maintenance4` and
 promoted to core in Version 1.3.
 ====
+endif::VK_VERSION_1_3[]
 
 Decorating an object with the code:WorkgroupSize built-in decoration will
 make that object contain the dimensions of a local workgroup.
@@ -4701,7 +5112,8 @@ code:WorldRayDirectionKHR::
 
 A variable decorated with the code:WorldRayDirectionKHR decoration will
 specify the direction of the ray being processed, in world space.
-The value is the parameter passed into code:OpTraceRayKHR.
+The value is the parameter passed into the <<glossary-pipeline-trace-ray,
+pipeline trace ray>> instruction.
 
 .Valid Usage
 ****
@@ -4727,7 +5139,8 @@ code:WorldRayOriginKHR::
 
 A variable decorated with the code:WorldRayOriginKHR decoration will specify
 the origin of the ray being processed, in world space.
-The value is the parameter passed into code:OpTraceRayKHR.
+The value is the parameter passed into the <<glossary-pipeline-trace-ray,
+pipeline trace ray>> instruction.
 
 .Valid Usage
 ****
@@ -4884,3 +5297,56 @@ This variable is in the range [eq]#[0, code:WarpMaxIDARM]#.
 ****
 --
 endif::VK_ARM_shader_core_builtins[]
+
+ifdef::VK_AMDX_shader_enqueue[]
+[[interfaces-builtin-variables-coalescedinputcountamd]]
+[open,refpage='CoalescedInputCountAMDX',desc='Number of inputs coalesced for a coalescing node in a work graph',type='builtins']
+--
+:refpage: CoalescedInputCountAMDX
+
+code:CoalescedInputCountAMDX::
+
+Decorating a variable with the code:CoalescedInputCountAMDX built-in
+decoration will make that variable contain the number of node dispatches
+that the implementation coalesced into the input for the current shader.
+This variable will take a value in the range [eq]#[1, arraySize)#, where
+[eq]#arraySize# is the maximum size of the input payload array for the
+shader.
+
+.Valid Usage
+****
+  * [[VUID-{refpage}-CoalescedInputCountAMDX-09172]]
+    The variable decorated with code:CoalescedInputCountAMDX must: be
+    declared using the code:Input {StorageClass}
+  * [[VUID-{refpage}-CoalescedInputCountAMDX-09173]]
+    If a variable is decorated with code:CoalescedInputCountAMDX, the
+    code:CoalescingAMDX execution mode must: be declared
+  * [[VUID-{refpage}-CoalescedInputCountAMDX-09174]]
+    The variable decorated with code:CoalescedInputCountAMDX must: be
+    declared as a scalar 32-bit integer value
+****
+--
+
+[open,refpage='ShaderIndexAMDX',desc='Index assigned to the shader within the workgraph',type='builtins']
+--
+:refpage: ShaderIndexAMDX
+
+code:ShaderIndexAMDX::
+
+Decorating a variable with the code:ShaderIndexAMDX built-in decoration will
+make that variable contain the index of the shader specified when it was
+compiled, either via
+slink:VkPipelineShaderStageNodeCreateInfoAMDX::pname:index or by the
+code:ShaderIndexAMDX execution mode.
+
+.Valid Usage
+****
+  * [[VUID-{refpage}-ShaderIndexAMDX-09175]]
+    The variable decorated with code:ShaderIndexAMDX must: be declared using
+    the code:Input {StorageClass}
+  * [[VUID-{refpage}-ShaderIndexAMDX-09176]]
+    The variable decorated with code:ShaderIndexAMDX must: be declared as a
+    scalar 32-bit integer value
+****
+--
+endif::VK_AMDX_shader_enqueue[]

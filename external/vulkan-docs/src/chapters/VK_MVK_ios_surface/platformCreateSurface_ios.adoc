@@ -7,6 +7,8 @@
 
 [open,refpage='vkCreateIOSSurfaceMVK',desc='Create a VkSurfaceKHR object for an iOS UIView',type='protos']
 --
+:refpage: vkCreateIOSSurfaceMVK
+
 To create a sname:VkSurfaceKHR object for an iOS code:UIView or
 basetype:CAMetalLayer, call:
 
@@ -41,7 +43,7 @@ The slink:VkIOSSurfaceCreateInfoMVK structure is defined as:
 
 include::{generated}/api/structs/VkIOSSurfaceCreateInfoMVK.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.

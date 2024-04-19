@@ -1,4 +1,4 @@
-// Copyright 2015-2022 The Khronos Group Inc.
+// Copyright 2015-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -45,7 +45,7 @@ The sname:VkPipelineRasterizationStateCreateInfo structure is defined as:
 
 include::{generated}/api/structs/VkPipelineRasterizationStateCreateInfo.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.
@@ -55,14 +55,14 @@ ifdef::VK_EXT_depth_clip_enable[]
     If the pipeline is not created with
     slink:VkPipelineRasterizationDepthClipStateCreateInfoEXT present then
     enabling depth clamp will also disable clipping primitives to the z
-    planes of the frustrum as described in <<vertexpostproc-clipping,
+    planes of the frustum as described in <<vertexpostproc-clipping,
     Primitive Clipping>>.
     Otherwise depth clipping is controlled by the state set in
     slink:VkPipelineRasterizationDepthClipStateCreateInfoEXT.
 endif::VK_EXT_depth_clip_enable[]
 ifndef::VK_EXT_depth_clip_enable[]
     Enabling depth clamp will also disable clipping primitives to the z
-    planes of the frustrum as described in <<vertexpostproc-clipping,
+    planes of the frustum as described in <<vertexpostproc-clipping,
     Primitive Clipping>>.
 endif::VK_EXT_depth_clip_enable[]
   * pname:rasterizerDiscardEnable controls whether primitives are discarded
@@ -98,16 +98,11 @@ endif::VK_AMD_rasterization_order[]
   * [[VUID-VkPipelineRasterizationStateCreateInfo-depthClampEnable-00782]]
     If the <<features-depthClamp, pname:depthClamp>> feature is not enabled,
     pname:depthClampEnable must: be ename:VK_FALSE
-ifndef::VK_NV_fill_rectangle[]
-  * [[VUID-VkPipelineRasterizationStateCreateInfo-polygonMode-01413]]
-    If the <<features-fillModeNonSolid, pname:fillModeNonSolid>> feature is
-    not enabled, pname:polygonMode must: be ename:VK_POLYGON_MODE_FILL
-endif::VK_NV_fill_rectangle[]
-ifdef::VK_NV_fill_rectangle[]
   * [[VUID-VkPipelineRasterizationStateCreateInfo-polygonMode-01507]]
     If the <<features-fillModeNonSolid, pname:fillModeNonSolid>> feature is
-    not enabled, pname:polygonMode must: be ename:VK_POLYGON_MODE_FILL or
-    ename:VK_POLYGON_MODE_FILL_RECTANGLE_NV
+    not enabled, pname:polygonMode must: be ename:VK_POLYGON_MODE_FILL
+ifdef::VK_NV_fill_rectangle[or ename:VK_POLYGON_MODE_FILL_RECTANGLE_NV]
+ifdef::VK_NV_fill_rectangle[]
   * [[VUID-VkPipelineRasterizationStateCreateInfo-polygonMode-01414]]
     If the `apiext:VK_NV_fill_rectangle` extension is not enabled,
     pname:polygonMode must: not be ename:VK_POLYGON_MODE_FILL_RECTANGLE_NV
@@ -145,7 +140,7 @@ defined as:
 
 include::{generated}/api/structs/VkPipelineRasterizationDepthClipStateCreateInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.
@@ -170,7 +165,7 @@ The sname:VkPipelineMultisampleStateCreateInfo structure is defined as:
 
 include::{generated}/api/structs/VkPipelineMultisampleStateCreateInfo.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.
@@ -269,7 +264,7 @@ slink:VkPipelineRasterizationStateCreateInfo is enabled.
 When enabled, primitives are discarded after they are processed by the last
 active shader stage in the pipeline before rasterization.
 
-ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2,VK_EXT_shader_object[]
 [open,refpage='vkCmdSetRasterizerDiscardEnable',desc='Control whether primitives are discarded before the rasterization stage dynamically for a command buffer',type='protos',alias='vkCmdSetRasterizerDiscardEnableEXT']
 --
 To <<pipelines-dynamic-state, dynamically enable>> whether primitives are
@@ -277,39 +272,43 @@ discarded before the rasterization stage, call:
 
 ifdef::VK_VERSION_1_3[]
 include::{generated}/api/protos/vkCmdSetRasterizerDiscardEnable.adoc[]
+
+ifdef::VK_EXT_extended_dynamic_state2,VK_EXT_shader_object[or the equivalent command]
 endif::VK_VERSION_1_3[]
 
-ifdef::VK_VERSION_1_3+VK_EXT_extended_dynamic_state2[or the equivalent command]
-
-ifdef::VK_EXT_extended_dynamic_state2[]
+ifdef::VK_EXT_extended_dynamic_state2,VK_EXT_shader_object[]
 include::{generated}/api/protos/vkCmdSetRasterizerDiscardEnableEXT.adoc[]
-endif::VK_EXT_extended_dynamic_state2[]
+endif::VK_EXT_extended_dynamic_state2,VK_EXT_shader_object[]
 
   * pname:commandBuffer is the command buffer into which the command will be
     recorded.
   * pname:rasterizerDiscardEnable controls whether primitives are discarded
     immediately before the rasterization stage.
 
-This command sets the discard enable for subsequent drawing commands when
-the graphics pipeline is created with
+This command sets the discard enable for subsequent drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_RASTERIZER_DISCARD_ENABLE set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2[]
 Otherwise, this state is specified by the
 slink:VkPipelineRasterizationStateCreateInfo::pname:rasterizerDiscardEnable
 value used to create the currently active pipeline.
 
-ifndef::VK_VERSION_1_3[]
+:refpage: vkCmdSetRasterizerDiscardEnable
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetRasterizerDiscardEnable-None-04871]]
-    The <<features-extendedDynamicState2, pname:extendedDynamicState2>>
-    feature must: be enabled
+include::{chapters}/commonvalidity/dynamic_state2_feature_common.adoc[]
 ****
-endif::VK_VERSION_1_3[]
 
 include::{generated}/validity/protos/vkCmdSetRasterizerDiscardEnable.adoc[]
 --
-endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2[]
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2,VK_EXT_shader_object[]
 
 
 ifdef::VK_EXT_transform_feedback[]
@@ -374,7 +373,7 @@ defined as:
 
 include::{generated}/api/structs/VkPipelineRasterizationStateStreamCreateInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.
@@ -409,7 +408,7 @@ tname:VkPipelineRasterizationStateStreamCreateFlagsEXT is a bitmask type for
 setting a mask, but is currently reserved for future use.
 --
 
-ifdef::VK_EXT_extended_dynamic_state3[]
+ifdef::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 [open,refpage='vkCmdSetRasterizationStreamEXT',desc='Specify the rasterization stream dynamically for a command buffer',type='protos']
 --
 To <<pipelines-dynamic-state, dynamically set>> the
@@ -422,19 +421,26 @@ include::{generated}/api/protos/vkCmdSetRasterizationStreamEXT.adoc[]
   * pname:rasterizationStream specifies the pname:rasterizationStream state.
 
 This command sets the pname:rasterizationStream state for subsequent drawing
-commands when the graphics pipeline is created with
+commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_RASTERIZATION_STREAM_EXT set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineRasterizationStateStreamCreateInfoEXT::pname:rasterizationStream
 value used to create the currently active pipeline.
 
+:refpage: vkCmdSetRasterizationStreamEXT
+:requiredfeature: extendedDynamicState3RasterizationStream
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetRasterizationStreamEXT-extendedDynamicState3RasterizationStream-07410]]
-    The <<features-extendedDynamicState3RasterizationStream,
-    pname:extendedDynamicState3RasterizationStream>> feature must: be
-    enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
   * [[VUID-vkCmdSetRasterizationStreamEXT-transformFeedback-07411]]
     The <<features-transformFeedback, pname:transformFeedback>> feature
     must: be enabled
@@ -449,7 +455,7 @@ value used to create the currently active pipeline.
 
 include::{generated}/validity/protos/vkCmdSetRasterizationStreamEXT.adoc[]
 --
-endif::VK_EXT_extended_dynamic_state3[]
+endif::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 endif::VK_EXT_transform_feedback[]
 
 
@@ -484,7 +490,7 @@ defined as:
 
 include::{generated}/api/structs/VkPipelineRasterizationStateRasterizationOrderAMD.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:rasterizationOrder is a elink:VkRasterizationOrderAMD value
@@ -595,7 +601,7 @@ slink:VkPipelineMultisampleStateCreateInfo::pname:rasterizationSamples.
 Each sample in a set is assigned a unique _sample index_ [eq]#i# in the
 range [eq]#[0, pname:rasterizationSamples)#.
 
-ifdef::VK_EXT_extended_dynamic_state3[]
+ifdef::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 [open,refpage='vkCmdSetRasterizationSamplesEXT',desc='Specify the rasterization samples dynamically for a command buffer',type='protos']
 --
 To <<pipelines-dynamic-state, dynamically set>> the
@@ -608,25 +614,33 @@ include::{generated}/api/protos/vkCmdSetRasterizationSamplesEXT.adoc[]
   * pname:rasterizationSamples specifies pname:rasterizationSamples.
 
 This command sets the pname:rasterizationSamples for subsequent drawing
-commands when the graphics pipeline is created with
+commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineMultisampleStateCreateInfo::pname:rasterizationSamples value
 used to create the currently active pipeline.
 
+:refpage: vkCmdSetRasterizationSamplesEXT
+:requiredfeature: extendedDynamicState3RasterizationSamples
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetRasterizationSamplesEXT-extendedDynamicState3RasterizationSamples-07414]]
-    The <<features-extendedDynamicState3RasterizationSamples,
-    pname:extendedDynamicState3RasterizationSamples>> feature must: be
-    enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdSetRasterizationSamplesEXT.adoc[]
 --
-endif::VK_EXT_extended_dynamic_state3[]
+endif::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
+[[primsrast-multisampling-coverageindex]]
 Each sample in a fragment is also assigned a unique _coverage index_ [eq]#j#
 in the range [eq]#[0, n {times} pname:rasterizationSamples)#, where [eq]#n#
 is the number of sets in the fragment.
@@ -799,7 +813,7 @@ as:
 
 include::{generated}/api/structs/VkPipelineSampleLocationsStateCreateInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:sampleLocationsEnable controls whether custom sample locations are
@@ -821,7 +835,7 @@ The sname:VkSampleLocationsInfoEXT structure is defined as:
 
 include::{generated}/api/structs/VkSampleLocationsInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:sampleLocationsPerPixel is a elink:VkSampleCountFlagBits value
@@ -856,7 +870,8 @@ endif::VK_EXT_fragment_density_map[]
 .Valid Usage
 ****
   * [[VUID-VkSampleLocationsInfoEXT-sampleLocationsPerPixel-01526]]
-    pname:sampleLocationsPerPixel must: be a bit value that is set in
+    pname:sampleLocationsPerPixel must: be a valid
+    elink:VkSampleCountFlagBits value that is set in
     slink:VkPhysicalDeviceSampleLocationsPropertiesEXT::pname:sampleLocationSampleCounts
   * [[VUID-VkSampleLocationsInfoEXT-sampleLocationsCount-01527]]
     pname:sampleLocationsCount must: equal
@@ -889,7 +904,7 @@ slink:VkPhysicalDeviceSampleLocationsPropertiesEXT.
 include::{generated}/validity/structs/VkSampleLocationEXT.adoc[]
 --
 
-ifdef::VK_EXT_extended_dynamic_state3[]
+ifdef::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 [open,refpage='vkCmdSetSampleLocationsEnableEXT',desc='Specify the samples locations enable state dynamically for a command buffer',type='protos']
 --
@@ -904,25 +919,32 @@ include::{generated}/api/protos/vkCmdSetSampleLocationsEnableEXT.adoc[]
     state.
 
 This command sets the pname:sampleLocationsEnable state for subsequent
-drawing commands when the graphics pipeline is created with
+drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_ENABLE_EXT set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineSampleLocationsStateCreateInfoEXT::pname:sampleLocationsEnable
 value used to create the currently active pipeline.
 
+:refpage: vkCmdSetSampleLocationsEnableEXT
+:requiredfeature: extendedDynamicState3SampleLocationsEnable
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetSampleLocationsEnableEXT-extendedDynamicState3SampleLocationsEnable-07415]]
-    The <<features-extendedDynamicState3SampleLocationsEnable,
-    pname:extendedDynamicState3SampleLocationsEnable>> feature must: be
-    enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdSetSampleLocationsEnableEXT.adoc[]
 --
 
-endif::VK_EXT_extended_dynamic_state3[]
+endif::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 [open,refpage='vkCmdSetSampleLocationsEXT',desc='Set sample locations dynamically for a command buffer',type='protos']
 --
@@ -936,7 +958,9 @@ include::{generated}/api/protos/vkCmdSetSampleLocationsEXT.adoc[]
   * pname:pSampleLocationsInfo is the sample locations state to set.
 
 This command sets the custom sample locations for subsequent drawing
-commands when the graphics pipeline is created with
+commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_EXT set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates, and when the
 slink:VkPipelineSampleLocationsStateCreateInfoEXT::pname:sampleLocationsEnable
@@ -947,13 +971,6 @@ values used to create the currently active pipeline.
 
 .Valid Usage
 ****
-ifndef::VK_EXT_extended_dynamic_state3[]
-  * [[VUID-vkCmdSetSampleLocationsEXT-sampleLocationsPerPixel-01529]]
-    The pname:sampleLocationsPerPixel member of pname:pSampleLocationsInfo
-    must: equal the pname:rasterizationSamples member of the
-    slink:VkPipelineMultisampleStateCreateInfo structure the bound graphics
-    pipeline has been created with
-endif::VK_EXT_extended_dynamic_state3[]
   * [[VUID-vkCmdSetSampleLocationsEXT-variableSampleLocations-01530]]
     If
     slink:VkPhysicalDeviceSampleLocationsPropertiesEXT::pname:variableSampleLocations
@@ -985,6 +1002,8 @@ be restricted by sample rate.
 
 [open,refpage='vkGetPhysicalDeviceFragmentShadingRatesKHR',desc='Get available shading rates for a physical device',type='protos']
 --
+:refpage: vkGetPhysicalDeviceFragmentShadingRatesKHR
+
 To query available shading rates, call:
 
 include::{generated}/api/protos/vkGetPhysicalDeviceFragmentShadingRatesKHR.adoc[]
@@ -1082,6 +1101,8 @@ but 4x2 is an unsupported rate.
 ====
 endif::VK_QCOM_render_pass_transform[]
 
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
+
 include::{generated}/validity/protos/vkGetPhysicalDeviceFragmentShadingRatesKHR.adoc[]
 --
 
@@ -1091,7 +1112,7 @@ The sname:VkPhysicalDeviceFragmentShadingRateKHR structure is defined as
 
 include::{generated}/api/structs/VkPhysicalDeviceFragmentShadingRateKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:sampleCounts is a bitmask of sample counts for which the shading
@@ -1120,7 +1141,7 @@ defined as:
 
 include::{generated}/api/structs/VkPipelineFragmentShadingRateStateCreateInfoKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:fragmentSize specifies a slink:VkExtent2D structure containing the
@@ -1166,7 +1187,9 @@ include::{generated}/api/protos/vkCmdSetFragmentShadingRateKHR.adoc[]
     generated by subsequent drawing commands.
 
 This command sets the pipeline fragment shading rate and combiner operation
-for subsequent drawing commands when the graphics pipeline is created with
+for subsequent drawing commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_FRAGMENT_SHADING_RATE_KHR set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
 Otherwise, this state is specified by the
@@ -1345,6 +1368,11 @@ ifdef::VK_EXT_sample_locations[]
     slink:VkPipelineSampleLocationsStateCreateInfoEXT::pname:sampleLocationsEnable
     is ename:VK_TRUE.
 endif::VK_EXT_sample_locations[]
+ifdef::VK_EXT_shader_tile_image[]
+  * The fragment shader declares any of the
+    code:TileImageColorReadAccessEXT, code:TileImageDepthReadAccessEXT, or
+    code:TileImageStencilReadAccessEXT capabilities.
+endif::VK_EXT_shader_tile_image[]
 
 Otherwise, each of the specified shading rates are combined and then used to
 derive the value of [eq]#C~xy~'#.
@@ -1408,16 +1436,25 @@ The result of the second combination is used as the final fragment shading
 rate, reported via the <<interfaces-builtin-variables-primitiveshadingrate,
 code:ShadingRateKHR built-in>>.
 
-Implementations may: clamp the [eq]#C~xy~# result of each combiner operation
-separately, or only after the second combiner operation.
+Implementations should: clamp the inputs to the combiner operations
+[eq]#A~xy~# and [eq]#B~xy~#, and must:
+ifdef::VK_KHR_maintenance6[]
+do so if
+sname:VkPhysicalDeviceMaintenance6PropertiesKHR::pname:fragmentShadingRateClampCombinerInputs
+is set to ename:VK_TRUE.
+All implementations must:
+endif::VK_KHR_maintenance6[]
+clamp the result of the second combiner operation.
 
-If the final combined rate is one of the rates returned by
+A fragment shading rate [eq]#R~xy~# representing any of [eq]#A~xy~#,
+[eq]#B~xy~# or [eq]#C~xy~# is clamped as follows.
+If [eq]#R~xy~# is one of the rates returned by
 flink:vkGetPhysicalDeviceFragmentShadingRatesKHR for the sample count
 ifdef::VK_QCOM_render_pass_transform[]
 and render pass transform
 endif::VK_QCOM_render_pass_transform[]
-used by rasterization, [eq]#C~xy~' = C~xy~#.
-Otherwise, [eq]#C~xy~'# is selected from the rates returned by
+used by rasterization, the clamped shading rate [eq]#R~xy~'# is [eq]#R~xy~#.
+Otherwise, the clamped shading rate is selected from the rates returned by
 flink:vkGetPhysicalDeviceFragmentShadingRatesKHR for the sample count
 ifdef::VK_QCOM_render_pass_transform[]
 and render pass transform
@@ -1426,11 +1463,11 @@ used by rasterization.
 From this list of supported rates, the following steps are applied in order,
 to select a single value:
 
-  . Keep only rates where [eq]#C~x~' {leq} C~x~# and [eq]#C~y~' {leq} C~y~#.
-  ** Implementations may: also keep rates where [eq]#C~x~' {leq} C~y~# and
-     [eq]#C~y~' {leq} C~x~#.
-  . Keep only rates with the highest area ([eq]#C~x~' {times} C~y~'#).
-  . Keep only rates with the lowest aspect ratio ([eq]#C~x~' {plus} C~y~'#).
+  . Keep only rates where [eq]#R~x~' {leq} R~x~# and [eq]#R~y~' {leq} R~y~#.
+  ** Implementations may: also keep rates where [eq]#R~x~' {leq} R~y~# and
+     [eq]#R~y~' {leq} R~x~#.
+  . Keep only rates with the highest area ([eq]#R~x~' {times} R~y~'#).
+  . Keep only rates with the lowest aspect ratio ([eq]#R~x~' {plus} R~y~'#).
   . In cases where a wide (e.g. 4x1) and tall (e.g. 1x4) rate remain, the
     implementation may: choose either rate.
     However, it must: choose this rate consistently for the same shading
@@ -1512,7 +1549,7 @@ defined as:
 
 include::{generated}/api/structs/VkPipelineFragmentShadingRateEnumStateCreateInfoNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:shadingRateType specifies a elink:VkFragmentShadingRateTypeNV
@@ -1589,7 +1626,9 @@ include::{generated}/api/protos/vkCmdSetFragmentShadingRateEnumNV.adoc[]
     generated by subsequent drawing commands.
 
 This command sets the pipeline fragment shading rate and combiner operation
-for subsequent drawing commands when the graphics pipeline is created with
+for subsequent drawing commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_FRAGMENT_SHADING_RATE_KHR set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
 Otherwise, this state is specified by the
@@ -1734,7 +1773,7 @@ defined as:
 
 include::{generated}/api/structs/VkPipelineViewportShadingRateImageStateCreateInfoNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:shadingRateImageEnable specifies whether shading rate image and
@@ -1845,7 +1884,7 @@ The number of entries in each palette is given by the
 implementation-dependent <<limits-shadingRatePaletteSize, shading rate image
 palette size>>.
 
-ifdef::VK_EXT_extended_dynamic_state3[]
+ifdef::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 [open,refpage='vkCmdSetShadingRateImageEnableNV',desc='Specify the shading rate image enable state dynamically for a command buffer',type='protos']
 --
 To <<pipelines-dynamic-state, dynamically set>> the
@@ -1859,24 +1898,31 @@ include::{generated}/api/protos/vkCmdSetShadingRateImageEnableNV.adoc[]
     state.
 
 This command sets the pname:shadingRateImageEnable state for subsequent
-drawing commands when the graphics pipeline is created with
+drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_SHADING_RATE_IMAGE_ENABLE_NV set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineViewportShadingRateImageStateCreateInfoNV::pname:shadingRateImageEnable
 value used to create the currently active pipeline.
 
+:refpage: vkCmdSetShadingRateImageEnableNV
+:requiredfeature: extendedDynamicState3ShadingRateImageEnable
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetShadingRateImageEnableNV-extendedDynamicState3ShadingRateImageEnable-07416]]
-    The <<features-extendedDynamicState3ShadingRateImageEnable,
-    pname:extendedDynamicState3ShadingRateImageEnable>> feature must: be
-    enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdSetShadingRateImageEnableNV.adoc[]
 --
-endif::VK_EXT_extended_dynamic_state3[]
+endif::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 [open,refpage='vkCmdSetViewportShadingRatePaletteNV',desc='Set shading rate image palettes dynamically for a command buffer',type='protos']
 --
@@ -1896,7 +1942,9 @@ include::{generated}/api/protos/vkCmdSetViewportShadingRatePaletteNV.adoc[]
     viewport.
 
 This command sets the per-viewport shading rate image palettes for
-subsequent drawing commands when the graphics pipeline is created with
+subsequent drawing commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_VIEWPORT_SHADING_RATE_PALETTE_NV set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
 Otherwise, this state is specified by the
@@ -2073,7 +2121,7 @@ defined as:
 
 include::{generated}/api/structs/VkPipelineViewportCoarseSampleOrderStateCreateInfoNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:sampleOrderType specifies the mechanism used to order coverage
@@ -2274,7 +2322,9 @@ sample count not enumerated in pname:pCustomSampleOrders will be identical
 to that used for ename:VK_COARSE_SAMPLE_ORDER_TYPE_DEFAULT_NV.
 
 This command sets the order of coverage samples for subsequent drawing
-commands when the graphics pipeline is created with
+commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_VIEWPORT_COARSE_SAMPLE_ORDER_NV set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
 Otherwise, this state is specified by the
@@ -2330,28 +2380,43 @@ shader at least [eq]#max({lceil}
 slink:VkPipelineMultisampleStateCreateInfo::pname:minSampleShading {times}
 slink:VkPipelineMultisampleStateCreateInfo::pname:rasterizationSamples
 {rceil}, 1)# times per fragment.
-If a fragment shader entry point's interface includes an input variable
-decorated with a code:BuiltIn of code:SampleId or code:SamplePosition, a
-value of `1.0` is used instead of pname:minSampleShading.
+If slink:VkPipelineMultisampleStateCreateInfo::pname:sampleShadingEnable is
+set to ename:VK_TRUE, sample shading is enabled.
+
+If a fragment shader entry point <<shaders-staticuse, statically uses>> an
+input variable decorated with a code:BuiltIn of code:SampleId or
+code:SamplePosition, sample shading is enabled and a value of `1.0` is used
+instead of pname:minSampleShading.
+If a fragment shader entry point <<shaders-staticuse, statically uses>> an
+input variable decorated with code:Sample, sample shading may: be enabled
+and a value of `1.0` will be used instead of pname:minSampleShading if it
+is.
 ifdef::VK_AMD_mixed_attachment_samples[]
 If the `apiext:VK_AMD_mixed_attachment_samples` extension is enabled and the
 subpass uses color attachments, the pname:samples value used to create each
 color attachment is used instead of pname:rasterizationSamples.
 endif::VK_AMD_mixed_attachment_samples[]
 
-Sample shading is enabled if at least one of the following conditions is
-true:
+[NOTE]
+.Note
+====
+If a shader decorates an input variable with code:Sample and that value
+meaningfully impacts the output of a shader, sample shading will be enabled
+to ensure that the input is in fact interpolated per-sample.
+This is inherent to the specification and not spelled out here - if an
+application simply declares such a variable it is implementation-defined
+whether sample shading is enabled or not.
+It is possible to see the effects of this by using atomics in the shader or
+using a pipeline statistics query to query the number of fragment
+invocations, even if the shader itself does not use any per-sample
+variables.
+====
 
-  * slink:VkPipelineMultisampleStateCreateInfo::pname:sampleShadingEnable is
-    set to ename:VK_TRUE, or
-  * the fragment shader's entry point interface includes input variables
-    decorated with a code:BuiltIn of code:SampleId or code:SamplePosition
-    built-ins.
-
-If there are fewer invocations than <<fragops,covered samples>>,
+If there are fewer fragment invocations than <<fragops,covered samples>>,
 implementations may: include those samples in fragment shader invocations in
-any manner as long as covered samples are all shaded at least once.
-
+any manner as long as covered samples are all shaded at least once, and each
+invocation that is not a <<shaders-helper-invocations, helper invocation>>
+covers at least one sample.
 
 ifdef::VK_NV_fragment_shader_barycentric,VK_KHR_fragment_shader_barycentric[]
 [[primsrast-barycentric]]
@@ -2498,6 +2563,10 @@ code:PointSize written by:
 and clamped to the implementation-dependent point size range
 [eq]#[pname:pointSizeRange[0],pname:pointSizeRange[1]]#.
 The value written to code:PointSize must: be greater than zero.
+ifdef::VK_KHR_maintenance5[]
+If <<features-maintenance5, pname:maintenance5>> is enabled, and a value is
+not written to code:PointSize, the point size takes a default value of 1.0.
+endif::VK_KHR_maintenance5[]
 
 Not all point sizes need be supported, but the size 1.0 must: be supported.
 The range of supported sizes and the size of evenly-spaced gradations within
@@ -2567,7 +2636,7 @@ as:
 
 include::{generated}/api/structs/VkPipelineRasterizationLineStateCreateInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:lineRasterizationMode is a elink:VkLineRasterizationModeEXT value
@@ -2653,7 +2722,7 @@ include::{generated}/api/enums/VkLineRasterizationModeEXT.adoc[]
     falloff, as defined in <<primsrast-lines-smooth,Smooth Lines>>.
 --
 
-ifdef::VK_EXT_extended_dynamic_state3[]
+ifdef::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 [open,refpage='vkCmdSetLineRasterizationModeEXT',desc='Specify the line rasterization mode dynamically for a command buffer',type='protos']
 --
@@ -2668,19 +2737,26 @@ include::{generated}/api/protos/vkCmdSetLineRasterizationModeEXT.adoc[]
     state.
 
 This command sets the pname:lineRasterizationMode state for subsequent
-drawing commands when the graphics pipeline is created with
+drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_LINE_RASTERIZATION_MODE_EXT set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineRasterizationLineStateCreateInfoEXT::pname:lineRasterizationMode
 value used to create the currently active pipeline.
 
+:refpage: vkCmdSetLineRasterizationModeEXT
+:requiredfeature: extendedDynamicState3LineRasterizationMode
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetLineRasterizationModeEXT-extendedDynamicState3LineRasterizationMode-07417]]
-    The <<features-extendedDynamicState3LineRasterizationMode,
-    pname:extendedDynamicState3LineRasterizationMode>> feature must: be
-    enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
   * [[VUID-vkCmdSetLineRasterizationModeEXT-lineRasterizationMode-07418]]
     If pname:lineRasterizationMode is
     ename:VK_LINE_RASTERIZATION_MODE_RECTANGULAR_EXT, then the
@@ -2712,24 +2788,32 @@ include::{generated}/api/protos/vkCmdSetLineStippleEnableEXT.adoc[]
   * pname:stippledLineEnable specifies the pname:stippledLineEnable state.
 
 This command sets the pname:stippledLineEnable state for subsequent drawing
-commands when the graphics pipeline is created with
+commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_LINE_STIPPLE_ENABLE_EXT set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineRasterizationLineStateCreateInfoEXT::pname:stippledLineEnable
 value used to create the currently active pipeline.
 
+:refpage: vkCmdSetLineStippleEnableEXT
+:requiredfeature: extendedDynamicState3LineStippleEnable
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetLineStippleEnableEXT-extendedDynamicState3LineStippleEnable-07421]]
-    The <<features-extendedDynamicState3LineStippleEnable,
-    pname:extendedDynamicState3LineStippleEnable>> feature must: be enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdSetLineStippleEnableEXT.adoc[]
 --
 
-endif::VK_EXT_extended_dynamic_state3[]
+endif::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 endif::VK_EXT_line_rasterization[]
 
@@ -2743,9 +2827,10 @@ include::{generated}/api/protos/vkCmdSetLineWidth.adoc[]
     recorded.
   * pname:lineWidth is the width of rasterized line segments.
 
-This command sets the line width for subsequent drawing commands when the
-graphics pipeline is created with ename:VK_DYNAMIC_STATE_LINE_WIDTH set in
-slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+This command sets the line width for subsequent drawing commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
+when the graphics pipeline is created with ename:VK_DYNAMIC_STATE_LINE_WIDTH
+set in slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
 Otherwise, this state is specified by the
 slink:VkPipelineRasterizationStateCreateInfo::pname:lineWidth value used to
 create the currently active pipeline.
@@ -2870,7 +2955,17 @@ the implementation advertises the pname:strictLines limit in
 slink:VkPhysicalDeviceLimits as ename:VK_TRUE.
 endif::VK_EXT_line_rasterization[]
 
-When pname:strictLines is ename:VK_FALSE,
+ifndef::VK_KHR_maintenance5[]
+When
+endif::VK_KHR_maintenance5[]
+ifdef::VK_KHR_maintenance5[]
+By default, when
+endif::VK_KHR_maintenance5[]
+pname:strictLines is ename:VK_FALSE,
+ifdef::VK_IMG_relaxed_line_rasterization[]
+or the <<features-relaxedLineRasterization, pname:relaxedLineRasterization>>
+feature is enabled,
+endif::VK_IMG_relaxed_line_rasterization[]
 ifdef::VK_EXT_line_rasterization[]
 and when the pname:lineRasterizationMode is
 ename:VK_LINE_RASTERIZATION_MODE_DEFAULT_EXT,
@@ -2899,8 +2994,19 @@ attributes.
 [[fig-non-strict-lines]]
 image::{images}/non_strict_lines.svg[align="center",title="Non strict lines",opts="{imageopts}"]
 
-Only when pname:strictLines is ename:VK_FALSE implementations may: deviate
-from the non-strict line algorithm described above in the following ways:
+ifndef::VK_IMG_relaxed_line_rasterization[Only when]
+ifdef::VK_IMG_relaxed_line_rasterization[When]
+pname:strictLines is ename:VK_FALSE
+ifdef::VK_IMG_relaxed_line_rasterization[]
+or when the <<features-relaxedLineRasterization,
+pname:relaxedLineRasterization>> feature is enabled,
+ifdef::VK_EXT_line_rasterization[]
+and pname:lineRasterizationMode is
+ename:VK_LINE_RASTERIZATION_MODE_DEFAULT_EXT
+endif::VK_EXT_line_rasterization[]
+endif::VK_IMG_relaxed_line_rasterization[]
+implementations may: deviate from the non-strict line algorithm described
+above in the following ways:
 
   * Implementations may: instead interpolate each fragment according to the
     formula in <<primsrast-lines-basic, Basic Line Segment Rasterization>>
@@ -2910,6 +3016,29 @@ from the non-strict line algorithm described above in the following ways:
     performed using the rules defined in
     <<primsrast-lines-bresenham,Bresenham Line Segment Rasterization>>.
 
+ifdef::VK_KHR_maintenance5[]
+If
+sname:VkPhysicalDeviceMaintenance5PropertiesKHR::pname:nonStrictSinglePixelWideLinesUseParallelogram
+is ename:VK_TRUE,
+ifdef::VK_EXT_line_rasterization[]
+the pname:lineRasterizationMode is
+ename:VK_LINE_RASTERIZATION_MODE_DEFAULT_EXT,
+endif::VK_EXT_line_rasterization[]
+and pname:strictLines is ename:VK_FALSE, non-strict lines of width 1.0 are
+rasterized as parallelograms, otherwise they are rasterized using
+Bresenham's algorithm.
+
+If
+sname:VkPhysicalDeviceMaintenance5PropertiesKHR::pname:nonStrictWideLinesUseParallelogram
+is ename:VK_TRUE,
+ifdef::VK_EXT_line_rasterization[]
+the pname:lineRasterizationMode is
+ename:VK_LINE_RASTERIZATION_MODE_DEFAULT_EXT,
+endif::VK_EXT_line_rasterization[]
+and pname:strictLines is ename:VK_FALSE, non-strict lines of width greater
+than 1.0 are rasterized as parallelograms, otherwise they are rasterized
+using Bresenham's algorithm.
+endif::VK_KHR_maintenance5[]
 
 [[primsrast-lines-bresenham]]
 === Bresenham Line Segment Rasterization
@@ -2923,6 +3052,17 @@ endif::VK_EXT_line_rasterization[]
 
 Non-strict lines may: also follow these rasterization rules for
 non-antialiased lines.
+
+ifdef::VK_IMG_relaxed_line_rasterization[]
+If the <<features-relaxedLineRasterization, pname:relaxedLineRasterization>>
+feature is enabled,
+ifdef::VK_EXT_line_rasterization[]
+and pname:lineRasterizationMode is
+ename:VK_LINE_RASTERIZATION_MODE_DEFAULT_EXT
+endif::VK_EXT_line_rasterization[]
+implementations must: follow these rasterization rules for non-antialised
+lines of width 1.0.
+endif::VK_IMG_relaxed_line_rasterization[]
 
 Line segment rasterization begins by characterizing the segment as either
 _x-major_ or _y-major_.
@@ -2979,7 +3119,7 @@ subject to the following rules:
     deviate by more than one unit in either x or y framebuffer coordinates
     from a corresponding fragment produced by the diamond-exit rule.
   * The total number of fragments produced by the algorithm must: not differ
-    from that produced by the diamond-exit rule by no more than one.
+    from that produced by the diamond-exit rule by more than one.
   * For an x-major line, two fragments that lie in the same
     framebuffer-coordinate column must: not be produced (for a y-major line,
     two fragments that lie in the same framebuffer-coordinate row must: not
@@ -3105,6 +3245,7 @@ include::{generated}/api/protos/vkCmdSetLineStippleEXT.adoc[]
     rasterization.
 
 This command sets the line stipple state for subsequent drawing commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
 when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_LINE_STIPPLE_EXT set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
@@ -3201,7 +3342,7 @@ Any triangle which is not front-facing is back-facing, including zero-area
 triangles.
 --
 
-ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 [open,refpage='vkCmdSetFrontFace',desc='Set front face orientation dynamically for a command buffer',type='protos',alias='vkCmdSetFrontFaceEXT']
 --
 To <<pipelines-dynamic-state, dynamically set>> the front face orientation,
@@ -3209,13 +3350,13 @@ call:
 
 ifdef::VK_VERSION_1_3[]
 include::{generated}/api/protos/vkCmdSetFrontFace.adoc[]
+
+ifdef::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[or the equivalent command]
 endif::VK_VERSION_1_3[]
 
-ifdef::VK_VERSION_1_3+VK_EXT_extended_dynamic_state[or the equivalent command]
-
-ifdef::VK_EXT_extended_dynamic_state[]
+ifdef::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 include::{generated}/api/protos/vkCmdSetFrontFaceEXT.adoc[]
-endif::VK_EXT_extended_dynamic_state[]
+endif::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 
   * pname:commandBuffer is the command buffer into which the command will be
     recorded.
@@ -3223,24 +3364,28 @@ endif::VK_EXT_extended_dynamic_state[]
     triangle orientation to be used for culling.
 
 This command sets the front face orientation for subsequent drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
 when the graphics pipeline is created with ename:VK_DYNAMIC_STATE_FRONT_FACE
 set in slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
 Otherwise, this state is specified by the
 slink:VkPipelineRasterizationStateCreateInfo::pname:frontFace value used to
 create the currently active pipeline.
 
-ifndef::VK_VERSION_1_3[]
+:refpage: vkCmdSetFrontFace
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetFrontFace-None-03383]]
-    The <<features-extendedDynamicState, pname:extendedDynamicState>>
-    feature must: be enabled
+include::{chapters}/commonvalidity/dynamic_state_feature_common.adoc[]
 ****
-endif::VK_VERSION_1_3[]
 
 include::{generated}/validity/protos/vkCmdSetFrontFace.adoc[]
 --
-endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 
 
 [open,refpage='VkCullModeFlagBits',desc='Bitmask controlling triangle culling',type='enums']
@@ -3272,44 +3417,48 @@ tname:VkCullModeFlags is a bitmask type for setting a mask of zero or more
 elink:VkCullModeFlagBits.
 --
 
-ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 [open,refpage='vkCmdSetCullMode',desc='Set cull mode dynamically for a command buffer',type='protos',alias='vkCmdSetCullModeEXT']
 --
 To <<pipelines-dynamic-state, dynamically set>> the cull mode, call:
 
 ifdef::VK_VERSION_1_3[]
 include::{generated}/api/protos/vkCmdSetCullMode.adoc[]
+
+ifdef::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[or the equivalent command]
 endif::VK_VERSION_1_3[]
 
-ifdef::VK_VERSION_1_3+VK_EXT_extended_dynamic_state[or the equivalent command]
-
-ifdef::VK_EXT_extended_dynamic_state[]
+ifdef::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 include::{generated}/api/protos/vkCmdSetCullModeEXT.adoc[]
-endif::VK_EXT_extended_dynamic_state[]
+endif::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 
   * pname:commandBuffer is the command buffer into which the command will be
     recorded.
   * pname:cullMode specifies the cull mode property to use for drawing.
 
-This command sets the cull mode for subsequent drawing commands when the
-graphics pipeline is created with ename:VK_DYNAMIC_STATE_CULL_MODE set in
-slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+This command sets the cull mode for subsequent drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+when the graphics pipeline is created with ename:VK_DYNAMIC_STATE_CULL_MODE
+set in slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
 Otherwise, this state is specified by the
 slink:VkPipelineRasterizationStateCreateInfo::pname:cullMode value used to
 create the currently active pipeline.
 
-ifndef::VK_VERSION_1_3[]
+:refpage: vkCmdSetCullMode
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetCullMode-None-03384]]
-    The <<features-extendedDynamicState, pname:extendedDynamicState>>
-    feature must: be enabled
+include::{chapters}/commonvalidity/dynamic_state_feature_common.adoc[]
 ****
-endif::VK_VERSION_1_3[]
 
 include::{generated}/validity/protos/vkCmdSetCullMode.adoc[]
 --
-endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 
 The rule for determining which fragments are produced by polygon
 rasterization is called _point sampling_.
@@ -3463,9 +3612,29 @@ endif::VK_NV_fill_rectangle[]
 These modes affect only the final rasterization of polygons: in particular,
 a polygon's vertices are shaded and the polygon is clipped and possibly
 culled before these modes are applied.
+
+ifndef::VK_KHR_maintenance5[]
+The point size of the final rasterization of polygons when
+<<primsrast-polygonmode, polygon mode>> is ename:VK_POLYGON_MODE_POINT is
+implementation-dependent, and the point size may: either be code:PointSize
+or 1.0.
+endif::VK_KHR_maintenance5[]
+ifdef::VK_KHR_maintenance5[]
+If
+sname:VkPhysicalDeviceMaintenance5PropertiesKHR::pname:polygonModePointSize
+is set to ename:VK_TRUE, the point size of the final rasterization of
+polygons is taken from code:PointSize when <<primsrast-polygonmode, polygon
+mode>> is ename:VK_POLYGON_MODE_POINT.
+
+Otherwise, if
+sname:VkPhysicalDeviceMaintenance5PropertiesKHR::pname:polygonModePointSize
+is set to ename:VK_FALSE, the point size of the final rasterization of
+polygons is 1.0 when <<primsrast-polygonmode, polygon mode>> is
+ename:VK_POLYGON_MODE_POINT.
+endif::VK_KHR_maintenance5[]
 --
 
-ifdef::VK_EXT_extended_dynamic_state3[]
+ifdef::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 [open,refpage='vkCmdSetPolygonModeEXT',desc='Specify polygon mode dynamically for a command buffer',type='protos']
 --
@@ -3477,28 +3646,31 @@ include::{generated}/api/protos/vkCmdSetPolygonModeEXT.adoc[]
     recorded.
   * pname:polygonMode specifies polygon mode.
 
-This command sets the polygon mode for subsequent drawing commands when the
-graphics pipeline is created with ename:VK_DYNAMIC_STATE_POLYGON_MODE_EXT
-set in slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+This command sets the polygon mode for subsequent drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
+ename:VK_DYNAMIC_STATE_POLYGON_MODE_EXT set in
+slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineRasterizationStateCreateInfo::pname:polygonMode value used
 to create the currently active pipeline.
 
+:refpage: vkCmdSetPolygonModeEXT
+:requiredfeature: extendedDynamicState3PolygonMode
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetPolygonModeEXT-extendedDynamicState3PolygonMode-07422]]
-    The <<features-extendedDynamicState3PolygonMode,
-    pname:extendedDynamicState3PolygonMode>> feature must: be enabled
-ifndef::VK_NV_fill_rectangle[]
-  * [[VUID-vkCmdSetPolygonModeEXT-fillModeNonSolid-07423]]
-    If the <<features-fillModeNonSolid, pname:fillModeNonSolid>> feature is
-    not enabled, pname:polygonMode must: be ename:VK_POLYGON_MODE_FILL
-endif::VK_NV_fill_rectangle[]
-ifdef::VK_NV_fill_rectangle[]
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
   * [[VUID-vkCmdSetPolygonModeEXT-fillModeNonSolid-07424]]
     If the <<features-fillModeNonSolid, pname:fillModeNonSolid>> feature is
-    not enabled, pname:polygonMode must: be ename:VK_POLYGON_MODE_FILL or
-    ename:VK_POLYGON_MODE_FILL_RECTANGLE_NV
+    not enabled, pname:polygonMode must: be ename:VK_POLYGON_MODE_FILL
+ifdef::VK_NV_fill_rectangle[or ename:VK_POLYGON_MODE_FILL_RECTANGLE_NV]
+ifdef::VK_NV_fill_rectangle[]
   * [[VUID-vkCmdSetPolygonModeEXT-polygonMode-07425]]
     If the `apiext:VK_NV_fill_rectangle` extension is not enabled,
     pname:polygonMode must: not be ename:VK_POLYGON_MODE_FILL_RECTANGLE_NV
@@ -3508,7 +3680,7 @@ endif::VK_NV_fill_rectangle[]
 include::{generated}/validity/protos/vkCmdSetPolygonModeEXT.adoc[]
 --
 
-endif::VK_EXT_extended_dynamic_state3[]
+endif::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 
 [[primsrast-depthbias]]
@@ -3535,7 +3707,7 @@ used to create the currently active pipeline.
 If the depth bias enable is ename:VK_FALSE, no bias is applied and the
 fragment's depth values are unchanged.
 
-ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2,VK_EXT_shader_object[]
 [open,refpage='vkCmdSetDepthBiasEnable',desc='Control whether to bias fragment depth values dynamically for a command buffer',type='protos',alias='vkCmdSetDepthBiasEnableEXT']
 --
 To <<pipelines-dynamic-state, dynamically enable>> whether to bias fragment
@@ -3543,38 +3715,42 @@ depth values, call:
 
 ifdef::VK_VERSION_1_3[]
 include::{generated}/api/protos/vkCmdSetDepthBiasEnable.adoc[]
+
+ifdef::VK_EXT_extended_dynamic_state2,VK_EXT_shader_object[or the equivalent command]
 endif::VK_VERSION_1_3[]
 
-ifdef::VK_VERSION_1_3+VK_EXT_extended_dynamic_state2[or the equivalent command]
-
-ifdef::VK_EXT_extended_dynamic_state2[]
+ifdef::VK_EXT_extended_dynamic_state2,VK_EXT_shader_object[]
 include::{generated}/api/protos/vkCmdSetDepthBiasEnableEXT.adoc[]
-endif::VK_EXT_extended_dynamic_state2[]
+endif::VK_EXT_extended_dynamic_state2,VK_EXT_shader_object[]
 
   * pname:commandBuffer is the command buffer into which the command will be
     recorded.
   * pname:depthBiasEnable controls whether to bias fragment depth values.
 
-This command sets the depth bias enable for subsequent drawing commands when
-the graphics pipeline is created with
+This command sets the depth bias enable for subsequent drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2[]
 Otherwise, this state is specified by the
 slink:VkPipelineRasterizationStateCreateInfo::pname:depthBiasEnable value
 used to create the currently active pipeline.
 
-ifndef::VK_VERSION_1_3[]
+:refpage: vkCmdSetDepthBiasEnable
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetDepthBiasEnable-None-04872]]
-    The <<features-extendedDynamicState2, pname:extendedDynamicState2>>
-    feature must: be enabled
+include::{chapters}/commonvalidity/dynamic_state2_feature_common.adoc[]
 ****
-endif::VK_VERSION_1_3[]
 
 include::{generated}/validity/protos/vkCmdSetDepthBiasEnable.adoc[]
 --
-endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2[]
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state2,VK_EXT_shader_object[]
 
 
 [[primsrast-depthbias-computation]]
@@ -3584,14 +3760,18 @@ The depth bias depends on three parameters:
 
   * pname:depthBiasSlopeFactor scales the maximum depth slope [eq]#m# of the
     polygon
-  * pname:depthBiasConstantFactor scales the minimum resolvable difference
-    [eq]#r# of the depth attachment
+  * pname:depthBiasConstantFactor scales the parameter [eq]#r# of the depth
+    attachment
   * the scaled terms are summed to produce a value which is then clamped to
     a minimum or maximum value specified by pname:depthBiasClamp
 
 pname:depthBiasSlopeFactor, pname:depthBiasConstantFactor, and
 pname:depthBiasClamp can: each be positive, negative, or zero.
-These parameters are set as described for flink:vkCmdSetDepthBias below.
+These parameters are set as described for flink:vkCmdSetDepthBias
+ifdef::VK_EXT_depth_bias_control[]
+and flink:vkCmdSetDepthBias2EXT
+endif::VK_EXT_depth_bias_control[]
+below.
 
 The maximum depth slope [eq]#m# of a triangle is
 
@@ -3611,23 +3791,61 @@ m = \max\left( \left| { {\partial z_f} \over {\partial x_f} } \right|,
        \right).
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-The minimum resolvable difference [eq]#r# is a parameter that depends on the
-depth attachment representation.
-It is the smallest difference in framebuffer coordinate [eq]#z# values that
-is guaranteed to remain distinct throughout polygon rasterization and in the
+ifdef::VK_EXT_depth_bias_control[]
+In a pipeline with a depth bias representation of
+ename:VK_DEPTH_BIAS_REPRESENTATION_FLOAT_EXT, [eq]#r#, for the given
+primitive is defined as
+
+  {empty}:: [eq]#r = 1#
+
+
+Otherwise
+endif::VK_EXT_depth_bias_control[]
+[eq]#r# is the minimum resolvable difference that depends on the depth
+attachment representation.
+ifdef::VK_EXT_depth_bias_control[]
+If sname:VkDepthBiasRepresentationInfoEXT::pname:depthBiasExact is
+ename:VK_FALSE it
+endif::VK_EXT_depth_bias_control[]
+ifndef::VK_EXT_depth_bias_control[It]
+is the smallest difference in framebuffer coordinate [eq]#z# values that is
+guaranteed to remain distinct throughout polygon rasterization and in the
 depth attachment.
 All pairs of fragments generated by the rasterization of two polygons with
 otherwise identical vertices, but [eq]#pname:z~f~# values that differ by
 [eq]#r#, will have distinct depth values.
 
-For fixed-point depth attachment representations, [eq]#r# is constant
-throughout the range of the entire depth attachment.
+For fixed-point depth attachment representations,
+ifdef::VK_EXT_depth_bias_control[]
+or in a pipeline with a depth bias representation of
+ename:VK_DEPTH_BIAS_REPRESENTATION_LEAST_REPRESENTABLE_VALUE_FORCE_UNORM_EXT,
+endif::VK_EXT_depth_bias_control[]
+[eq]#r# is constant throughout the range of the entire depth attachment.
+ifdef::VK_EXT_depth_bias_control[]
+If sname:VkDepthBiasRepresentationInfoEXT::pname:depthBiasExact is
+ename:VK_TRUE, then its value must: be
+
+  {empty}:: [eq]#r = 2^-n^#
+
+Otherwise its value is implementation-dependent but must: be at most
+endif::VK_EXT_depth_bias_control[]
+ifndef::VK_EXT_depth_bias_control[]
 Its value is implementation-dependent but must: be at most
+endif::VK_EXT_depth_bias_control[]
 
   {empty}:: [eq]#r = 2 {times} 2^-n^#
 
-for an n-bit buffer.
-For floating-point depth attachment, there is no single minimum resolvable
+where [eq]#n# is the number of bits used for the depth
+ifndef::VK_EXT_depth_bias_control[aspect.]
+ifdef::VK_EXT_depth_bias_control[]
+aspect when using a fixed-point attachment, or the number of mantissa bits
+plus one when using a floating-point attachment.
+endif::VK_EXT_depth_bias_control[]
+
+
+ifdef::VK_EXT_depth_bias_control[Otherwise for]
+ifndef::VK_EXT_depth_bias_control[For]
+floating-point depth attachment, there is no single minimum resolvable
 difference.
 In this case, the minimum resolvable difference for a given polygon is
 dependent on the maximum exponent, [eq]#e#, in the range of [eq]#z# values
@@ -3688,12 +3906,19 @@ include::{generated}/api/protos/vkCmdSetDepthBias.adoc[]
     slope in depth bias calculations.
 
 This command sets the depth bias parameters for subsequent drawing commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
 when the graphics pipeline is created with ename:VK_DYNAMIC_STATE_DEPTH_BIAS
 set in slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
 Otherwise, this state is specified by the corresponding
 slink:VkPipelineRasterizationStateCreateInfo::pname:depthBiasConstantFactor,
 pname:depthBiasClamp, and pname:depthBiasSlopeFactor values used to create
 the currently active pipeline.
+
+ifdef::VK_EXT_depth_bias_control[]
+Calling this function is equivalent to calling fname:vkCmdSetDepthBias2EXT
+without a sname:VkDepthBiasRepresentationInfoEXT in the pNext chain of
+sname:VkDepthBiasInfoEXT.
+endif::VK_EXT_depth_bias_control[]
 
 .Valid Usage
 ****
@@ -3705,6 +3930,114 @@ the currently active pipeline.
 include::{generated}/validity/protos/vkCmdSetDepthBias.adoc[]
 --
 
+ifdef::VK_EXT_depth_bias_control[]
+[open,refpage='VkDepthBiasRepresentationInfoEXT',desc='Structure specifying depth bias parameters',type='structs']
+--
+:refpage: VkDepthBiasRepresentationInfoEXT
+
+The sname:VkDepthBiasRepresentationInfoEXT structure is defined as:
+
+include::{generated}/api/structs/VkDepthBiasRepresentationInfoEXT.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:depthBiasRepresentation is a elink:VkDepthBiasRepresentationEXT
+    value specifying the depth bias representation.
+  * pname:depthBiasExact specifies that the implementation is not allowed to
+    scale the depth bias value to ensure a minimum resolvable distance.
+
+.Valid Usage
+****
+  * [[VUID-VkDepthBiasRepresentationInfoEXT-leastRepresentableValueForceUnormRepresentation-08947]]
+    If the <<features-leastRepresentableValueForceUnormRepresentation,
+    pname:leastRepresentableValueForceUnormRepresentation>> feature is not
+    enabled, pname:depthBiasRepresentation must: not be
+    `VK_DEPTH_BIAS_REPRESENTATION_LEAST_REPRESENTABLE_VALUE_FORCE_UNORM_EXT`
+  * [[VUID-VkDepthBiasRepresentationInfoEXT-floatRepresentation-08948]]
+    If the <<features-floatRepresentation, pname:floatRepresentation>>
+    feature is not enabled, pname:depthBiasRepresentation must: not be
+    `VK_DEPTH_BIAS_REPRESENTATION_FLOAT_EXT`
+  * [[VUID-VkDepthBiasRepresentationInfoEXT-depthBiasExact-08949]]
+    If the <<features-depthBiasExact, pname:depthBiasExact>> feature is not
+    enabled, pname:depthBiasExact must: be `VK_FALSE`
+****
+
+include::{generated}/validity/structs/VkDepthBiasRepresentationInfoEXT.adoc[]
+--
+
+[open,refpage='VkDepthBiasRepresentationEXT',desc='Specify the depth bias representation',type='enums']
+--
+Possible values of
+slink:VkDepthBiasRepresentationInfoEXT::pname:depthBiasRepresentation,
+specifying the depth bias representation are:
+
+include::{generated}/api/enums/VkDepthBiasRepresentationEXT.adoc[]
+
+  * ename:VK_DEPTH_BIAS_REPRESENTATION_LEAST_REPRESENTABLE_VALUE_FORMAT_EXT
+    specifies that the depth bias representation is a factor of the format's
+    [eq]#r# as described in <<primsrast-depthbias-computation>>.
+  * ename:VK_DEPTH_BIAS_REPRESENTATION_LEAST_REPRESENTABLE_VALUE_FORCE_UNORM_EXT
+    specifies that the depth bias representation is a factor of a constant
+    [eq]#r# defined by the bit-size or mantissa of the format as described
+    in <<primsrast-depthbias-computation>>.
+  * ename:VK_DEPTH_BIAS_REPRESENTATION_FLOAT_EXT specifies that the depth
+    bias representation is a factor of constant [eq]#r# equal to 1.
+--
+
+[open,refpage='VkDepthBiasInfoEXT',desc='Structure specifying depth bias parameters',type='structs']
+--
+:refpage: VkDepthBiasInfoEXT
+
+The sname:VkDepthBiasInfoEXT structure is defined as:
+
+include::{generated}/api/structs/VkDepthBiasInfoEXT.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:depthBiasConstantFactor is a scalar factor controlling the
+    constant depth value added to each fragment.
+  * pname:depthBiasClamp is the maximum (or minimum) depth bias of a
+    fragment.
+  * pname:depthBiasSlopeFactor is a scalar factor applied to a fragment's
+    slope in depth bias calculations.
+
+If pname:pNext does not contain a slink:VkDepthBiasRepresentationInfoEXT
+structure, then this command is equivalent to including a
+slink:VkDepthBiasRepresentationInfoEXT with pname:depthBiasExact set to
+ename:VK_FALSE and pname:depthBiasRepresentation set to
+ename:VK_DEPTH_BIAS_REPRESENTATION_LEAST_REPRESENTABLE_VALUE_FORMAT_EXT.
+
+.Valid Usage
+****
+  * [[VUID-VkDepthBiasInfoEXT-depthBiasClamp-08950]]
+    If the <<features-depthBiasClamp, pname:depthBiasClamp>> feature is not
+    enabled, pname:depthBiasClamp must: be `0.0`
+****
+
+include::{generated}/validity/structs/VkDepthBiasInfoEXT.adoc[]
+--
+
+[open,refpage='vkCmdSetDepthBias2EXT',desc='Set depth bias factors and clamp dynamically for a command buffer',type='protos']
+--
+To <<pipelines-dynamic-state, dynamically set>> the depth bias parameters,
+call:
+
+include::{generated}/api/protos/vkCmdSetDepthBias2EXT.adoc[]
+
+  * pname:commandBuffer is the command buffer into which the command will be
+    recorded.
+  * pname:pDepthBiasInfo is a pointer to a slink:VkDepthBiasInfoEXT
+    structure specifying depth bias parameters.
+
+This command is functionally identical to flink:vkCmdSetDepthBias, but
+includes extensible sub-structures that include pname:sType and pname:pNext
+parameters, allowing them to be more easily extended.
+
+include::{generated}/validity/protos/vkCmdSetDepthBias2EXT.adoc[]
+--
+endif::VK_EXT_depth_bias_control[]
 
 ifdef::VK_EXT_conservative_rasterization[]
 [[primsrast-conservativeraster]]
@@ -3721,7 +4054,7 @@ sname:VkPipelineRasterizationConservativeStateCreateInfoEXT is defined as:
 
 include::{generated}/api/structs/VkPipelineRasterizationConservativeStateCreateInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.
@@ -3792,7 +4125,7 @@ include::{generated}/api/enums/VkConservativeRasterizationModeEXT.adoc[]
     that conservative rasterization is enabled in underestimation mode.
 --
 
-ifdef::VK_EXT_extended_dynamic_state3[]
+ifdef::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 [open,refpage='vkCmdSetConservativeRasterizationModeEXT',desc='Specify the conservative rasterization mode dynamically for a command buffer',type='protos']
 --
@@ -3807,19 +4140,26 @@ include::{generated}/api/protos/vkCmdSetConservativeRasterizationModeEXT.adoc[]
     pname:conservativeRasterizationMode state.
 
 This command sets the pname:conservativeRasterizationMode state for
-subsequent drawing commands when the graphics pipeline is created with
+subsequent drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_CONSERVATIVE_RASTERIZATION_MODE_EXT set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineRasterizationConservativeStateCreateInfoEXT::pname:conservativeRasterizationMode
 value used to create the currently active pipeline.
 
+:refpage: vkCmdSetConservativeRasterizationModeEXT
+:requiredfeature: extendedDynamicState3ConservativeRasterizationMode
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetConservativeRasterizationModeEXT-extendedDynamicState3ConservativeRasterizationMode-07426]]
-    The <<features-extendedDynamicState3ConservativeRasterizationMode,
-    pname:extendedDynamicState3ConservativeRasterizationMode>> feature must:
-    be enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdSetConservativeRasterizationModeEXT.adoc[]
@@ -3838,19 +4178,26 @@ include::{generated}/api/protos/vkCmdSetExtraPrimitiveOverestimationSizeEXT.adoc
     pname:extraPrimitiveOverestimationSize.
 
 This command sets the pname:extraPrimitiveOverestimationSize for subsequent
-drawing commands when the graphics pipeline is created with
+drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_EXTRA_PRIMITIVE_OVERESTIMATION_SIZE_EXT set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineRasterizationConservativeStateCreateInfoEXT::pname:extraPrimitiveOverestimationSize
 value used to create the currently active pipeline.
 
+:refpage: vkCmdSetExtraPrimitiveOverestimationSizeEXT
+:requiredfeature: extendedDynamicState3ExtraPrimitiveOverestimationSize
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetExtraPrimitiveOverestimationSizeEXT-extendedDynamicState3ExtraPrimitiveOverestimationSize-07427]]
-    The <<features-extendedDynamicState3ExtraPrimitiveOverestimationSize,
-    pname:extendedDynamicState3ExtraPrimitiveOverestimationSize>> feature
-    must: be enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
   * [[VUID-vkCmdSetExtraPrimitiveOverestimationSizeEXT-extraPrimitiveOverestimationSize-07428]]
     pname:extraPrimitiveOverestimationSize must: be in the range of `0.0` to
     sname:VkPhysicalDeviceConservativeRasterizationPropertiesEXT::pname:maxExtraPrimitiveOverestimationSize
@@ -3860,7 +4207,7 @@ value used to create the currently active pipeline.
 include::{generated}/validity/protos/vkCmdSetExtraPrimitiveOverestimationSizeEXT.adoc[]
 --
 
-endif::VK_EXT_extended_dynamic_state3[]
+endif::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 When overestimate conservative rasterization is enabled, rather than
 evaluating coverage at individual sample locations, a determination is made

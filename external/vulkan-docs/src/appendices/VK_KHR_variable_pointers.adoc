@@ -1,4 +1,4 @@
-// Copyright 2016-2022 The Khronos Group Inc.
+// Copyright 2016-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -10,10 +10,6 @@ include::{generated}/meta/{refprefix}VK_KHR_variable_pointers.adoc[]
     2017-09-05
 *IP Status*::
     No known IP claims.
-*Interactions and External Dependencies*::
-  - This extension requires
-    {spirv}/KHR/SPV_KHR_variable_pointers.html[`SPV_KHR_variable_pointers`]
-  - Promoted to Vulkan 1.1 Core
 *Contributors*::
   - John Kessenich, Google
   - Neil Henning, Codeplay
@@ -22,7 +18,7 @@ include::{generated}/meta/{refprefix}VK_KHR_variable_pointers.adoc[]
   - Graeme Leese, Broadcom
   - Weifeng Zhang, Qualcomm
   - Stephen Clarke, Imagination Technologies
-  - Jason Ekstrand, Intel
+  - Faith Ekstrand, Intel
   - Jesse Hall, Google
 
 === Description

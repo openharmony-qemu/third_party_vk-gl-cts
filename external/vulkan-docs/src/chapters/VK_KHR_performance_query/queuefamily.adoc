@@ -1,9 +1,11 @@
-// Copyright 2019-2022 The Khronos Group Inc.
+// Copyright 2019-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
 [open,refpage='vkEnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR',desc='Reports properties of the performance query counters available on a queue family of a device',type='protos']
 --
+:refpage: vkEnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR
+
 To enumerate the performance query counters available on a queue family of a
 physical device, call:
 
@@ -31,6 +33,8 @@ most pname:pCounterCount structures will be written, and ename:VK_INCOMPLETE
 will be returned instead of ename:VK_SUCCESS, to indicate that not all the
 available counters were returned.
 
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
+
 include::{generated}/validity/protos/vkEnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR.adoc[]
 --
 
@@ -40,7 +44,7 @@ The sname:VkPerformanceCounterKHR structure is defined as:
 
 include::{generated}/api/structs/VkPerformanceCounterKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:unit is a elink:VkPerformanceCounterUnitKHR specifying the unit
@@ -140,7 +144,7 @@ The sname:VkPerformanceCounterDescriptionKHR structure is defined as:
 
 include::{generated}/api/structs/VkPerformanceCounterDescriptionKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is a bitmask of

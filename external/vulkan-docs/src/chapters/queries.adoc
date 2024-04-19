@@ -1,4 +1,4 @@
-// Copyright 2015-2022 The Khronos Group Inc.
+// Copyright 2015-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -20,8 +20,7 @@ ifdef::VK_KHR_video_queue[]
 <<queries-result-status-only, Result Status Queries>>,
 endif::VK_KHR_video_queue[]
 ifdef::VK_KHR_video_encode_queue[]
-<<queries-video-encode-bitstream-buffer-range, Video Encode Bitstream Buffer
-Range Queries>>,
+<<queries-video-encode-feedback, Video Encode Feedback Queries>>
 endif::VK_KHR_video_encode_queue[]
 and <<queries-timestamps, Timestamp Queries>>.
 ifdef::VK_KHR_performance_query[]
@@ -64,6 +63,11 @@ include::{generated}/api/handles/VkQueryPool.adoc[]
 
 [open,refpage='vkCreateQueryPool',desc='Create a new query pool object',type='protos']
 --
+:refpage: vkCreateQueryPool
+:objectnameplural: query pools
+:objectnamecamelcase: queryPool
+:objectcount: 1
+
 To create a query pool, call:
 
 include::{generated}/api/protos/vkCreateQueryPool.adoc[]
@@ -77,6 +81,15 @@ include::{generated}/api/protos/vkCreateQueryPool.adoc[]
   * pname:pQueryPool is a pointer to a slink:VkQueryPool handle in which the
     resulting query pool object is returned.
 
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
+
+ifdef::VKSC_VERSION_1_0[]
+.Valid Usage
+****
+include::{chapters}/commonvalidity/memory_reservation_request_count_common.adoc[]
+****
+endif::VKSC_VERSION_1_0[]
+
 include::{generated}/validity/protos/vkCreateQueryPool.adoc[]
 --
 
@@ -86,7 +99,7 @@ The sname:VkQueryPoolCreateInfo structure is defined as:
 
 include::{generated}/api/structs/VkQueryPoolCreateInfo.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.
@@ -132,12 +145,49 @@ ifdef::VK_KHR_performance_query[]
 endif::VK_KHR_performance_query[]
   * [[VUID-VkQueryPoolCreateInfo-queryCount-02763]]
     pname:queryCount must: be greater than 0
+ifdef::VKSC_VERSION_1_0[]
+  * [[VUID-VkQueryPoolCreateInfo-queryType-05046]]
+    If pname:queryType is ename:VK_QUERY_TYPE_OCCLUSION then
+    pname:queryCount must: be less than or equal to the maximum of all
+    slink:VkDeviceObjectReservationCreateInfo::pname:maxOcclusionQueriesPerPool
+    values specified when pname:device was created
+  * [[VUID-VkQueryPoolCreateInfo-queryType-05047]]
+    If pname:queryType is ename:VK_QUERY_TYPE_PIPELINE_STATISTICS then
+    pname:queryCount must: be less than or equal to the maximum of all
+    slink:VkDeviceObjectReservationCreateInfo::pname:maxPipelineStatisticsQueriesPerPool
+    values specified when pname:device was created
+  * [[VUID-VkQueryPoolCreateInfo-queryType-05048]]
+    If pname:queryType is ename:VK_QUERY_TYPE_TIMESTAMP then
+    pname:queryCount must: be less than or equal to the maximum of all
+    slink:VkDeviceObjectReservationCreateInfo::pname:maxTimestampQueriesPerPool
+    values specified when pname:device was created
+ifdef::VK_KHR_performance_query[]
+  * [[VUID-VkQueryPoolCreateInfo-queryType-05049]]
+    If pname:queryType is ename:VK_QUERY_TYPE_PERFORMANCE_QUERY_KHR then
+    pname:queryCount must: be less than or equal to the maximum of all
+    slink:VkPerformanceQueryReservationInfoKHR::pname:maxPerformanceQueriesPerPool
+    values specified when pname:device was created
+endif::VK_KHR_performance_query[]
+endif::VKSC_VERSION_1_0[]
 ifdef::VK_KHR_video_encode_queue[]
   * [[VUID-VkQueryPoolCreateInfo-queryType-07133]]
-    If pname:queryType is
-    ename:VK_QUERY_TYPE_VIDEO_ENCODE_BITSTREAM_BUFFER_RANGE_KHR, then the
-    pname:pNext chain must: include a slink:VkVideoProfileInfoKHR structure
-    with pname:videoCodecOperation specifying an encode operation
+    If pname:queryType is ename:VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR,
+    then the pname:pNext chain must: include a slink:VkVideoProfileInfoKHR
+    structure with pname:videoCodecOperation specifying an encode operation
+  * [[VUID-VkQueryPoolCreateInfo-queryType-07906]]
+    If pname:queryType is ename:VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR,
+    then the pname:pNext chain must: include a
+    slink:VkQueryPoolVideoEncodeFeedbackCreateInfoKHR structure
+  * [[VUID-VkQueryPoolCreateInfo-queryType-07907]]
+    If pname:queryType is ename:VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR, and
+    the pname:pNext chain includes a slink:VkVideoProfileInfoKHR structure
+    and a slink:VkQueryPoolVideoEncodeFeedbackCreateInfoKHR structure, then
+    slink:VkQueryPoolVideoEncodeFeedbackCreateInfoKHR::pname:encodeFeedbackFlags
+    must: not contain any bits that are not set in
+    slink:VkVideoEncodeCapabilitiesKHR::pname:supportedEncodeFeedbackFlags,
+    as returned by flink:vkGetPhysicalDeviceVideoCapabilitiesKHR for the
+    <<video-profiles,video profile>> described by
+    slink:VkVideoProfileInfoKHR and its pname:pNext chain
 endif::VK_KHR_video_encode_queue[]
 ****
 
@@ -155,6 +205,22 @@ currently reserved for future use.
 ifdef::VK_KHR_performance_query[]
 include::{chapters}/VK_KHR_performance_query/querycreateinfo.adoc[]
 endif::VK_KHR_performance_query[]
+
+ifdef::VKSC_VERSION_1_0[]
+ifdef::hidden[]
+// tag::scremoved[]
+  * fname:vkDestroyQueryPool <<SCID-4>>
+// end::scremoved[]
+endif::hidden[]
+
+Query pools cannot: be destroyed <<SCID-4>>.
+If
+slink:VkPhysicalDeviceVulkanSC10Properties::<<limits-deviceDestroyFreesMemory,pname:deviceDestroyFreesMemory>>
+is ename:VK_TRUE, the memory is returned to the system when the device is
+destroyed.
+
+endif::VKSC_VERSION_1_0[]
+ifndef::VKSC_VERSION_1_0[]
 
 [open,refpage='vkDestroyQueryPool',desc='Destroy a query pool object',type='protos']
 --
@@ -191,6 +257,8 @@ queries that are used in command buffers submitted for execution.
 
 include::{generated}/validity/protos/vkDestroyQueryPool.adoc[]
 --
+
+endif::VKSC_VERSION_1_0[]
 
 [open,refpage='VkQueryType',desc='Specify the type of queries managed by a query pool',type='enums']
 --
@@ -249,9 +317,8 @@ ifdef::VK_KHR_video_queue[]
     <<queries-result-status-only, result status query>>.
 endif::VK_KHR_video_queue[]
 ifdef::VK_KHR_video_encode_queue[]
-  * ename:VK_QUERY_TYPE_VIDEO_ENCODE_BITSTREAM_BUFFER_RANGE_KHR specifies a
-    <<queries-video-encode-bitstream-buffer-range, video encode bitstream
-    range query>>.
+  * ename:VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR specifies a
+    <<queries-video-encode-feedback, video encode feedback query>>.
 endif::VK_KHR_video_encode_queue[]
 ifdef::VK_EXT_mesh_shader[]
   * ename:VK_QUERY_TYPE_MESH_PRIMITIVES_GENERATED_EXT specifies a
@@ -299,7 +366,8 @@ Both the availability status and numerical results can: be retrieved by
 calling either flink:vkGetQueryPoolResults or
 flink:vkCmdCopyQueryPoolResults.
 
-After query pool creation, each query must: be reset before it is used.
+After query pool creation, each query is in an uninitialized state and must:
+be reset before it is used.
 Queries must: also be reset between uses.
 
 ifdef::VK_VERSION_1_1,VK_KHR_device_group[]
@@ -313,6 +381,8 @@ endif::VK_VERSION_1_1,VK_KHR_device_group[]
 
 [open,refpage='vkCmdResetQueryPool',desc='Reset queries in a query pool',type='protos']
 --
+:refpage: vkCmdResetQueryPool
+
 To reset a range of queries in a query pool on a queue, call:
 
 include::{generated}/api/protos/vkCmdResetQueryPool.adoc[]
@@ -367,12 +437,7 @@ endif::VK_KHR_performance_query[]
 
 .Valid Usage
 ****
-  * [[VUID-vkCmdResetQueryPool-firstQuery-00796]]
-    pname:firstQuery must: be less than the number of queries in
-    pname:queryPool
-  * [[VUID-vkCmdResetQueryPool-firstQuery-00797]]
-    The sum of pname:firstQuery and pname:queryCount must: be less than or
-    equal to the number of queries in pname:queryPool
+include::{chapters}/commonvalidity/query_pool_count_common.adoc[]
   * [[VUID-vkCmdResetQueryPool-None-02841]]
     All queries used by the command must: not be active
 ifdef::VK_KHR_performance_query[]
@@ -392,6 +457,8 @@ include::{generated}/validity/protos/vkCmdResetQueryPool.adoc[]
 ifdef::VK_VERSION_1_2,VK_EXT_host_query_reset[]
 [open,refpage='vkResetQueryPool',desc='Reset queries in a query pool',type='protos',alias='vkResetQueryPoolEXT']
 --
+:refpage: vkResetQueryPool
+
 To reset a range of queries in a query pool on the host, call:
 
 ifdef::VK_VERSION_1_2[]
@@ -421,15 +488,10 @@ endif::VK_KHR_performance_query[]
 
 .Valid Usage
 ****
+include::{chapters}/commonvalidity/query_pool_count_common.adoc[]
   * [[VUID-vkResetQueryPool-None-02665]]
     The <<features-hostQueryReset, pname:hostQueryReset>> feature must: be
     enabled
-  * [[VUID-vkResetQueryPool-firstQuery-02666]]
-    pname:firstQuery must: be less than the number of queries in
-    pname:queryPool
-  * [[VUID-vkResetQueryPool-firstQuery-02667]]
-    The sum of pname:firstQuery and pname:queryCount must: be less than or
-    equal to the number of queries in pname:queryPool
   * [[VUID-vkResetQueryPool-firstQuery-02741]]
     Submitted commands that refer to the range specified by pname:firstQuery
     and pname:queryCount in pname:queryPool must: have completed execution
@@ -675,12 +737,13 @@ include::{chapters}/commonvalidity/query_begin_common.adoc[]
     ename:VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT the pname:index
     parameter must: be less than
     sname:VkPhysicalDeviceTransformFeedbackPropertiesEXT::pname:maxTransformFeedbackStreams
-ifndef::VK_EXT_primitives_generated_query[]
-  * [[VUID-vkCmdBeginQueryIndexedEXT-queryType-02340]]
+  * [[VUID-vkCmdBeginQueryIndexedEXT-queryType-06692]]
     If the pname:queryType used to create pname:queryPool was not
-    ename:VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT the pname:index must:
-    be zero
+    ename:VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT
+ifdef::VK_EXT_primitives_generated_query[]
+    and not ename:VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT,
 endif::VK_EXT_primitives_generated_query[]
+    the pname:index must: be zero
 ifdef::VK_EXT_primitives_generated_query[]
   * [[VUID-vkCmdBeginQueryIndexedEXT-queryType-06689]]
     If the pname:queryType used to create pname:queryPool was
@@ -698,11 +761,6 @@ ifdef::VK_EXT_primitives_generated_query[]
     <<features-primitivesGeneratedQueryWithNonZeroStreams,
     pname:primitivesGeneratedQueryWithNonZeroStreams>> feature is not
     enabled, the pname:index parameter must: be zero
-  * [[VUID-vkCmdBeginQueryIndexedEXT-queryType-06692]]
-    If the pname:queryType used to create pname:queryPool was not
-    ename:VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT and not
-    ename:VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT, the pname:index must: be
-    zero
   * [[VUID-vkCmdBeginQueryIndexedEXT-queryType-06693]]
     If the pname:queryType used to create pname:queryPool was
     ename:VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT then
@@ -747,6 +805,8 @@ more elink:VkQueryControlFlagBits.
 
 [open,refpage='vkCmdEndQuery',desc='Ends a query',type='protos',xrefs='vkCmdBeginQuery vkCmdBeginQueryIndexedEXT vkCmdEndQueryIndexedEXT']
 --
+:refpage: vkCmdEndQuery
+
 To end a query after the set of desired drawing or dispatching commands is
 executed, call:
 
@@ -821,6 +881,8 @@ include::{generated}/validity/protos/vkCmdEndQuery.adoc[]
 ifdef::VK_EXT_transform_feedback[]
 [open,refpage='vkCmdEndQueryIndexedEXT',desc='Ends a query',type='protos',xrefs='vkCmdBeginQuery vkCmdEndQuery vkCmdBeginQueryIndexedEXT']
 --
+:refpage: vkCmdEndQueryIndexedEXT
+
 To end an indexed query after the set of desired drawing or dispatching
 commands is recorded, call:
 
@@ -870,39 +932,28 @@ ifdef::VK_VERSION_1_1,VK_KHR_multiview[]
     current subpass's view mask must: be less than or equal to the number of
     queries in pname:queryPool
 endif::VK_VERSION_1_1,VK_KHR_multiview[]
-ifndef::VK_EXT_primitives_generated_query[]
-  * [[VUID-vkCmdEndQueryIndexedEXT-queryType-02346]]
-    If the pname:queryType used to create pname:queryPool was
-    ename:VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT the pname:index
-    parameter must: be less than
-    sname:VkPhysicalDeviceTransformFeedbackPropertiesEXT::pname:maxTransformFeedbackStreams
-  * [[VUID-vkCmdEndQueryIndexedEXT-queryType-02347]]
-    If the pname:queryType used to create pname:queryPool was not
-    ename:VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT the pname:index must:
-    be zero
-  * [[VUID-vkCmdEndQueryIndexedEXT-queryType-02723]]
-    If the pname:queryType used to create pname:queryPool was
-    ename:VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT pname:index must:
-    equal the pname:index used to begin the query
-endif::VK_EXT_primitives_generated_query[]
-ifdef::VK_EXT_primitives_generated_query[]
   * [[VUID-vkCmdEndQueryIndexedEXT-queryType-06694]]
     If the pname:queryType used to create pname:queryPool was
-    ename:VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT or
-    ename:VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT, the pname:index parameter
-    must: be less than
+    ename:VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT
+ifdef::VK_EXT_primitives_generated_query[]
+    or ename:VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT,
+endif::VK_EXT_primitives_generated_query[]
+    the pname:index parameter must: be less than
     sname:VkPhysicalDeviceTransformFeedbackPropertiesEXT::pname:maxTransformFeedbackStreams
   * [[VUID-vkCmdEndQueryIndexedEXT-queryType-06695]]
     If the pname:queryType used to create pname:queryPool was not
-    ename:VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT and not
-    ename:VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT, the pname:index must: be
-    zero
+    ename:VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT
+ifdef::VK_EXT_primitives_generated_query[]
+    and not ename:VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT,
+endif::VK_EXT_primitives_generated_query[]
+    the pname:index must: be zero
   * [[VUID-vkCmdEndQueryIndexedEXT-queryType-06696]]
     If the pname:queryType used to create pname:queryPool was
-    ename:VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT or
-    ename:VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT, pname:index must: equal
-    the pname:index used to begin the query
+    ename:VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT
+ifdef::VK_EXT_primitives_generated_query[]
+    or ename:VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT,
 endif::VK_EXT_primitives_generated_query[]
+    pname:index must: equal the pname:index used to begin the query
 include::{chapters}/commonvalidity/query_end_common.adoc[]
 ****
 
@@ -930,7 +981,7 @@ ifdef::VK_EXT_mesh_shader[]
     mesh shader queries,
 endif::VK_EXT_mesh_shader[]
 ifdef::VK_KHR_video_encode_queue[]
-    video encode bitstream buffer range queries,
+    video encode feedback queries,
 endif::VK_KHR_video_encode_queue[]
     and timestamp queries store results in a tightly packed array of
     unsigned integers, either 32- or 64-bits as requested by the command,
@@ -989,10 +1040,12 @@ ifdef::VK_EXT_mesh_shader[]
     Mesh shader queries write a single integer.
 endif::VK_EXT_mesh_shader[]
 ifdef::VK_KHR_video_encode_queue[]
-    Video encode bitstream buffer range queries write two integers; the
-    first integer is an offset into the bitstream buffer range where the
-    encoded video bitstream data was written, and the second integer is the
-    number of bytes written to the bitstream buffer.
+    Video encode feedback queries write one or more integer values for each
+    bit that is enabled in
+    slink:VkQueryPoolVideoEncodeFeedbackCreateInfoKHR::pname:encodeFeedbackFlags
+    when the pool is created, and the feedback values are written in bit
+    order starting from the least significant bit, as described
+    <<queries-video-encode-feedback,here>>.
 endif::VK_KHR_video_encode_queue[]
   * If more than one query is retrieved and pname:stride is not at least as
     large as the size of the array of values corresponding to a single
@@ -1000,6 +1053,8 @@ endif::VK_KHR_video_encode_queue[]
 
 [open,refpage='vkGetQueryPoolResults',desc='Copy results of queries in a query pool to a host memory region',type='protos']
 --
+:refpage: vkGetQueryPoolResults
+
 To retrieve status and results for a set of queries, call:
 
 include::{generated}/api/protos/vkGetQueryPoolResults.adoc[]
@@ -1030,10 +1085,15 @@ Behavior when not all queries are available is described
 If ename:VK_QUERY_RESULT_WITH_AVAILABILITY_BIT is set, results for all
 queries in pname:queryPool identified by pname:firstQuery and
 pname:queryCount are copied to pname:pData, along with an extra availability
+ifdef::VK_KHR_video_queue[or status]
 value written directly after the results of each query and interpreted as an
 unsigned integer.
 A value of zero indicates that the results are not yet available, otherwise
 the query is complete and results are available.
+The size of the availability
+ifdef::VK_KHR_video_queue[or status]
+values is 64 bits if ename:VK_QUERY_RESULT_64_BIT is set in pname:flags.
+Otherwise, it is 32 bits.
 
 ifdef::VK_KHR_video_queue[]
 If ename:VK_QUERY_RESULT_WITH_STATUS_BIT_KHR is set, results for all queries
@@ -1048,7 +1108,23 @@ unsuccessfully.
 
 elink:VkQueryResultStatusKHR defines specific meaning for values returned
 here, though implementations are free to return other values.
+
+If the status value written is negative, indicating that the operations
+within the query completed unsuccessfully, then all other results written by
+this command are undefined: unless otherwise specified for any of the
+results of the used query type.
 endif::VK_KHR_video_queue[]
+
+[NOTE]
+.Note
+====
+If ename:VK_QUERY_RESULT_WITH_AVAILABILITY_BIT
+ifdef::VK_KHR_video_queue[or ename:VK_QUERY_RESULT_WITH_STATUS_BIT_KHR]
+is set, the layout of data in the buffer is a __(result,availability)__
+ifdef::VK_KHR_video_queue[or __(result,status)__]
+pair for each query returned, and pname:stride is the stride between each
+pair.
+====
 
 Results for any available query written by this command are final and
 represent the final result of the query.
@@ -1057,7 +1133,8 @@ unavailable, an intermediate result between zero and the final result value
 is written for that query.
 Otherwise, any result written by this command is undefined:.
 
-If ename:VK_QUERY_RESULT_64_BIT is set, results and availability
+If ename:VK_QUERY_RESULT_64_BIT is set, results and, if returned,
+availability
 ifdef::VK_KHR_video_queue[or status]
 values for all queries are written as an array of 64-bit values.
 ifdef::VK_KHR_performance_query[]
@@ -1140,26 +1217,30 @@ Applications can: double-buffer query pool usage, with a pool per frame, and
 reset queries at the end of the frame in which they are read.
 ====
 
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
+
 .Valid Usage
 ****
-  * [[VUID-vkGetQueryPoolResults-firstQuery-00813]]
-    pname:firstQuery must: be less than the number of queries in
-    pname:queryPool
-ifndef::VK_KHR_performance_query[]
-  * [[VUID-vkGetQueryPoolResults-flags-02827]]
-    If ename:VK_QUERY_RESULT_64_BIT is not set in pname:flags, then
-    pname:pData and pname:stride must: be multiples of `4`
-endif::VK_KHR_performance_query[]
-ifdef::VK_KHR_performance_query[]
+include::{chapters}/commonvalidity/query_pool_count_common.adoc[]
+include::{chapters}/commonvalidity/query_results_common.adoc[]
+  * [[VUID-vkGetQueryPoolResults-None-09401]]
+    All queries used by the command must: not be uninitialized
   * [[VUID-vkGetQueryPoolResults-flags-02828]]
-    If ename:VK_QUERY_RESULT_64_BIT is not set in pname:flags and the
-    pname:queryType used to create pname:queryPool was not
-    ename:VK_QUERY_TYPE_PERFORMANCE_QUERY_KHR, then pname:pData and
-    pname:stride must: be multiples of `4`
+    If ename:VK_QUERY_RESULT_64_BIT is not set in pname:flags
+ifdef::VK_KHR_performance_query[]
+    and the pname:queryType used to create pname:queryPool was not
+    ename:VK_QUERY_TYPE_PERFORMANCE_QUERY_KHR,
 endif::VK_KHR_performance_query[]
+    then pname:pData and pname:stride must: be multiples of `4`
   * [[VUID-vkGetQueryPoolResults-flags-00815]]
     If ename:VK_QUERY_RESULT_64_BIT is set in pname:flags then pname:pData
     and pname:stride must: be multiples of `8`
+  * [[VUID-vkGetQueryPoolResults-stride-08993]]
+    If ename:VK_QUERY_RESULT_WITH_AVAILABILITY_BIT is set, pname:stride
+    must: be large enough to contain the unsigned integer representing
+    availability
+ifdef::VK_KHR_video_queue[or status]
+    in addition to the query result.
 ifdef::VK_KHR_performance_query[]
   * [[VUID-vkGetQueryPoolResults-queryType-03229]]
     If the pname:queryType used to create pname:queryPool was
@@ -1169,42 +1250,14 @@ ifdef::VK_KHR_performance_query[]
   * [[VUID-vkGetQueryPoolResults-queryType-04519]]
     If the pname:queryType used to create pname:queryPool was
     ename:VK_QUERY_TYPE_PERFORMANCE_QUERY_KHR, then pname:stride must: be
-    large enough to contain
-    sname:VkQueryPoolPerformanceCreateInfoKHR::pname:counterIndexCount used
+    large enough to contain the
+    slink:VkQueryPoolPerformanceCreateInfoKHR::pname:counterIndexCount used
     to create pname:queryPool times the size of
     slink:VkPerformanceCounterResultKHR
 endif::VK_KHR_performance_query[]
-  * [[VUID-vkGetQueryPoolResults-firstQuery-00816]]
-    The sum of pname:firstQuery and pname:queryCount must: be less than or
-    equal to the number of queries in pname:queryPool
   * [[VUID-vkGetQueryPoolResults-dataSize-00817]]
     pname:dataSize must: be large enough to contain the result of each
     query, as described <<queries-operation-memorylayout,here>>
-  * [[VUID-vkGetQueryPoolResults-queryType-00818]]
-    If the pname:queryType used to create pname:queryPool was
-    ename:VK_QUERY_TYPE_TIMESTAMP, pname:flags must: not contain
-    ename:VK_QUERY_RESULT_PARTIAL_BIT
-ifdef::VK_KHR_performance_query[]
-  * [[VUID-vkGetQueryPoolResults-queryType-03230]]
-    If the pname:queryType used to create pname:queryPool was
-    ename:VK_QUERY_TYPE_PERFORMANCE_QUERY_KHR, pname:flags must: not contain
-    ename:VK_QUERY_RESULT_WITH_AVAILABILITY_BIT,
-    ename:VK_QUERY_RESULT_PARTIAL_BIT or ename:VK_QUERY_RESULT_64_BIT
-  * [[VUID-vkGetQueryPoolResults-queryType-03231]]
-    If the pname:queryType used to create pname:queryPool was
-    ename:VK_QUERY_TYPE_PERFORMANCE_QUERY_KHR, the pname:queryPool must:
-    have been recorded once for each pass as retrieved via a call to
-    flink:vkGetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR
-endif::VK_KHR_performance_query[]
-ifdef::VK_KHR_video_queue[]
-  * [[VUID-vkGetQueryPoolResults-queryType-04810]]
-    If the pname:queryType used to create pname:queryPool was
-    ename:VK_QUERY_TYPE_RESULT_STATUS_ONLY_KHR, then pname:flags must:
-    include ename:VK_QUERY_RESULT_WITH_STATUS_BIT_KHR
-  * [[VUID-vkGetQueryPoolResults-flags-04811]]
-    If pname:flags includes ename:VK_QUERY_RESULT_WITH_STATUS_BIT_KHR, then
-    it must: not include ename:VK_QUERY_RESULT_WITH_AVAILABILITY_BIT
-endif::VK_KHR_video_queue[]
 ****
 
 include::{generated}/validity/protos/vkGetQueryPoolResults.adoc[]
@@ -1248,21 +1301,30 @@ more elink:VkQueryResultFlagBits.
 ifdef::VK_KHR_video_queue[]
 [open,refpage='VkQueryResultStatusKHR',desc='Specific status codes for operations',type='enums']
 --
+[[query-result-status-codes]]
 Specific status codes that can: be returned from a query are:
 
 include::{generated}/api/enums/VkQueryResultStatusKHR.adoc[]
 
-  * ename:VK_QUERY_RESULT_STATUS_NOT_READY_KHR specifies that the query
+  * ename:VK_QUERY_RESULT_STATUS_NOT_READY_KHR indicates that the query
     result is not yet available.
-  * ename:VK_QUERY_RESULT_STATUS_ERROR_KHR specifies that operations did not
+  * ename:VK_QUERY_RESULT_STATUS_ERROR_KHR indicates that operations did not
     complete successfully.
-  * ename:VK_QUERY_RESULT_STATUS_COMPLETE_KHR specifies that operations
+  * ename:VK_QUERY_RESULT_STATUS_COMPLETE_KHR indicates that operations
     completed successfully and the query result is available.
+ifdef::VK_KHR_video_encode_queue[]
+  * ename:VK_QUERY_RESULT_STATUS_INSUFFICIENT_BITSTREAM_BUFFER_RANGE_KHR
+    indicates that a video encode operation did not complete successfully
+    due to the destination video bitstream buffer range not being
+    sufficiently large to fit the encoded bitstream data.
+endif::VK_KHR_video_encode_queue[]
 --
 endif::VK_KHR_video_queue[]
 
 [open,refpage='vkCmdCopyQueryPoolResults',desc='Copy the results of queries in a query pool to a buffer object',type='protos']
 --
+:refpage: vkCmdCopyQueryPoolResults
+
 To copy query statuses and numerical results directly to buffer memory,
 call:
 
@@ -1313,6 +1375,11 @@ unsuccessfully.
 
 elink:VkQueryResultStatusKHR defines specific meaning for values returned
 here, though implementations are free to return other values.
+
+If the status value written is negative, indicating that the operations
+within the query completed unsuccessfully, then all other results written by
+this command are undefined: unless otherwise specified for any of the
+results of the used query type.
 endif::VK_KHR_video_queue[]
 
 Results for any available query written by this command are final and
@@ -1375,14 +1442,13 @@ before using the results.
 
 .Valid Usage
 ****
+include::{chapters}/commonvalidity/query_pool_count_common.adoc[]
+include::{chapters}/commonvalidity/query_results_common.adoc[]
+  * [[VUID-vkCmdCopyQueryPoolResults-None-09402]]
+    All queries used by the command must: not be uninitialized when the
+    command is executed
   * [[VUID-vkCmdCopyQueryPoolResults-dstOffset-00819]]
     pname:dstOffset must: be less than the size of pname:dstBuffer
-  * [[VUID-vkCmdCopyQueryPoolResults-firstQuery-00820]]
-    pname:firstQuery must: be less than the number of queries in
-    pname:queryPool
-  * [[VUID-vkCmdCopyQueryPoolResults-firstQuery-00821]]
-    The sum of pname:firstQuery and pname:queryCount must: be less than or
-    equal to the number of queries in pname:queryPool
   * [[VUID-vkCmdCopyQueryPoolResults-flags-00822]]
     If ename:VK_QUERY_RESULT_64_BIT is not set in pname:flags then
     pname:dstOffset and pname:stride must: be multiples of `4`
@@ -1399,26 +1465,12 @@ before using the results.
   * [[VUID-vkCmdCopyQueryPoolResults-dstBuffer-00826]]
     If pname:dstBuffer is non-sparse then it must: be bound completely and
     contiguously to a single sname:VkDeviceMemory object
-  * [[VUID-vkCmdCopyQueryPoolResults-queryType-00827]]
-    If the pname:queryType used to create pname:queryPool was
-    ename:VK_QUERY_TYPE_TIMESTAMP, pname:flags must: not contain
-    ename:VK_QUERY_RESULT_PARTIAL_BIT
 ifdef::VK_KHR_performance_query[]
   * [[VUID-vkCmdCopyQueryPoolResults-queryType-03232]]
     If the pname:queryType used to create pname:queryPool was
     ename:VK_QUERY_TYPE_PERFORMANCE_QUERY_KHR,
     slink:VkPhysicalDevicePerformanceQueryPropertiesKHR::pname:allowCommandBufferQueryCopies
     must: be ename:VK_TRUE
-  * [[VUID-vkCmdCopyQueryPoolResults-queryType-03233]]
-    If the pname:queryType used to create pname:queryPool was
-    ename:VK_QUERY_TYPE_PERFORMANCE_QUERY_KHR, pname:flags must: not contain
-    ename:VK_QUERY_RESULT_WITH_AVAILABILITY_BIT,
-    ename:VK_QUERY_RESULT_PARTIAL_BIT or ename:VK_QUERY_RESULT_64_BIT
-  * [[VUID-vkCmdCopyQueryPoolResults-queryType-03234]]
-    If the pname:queryType used to create pname:queryPool was
-    ename:VK_QUERY_TYPE_PERFORMANCE_QUERY_KHR, the pname:queryPool must:
-    have been submitted once for each pass as retrieved via a call to
-    flink:vkGetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR
 endif::VK_KHR_performance_query[]
 ifdef::VK_INTEL_performance_query[]
   * [[VUID-vkCmdCopyQueryPoolResults-queryType-02734]]
@@ -1426,17 +1478,11 @@ ifdef::VK_INTEL_performance_query[]
     pname:queryType used to create pname:queryPool was
     ename:VK_QUERY_TYPE_PERFORMANCE_QUERY_INTEL
 endif::VK_INTEL_performance_query[]
-ifdef::VK_KHR_video_queue[]
-  * [[VUID-vkCmdCopyQueryPoolResults-queryType-06901]]
-    If the pname:queryType used to create pname:queryPool was
-    ename:VK_QUERY_TYPE_RESULT_STATUS_ONLY_KHR, then pname:flags must:
-    include ename:VK_QUERY_RESULT_WITH_STATUS_BIT_KHR
-  * [[VUID-vkCmdCopyQueryPoolResults-flags-06902]]
-    If pname:flags includes ename:VK_QUERY_RESULT_WITH_STATUS_BIT_KHR, then
-    it must: not include ename:VK_QUERY_RESULT_WITH_AVAILABILITY_BIT
-endif::VK_KHR_video_queue[]
   * [[VUID-vkCmdCopyQueryPoolResults-None-07429]]
     All queries used by the command must: not be active
+  * [[VUID-vkCmdCopyQueryPoolResults-None-08752]]
+    All queries used by the command must: have been made _available_ by
+    prior executed commands
 ****
 
 include::{generated}/validity/protos/vkCmdCopyQueryPoolResults.adoc[]
@@ -1478,6 +1524,15 @@ on some implementations, and should: be used where it is sufficient to know
 a boolean result on whether any samples passed the per-fragment tests.
 In this case, some implementations may: only return zero or one, indifferent
 to the actual number of samples passing the per-fragment tests.
+
+Setting ename:VK_QUERY_CONTROL_PRECISE_BIT does not guarantee that different
+implementations return the same number of samples in an occlusion query.
+Some implementations may kill fragments in the
+<<pipelines-graphics-subsets-pre-rasterization, pre-rasterization shader
+stage>>, and these killed fragments do not contribute to the final result of
+the query.
+It is possible that some implementations generate a zero result value for
+the query, while others generate a non-zero value.
 ====
 
 When an occlusion query finishes, the result for that query is marked as
@@ -1727,25 +1782,52 @@ specified by pname:stage.
 The second <<synchronization-dependencies-scopes, synchronization scope>>
 includes only the timestamp write operation.
 
-When the timestamp value is written, the availability status of the query is
-set to available.
+[NOTE]
+.Note
+====
+Implementations may write the timestamp at any stage that is
+<<synchronization-pipeline-stages-order, logically later>> than pname:stage.
+====
+
+Any timestamp write that <<synchronization-dependencies-execution,
+happens-after>> another timestamp write in the same submission must: not
+have a lower value unless its value overflows the maximum supported integer
+bit width of the query.
+ifdef::VK_KHR_calibrated_timestamps,VK_EXT_calibrated_timestamps[]
+If
+ifdef::VK_KHR_calibrated_timestamps[`apiext:VK_KHR_calibrated_timestamps`]
+ifdef::VK_KHR_calibrated_timestamps+VK_EXT_calibrated_timestamps[or]
+ifdef::VK_EXT_calibrated_timestamps[`apiext:VK_EXT_calibrated_timestamps`]
+is enabled, this extends to timestamp writes across all submissions on the
+same logical device: any timestamp write that
+<<synchronization-dependencies-execution, happens-after>> another must: not
+have a lower value unless its value overflows the maximum supported integer
+bit width of the query.
+Timestamps written by this command must: be in the
+ifdef::VK_KHR_calibrated_timestamps[ename:VK_TIME_DOMAIN_DEVICE_KHR]
+ifndef::VK_KHR_calibrated_timestamps[ename:VK_TIME_DOMAIN_DEVICE_EXT]
+<<VkTimeDomainKHR, time domain>>.
+endif::VK_KHR_calibrated_timestamps,VK_EXT_calibrated_timestamps[]
+If an overflow occurs, the timestamp value must: wrap back to zero.
 
 [NOTE]
 .Note
 ====
-If an implementation is unable to detect completion and latch the timer
-immediately after pname:stage has completed, it may: instead do so at any
-logically later stage.
-====
-
-Comparisons between timestamps are not meaningful if the timestamps are
-written by commands submitted to different queues.
-
-[NOTE]
-.Note
-====
-An example of such a comparison is subtracting an older timestamp from a
-newer one to determine the execution time of a sequence of commands.
+Comparisons between timestamps should be done between timestamps where they
+are guaranteed to not decrease.
+For example, subtracting an older timestamp from a newer one to determine
+the execution time of a sequence of commands is only a reliable measurement
+if the two timestamp writes were performed in the same
+ifdef::VK_KHR_calibrated_timestamps,VK_EXT_calibrated_timestamps[]
+submission, or if the writes were performed on the same logical device and
+ifdef::VK_KHR_calibrated_timestamps[`apiext:VK_KHR_calibrated_timestamps`]
+ifdef::VK_KHR_calibrated_timestamps+VK_EXT_calibrated_timestamps[or]
+ifdef::VK_EXT_calibrated_timestamps[`apiext:VK_EXT_calibrated_timestamps`]
+is enabled.
+endif::VK_KHR_calibrated_timestamps,VK_EXT_calibrated_timestamps[]
+ifndef::VK_KHR_calibrated_timestamps,VK_EXT_calibrated_timestamps[]
+submission.
+endif::VK_KHR_calibrated_timestamps,VK_EXT_calibrated_timestamps[]
 ====
 
 ifdef::VK_VERSION_1_1,VK_KHR_multiview[]
@@ -1791,17 +1873,14 @@ include::{chapters}/commonvalidity/stage_mask_2_common.adoc[]
   * [[VUID-vkCmdWriteTimestamp2-queryPool-03861]]
     pname:queryPool must: have been created with a pname:queryType of
     ename:VK_QUERY_TYPE_TIMESTAMP
-  * [[VUID-vkCmdWriteTimestamp2-queryPool-03862]]
-    The query identified by pname:queryPool and pname:query must: be
-    _unavailable_
   * [[VUID-vkCmdWriteTimestamp2-timestampValidBits-03863]]
     The command pool's queue family must: support a non-zero
     pname:timestampValidBits
   * [[VUID-vkCmdWriteTimestamp2-query-04903]]
     pname:query must: be less than the number of queries in pname:queryPool
-ifdef::VK_VERSION_1_1,VK_KHR_multiview[]
   * [[VUID-vkCmdWriteTimestamp2-None-03864]]
-    All queries used by the command must: be unavailable
+    All queries used by the command must: be _unavailable_
+ifdef::VK_VERSION_1_1,VK_KHR_multiview[]
   * [[VUID-vkCmdWriteTimestamp2-query-03865]]
     If fname:vkCmdWriteTimestamp2 is called within a render pass instance,
     the sum of pname:query and the number of bits set in the current
@@ -1843,26 +1922,54 @@ specified by pname:pipelineStage.
 The second <<synchronization-dependencies-scopes, synchronization scope>>
 includes only the timestamp write operation.
 
-When the timestamp value is written, the availability status of the query is
-set to available.
+[NOTE]
+.Note
+====
+Implementations may write the timestamp at any stage that is
+<<synchronization-pipeline-stages-order, logically later>> than pname:stage.
+====
+
+Any timestamp write that <<synchronization-dependencies-execution,
+happens-after>> another timestamp write in the same submission must: not
+have a lower value unless its value overflows the maximum supported integer
+bit width of the query.
+ifdef::VK_KHR_calibrated_timestamps,VK_EXT_calibrated_timestamps[]
+If
+ifdef::VK_KHR_calibrated_timestamps[`apiext:VK_KHR_calibrated_timestamps`]
+ifdef::VK_KHR_calibrated_timestamps+VK_EXT_calibrated_timestamps[or]
+ifdef::VK_EXT_calibrated_timestamps[`apiext:VK_EXT_calibrated_timestamps`]
+is enabled, this extends to timestamp writes across all submissions on the
+same logical device: any timestamp write that
+<<synchronization-dependencies-execution, happens-after>> another must: not
+have a lower value unless its value overflows the maximum supported integer
+bit width of the query.
+Timestamps written by this command must: be in the
+ifdef::VK_KHR_calibrated_timestamps[ename:VK_TIME_DOMAIN_DEVICE_KHR]
+ifndef::VK_KHR_calibrated_timestamps[ename:VK_TIME_DOMAIN_DEVICE_EXT]
+<<VkTimeDomainKHR, time domain>>.
+endif::VK_KHR_calibrated_timestamps,VK_EXT_calibrated_timestamps[]
+If an overflow occurs, the timestamp value must: wrap back to zero.
 
 [NOTE]
 .Note
 ====
-If an implementation is unable to detect completion and latch the timer
-immediately after pname:stage has completed, it may: instead do so at any
-logically later stage.
+Comparisons between timestamps should be done between timestamps where they
+are guaranteed to not decrease.
+For example, subtracting an older timestamp from a newer one to determine
+the execution time of a sequence of commands is only a reliable measurement
+if the two timestamp writes were performed in the same
+ifdef::VK_KHR_calibrated_timestamps,VK_EXT_calibrated_timestamps[]
+submission, or if the writes were performed on the same logical device and
+ifdef::VK_KHR_calibrated_timestamps[`apiext:VK_KHR_calibrated_timestamps`]
+ifdef::VK_KHR_calibrated_timestamps+VK_EXT_calibrated_timestamps[or]
+ifdef::VK_EXT_calibrated_timestamps[`apiext:VK_EXT_calibrated_timestamps`]
+is enabled.
+endif::VK_KHR_calibrated_timestamps,VK_EXT_calibrated_timestamps[]
+ifndef::VK_KHR_calibrated_timestamps,VK_EXT_calibrated_timestamps[]
+submission.
+endif::VK_KHR_calibrated_timestamps,VK_EXT_calibrated_timestamps[]
 ====
 
-Comparisons between timestamps are not meaningful if the timestamps are
-written by commands submitted to different queues.
-
-[NOTE]
-.Note
-====
-An example of such a comparison is subtracting an older timestamp from a
-newer one to determine the execution time of a sequence of commands.
-====
 
 ifdef::VK_VERSION_1_1,VK_KHR_multiview[]
 
@@ -1897,17 +2004,14 @@ include::{chapters}/commonvalidity/pipeline_stage_common.adoc[]
   * [[VUID-vkCmdWriteTimestamp-queryPool-01416]]
     pname:queryPool must: have been created with a pname:queryType of
     ename:VK_QUERY_TYPE_TIMESTAMP
-  * [[VUID-vkCmdWriteTimestamp-queryPool-00828]]
-    The query identified by pname:queryPool and pname:query must: be
-    _unavailable_
   * [[VUID-vkCmdWriteTimestamp-timestampValidBits-00829]]
     The command pool's queue family must: support a non-zero
     pname:timestampValidBits
   * [[VUID-vkCmdWriteTimestamp-query-04904]]
     pname:query must: be less than the number of queries in pname:queryPool
-ifdef::VK_VERSION_1_1,VK_KHR_multiview[]
   * [[VUID-vkCmdWriteTimestamp-None-00830]]
-    All queries used by the command must: be unavailable
+    All queries used by the command must: be _unavailable_
+ifdef::VK_VERSION_1_1,VK_KHR_multiview[]
   * [[VUID-vkCmdWriteTimestamp-query-00831]]
     If fname:vkCmdWriteTimestamp is called within a render pass instance,
     the sum of pname:query and the number of bits set in the current
@@ -1989,7 +2093,7 @@ ename:VK_QUERY_PIPELINE_STATISTIC_CLIPPING_INVOCATIONS_BIT, but the
 primitives generated query is deterministic, i.e. it must be identical to
 the number of primitives processed.
 ename:VK_QUERY_PIPELINE_STATISTIC_CLIPPING_INVOCATIONS_BIT may vary for
-implementation dependent reasons, e.g. the same primitive may be processed
+implementation-dependent reasons, e.g. the same primitive may be processed
 multiple times for purposes of clipping.
 ====
 endif::VK_EXT_primitives_generated_query[]
@@ -2038,19 +2142,97 @@ endif::VK_KHR_video_queue[]
 
 
 ifdef::VK_KHR_video_encode_queue[]
-[[queries-video-encode-bitstream-buffer-range]]
-== Video Encode Bitstream Buffer Range Queries
+[[queries-video-encode-feedback]]
+== Video Encode Feedback Queries
 
-Bitstream buffer range queries track the range of bytes written to the
-bitstream buffer by a video coding operation.
+Video encode feedback queries allow the application to capture feedback
+values generated by video encode operations.
+As such, video encode feedback queries are available on queue families
+supporting video encode operations.
+The availability of individual video encode feedback values is indicated by
+the bits of
+slink:VkVideoEncodeCapabilitiesKHR::pname:supportedEncodeFeedbackFlags, as
+returned by flink:vkGetPhysicalDeviceVideoCapabilitiesKHR for the
+<<video-profiles,video profile>> the queries are intended to be used with.
 
-When such a video coding operation is issued while a bitstream buffer range
-query is active, two values are recorded for the query:
+The set of enabled video encode feedback values must: be configured on the
+query pool when it is created using the pname:encodeFeedbackFlags member of
+the slink:VkQueryPoolVideoEncodeFeedbackCreateInfoKHR included in the
+pname:pNext chain of slink:VkQueryPoolCreateInfo.
 
-  * The offset into the bitstream buffer range used by the video encoding
-    operation where the bitstream data was written.
-    This offset is an additional offset from the start of the range
-    specified by the application.
-  * The number of bytes written to the bitstream buffer.
+[open,refpage='VkQueryPoolVideoEncodeFeedbackCreateInfoKHR',desc='Structure specifying enabled video encode feedback values',type='structs']
+--
+The sname:VkQueryPoolVideoEncodeFeedbackCreateInfoKHR structure is defined
+as:
 
+include::{generated}/api/structs/VkQueryPoolVideoEncodeFeedbackCreateInfoKHR.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:encodeFeedbackFlags is a bitmask of
+    elink:VkVideoEncodeFeedbackFlagBitsKHR values specifying the set of
+    enabled video encode feedback values captured by queries of the new
+    pool.
+
+include::{generated}/validity/structs/VkQueryPoolVideoEncodeFeedbackCreateInfoKHR.adoc[]
+--
+
+[open,refpage='VkVideoEncodeFeedbackFlagBitsKHR',desc='Bits specifying queried video encode feedback values',type='enums']
+--
+Bits which can: be set in
+slink:VkQueryPoolVideoEncodeFeedbackCreateInfoKHR::pname:encodeFeedbackFlags
+for video encode feedback query pools are:
+
+include::{generated}/api/enums/VkVideoEncodeFeedbackFlagBitsKHR.adoc[]
+
+  * ename:VK_VIDEO_ENCODE_FEEDBACK_BITSTREAM_BUFFER_OFFSET_BIT_KHR specifies
+    that queries managed by the pool will capture the byte offset of the
+    bitstream data written by the video encode operation to the bitstream
+    buffer specified in slink:VkVideoEncodeInfoKHR::pname:dstBuffer relative
+    to the offset specified in
+    slink:VkVideoEncodeInfoKHR::pname:dstBufferOffset.
+    For the first video encode operation issued by any
+    <<video-encode-commands,video encode command>>, this value will always
+    be zero, meaning that bitstream data is always written to the buffer
+    specified in slink:VkVideoEncodeInfoKHR::pname:dstBuffer starting from
+    the offset specified in
+    slink:VkVideoEncodeInfoKHR::pname:dstBufferOffset.
+  * ename:VK_VIDEO_ENCODE_FEEDBACK_BITSTREAM_BYTES_WRITTEN_BIT_KHR specifies
+    that queries managed by the pool will capture the number of bytes
+    written by the video encode operation to the bitstream buffer specified
+    in slink:VkVideoEncodeInfoKHR::pname:dstBuffer.
+  * ename:VK_VIDEO_ENCODE_FEEDBACK_BITSTREAM_HAS_OVERRIDES_BIT_KHR specifies
+    that queries managed by the pool will capture a boolean value indicating
+    that the data written to the bitstream buffer specified in
+    slink:VkVideoEncodeInfoKHR::pname:dstBuffer contains
+    <<encode-overrides,overridden parameters>>.
+
+When retrieving the results of video encode feedback queries, the values
+corresponding to each enabled video encode feedback are written in the order
+of the bits defined above, followed by an optional value indicating
+availability or result status if ename:VK_QUERY_RESULT_WITH_AVAILABILITY_BIT
+or ename:VK_QUERY_RESULT_WITH_STATUS_BIT_KHR is specified, respectively.
+
+If the result status of a video encode feedback query is negative, then the
+results of all enabled video encode feedback values will be undefined:.
+
+[NOTE]
+.Note
+====
+Thus it is recommended that applications always specify
+ename:VK_QUERY_RESULT_WITH_STATUS_BIT_KHR when retrieving the results of
+video encode feedback queries and ignore such undefined: video encode
+feedback values for any <<encode-unsuccessful,unsuccessfully>> completed
+video encode operations.
+====
+--
+
+[open,refpage='VkVideoEncodeFeedbackFlagsKHR',desc='Bitmask of VkVideoEncodeFeedbackFlagBitsKHR',type='flags']
+--
+include::{generated}/api/flags/VkVideoEncodeFeedbackFlagsKHR.adoc[]
+
+tname:VkVideoEncodeFeedbackFlagsKHR is a bitmask type for setting a mask of
+zero or more elink:VkVideoEncodeFeedbackFlagBitsKHR.
+--
 endif::VK_KHR_video_encode_queue[]

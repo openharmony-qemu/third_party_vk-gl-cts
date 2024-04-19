@@ -1,4 +1,4 @@
-// Copyright 2018-2022 The Khronos Group Inc.
+// Copyright 2018-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -55,16 +55,18 @@ properties supported, at most pname:pFormatCount values will be written to
 pname:pImageFormatProperties, and ename:VK_INCOMPLETE will be returned
 instead of ename:VK_SUCCESS, to indicate that not all the available values
 were returned.
+
 Before creating an image to be used as a optical flow frame, obtain the
 supported image creation parameters by querying with
 flink:vkGetPhysicalDeviceFormatProperties2 and
 flink:vkGetPhysicalDeviceImageFormatProperties2 using one of the reported
 formats and adding slink:VkOpticalFlowImageFormatInfoNV to the pname:pNext
 chain of slink:VkPhysicalDeviceImageFormatInfo2.
+
 When querying the parameters with
 flink:vkGetPhysicalDeviceImageFormatProperties2 for images used for optical
 flow operations, the slink:VkOpticalFlowImageFormatInfoNV::pname:usage field
-should contain one or more of the bits defined in
+must: contain one or more of the bits defined in
 elink:VkOpticalFlowUsageFlagBitsNV.
 
 include::{generated}/validity/protos/vkGetPhysicalDeviceOpticalFlowImageFormatsNV.adoc[]
@@ -97,7 +99,7 @@ The slink:VkOpticalFlowImageFormatInfoNV structure is defined as:
 
 include::{generated}/api/structs/VkOpticalFlowImageFormatInfoNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[opticalflow-usage]] pname:usage is a bitmask of
@@ -109,7 +111,7 @@ include::{generated}/validity/structs/VkOpticalFlowImageFormatInfoNV.adoc[]
 
 [open,refpage='VkOpticalFlowUsageFlagBitsNV',desc='Bits specifying usage for optical flow operations',type='enums']
 --
-Bits which can: be set in VkOpticalFlowImageFormatInfoNV::pname:usage,
+Bits which can: be set in slink:VkOpticalFlowImageFormatInfoNV::pname:usage,
 controlling optical flow usage, are:
 
 include::{generated}/api/enums/VkOpticalFlowUsageFlagBitsNV.adoc[]
@@ -140,7 +142,7 @@ The slink:VkOpticalFlowImageFormatPropertiesNV structure is defined as:
 
 include::{generated}/api/structs/VkOpticalFlowImageFormatPropertiesNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[opticalflow-format]] pname:format is a elink:VkFormat that specifies
@@ -196,7 +198,7 @@ The slink:VkOpticalFlowSessionCreateInfoNV structure is defined as:
 
 include::{generated}/api/structs/VkOpticalFlowSessionCreateInfoNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:width is the width in pixels of the input or reference frame to be
@@ -217,8 +219,8 @@ include::{generated}/api/structs/VkOpticalFlowSessionCreateInfoNV.adoc[]
     sname:VkOpticalFlowSessionCreateInfoNV::pname:height divided by
     sname:VkOpticalFlowSessionCreateInfoNV::pname:outputGridSize.
   * pname:hintGridSize is one exactly bit of
-    tlink:VkOpticalFlowGridSizeFlagsNV specifying the grid size of of the
-    hint flow vector maps to be bound to this optical flow session.
+    tlink:VkOpticalFlowGridSizeFlagsNV specifying the grid size of the hint
+    flow vector maps to be bound to this optical flow session.
     The size of the hint maps is determined by
     sname:VkOpticalFlowSessionCreateInfoNV::pname:width and
     sname:VkOpticalFlowSessionCreateInfoNV::pname:height divided by
@@ -299,13 +301,13 @@ internal use only and is defined as:
 
 include::{generated}/api/structs/VkOpticalFlowSessionCreatePrivateDataInfoNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:id is an identifier for data which is passed at a memory location
     specified in
     sname:VkOpticalFlowSessionCreatePrivateDataInfoNV::pname:pPrivateData.
-  * pname:size is is the size of data in bytes which is passed at a memory
+  * pname:size is the size of data in bytes which is passed at a memory
     location specified in
     sname:VkOpticalFlowSessionCreatePrivateDataInfoNV::pname:pPrivateData.
   * pname:pPrivateData is a pointer to NV internal data.
@@ -430,7 +432,7 @@ include::{generated}/validity/protos/vkDestroyOpticalFlowSessionNV.adoc[]
 
 
 [[opticalflow-session-binding-images]]
-=== Binding vulkan image views to an optical flow session
+=== Binding Vulkan Image Views to an Optical Flow Session
 
 [open,refpage='vkBindOpticalFlowSessionImageNV',desc='Bind image to an optical flow session',type='protos']
 --
@@ -515,7 +517,7 @@ The slink:VkOpticalFlowExecuteInfoNV structure is defined as:
 
 include::{generated}/api/structs/VkOpticalFlowExecuteInfoNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags are the tlink:VkOpticalFlowExecuteFlagsNV used for this

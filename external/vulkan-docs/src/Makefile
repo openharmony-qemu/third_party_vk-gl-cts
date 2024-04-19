@@ -1,4 +1,4 @@
-# Copyright 2014-2022 The Khronos Group Inc.
+# Copyright 2014-2024 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -8,7 +8,8 @@
 # $(VERSIONS) variable on the make command line to a space-separated
 # list of version names (e.g. VK_VERSION_1_3) *including all previous
 # versions of the API* (e.g. VK_VERSION_1_1 must also include
-# VK_VERSION_1_0). $(VERSIONS) is converted into generator
+# VK_VERSION_1_0 and VKSC_VERSION_1_0 must also include VK_VERSION_1_2,
+# VK_VERSION_1_1 & VK_VERSION_1_0). $(VERSIONS) is converted into generator
 # script arguments $(VERSIONOPTIONS) and into $(ATTRIBFILE)
 #
 # To build the specification / reference pages (refpages) with optional
@@ -22,7 +23,16 @@
 # runs of `make`.
 .DELETE_ON_ERROR:
 
+# Support building both Vulkan and Vulkan SC APIs
+# Allow the API to be overridden by the VULKAN_API environment variable
+# supported options are 'vulkan' and 'vulkansc' or unset
+# default to 'vulkan'
+VULKAN_API ?= vulkan
+ifeq ($(VULKAN_API),vulkan)
 VERSIONS := VK_VERSION_1_0 VK_VERSION_1_1 VK_VERSION_1_2 VK_VERSION_1_3
+else
+VERSIONS := VK_VERSION_1_0 VK_VERSION_1_1 VK_VERSION_1_2 VKSC_VERSION_1_0
+endif
 VERSIONOPTIONS := $(foreach version,$(VERSIONS),-feature $(version))
 
 EXTS := $(sort $(EXTENSIONS) $(DIFFEXTENSIONS))
@@ -59,7 +69,20 @@ allman: manhtmlpages
 # Invokes all the automated checks, but CHECK_XREFS can be set to empty
 # on the command line to avoid building an HTML spec target.
 CHECK_XREFS = check-xrefs
-allchecks: check-contractions check-spelling check-bullets check-reflow check-links check-consistency check-undefined check-txtfiles $(CHECK_XREFS)
+ifeq ($(VULKAN_API),vulkansc)
+CHECK_XREFS =
+endif
+allchecks: check-copyright-dates \
+    check-contractions \
+    check-spelling \
+    check-writing \
+    check-bullets \
+    check-reflow \
+    check-links \
+    check-consistency \
+    check-undefined \
+    check-txtfiles \
+    $(CHECK_XREFS)
 
 QUIET	 ?= @
 VERYQUIET?= @
@@ -74,8 +97,15 @@ MKDIR	 = mkdir -p
 CP	 = cp
 ECHO	 = echo
 
+# Where the repo root is
+ROOTDIR        = $(CURDIR)
+# Where the spec files are
+SPECDIR        = $(CURDIR)
+
 # Path to scripts used in generation
-SCRIPTS  = $(CURDIR)/scripts
+SCRIPTS  = $(ROOTDIR)/scripts
+# Path to configs and asciidoc extensions used in generation
+CONFIGS  = $(ROOTDIR)/config
 
 # Target directories for output files
 # HTMLDIR - 'html' target
@@ -85,6 +115,7 @@ HTMLDIR   = $(OUTDIR)/html
 VUDIR	  = $(OUTDIR)/validation
 PDFDIR	  = $(OUTDIR)/pdf
 PROPOSALDIR = $(OUTDIR)/proposals
+JSAPIMAP  = $(GENERATED)/apimap.cjs
 PYAPIMAP  = $(GENERATED)/apimap.py
 RBAPIMAP  = $(GENERATED)/apimap.rb
 
@@ -97,6 +128,7 @@ VERBOSE =
 # asciidoc attributes to set (defaults are usually OK)
 # NOTEOPTS sets options controlling which NOTEs are generated
 # PATCHVERSION must equal VK_HEADER_VERSION from vk.xml
+# SCPATCHVERSION is specific to the Vulkan SC spec
 # ATTRIBOPTS sets the API revision and enables KaTeX generation
 # EXTRAATTRIBS sets additional attributes, if passed to make
 # ADOCMISCOPTS miscellaneous options controlling error behavior, etc.
@@ -104,7 +136,15 @@ VERBOSE =
 # ADOCOPTS options for asciidoc->HTML5 output
 
 NOTEOPTS     = -a editing-notes -a implementation-guide
-PATCHVERSION = 238
+PATCHVERSION = 275
+BASEOPTS     =
+
+ifneq (,$(findstring VKSC_VERSION_1_0,$(VERSIONS)))
+VKSPECREVISION := 1.2.$(PATCHVERSION)
+SCPATCHVERSION = 14
+SPECREVISION = 1.0.$(SCPATCHVERSION)
+BASEOPTS = -a baserevnumber="$(VKSPECREVISION)"
+else
 
 ifneq (,$(findstring VK_VERSION_1_3,$(VERSIONS)))
 SPECMINOR = 3
@@ -121,6 +161,7 @@ endif
 endif
 
 SPECREVISION = 1.$(SPECMINOR).$(PATCHVERSION)
+endif
 
 # Spell out ISO 8601 format as not all date commands support --rfc-3339
 SPECDATE     = $(shell echo `date -u "+%Y-%m-%d %TZ"`)
@@ -144,16 +185,16 @@ SPECREMARK = from git branch: $(shell echo `git symbolic-ref --short HEAD 2> /de
 #   refprefix - controls which generated extension metafiles are
 #	included at build time. Must be empty for specification,
 #	'refprefix.' for refpages (see ADOCREFOPTS below).
-ATTRIBOPTS   = -a revnumber="$(SPECREVISION)" \
+ATTRIBOPTS   = -a revnumber="$(SPECREVISION)" $(BASEOPTS) \
 	       -a revdate="$(SPECDATE)" \
 	       -a revremark="$(SPECREMARK)" \
 	       -a apititle="$(APITITLE)" \
 	       -a stem=latexmath \
 	       -a imageopts="$(IMAGEOPTS)" \
-	       -a config=$(CURDIR)/config \
-	       -a appendices=$(CURDIR)/appendices \
-	       -a proposals=$(CURDIR)/proposals \
-	       -a chapters=$(CURDIR)/chapters \
+	       -a config=$(ROOTDIR)/config \
+	       -a appendices=$(SPECDIR)/appendices \
+	       -a proposals=$(SPECDIR)/proposals \
+	       -a chapters=$(SPECDIR)/chapters \
 	       -a images=$(IMAGEPATH) \
 	       -a generated=$(GENERATED) \
 	       -a refprefix \
@@ -162,14 +203,18 @@ ADOCMISCOPTS = --failure-level ERROR
 # Non target-specific Asciidoctor extensions and options
 # Look in $(GENERATED) for explicitly required non-extension Ruby, such
 # as apimap.rb
-ADOCEXTS     = -I$(GENERATED) -r $(CURDIR)/config/spec-macros.rb -r $(CURDIR)/config/tilde_open_block.rb
+ADOCEXTS     = -I$(GENERATED) \
+	       -r $(CONFIGS)/spec-macros.rb \
+	       -r $(CONFIGS)/open_listing_block.rb \
+	       -r $(CONFIGS)/ifdef-mismatch.rb
 ADOCOPTS     = -d book $(ADOCMISCOPTS) $(ATTRIBOPTS) $(NOTEOPTS) $(VERBOSE) $(ADOCEXTS)
 
 # HTML target-specific Asciidoctor extensions and options
-ADOCHTMLEXTS = -r $(CURDIR)/config/katex_replace.rb \
-	       -r $(CURDIR)/config/loadable_html.rb \
-	       -r $(CURDIR)/config/vuid-expander.rb \
-	       -r $(CURDIR)/config/rouge-extend-css.rb
+ADOCHTMLEXTS = -r $(CONFIGS)/katex_replace.rb \
+	       -r $(CONFIGS)/loadable_html.rb \
+	       -r $(CONFIGS)/vuid-expander.rb \
+	       -r $(CONFIGS)/rouge-extend-css.rb \
+	       -r $(CONFIGS)/genanchorlinks.rb
 
 # ADOCHTMLOPTS relies on the relative runtime path from the output HTML
 # file to the katex scripts being set with KATEXDIR. This is overridden
@@ -180,39 +225,41 @@ ADOCHTMLEXTS = -r $(CURDIR)/config/katex_replace.rb \
 # that is coded into CSS, and set separately for each HTML target.
 # ADOCHTMLOPTS also relies on the absolute build-time path to the
 # 'stylesdir' containing our custom CSS.
-KATEXSRCDIR  = $(CURDIR)/katex
+KATEXSRCDIR  = $(ROOTDIR)/katex
 KATEXINSTDIR = $(OUTDIR)/katex
 ADOCHTMLOPTS = $(ADOCHTMLEXTS) -a katexpath=$(KATEXDIR) \
 	       -a stylesheet=khronos.css \
-	       -a stylesdir=$(CURDIR)/config \
+	       -a stylesdir=$(ROOTDIR)/config \
 	       -a sectanchors
 
 # PDF target-specific Asciidoctor extensions and options
 ADOCPDFEXTS  = -r asciidoctor-pdf \
 	       -r asciidoctor-mathematical \
-	       -r $(CURDIR)/config/asciidoctor-mathematical-ext.rb \
-	       -r $(CURDIR)/config/vuid-expander.rb
+	       -r $(CONFIGS)/asciidoctor-mathematical-ext.rb \
+	       -r $(CONFIGS)/vuid-expander.rb
 ADOCPDFOPTS  = $(ADOCPDFEXTS) -a mathematical-format=svg \
 	       -a imagesoutdir=$(PDFMATHDIR) \
-	       -a pdf-fontsdir=config/fonts,GEM_FONTS_DIR \
-	       -a pdf-stylesdir=config/themes -a pdf-style=pdf
+	       -a pdf-fontsdir=$(CONFIGS)/fonts,GEM_FONTS_DIR \
+	       -a pdf-stylesdir=$(CONFIGS)/themes -a pdf-style=pdf
 
 # Valid usage-specific Asciidoctor extensions and options
-ADOCVUEXTS = -r $(CURDIR)/config/vu-to-json.rb -r $(CURDIR)/config/quiet-include-failure.rb
+ADOCVUEXTS = -r $(CONFIGS)/vu-to-json.rb -r $(CONFIGS)/quiet-include-failure.rb
 # {vuprefix} precedes some anchors which are otherwise encountered twice
 # by the validusage extractor.
-ADOCVUOPTS = $(ADOCVUEXTS) -a vuprefix=vu-
+# {attribute-missing} overrides the global setting, since the extractor
+# reports a lot of false-flag warnings otherwise.
+ADOCVUOPTS = $(ADOCVUEXTS) -a vuprefix=vu- -a attribute-missing=skip
 
 .PHONY: directories
 
 # Images used by the spec. These are included in generated HTML now.
-IMAGEPATH = $(CURDIR)/images
+IMAGEPATH = $(SPECDIR)/images
 SVGFILES  = $(wildcard $(IMAGEPATH)/*.svg)
 
 # Top-level spec source file
-SPECSRC        = vkspec.adoc
+SPECSRC        = $(SPECDIR)/vkspec.adoc
 # Static files making up sections of the API spec.
-SPECFILES = $(wildcard chapters/[A-Za-z]*.adoc chapters/*/[A-Za-z]*.adoc appendices/[A-Za-z]*.adoc)
+SPECFILES = $(wildcard $(SPECDIR)/chapters/[A-Za-z]*.adoc $(SPECDIR)/chapters/*/[A-Za-z]*.adoc $(SPECDIR)/appendices/[A-Za-z]*.adoc)
 # Shorthand for where different types generated files go.
 # All can be relocated by overriding GENERATED in the make invocation.
 GENERATED      = $(CURDIR)/gen
@@ -224,7 +271,8 @@ METAPATH       = $(GENERATED)/meta
 INTERFACEPATH  = $(GENERATED)/interfaces
 SPIRVCAPPATH   = $(GENERATED)/spirvcap
 FORMATSPATH    = $(GENERATED)/formats
-PROPOSALPATH   = $(CURDIR)/proposals
+SYNCPATH       = $(GENERATED)/sync
+PROPOSALPATH   = $(SPECDIR)/proposals
 # timeMarker is a proxy target created when many generated files are
 # made at once
 APIDEPEND      = $(APIPATH)/timeMarker
@@ -234,15 +282,14 @@ METADEPEND     = $(METAPATH)/timeMarker
 INTERFACEDEPEND = $(INTERFACEPATH)/timeMarker
 SPIRVCAPDEPEND = $(SPIRVCAPPATH)/timeMarker
 FORMATSDEPEND = $(FORMATSPATH)/timeMarker
+SYNCDEPEND = $(SYNCPATH)/timeMarker
 RUBYDEPEND     = $(RBAPIMAP)
 ATTRIBFILE     = $(GENERATED)/specattribs.adoc
 # All generated dependencies
-GENDEPENDS     = $(APIDEPEND) $(VALIDITYDEPEND) $(HOSTSYNCDEPEND) $(METADEPEND) $(INTERFACEDEPEND) $(SPIRVCAPDEPEND) $(FORMATSDEPEND) $(RUBYDEPEND) $(ATTRIBFILE)
+GENDEPENDS     = $(APIDEPEND) $(VALIDITYDEPEND) $(HOSTSYNCDEPEND) $(METADEPEND) $(INTERFACEDEPEND) $(SPIRVCAPDEPEND) $(FORMATSDEPEND) $(SYNCDEPEND) $(RUBYDEPEND) $(ATTRIBFILE)
 # All non-format-specific dependencies
 COMMONDOCS     = $(SPECFILES) $(GENDEPENDS)
 
-# Script to add href to anchors
-GENANCHORLINKS = $(SCRIPTS)/genanchorlinks.py
 # Script to translate math on build time
 TRANSLATEMATH = $(NODEJS) $(SCRIPTS)/translate_math.js $(KATEXSRCDIR)/katex.min.js
 
@@ -258,8 +305,8 @@ $(KATEXINSTDIR): $(KATEXSRCDIR)
 # There is some complexity to try and avoid short virtual targets like 'html'
 # causing specs to *always* be regenerated.
 
-CHUNKER = $(CURDIR)/scripts/asciidoctor-chunker/asciidoctor-chunker.js
-CHUNKINDEX = $(CURDIR)/config/chunkindex
+CHUNKER = $(SCRIPTS)/asciidoctor-chunker/asciidoctor-chunker.js
+CHUNKINDEX = $(CONFIGS)/chunkindex
 # Only the $(CHUNKER) step is required unless the search index is to be
 # generated and incorporated into the chunked spec.
 #
@@ -291,7 +338,6 @@ html: $(HTMLDIR)/vkspec.html $(SPECSRC) $(COMMONDOCS)
 $(HTMLDIR)/vkspec.html: KATEXDIR = ../katex
 $(HTMLDIR)/vkspec.html: $(SPECSRC) $(COMMONDOCS) $(KATEXINSTDIR)
 	$(QUIET)$(ASCIIDOC) -b html5 $(ADOCOPTS) $(ADOCHTMLOPTS) -o $@ $(SPECSRC)
-	$(QUIET)$(PYTHON) $(GENANCHORLINKS) $@ $@
 	$(QUIET)$(TRANSLATEMATH) $@
 
 diff_html: $(HTMLDIR)/diff.html $(SPECSRC) $(COMMONDOCS)
@@ -300,7 +346,7 @@ $(HTMLDIR)/diff.html: KATEXDIR = ../katex
 $(HTMLDIR)/diff.html: $(SPECSRC) $(COMMONDOCS) $(KATEXINSTDIR)
 	$(QUIET)$(ASCIIDOC) -b html5 $(ADOCOPTS) $(ADOCHTMLOPTS) \
 	    -a diff_extensions="$(DIFFEXTENSIONS)" \
-	    -r $(CURDIR)/config/extension-highlighter.rb --trace \
+	    -r $(CONFIGS)/extension-highlighter.rb --trace \
 	    -o $@ $(SPECSRC)
 	$(QUIET)$(TRANSLATEMATH) $@
 
@@ -327,7 +373,7 @@ $(VUDIR)/validusage.json: $(SPECSRC) $(COMMONDOCS)
 # Vulkan Documentation and Extensions, a.k.a. "Style Guide" documentation
 
 STYLESRC = styleguide.adoc
-STYLEFILES = $(wildcard style/[A-Za-z]*.adoc)
+STYLEFILES = $(wildcard $(SPECDIR)/style/[A-Za-z]*.adoc)
 
 styleguide: $(OUTDIR)/styleguide.html
 
@@ -361,7 +407,7 @@ $(PROPOSALDIR)/%.html: $(PROPOSALPATH)/%.adoc
 	$(QUIET)$(ASCIIDOC) --failure-level ERROR -b html5 -o $@ $<
 	$(QUIET) if egrep -q '\\[([]' $@ ; then \
 	    $(TRANSLATEMATH) $@ ; \
-    fi
+	fi
 
 # Reflow text in spec sources
 REFLOW = $(SCRIPTS)/reflow.py
@@ -375,7 +421,7 @@ reflow:
 # 'ci-allchecks' targets or individually.
 
 # Look for disallowed contractions
-CHECK_CONTRACTIONS = git grep -i -F -f config/CI/contractions | egrep -v -E -f config/CI/contractions-allowed
+CHECK_CONTRACTIONS = git grep -i -F -f $(ROOTDIR)/config/CI/contractions | egrep -v -E -f $(ROOTDIR)/config/CI/contractions-allowed
 check-contractions:
 	if test `$(CHECK_CONTRACTIONS) | wc -l` != 0 ; then \
 	    echo "Contractions found that are not allowed:" ; \
@@ -384,7 +430,7 @@ check-contractions:
 	fi
 
 # Look for typos and suggest fixes
-CODESPELL = codespell --config config/CI/codespellrc -S '*.js' -S './antora*/*' -S 'ERRS*'
+CODESPELL = codespell --config $(ROOTDIR)/config/CI/codespellrc -S '*.js' -S './antora*/*' -S 'ERRS*,*.pdf,*.html'
 check-spelling:
 	if ! $(CODESPELL) > /dev/null ; then \
 	    echo "Found probable misspellings. Corrections can be added to config/CI/codespell-allowed:" ; \
@@ -392,8 +438,19 @@ check-spelling:
 	    exit 1 ; \
 	fi
 
+# Look for old or unpreferred language in specification language.
+# This mostly helps when we make global changes that also need to be
+# made in outstanding extension branches for new text.
+CHECK_WRITING = git grep -E -f $(ROOTDIR)/config/CI/writing $(SPECDIR)/registry.adoc $(SPECDIR)/vkspec.adoc $(SPECDIR)/chapters $(SPECDIR)/appendices
+check-writing:
+	if test `$(CHECK_WRITING) | wc -l` != 0 ; then \
+	    echo "Found old style writing. Please refer to the style guide or similar language in current main branch for fixes:" ; \
+	    $(CHECK_WRITING) ; \
+	    exit 1 ; \
+	fi
+
 # Look for bullet list items not preceded by exactly two spaces, per styleguide
-CHECK_BULLETS = git grep -E '^( |   +)[-*]+ ' chapters appendices style [a-z]*.adoc
+CHECK_BULLETS = git grep -E '^( |   +)[-*]+ ' $(SPECDIR)/chapters $(SPECDIR)/appendices $(SPECDIR)/style $(SPECDIR)/[a-z]*.adoc
 check-bullets:
 	if test `$(CHECK_BULLETS) | wc -l` != 0 ; then \
 	    echo "Bullet list item found not preceded by exactly two spaces:" ; \
@@ -406,12 +463,24 @@ check-bullets:
 check-reflow:
 	$(PYTHON) $(SCRIPTS)/reflow.py -nowrite -noflow -check FAIL -checkVUID FAIL $(SPECFILES)
 
+# Look for files whose Khronos copyright has not been updated to the
+# current year
+DATE_YEAR = $(shell date +%Y)
+CHECK_DATES = git grep -z -l 'Copyright.*The Khronos' | xargs -0 git grep -L 'Copyright.*$(DATE_YEAR).*The Khronos'
+check-copyright-dates:
+	if test `$(CHECK_DATES) | wc -l` != 0 ; then \
+	    echo "Files with out-of-date Khronos copyrights (must be updated to $(DATE_YEAR):" ; \
+	    $(CHECK_DATES) ; \
+	    exit 1 ; \
+	 fi
+
 # Look for proper use of custom markup macros
 #   --ignore_count 0 can be incremented if there are unfixable errors
 check-links:
 	$(PYTHON) $(SCRIPTS)/check_spec_links.py -Werror --ignore_count 0
 
 # Perform XML consistency checks
+# Use '-warn' option to display warnings as well as errors
 check-consistency:
 	$(PYTHON) $(SCRIPTS)/xml_consistency.py
 
@@ -420,7 +489,7 @@ check-undefined:
 	$(SCRIPTS)/ci/check_undefined
 
 # Look for '.txt' files, which should almost all be .adoc now
-CHECK_TXTFILES = find . -name '*.txt' | egrep -v -E -f config/CI/txt-files-allowed
+CHECK_TXTFILES = find . -name '*.txt' | egrep -v -E -f $(ROOTDIR)/config/CI/txt-files-allowed
 check-txtfiles:
 	if test `$(CHECK_TXTFILES) | wc -l` != 0 ; then \
 	    echo "*.txt files found that are not allowed (use .adoc):" ; \
@@ -456,10 +525,12 @@ CLEAN_GEN_PATHS = \
     $(INTERFACEPATH) \
     $(SPIRVCAPPATH) \
     $(FORMATSPATH) \
+    $(SYNCPATH) \
     $(REFPATH) \
     $(GENERATED)/include \
     $(GENERATED)/__pycache__ \
     $(PDFMATHDIR) \
+    $(JSAPIMAP) \
     $(PYAPIMAP) \
     $(RBAPIMAP) \
     $(ATTRIBFILE)
@@ -475,7 +546,7 @@ clean_validusage:
 MANSOURCES   = $(filter-out $(REFPATH)/apispec.adoc, $(wildcard $(REFPATH)/*.adoc))
 
 # Generation of refpage asciidoctor sources by extraction from the
-# specification.
+# specification(s).
 #
 # Should have a proper dependency causing the man page sources to be
 # generated by running genRef (once), but adding $(MANSOURCES) to the
@@ -489,7 +560,7 @@ refpages: $(REFPATH)/apispec.adoc
 $(REFPATH)/apispec.adoc: $(SPECFILES) $(GENREF) $(SCRIPTS)/reflib.py $(PYAPIMAP)
 	$(QUIET)$(MKDIR) $(REFPATH)
 	$(PYTHON) $(GENREF) -genpath $(GENERATED) -basedir $(REFPATH) \
-	    -log $(LOGFILE) -extpath $(CURDIR)/appendices \
+	    -log $(LOGFILE) -extpath $(SPECDIR)/appendices \
 	    $(EXTOPTIONS) $(SPECFILES)
 
 # These targets are HTML5 refpages
@@ -591,13 +662,17 @@ manaliases: $(PYAPIMAP)
 # $(GENVKEXTRA) are extra options that can be passed to genvk.py, e.g.
 # '-diag diag'
 
-REGISTRY   = xml
+REGISTRY   = $(ROOTDIR)/xml
 VKXML	   = $(REGISTRY)/vk.xml
 GENVK	   = $(SCRIPTS)/genvk.py
 GENVKOPTS  = $(VERSIONOPTIONS) $(EXTOPTIONS) $(GENVKEXTRA) -registry $(VKXML)
 GENVKEXTRA =
 
-scriptapi: pyapi rubyapi
+scriptapi: jsapi pyapi rubyapi
+
+jsapi $(JSAPIMAP): $(VKXML) $(GENVK)
+	$(QUIET)$(MKDIR) $(GENERATED)
+	$(QUIET)$(PYTHON) $(GENVK) $(GENVKOPTS) -o $(GENERATED) apimap.cjs
 
 pyapi $(PYAPIMAP): $(VKXML) $(GENVK)
 	$(QUIET)$(MKDIR) $(GENERATED)
@@ -653,14 +728,32 @@ $(FORMATSDEPEND): $(VKXML) $(GENVK)
 	$(QUIET)$(MKDIR) $(FORMATSPATH)
 	$(QUIET)$(PYTHON) $(GENVK) $(GENVKOPTS) -o $(FORMATSPATH) formatsinc
 
+# This generates a single file, so FORMATSDEPEND is the full path to
+# the file, rather than to a timeMarker in the same directory.
+syncinc: $(SYNCDEPEND)
+
+$(SYNCDEPEND): $(VKXML) $(GENVK)
+	$(QUIET)$(MKDIR) $(SYNCPATH)
+	$(QUIET)$(PYTHON) $(GENVK) $(GENVKOPTS) -o $(SYNCPATH) syncinc
+
 # This generates a single file containing asciidoc attributes for each
 # core version and extension in the spec being built.
+# For use with Antora, it also includes a couple of document attributes
+# otherwise passed on the asciidoctor command line.
+# These should not use the asciidoctor attribute names (e.g. revnumber,
+# revdate), so use the Makefile variable names instead (e.g.
+# SPECREVISION, SPECDATE).
+
 attribs: $(ATTRIBFILE)
 
 $(ATTRIBFILE):
-	for attrib in $(VERSIONS) $(EXTS) ; do \
+	$(QUIET)for attrib in $(VERSIONS) $(EXTS) ; do \
 	    echo ":$${attrib}:" ; \
 	done > $@
+	$(QUIET)(echo ":SPECREVISION: $(SPECREVISION)" ; \
+		 echo ":SPECDATE: $(SPECDATE)" ; \
+		 echo ":SPECREMARK: $(SPECREMARK)" ; \
+		 echo ":APITITLE: $(APITITLE)") >> $@
 
 # Debugging aid - generate all files from registry XML
 generated: $(PYAPIMAP) $(GENDEPENDS)

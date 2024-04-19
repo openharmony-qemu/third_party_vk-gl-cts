@@ -1,4 +1,4 @@
-// Copyright 2017-2022 The Khronos Group Inc.
+// Copyright 2017-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -8,13 +8,11 @@ include::{generated}/meta/{refprefix}VK_KHR_uniform_buffer_standard_layout.adoc[
 
 *Last Modified Date*::
     2019-01-25
-*Interactions and External Dependencies*::
-  - Promoted to Vulkan 1.2 Core
 *Contributors*::
   - Graeme Leese, Broadcom
   - Jeff Bolz, NVIDIA
   - Tobias Hector, AMD
-  - Jason Ekstrand, Intel
+  - Faith Ekstrand, Intel
   - Neil Henning, AMD
 
 === Description

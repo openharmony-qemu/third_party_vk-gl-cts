@@ -1,4 +1,4 @@
-// Copyright 2015-2022 The Khronos Group Inc.
+// Copyright 2015-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -7,7 +7,7 @@
 
 
 [[clears-outside]]
-== Clearing Images Outside A Render Pass Instance
+== Clearing Images Outside a Render Pass Instance
 
 Color and depth/stencil images can: be cleared outside a render pass
 instance using flink:vkCmdClearColorImage or
@@ -66,17 +66,13 @@ endif::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
     pname:imageLayout must: specify the layout of the image subresource
     ranges of pname:image specified in pname:pRanges at the time this
     command is executed on a sname:VkDevice
-ifndef::VK_KHR_shared_presentable_image[]
-  * [[VUID-vkCmdClearColorImage-imageLayout-00005]]
-    pname:imageLayout must: be ename:VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL or
-    ename:VK_IMAGE_LAYOUT_GENERAL
-endif::VK_KHR_shared_presentable_image[]
-ifdef::VK_KHR_shared_presentable_image[]
   * [[VUID-vkCmdClearColorImage-imageLayout-01394]]
-    pname:imageLayout must: be ename:VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-    ename:VK_IMAGE_LAYOUT_GENERAL, or
-    ename:VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR
+    pname:imageLayout must: be
+ifdef::VK_KHR_shared_presentable_image[]
+    ename:VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR,
 endif::VK_KHR_shared_presentable_image[]
+    ename:VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL or
+    ename:VK_IMAGE_LAYOUT_GENERAL
   * [[VUID-vkCmdClearColorImage-aspectMask-02498]]
     The slink:VkImageSubresourceRange::pname:aspectMask members of the
     elements of the pname:pRanges array must: each only include
@@ -151,11 +147,6 @@ ifdef::VK_VERSION_1_1,VK_KHR_maintenance1[]
     The <<resources-image-format-features,format features>> of pname:image
     must: contain ename:VK_FORMAT_FEATURE_TRANSFER_DST_BIT
 endif::VK_VERSION_1_1,VK_KHR_maintenance1[]
-ifndef::VK_VERSION_1_2,VK_EXT_separate_stencil_usage[]
-  * [[VUID-vkCmdClearDepthStencilImage-image-00009]]
-    pname:image must: have been created with
-    ename:VK_IMAGE_USAGE_TRANSFER_DST_BIT usage flag
-endif::VK_VERSION_1_2,VK_EXT_separate_stencil_usage[]
 ifdef::VK_VERSION_1_2,VK_EXT_separate_stencil_usage[]
   * [[VUID-vkCmdClearDepthStencilImage-pRanges-02658]]
     If the pname:aspect member of any element of pname:pRanges includes
@@ -164,10 +155,14 @@ ifdef::VK_VERSION_1_2,VK_EXT_separate_stencil_usage[]
     ename:VK_IMAGE_USAGE_TRANSFER_DST_BIT must: have been included in the
     slink:VkImageStencilUsageCreateInfo::pname:stencilUsage used to create
     pname:image
+endif::VK_VERSION_1_2,VK_EXT_separate_stencil_usage[]
   * [[VUID-vkCmdClearDepthStencilImage-pRanges-02659]]
     If the pname:aspect member of any element of pname:pRanges includes
-    ename:VK_IMAGE_ASPECT_STENCIL_BIT, and pname:image was not created with
+    ename:VK_IMAGE_ASPECT_STENCIL_BIT,
+ifdef::VK_VERSION_1_2,VK_EXT_separate_stencil_usage[]
+    and pname:image was not created with
     <<VkImageStencilUsageCreateInfo,separate stencil usage>>,
+endif::VK_VERSION_1_2,VK_EXT_separate_stencil_usage[]
     ename:VK_IMAGE_USAGE_TRANSFER_DST_BIT must: have been included in the
     slink:VkImageCreateInfo::pname:usage used to create pname:image
   * [[VUID-vkCmdClearDepthStencilImage-pRanges-02660]]
@@ -175,7 +170,6 @@ ifdef::VK_VERSION_1_2,VK_EXT_separate_stencil_usage[]
     ename:VK_IMAGE_ASPECT_DEPTH_BIT, ename:VK_IMAGE_USAGE_TRANSFER_DST_BIT
     must: have been included in the slink:VkImageCreateInfo::pname:usage
     used to create pname:image
-endif::VK_VERSION_1_2,VK_EXT_separate_stencil_usage[]
   * [[VUID-vkCmdClearDepthStencilImage-image-00010]]
     If pname:image is non-sparse then it must: be bound completely and
     contiguously to a single sname:VkDeviceMemory object
@@ -245,7 +239,7 @@ the purposes of memory barriers.
 
 
 [[clears-inside]]
-== Clearing Images Inside A Render Pass Instance
+== Clearing Images Inside a Render Pass Instance
 
 [open,refpage='vkCmdClearAttachments',desc='Clear regions within bound framebuffer attachments',type='protos']
 --
@@ -298,12 +292,36 @@ as it is more efficient on some implementations.
 If any attachment's pname:aspectMask to be cleared is not backed by an image
 view, the clear has no effect on that aspect.
 
+ifdef::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
+If an attachment being cleared refers to an image view created with an
+pname:aspectMask equal to one of ename:VK_IMAGE_ASPECT_PLANE_0_BIT,
+ename:VK_IMAGE_ASPECT_PLANE_1_BIT or ename:VK_IMAGE_ASPECT_PLANE_2_BIT, it
+is considered to be ename:VK_IMAGE_ASPECT_COLOR_BIT for purposes of this
+command, and must: be cleared with the ename:VK_IMAGE_ASPECT_COLOR_BIT
+aspect as specified by <<image-views-plane-promotion,image view creation>>.
+endif::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdClearAttachments-pAttachments-07270]]
-    For each element of pname:pAttachments, the corresponding attachment in
-    the current render pass instance must: either not be backed by an image
-    view, or contain each of the aspects specified in pname:aspectMask
+  * [[VUID-vkCmdClearAttachments-aspectMask-07884]]
+    If
+ifdef::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
+    the current render pass instance does not use dynamic rendering, and
+endif::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
+    the pname:aspectMask member of any element of pname:pAttachments
+    contains ename:VK_IMAGE_ASPECT_DEPTH_BIT, the current subpass instance's
+    depth-stencil attachment must: be either ename:VK_ATTACHMENT_UNUSED or
+    the attachment pname:format must: contain a depth component
+  * [[VUID-vkCmdClearAttachments-aspectMask-07885]]
+    If
+ifdef::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
+    the current render pass instance does not use dynamic rendering, and
+endif::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
+    the pname:aspectMask member of any element of pname:pAttachments
+    contains ename:VK_IMAGE_ASPECT_STENCIL_BIT, the current subpass
+    instance's depth-stencil attachment must: be either
+    ename:VK_ATTACHMENT_UNUSED or the attachment pname:format must: contain
+    a stencil component
   * [[VUID-vkCmdClearAttachments-aspectMask-07271]]
     If the pname:aspectMask member of any element of pname:pAttachments
     contains ename:VK_IMAGE_ASPECT_COLOR_BIT, the pname:colorAttachment
@@ -342,6 +360,12 @@ ifdef::VK_VERSION_1_1,VK_KHR_multiview[]
     If the render pass instance this is recorded in uses multiview, then
     pname:baseArrayLayer must: be zero and pname:layerCount must: be one
 endif::VK_VERSION_1_1,VK_KHR_multiview[]
+ifdef::VK_ANDROID_external_format_resolve[]
+  * [[VUID-vkCmdClearAttachments-aspectMask-09298]]
+    If the subpass this is recorded in performs an external format resolve,
+    the pname:aspectMask member of any element of pname:pAttachments must:
+    not include `VK_IMAGE_ASPECT_PLANE__{ibit}__BIT` for any index _i_
+endif::VK_ANDROID_external_format_resolve[]
 ****
 
 include::{generated}/validity/protos/vkCmdClearAttachments.adoc[]
@@ -391,8 +415,6 @@ ifdef::VK_EXT_image_drm_format_modifier[]
     pname:aspectMask must: not include
     `VK_IMAGE_ASPECT_MEMORY_PLANE__{ibit}__BIT_EXT` for any index _i_
 endif::VK_EXT_image_drm_format_modifier[]
-  * [[VUID-VkClearAttachment-clearValue-00021]]
-    pname:clearValue must: be a valid sname:VkClearValue union
 ****
 
 include::{generated}/validity/structs/VkClearAttachment.adoc[]
@@ -409,13 +431,13 @@ The sname:VkClearColorValue structure is defined as:
 include::{generated}/api/structs/VkClearColorValue.adoc[]
 
   * pname:float32 are the color clear values when the format of the image or
-    attachment is one of the formats in the <<formats-numericformat>> table
-    other than signed integer (etext:SINT) or unsigned integer (etext:UINT).
+    attachment is one of the <<formats-numericformat, numeric formats>> with
+    a numeric type that is floating-point.
     Floating point values are automatically converted to the format of the
     image, with the clear value being treated as linear if the image is
     sRGB.
   * pname:int32 are the color clear values when the format of the image or
-    attachment is signed integer (etext:SINT).
+    attachment has a numeric type that is signed integer (etext:SINT).
     Signed integer values are converted to the format of the image by
     casting to the smaller type (with negative 32-bit values mapping to
     negative values in the smaller type).
@@ -423,7 +445,7 @@ include::{generated}/api/structs/VkClearColorValue.adoc[]
     would overflow in conversion to that type), the clear value is
     undefined:.
   * pname:uint32 are the color clear values when the format of the image or
-    attachment is unsigned integer (etext:UINT).
+    attachment has a numeric type that is unsigned integer (etext:UINT).
     Unsigned integer values are converted to the format of the image by
     casting to the integer type with fewer bits.
 
@@ -453,15 +475,11 @@ include::{generated}/api/structs/VkClearDepthStencilValue.adoc[]
 
 .Valid Usage
 ****
-ifdef::VK_EXT_depth_range_unrestricted[]
   * [[VUID-VkClearDepthStencilValue-depth-00022]]
+ifdef::VK_EXT_depth_range_unrestricted[]
     Unless the `apiext:VK_EXT_depth_range_unrestricted` extension is enabled
-    pname:depth must: be between `0.0` and `1.0`, inclusive
 endif::VK_EXT_depth_range_unrestricted[]
-ifndef::VK_EXT_depth_range_unrestricted[]
-  * [[VUID-VkClearDepthStencilValue-depth-02506]]
     pname:depth must: be between `0.0` and `1.0`, inclusive
-endif::VK_EXT_depth_range_unrestricted[]
 ****
 
 include::{generated}/validity/structs/VkClearDepthStencilValue.adoc[]
@@ -533,14 +551,20 @@ fname:vkCmdFillBuffer.
   * [[VUID-vkCmdFillBuffer-dstBuffer-00029]]
     pname:dstBuffer must: have been created with
     ename:VK_BUFFER_USAGE_TRANSFER_DST_BIT usage flag
-ifndef::VK_VERSION_1_1,VK_KHR_maintenance1[]
-  * [[VUID-vkCmdFillBuffer-commandBuffer-00030]]
-    The sname:VkCommandPool that pname:commandBuffer was allocated from
-    must: support graphics or compute operations
+  * [[VUID-vkCmdFillBuffer-apiVersion-07894]]
+ifdef::VK_VERSION_1_1,VK_KHR_maintenance1[]
+ifndef::VKSC_VERSION_1_0[]
+    If the apiext:VK_KHR_maintenance1 extension is not enabled and
+    slink:VkPhysicalDeviceProperties::pname:apiVersion is less than Vulkan
+    1.1, the
+endif::VKSC_VERSION_1_0[]
 endif::VK_VERSION_1_1,VK_KHR_maintenance1[]
+ifndef::VK_VERSION_1_1,VK_KHR_maintenance1[The]
+    slink:VkCommandPool that pname:commandBuffer was allocated from must:
+    support graphics or compute operations
   * [[VUID-vkCmdFillBuffer-dstBuffer-00031]]
     If pname:dstBuffer is non-sparse then it must: be bound completely and
-    contiguously to a single sname:VkDeviceMemory object
+    contiguously to a single slink:VkDeviceMemory object
 ifdef::VK_VERSION_1_1[]
   * [[VUID-vkCmdFillBuffer-commandBuffer-01811]]
     If pname:commandBuffer is an unprotected command buffer and
@@ -642,6 +666,7 @@ endif::VK_VERSION_1_1[]
 include::{generated}/validity/protos/vkCmdUpdateBuffer.adoc[]
 --
 
+ifndef::VKSC_VERSION_1_0[]
 [NOTE]
 .Note
 ====
@@ -650,3 +675,4 @@ prior to version 1.0.19 of the Specification and dlink:VK_HEADER_VERSION 19
 of the <<boilerplate-headers,Vulkan Header Files>>.
 This was a historical anomaly, as the source data may be of other types.
 ====
+endif::VKSC_VERSION_1_0[]

@@ -1,4 +1,4 @@
-// Copyright 2016-2022 The Khronos Group Inc.
+// Copyright 2016-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -10,11 +10,9 @@ include::{generated}/meta/{refprefix}VK_KHR_dedicated_allocation.adoc[]
     2017-09-05
 *IP Status*::
     No known IP claims.
-*Interactions and External Dependencies*::
-  - Promoted to Vulkan 1.1 Core
 *Contributors*::
   - Jeff Bolz, NVIDIA
-  - Jason Ekstrand, Intel
+  - Faith Ekstrand, Intel
 
 === Description
 
@@ -52,8 +50,7 @@ include::{generated}/interfaces/VK_KHR_dedicated_allocation.adoc[]
 === Examples
 
 [source,c++]
---------------------------------------
-
+----
     // Create an image with a dedicated allocation based on the
     // implementation's preference
 
@@ -66,26 +63,26 @@ include::{generated}/interfaces/VK_KHR_dedicated_allocation.adoc[]
     VkResult result = vkCreateImage(
         device,
         &imageCreateInfo,
-        NULL,                               // pAllocator
+        NULL,               // pAllocator
         &image);
 
     VkMemoryDedicatedRequirementsKHR dedicatedRequirements =
     {
-        VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS_KHR,
-        NULL,                               // pNext
+        .sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS_KHR,
+        .pNext = NULL,
     };
 
     VkMemoryRequirements2 memoryRequirements =
     {
-        VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2,
-        &dedicatedRequirements,             // pNext
+        .sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2,
+        .pNext = &dedicatedRequirements,
     };
 
     const VkImageMemoryRequirementsInfo2 imageRequirementsInfo =
     {
-        VK_STRUCTURE_TYPE_IMAGE_MEMORY_REQUIREMENTS_INFO_2,
-        NULL,                               // pNext
-        image
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_REQUIREMENTS_INFO_2,
+        .pNext = NULL,
+        .image = image
     };
 
     vkGetImageMemoryRequirements2(
@@ -99,25 +96,25 @@ include::{generated}/interfaces/VK_KHR_dedicated_allocation.adoc[]
 
         VkMemoryDedicatedAllocateInfoKHR dedicatedInfo =
         {
-            VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO_KHR,   // sType
-            NULL,                                                   // pNext
-            image,                                                  // image
-            VK_NULL_HANDLE,                                         // buffer
+            .sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO_KHR,
+            .pNext = NULL,
+            .image = image,
+            .buffer = VK_NULL_HANDLE,
         };
 
         VkMemoryAllocateInfo memoryAllocateInfo =
         {
-            VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,                 // sType
-            &dedicatedInfo,                                         // pNext
-            memoryRequirements.size,                                // allocationSize
-            FindMemoryTypeIndex(memoryRequirements.memoryTypeBits), // memoryTypeIndex
+            .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+            .pNext = &dedicatedInfo,
+            .allocationSize = memoryRequirements.size,
+            .memoryTypeIndex = FindMemoryTypeIndex(memoryRequirements.memoryTypeBits),
         };
 
         VkDeviceMemory memory;
         vkAllocateMemory(
             device,
             &memoryAllocateInfo,
-            NULL,                       // pAllocator
+            NULL,               // pAllocator
             &memory);
 
         // Bind the image to the memory
@@ -130,8 +127,7 @@ include::{generated}/interfaces/VK_KHR_dedicated_allocation.adoc[]
     } else {
         // Take the normal memory sub-allocation path
     }
-
---------------------------------------
+----
 
 === Version History
 
@@ -139,10 +135,10 @@ include::{generated}/interfaces/VK_KHR_dedicated_allocation.adoc[]
   ** Copy content from VK_NV_dedicated_allocation
   ** Add some references to external object interactions to the overview.
 
-  * Revision 2, 2017-03-27 (Jason Ekstrand)
+  * Revision 2, 2017-03-27 (Faith Ekstrand)
   ** Rework the extension to be query-based
 
-  * Revision 3, 2017-07-31 (Jason Ekstrand)
+  * Revision 3, 2017-07-31 (Faith Ekstrand)
   ** Clarify that memory objects allocated with
      VkMemoryDedicatedAllocateInfoKHR can only have the specified resource
      bound and no others.

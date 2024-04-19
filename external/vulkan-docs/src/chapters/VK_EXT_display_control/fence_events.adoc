@@ -1,4 +1,4 @@
-// Copyright 2018-2022 The Khronos Group Inc.
+// Copyright 2018-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -10,6 +10,8 @@ signaled when a particular event occurs on a device or display.
 
 [open,refpage='vkRegisterDeviceEventEXT',desc='Signal a fence when a device event occurs',type='protos']
 --
+:refpage: vkRegisterDeviceEventEXT
+
 To create a fence that will be signaled when an event occurs on a device,
 call:
 
@@ -23,6 +25,8 @@ include::{generated}/api/protos/vkRegisterDeviceEventEXT.adoc[]
   * pname:pFence is a pointer to a handle in which the resulting fence
     object is returned.
 
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
+
 include::{generated}/validity/protos/vkRegisterDeviceEventEXT.adoc[]
 --
 
@@ -32,7 +36,7 @@ The sname:VkDeviceEventInfoEXT structure is defined as:
 
 include::{generated}/api/structs/VkDeviceEventInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:device is a elink:VkDeviceEventTypeEXT value specifying when the
@@ -57,6 +61,8 @@ include::{generated}/api/enums/VkDeviceEventTypeEXT.adoc[]
 
 [open,refpage='vkRegisterDisplayEventEXT',desc='Signal a fence when a display event occurs',type='protos']
 --
+:refpage: vkRegisterDisplayEventEXT
+
 To create a fence that will be signaled when an event occurs on a
 slink:VkDisplayKHR object, call:
 
@@ -71,6 +77,8 @@ include::{generated}/api/protos/vkRegisterDisplayEventEXT.adoc[]
   * pname:pFence is a pointer to a handle in which the resulting fence
     object is returned.
 
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
+
 include::{generated}/validity/protos/vkRegisterDisplayEventEXT.adoc[]
 --
 
@@ -80,7 +88,7 @@ The sname:VkDisplayEventInfoEXT structure is defined as:
 
 include::{generated}/api/structs/VkDisplayEventInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:displayEvent is a elink:VkDisplayEventTypeEXT specifying when the

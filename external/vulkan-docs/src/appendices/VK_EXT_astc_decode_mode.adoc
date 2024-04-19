@@ -1,4 +1,4 @@
-// Copyright 2018-2022 The Khronos Group Inc.
+// Copyright 2018-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -68,21 +68,20 @@ Create an image view that decodes to ename:VK_FORMAT_R8G8B8A8_UNORM
 precision:
 
 [source,c++]
-----------------------------------------
-
+----
     VkImageViewASTCDecodeModeEXT decodeMode =
     {
-        VK_STRUCTURE_TYPE_IMAGE_VIEW_ASTC_DECODE_MODE_EXT, // sType
-        NULL, // pNext
-        VK_FORMAT_R8G8B8A8_UNORM // decode mode
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_ASTC_DECODE_MODE_EXT,
+        .pNext = NULL,
+        .decodeMode = VK_FORMAT_R8G8B8A8_UNORM
     };
 
     VkImageViewCreateInfo createInfo =
     {
-        VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO, // sType
-        &decodeMode, // pNext
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .pNext = &decodeMode,
         // flags, image, viewType set to application-desired values
-        VK_FORMAT_ASTC_8x8_UNORM_BLOCK, // format
+        .format = VK_FORMAT_ASTC_8x8_UNORM_BLOCK,
         // components, subresourceRange set to application-desired values
     };
 
@@ -92,7 +91,7 @@ precision:
         &createInfo,
         NULL,
         &imageView);
-----------------------------------------
+----
 
 === Version History
 

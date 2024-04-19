@@ -1,4 +1,4 @@
-// Copyright 2015-2022 The Khronos Group Inc.
+// Copyright 2015-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -18,6 +18,11 @@ include::{generated}/api/handles/VkSampler.adoc[]
 
 [open,refpage='vkCreateSampler',desc='Create a new sampler object',type='protos']
 --
+:refpage: vkCreateSampler
+:objectnameplural: samplers
+:objectnamecamelcase: sampler
+:objectcount: 1
+
 To create a sampler object, call:
 
 include::{generated}/api/protos/vkCreateSampler.adoc[]
@@ -30,12 +35,15 @@ include::{generated}/api/protos/vkCreateSampler.adoc[]
   * pname:pSampler is a pointer to a slink:VkSampler handle in which the
     resulting sampler object is returned.
 
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
+
 .Valid Usage
 ****
   * [[VUID-vkCreateSampler-maxSamplerAllocationCount-04110]]
     There must: be less than
     slink:VkPhysicalDeviceLimits::pname:maxSamplerAllocationCount
     slink:VkSampler objects currently created on the device
+include::{chapters}/commonvalidity/memory_reservation_request_count_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCreateSampler.adoc[]
@@ -47,7 +55,7 @@ The sname:VkSamplerCreateInfo structure is defined as:
 
 include::{generated}/api/structs/VkSamplerCreateInfo.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is a bitmask of elink:VkSamplerCreateFlagBits describing
@@ -65,10 +73,9 @@ include::{generated}/api/structs/VkSamplerCreateInfo.adoc[]
   * pname:addressModeW is a elink:VkSamplerAddressMode value specifying the
     addressing mode for W coordinates outside [eq]#[0,1)#.
   * [[samplers-mipLodBias]] pname:mipLodBias is the bias to be added to
-    mipmap LOD (level-of-detail) calculation and bias provided by image
-    sampling functions in SPIR-V, as described in the
-    <<textures-level-of-detail-operation, Level-of-Detail Operation>>
-    section.
+    mipmap LOD calculation and bias provided by image sampling functions in
+    SPIR-V, as described in the <<textures-level-of-detail-operation, LOD
+    Operation>> section.
   * [[samplers-maxAnisotropy]] pname:anisotropyEnable is ename:VK_TRUE to
     enable anisotropic filtering, as described in the
     <<textures-texel-anisotropic-filtering, Texel Anisotropic Filtering>>
@@ -226,7 +233,7 @@ ifdef::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
     ename:VK_FALSE
 ifdef::VK_VERSION_1_2,VK_EXT_sampler_filter_minmax[]
   * [[VUID-VkSamplerCreateInfo-None-01647]]
-    if <<samplers-YCbCr-conversion,sampler {YCbCr} conversion>> is enabled
+    If <<samplers-YCbCr-conversion,sampler {YCbCr} conversion>> is enabled
     and the pname:pNext chain includes a
     slink:VkSamplerReductionModeCreateInfo structure, then the sampler
     reduction mode must: be set to
@@ -257,13 +264,14 @@ ifdef::VK_IMG_filter_cubic,VK_EXT_filter_cubic[]
     ename:VK_FALSE
 endif::VK_IMG_filter_cubic,VK_EXT_filter_cubic[]
 ifdef::VK_IMG_filter_cubic+VK_EXT_sampler_filter_minmax[]
-ifndef::VK_EXT_filter_cubic[]
-  * [[VUID-VkSamplerCreateInfo-magFilter-01422]]
-    If either pname:magFilter or pname:minFilter is
-    ename:VK_FILTER_CUBIC_EXT, the pname:reductionMode member of
-    slink:VkSamplerReductionModeCreateInfo must: be
-    ename:VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE
+  * [[VUID-VkSamplerCreateInfo-magFilter-07911]]
+    If
+ifdef::VK_EXT_filter_cubic[]
+    the apiext:VK_EXT_filter_cubic extension is not enabled and
 endif::VK_EXT_filter_cubic[]
+    either pname:magFilter or pname:minFilter is ename:VK_FILTER_CUBIC_EXT,
+    the pname:reductionMode member of slink:VkSamplerReductionModeCreateInfo
+    must: be ename:VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE
 endif::VK_IMG_filter_cubic+VK_EXT_sampler_filter_minmax[]
 ifdef::VK_VERSION_1_2,VK_EXT_sampler_filter_minmax[]
   * [[VUID-VkSamplerCreateInfo-compareEnable-01423]]
@@ -378,7 +386,7 @@ endif::VK_QCOM_image_processing[]
 include::{generated}/validity/structs/VkSamplerCreateInfo.adoc[]
 --
 
-[open,refpage='VK_LOD_CLAMP_NONE',desc='Maximum level of detail unclamped access sentinel',type='consts']
+[open,refpage='VK_LOD_CLAMP_NONE',desc='Maximum LOD unclamped access sentinel',type='consts']
 --
 ename:VK_LOD_CLAMP_NONE is a special constant value used for
 slink:VkSamplerCreateInfo::pname:maxLod to indicate that maximum LOD
@@ -411,8 +419,14 @@ ifdef::VK_QCOM_image_processing[]
   * [[samplers-imageprocessingsampler]]
     ename:VK_SAMPLER_CREATE_IMAGE_PROCESSING_BIT_QCOM specifies that the
     sampler will read from images using only code:OpImageWeightedSampleQCOM,
-    code:OpImageBoxFilterQCOM, code:OpImageBlockMatchSSDQCOM, or
-    code:OpImageBlockMatchSADQCOM.
+    code:OpImageBoxFilterQCOM,
+ifdef::VK_QCOM_image_processing2[]
+    code:OpImageBlockMatchGatherSSDQCOM,
+    code:OpImageBlockMatchGatherSADQCOM,
+    code:OpImageBlockMatchWindowSSDQCOM,
+    code:OpImageBlockMatchWindowSADQCOM,
+endif::VK_QCOM_image_processing2[]
+    code:OpImageBlockMatchSSDQCOM, or code:OpImageBlockMatchSADQCOM.
 endif::VK_QCOM_image_processing[]
 
 ifdef::VK_EXT_fragment_density_map[]
@@ -457,7 +471,7 @@ or the equivalent
 include::{generated}/api/structs/VkSamplerReductionModeCreateInfoEXT.adoc[]
 endif::VK_EXT_sampler_filter_minmax[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:reductionMode is a elink:VkSamplerReductionMode value controlling
@@ -496,8 +510,56 @@ endif::VK_EXT_sampler_filter_minmax[]
   * ename:VK_SAMPLER_REDUCTION_MODE_MAX specifies that texel values are
     combined by taking the component-wise maximum of values in the footprint
     with non-zero weights.
+ifdef::VK_QCOM_filter_cubic_clamp[]
+  * ename:VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE_RANGECLAMP_QCOM
+    specifies values are combined as described by
+    ename:VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE, followed by a
+    <<textures-texel-range-clamp,texel range clamp>>.
+endif::VK_QCOM_filter_cubic_clamp[]
 --
 endif::VK_VERSION_1_2,VK_EXT_sampler_filter_minmax[]
+
+ifdef::VK_QCOM_filter_cubic_weights[]
+[open,refpage='VkSamplerCubicWeightsCreateInfoQCOM',desc='Structure specifying sampler cubic weights',type='structs']
+--
+The sname:VkSamplerCubicWeightsCreateInfoQCOM structure is defined as:
+
+include::{generated}/api/structs/VkSamplerCubicWeightsCreateInfoQCOM.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:cubicWeights is a elink:VkCubicFilterWeightsQCOM value controlling
+    which cubic weights are used.
+
+If the pname:pNext chain of slink:VkSamplerCreateInfo includes a
+sname:VkSamplerCubicWeightsCreateInfoQCOM structure, then that structure
+specifies which cubic weights are used.
+
+If that structure is not present, pname:cubicWeights is considered to be
+ename:VK_CUBIC_FILTER_WEIGHTS_CATMULL_ROM_QCOM.
+
+include::{generated}/validity/structs/VkSamplerCubicWeightsCreateInfoQCOM.adoc[]
+--
+
+[open,refpage='VkCubicFilterWeightsQCOM',desc='Specify cubic weights for texture filtering',type='enums']
+--
+Possible values of the
+slink:VkSamplerCubicWeightsCreateInfoQCOM::pname:cubicWeights, specifying
+cubic weights used in <<textures-texel-cubic-filtering, Texel Cubic
+Filtering>> are:
+
+include::{generated}/api/enums/VkCubicFilterWeightsQCOM.adoc[]
+
+  * ename:VK_CUBIC_FILTER_WEIGHTS_CATMULL_ROM_QCOM specifies Catmull-Rom
+    weights.
+  * ename:VK_CUBIC_FILTER_WEIGHTS_ZERO_TANGENT_CARDINAL_QCOM specifies Zero
+    Tangent Cardinal weights.
+  * ename:VK_CUBIC_FILTER_WEIGHTS_B_SPLINE_QCOM specifies B-Spline weights.
+  * ename:VK_CUBIC_FILTER_WEIGHTS_MITCHELL_NETRAVALI_QCOM specifies
+    Mitchell-Netravali weights.
+--
+endif::VK_QCOM_filter_cubic_weights[]
 
 [open,refpage='VkFilter',desc='Specify filters used for texture lookups',type='enums']
 --
@@ -656,12 +718,14 @@ include::{generated}/api/protos/vkDestroySampler.adoc[]
   * [[VUID-vkDestroySampler-sampler-01082]]
     All submitted commands that refer to pname:sampler must: have completed
     execution
+ifndef::VKSC_VERSION_1_0[]
   * [[VUID-vkDestroySampler-sampler-01083]]
     If sname:VkAllocationCallbacks were provided when pname:sampler was
     created, a compatible set of callbacks must: be provided here
   * [[VUID-vkDestroySampler-sampler-01084]]
     If no sname:VkAllocationCallbacks were provided when pname:sampler was
     created, pname:pAllocator must: be `NULL`
+endif::VKSC_VERSION_1_0[]
 ****
 
 include::{generated}/validity/protos/vkDestroySampler.adoc[]
@@ -670,7 +734,7 @@ include::{generated}/validity/protos/vkDestroySampler.adoc[]
 
 ifdef::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
 [[samplers-YCbCr-conversion]]
-== Sampler {YCbCr} conversion
+== Sampler {YCbCr} Conversion
 
 [open,refpage='VkSamplerYcbcrConversionInfo',desc='Structure specifying {YCbCr} conversion to a sampler or image view',type='structs']
 --
@@ -704,7 +768,7 @@ or the equivalent
 include::{generated}/api/structs/VkSamplerYcbcrConversionInfoKHR.adoc[]
 endif::VK_KHR_sampler_ycbcr_conversion[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:conversion is a slink:VkSamplerYcbcrConversion handle created with
@@ -730,6 +794,11 @@ endif::VK_KHR_sampler_ycbcr_conversion[]
 
 [open,refpage='vkCreateSamplerYcbcrConversion',desc='Create a new {YCbCr} conversion',type='protos']
 --
+:refpage: vkCreateSamplerYcbcrConversion
+:objectnameplural: sampler conversions
+:objectnamecamelcase: samplerYcbcrConversion
+:objectcount: 1
+
 To create a slink:VkSamplerYcbcrConversion, call:
 
 ifdef::VK_VERSION_1_1[]
@@ -756,11 +825,14 @@ The interpretation of the configured sampler {YCbCr} conversion is described
 in more detail in <<textures-sampler-YCbCr-conversion,the description of
 sampler {YCbCr} conversion>> in the <<textures,Image Operations>> chapter.
 
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
+
 .Valid Usage
 ****
   * [[VUID-vkCreateSamplerYcbcrConversion-None-01648]]
     The <<features-samplerYcbcrConversion, pname:samplerYcbcrConversion>>
     feature must: be enabled
+include::{chapters}/commonvalidity/memory_reservation_request_count_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCreateSamplerYcbcrConversion.adoc[]
@@ -778,7 +850,7 @@ or the equivalent
 include::{generated}/api/structs/VkSamplerYcbcrConversionCreateInfoKHR.adoc[]
 endif::VK_KHR_sampler_ycbcr_conversion[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:format is the format of the image from which color information
@@ -834,20 +906,17 @@ endif::VK_ANDROID_external_memory_android_hardware_buffer[]
 
 .Valid Usage
 ****
-ifndef::VK_ANDROID_external_memory_android_hardware_buffer[]
-  * [[VUID-VkSamplerYcbcrConversionCreateInfo-format-04060]]
-    pname:format must: represent unsigned normalized values (i.e. the format
-    must be a etext:UNORM format)
-endif::VK_ANDROID_external_memory_android_hardware_buffer[]
 ifdef::VK_ANDROID_external_memory_android_hardware_buffer[]
   * [[VUID-VkSamplerYcbcrConversionCreateInfo-format-01904]]
     If an external format conversion is being created, pname:format must: be
     ename:VK_FORMAT_UNDEFINED
-  * [[VUID-VkSamplerYcbcrConversionCreateInfo-format-04061]]
-    If an external format conversion is not being created, pname:format
-    must: represent unsigned normalized values (i.e. the format must be a
-    etext:UNORM format)
 endif::VK_ANDROID_external_memory_android_hardware_buffer[]
+  * [[VUID-VkSamplerYcbcrConversionCreateInfo-format-04061]]
+ifdef::VK_ANDROID_external_memory_android_hardware_buffer[]
+    If an external format conversion is not being created,
+endif::VK_ANDROID_external_memory_android_hardware_buffer[]
+    pname:format must: represent unsigned normalized values (i.e. the format
+    must: be a etext:UNORM format)
   * [[VUID-VkSamplerYcbcrConversionCreateInfo-format-01650]]
     The <<potential-format-features, potential format features>> of the
     sampler {YCbCr} conversion must: support
@@ -914,6 +983,26 @@ endif::VK_ANDROID_external_memory_android_hardware_buffer[]
     sampler {YCbCr} conversion do not support
     ename:VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT,
     pname:chromaFilter must: not be ename:VK_FILTER_LINEAR
+ifdef::VK_QCOM_ycbcr_degamma[]
+  * [[VUID-VkSamplerYcbcrConversionCreateInfo-pNext-09207]]
+    If the pname:pNext chain includes a
+    slink:VkSamplerYcbcrConversionYcbcrDegammaCreateInfoQCOM structure, and
+    if the <<features-ycbcr-degamma,pname:ycbcrDegamma>> feature is not
+    enabled, then
+    slink:VkSamplerYcbcrConversionYcbcrDegammaCreateInfoQCOM::pname:enableYDegamma
+    must: be ename:VK_FALSE
+  * [[VUID-VkSamplerYcbcrConversionCreateInfo-pNext-09208]]
+    If the pname:pNext chain includes a
+    slink:VkSamplerYcbcrConversionYcbcrDegammaCreateInfoQCOM structure, and
+    if the <<features-ycbcr-degamma,pname:ycbcrDegamma>> feature is not
+    enabled, then
+    slink:VkSamplerYcbcrConversionYcbcrDegammaCreateInfoQCOM::pname:enableCbCrDegamma
+    must: be ename:VK_FALSE
+  * [[VUID-VkSamplerYcbcrConversionCreateInfo-pNext-09209]]
+    If the pname:pNext chain includes a
+    slink:VkSamplerYcbcrConversionYcbcrDegammaCreateInfoQCOM structure,
+    pname:format must: be a format with 8-bit R, G, and B components.
+endif::VK_QCOM_ycbcr_degamma[]
 ****
 
 include::{generated}/validity/structs/VkSamplerYcbcrConversionCreateInfo.adoc[]
@@ -1038,6 +1127,32 @@ endif::VK_KHR_sampler_ycbcr_conversion[]
     nearest higher odd luma sample.
 --
 
+ifdef::VK_QCOM_ycbcr_degamma[]
+[open,refpage='VkSamplerYcbcrConversionYcbcrDegammaCreateInfoQCOM',desc='Structure specifying {YCbCr} degamma parameters',type='structs']
+--
+Applications can: enable sRGB to linear conversion for the R, G, and B
+components of a {YCbCr} image during <<textures-ycbcr-degamma, format
+conversion>> by including
+sname:VkSamplerYcbcrConversionYcbcrDegammaCreateInfoQCOM structure in the
+pname:pNext chain of slink:VkSamplerYcbcrConversionCreateInfo.
+
+The sname:VkSamplerYcbcrConversionYcbcrDegammaCreateInfoQCOM structure is
+defined as:
+
+include::{generated}/api/structs/VkSamplerYcbcrConversionYcbcrDegammaCreateInfoQCOM.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:enableYDegamma indicates <<textures-ycbcr-degamma,sRGB to linear>>
+    conversion is enabled for the G component.
+  * pname:enableCbCrDegamma indicates <<textures-ycbcr-degamma,sRGB to
+    linear>> conversion is enabled for the R and B components.
+
+include::{generated}/validity/structs/VkSamplerYcbcrConversionYcbcrDegammaCreateInfoQCOM.adoc[]
+--
+endif::VK_QCOM_ycbcr_degamma[]
+
 [open,refpage='vkDestroySamplerYcbcrConversion',desc='Destroy a created {YCbCr} conversion',type='protos']
 --
 To destroy a sampler {YCbCr} conversion, call:
@@ -1073,7 +1188,7 @@ The sname:VkSamplerCustomBorderColorCreateInfoEXT structure is defined as:
 
 include::{generated}/api/structs/VkSamplerCustomBorderColorCreateInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:customBorderColor is a slink:VkClearColorValue representing the
@@ -1087,22 +1202,30 @@ include::{generated}/api/structs/VkSamplerCustomBorderColorCreateInfoEXT.adoc[]
 [NOTE]
 .Note
 ====
-If pname:format is a combined depth stencil format, the aspect is determined
-by the value of slink:VkSamplerCreateInfo::pname:pname:borderColor.
-If slink:VkSamplerCreateInfo::pname:pname:borderColor is
+If pname:format is a depth/stencil format, the aspect is determined by the
+value of slink:VkSamplerCreateInfo::pname:borderColor.
+If slink:VkSamplerCreateInfo::pname:borderColor is
 ename:VK_BORDER_COLOR_FLOAT_CUSTOM_EXT, the depth aspect is considered.
-If slink:VkSamplerCreateInfo::pname:pname:borderColor is
+If slink:VkSamplerCreateInfo::pname:borderColor is
 ename:VK_BORDER_COLOR_INT_CUSTOM_EXT, the stencil aspect is considered.
+
+If pname:format is ename:VK_FORMAT_UNDEFINED, the
+slink:VkSamplerCreateInfo::pname:borderColor is
+ename:VK_BORDER_COLOR_INT_CUSTOM_EXT, and the sampler is used with an image
+with a stencil format, then the implementation must: source the custom
+border color from either the first or second components of
+slink:VkSamplerCreateInfo::pname:customBorderColor and should: source it
+from the first component.
 ====
 
 .Valid Usage
 ****
   * [[VUID-VkSamplerCustomBorderColorCreateInfoEXT-format-07605]]
     If pname:format is not ename:VK_FORMAT_UNDEFINED and pname:format is not
-    a combined depth stencil format then the
+    a depth/stencil format then the
     slink:VkSamplerCreateInfo::pname:borderColor type must: match the
-    sampled type of the provided pname:format, as shown in the _SPIR-V
-    Sampled Type_ column of the <<formats-numericformat>> table
+    sampled type of the provided pname:format, as shown in the _SPIR-V Type_
+    column of the <<formats-numericformat>> table
   * [[VUID-VkSamplerCustomBorderColorCreateInfoEXT-format-04014]]
     If the <<features-customBorderColorWithoutFormat,
     pname:customBorderColorWithoutFormat>> feature is not enabled then
@@ -1110,9 +1233,12 @@ ename:VK_BORDER_COLOR_INT_CUSTOM_EXT, the stencil aspect is considered.
   * [[VUID-VkSamplerCustomBorderColorCreateInfoEXT-format-04015]]
     If the sampler is used to sample an image view of
     ename:VK_FORMAT_B4G4R4A4_UNORM_PACK16,
-    ename:VK_FORMAT_B5G6R5_UNORM_PACK16, or
-    ename:VK_FORMAT_B5G5R5A1_UNORM_PACK16 format then pname:format must: not
-    be ename:VK_FORMAT_UNDEFINED
+    ename:VK_FORMAT_B5G6R5_UNORM_PACK16,
+ifdef::VK_KHR_maintenance5[]
+    ename:VK_FORMAT_A1B5G5R5_UNORM_PACK16_KHR,
+endif::VK_KHR_maintenance5[]
+    or ename:VK_FORMAT_B5G5R5A1_UNORM_PACK16 format then pname:format must:
+    not be ename:VK_FORMAT_UNDEFINED
 ****
 
 include::{generated}/validity/structs/VkSamplerCustomBorderColorCreateInfoEXT.adoc[]
@@ -1139,7 +1265,7 @@ defined as:
 
 include::{generated}/api/structs/VkSamplerBorderColorComponentMappingCreateInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:components is a slink:VkComponentMapping structure specifying a
@@ -1161,3 +1287,47 @@ shader image instructions when the border color is used.
 include::{generated}/validity/structs/VkSamplerBorderColorComponentMappingCreateInfoEXT.adoc[]
 --
 endif::VK_EXT_border_color_swizzle[]
+
+ifdef::VK_QCOM_image_processing2[]
+[open,refpage='VkSamplerBlockMatchWindowCreateInfoQCOM',desc='Structure specifying the block match window parameters',type='structs']
+--
+
+The sname:VkSamplerBlockMatchWindowCreateInfoQCOM structure is defined as:
+
+include::{generated}/api/structs/VkSamplerBlockMatchWindowCreateInfoQCOM.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:windowExtent is a slink:VkExtent2D specifying a the width and
+    height of the block match window.
+  * pname:windowCompareMode is a elink:VkBlockMatchWindowCompareModeQCOM
+    specifying the compare mode.
+
+.Valid Usage
+****
+  * [[VUID-VkSamplerBlockMatchWindowCreateInfoQCOM-WindowExtent-09210]]
+    pname:WindowExtent must: not be larger than
+    slink:VkPhysicalDeviceImageProcessing2PropertiesQCOM::pname:maxBlockMatchWindow.
+****
+
+include::{generated}/validity/structs/VkSamplerBlockMatchWindowCreateInfoQCOM.adoc[]
+--
+
+[open,refpage='VkBlockMatchWindowCompareModeQCOM',desc='Block match window compare modes',type='enums']
+--
+The elink:VkBlockMatchWindowCompareModeQCOM enum describes how block match
+values within the window are compared.
+elink:VkBlockMatchWindowCompareModeQCOM is defined as:
+
+include::{generated}/api/enums/VkBlockMatchWindowCompareModeQCOM.adoc[]
+
+  * ename:VK_BLOCK_MATCH_WINDOW_COMPARE_MODE_MIN_QCOM specifies that
+    windowed block match operations return the minimum error within the
+    window.
+  * ename:VK_BLOCK_MATCH_WINDOW_COMPARE_MODE_MAX_QCOM specifies that
+    windowed block match operations return the maximum error within the
+    window.
+--
+endif::VK_QCOM_image_processing2[]
+

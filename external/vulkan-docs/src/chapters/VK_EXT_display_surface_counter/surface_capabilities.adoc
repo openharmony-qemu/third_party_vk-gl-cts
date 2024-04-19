@@ -1,9 +1,11 @@
-// Copyright 2018-2022 The Khronos Group Inc.
+// Copyright 2018-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
 [open,refpage='vkGetPhysicalDeviceSurfaceCapabilities2EXT',desc='Query surface capabilities',type='protos']
 --
+:refpage: vkGetPhysicalDeviceSurfaceCapabilities2EXT
+
 To query the basic capabilities of a surface, needed in order to create a
 swapchain, call:
 
@@ -22,6 +24,8 @@ flink:vkGetPhysicalDeviceSurfaceCapabilitiesKHR, with the ability to return
 extended information by adding extending structures to the pname:pNext chain
 of its pname:pSurfaceCapabilities parameter.
 
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
+
 .Valid Usage
 ****
 include::{chapters}/commonvalidity/surface_physical_device_common.adoc[]
@@ -36,7 +40,7 @@ The sname:VkSurfaceCapabilities2EXT structure is defined as:
 
 include::{generated}/api/structs/VkSurfaceCapabilities2EXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 include::{chapters}/VK_KHR_surface/wsi.adoc[tag=surface_capabilities_members]

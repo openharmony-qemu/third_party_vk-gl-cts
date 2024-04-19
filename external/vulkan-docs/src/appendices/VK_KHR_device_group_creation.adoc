@@ -1,4 +1,4 @@
-// Copyright 2016-2022 The Khronos Group Inc.
+// Copyright 2016-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -10,8 +10,6 @@ include::{generated}/meta/{refprefix}VK_KHR_device_group_creation.adoc[]
     2016-10-19
 *IP Status*::
     No known IP claims.
-*Interactions and External Dependencies*::
-  - Promoted to Vulkan 1.1 Core
 *Contributors*::
   - Jeff Bolz, NVIDIA
 
@@ -35,8 +33,7 @@ include::{generated}/interfaces/VK_KHR_device_group_creation.adoc[]
 === Examples
 
 [source,c++]
-----------------------------------------
-
+----
     VkDeviceCreateInfo devCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
     // (not shown) fill out devCreateInfo as usual.
     uint32_t deviceGroupCount = 0;
@@ -64,8 +61,7 @@ include::{generated}/interfaces/VK_KHR_device_group_creation.adoc[]
 
     vkCreateDevice(props[0].physicalDevices[0], &devCreateInfo, NULL, &g_vkDevice);
     free(props);
-
-----------------------------------------
+----
 
 === Version History
 

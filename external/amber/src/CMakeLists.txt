@@ -47,13 +47,17 @@ option(AMBER_USE_LOCAL_VULKAN "Build with vulkan in third_party" OFF)
 option(AMBER_USE_CLSPV "Build with Clspv support" OFF)
 option(AMBER_ENABLE_SWIFTSHADER
   "Build using SwiftShader" ${AMBER_ENABLE_SWIFTSHADER})
-option(AMBER_ENABLE_VK_DEBUGGING
-  "Build with cppdap debugging support" ${AMBER_ENABLE_VK_DEBUGGING})
 option(AMBER_ENABLE_RTTI
   "Build with runtime type information" OFF)
+option(AMBER_DISABLE_WERROR "Build without the -Werror flag" ${AMBER_DISABLE_WERROR})
+option(AMBER_DISABLE_WEVERYTHING "Build without the -Weverything flag" ${AMBER_DISABLE_WEVERYTHING})
+
+if (${AMBER_ENABLE_VK_DEBUGGING})
+  message(FATAL_ERROR "Amber no longer supports Vulkan debugging")
+endif()
 
 if (${AMBER_USE_CLSPV} OR ${AMBER_ENABLE_SWIFTSHADER})
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
 else()
   set(CMAKE_CXX_STANDARD 11)
 endif()
@@ -153,7 +157,6 @@ add_definitions(-DAMBER_ENABLE_SHADERC=$<BOOL:${AMBER_ENABLE_SHADERC}>)
 add_definitions(-DAMBER_ENABLE_DXC=$<BOOL:${AMBER_ENABLE_DXC}>)
 add_definitions(-DAMBER_ENABLE_CLSPV=$<BOOL:${AMBER_ENABLE_CLSPV}>)
 add_definitions(-DAMBER_ENABLE_LODEPNG=$<BOOL:${AMBER_ENABLE_LODEPNG}>)
-add_definitions(-DAMBER_ENABLE_VK_DEBUGGING=$<BOOL:${AMBER_ENABLE_VK_DEBUGGING}>)
 add_definitions(-DAMBER_ENABLE_RTTI=$<BOOL:${AMBER_ENABLE_RTTI}>)
 
 set(CMAKE_DEBUG_POSTFIX "")
@@ -205,13 +208,16 @@ function(amber_default_compile_options TARGET)
       -fno-exceptions
       -fvisibility=hidden
       -Wall
-      -Werror
       -Wextra
+      -Wno-cast-function-type-strict
       -Wno-padded
       -Wno-switch-enum
       -Wno-unknown-pragmas
       -pedantic-errors
     )
+    if (NOT ${AMBER_DISABLE_WERROR})
+      target_compile_options(${TARGET} PRIVATE -Werror)
+    endif()
 
     if(NOT ${AMBER_ENABLE_RTTI})
       target_compile_options(${TARGET} PRIVATE -fno-rtti)
@@ -223,8 +229,10 @@ function(amber_default_compile_options TARGET)
         -Wno-c++98-compat-pedantic
         -Wno-format-pedantic
         -Wno-unknown-warning-option
-        -Weverything
       )
+      if (NOT ${AMBER_DISABLE_WEVERYTHING})
+        target_compile_options(${TARGET} PRIVATE -Weverything)
+      endif()
     endif()
   endif()
 

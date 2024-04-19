@@ -1,4 +1,4 @@
-// Copyright 2015-2022 The Khronos Group Inc.
+// Copyright 2015-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -170,8 +170,10 @@ Khronos has registered some author IDs for specific uses:
 
   * KHR is used for Khronos-ratified extensions.
   * EXT is used for multi-vendor extensions.
-    These are extensions that have not been ratified, but are intended to be
-    exposed by implementations from multiple vendors.
+    These are extensions intended to be exposed by implementations from
+    multiple vendors.
+    Historically these extensions were not ratified, but Khronos has begun
+    retroactively ratifying selected `EXT` extensions.
 
 [NOTE]
 .Note
@@ -274,7 +276,7 @@ Validation Layers, and a variety of language bindings.
 
 
 [[extensions-author-ID]]
-== Registering an Author ID with Khronos
+== Registering an Author ID With Khronos
 
 Previous Khronos APIs could only officially be modified by Khronos members.
 In an effort to build a more flexible platform, Vulkan allows non-Khronos
@@ -305,7 +307,7 @@ faith.
 
 
 [[extensions-vendor-id]]
-== Registering a Vendor ID with Khronos
+== Registering a Vendor ID With Khronos
 
 Vulkan implementors must report a valid vendor ID for their implementation
 when queried by fname:vkGetPhysicalDeviceProperties, as described in the
@@ -431,8 +433,8 @@ conditionals.
 The changes are only visible in generated documentation when the
 Specification is built with an asciidoctor attribute of that name defined.
 Khronos publishes three forms of the Vulkan Specification: the core API
-(e.g. versions 1.x) only; core API with all registered `KHR` extensions; and
-core API with all registered extensions.
+(e.g. versions 1.x) only; core API with all registered `KHR` and `EXT`
+extensions; and core API with all registered extensions.
 
 
 [[extensions-documenting-extensions]]
@@ -643,52 +645,48 @@ sed -i -E 's/`?<<(VK_[A-Za-z0-9_]*)>>`?/`apiext:\1`/g' chapters/{*.adoc,*/*.adoc
   * Valid usage statements referring to interactions between structures in a
     pname:pNext chain must be described in the parent structure's language,
     as specified <<extensions-interactions-parent, in more detail below>>.
-  * Valid usage statements must: be kept atomic with regards to extension
-    conditionals.
-    Do not surround part of a single statement with conditionals.
-    Valid usage statements are automatically extracted from the
-    specification for use by ecosystem components like the validation
-    layers, and the extraction scripts need to know which valid usage
-    statements apply to which extensions.
-    The loops required to deal with partial statements are simply not worth
-    the trouble.
-    For example, instead of
+  * Valid usage statements should be written including all relevant version
+    and extension information embedded in the text, and surrounded by
+    preprocessor directives as necessary, rather than simply relying on an
+    `ifdef` to take care of it.
+    For example, instead of:
 +
 [source,asciidoc]
 .Example Markup
 ----
-  * If pname:buffer was created with a sharing mode of
-    ename:VK_SHARING_MODE_EXCLUSIVE, pname:srcQueueFamilyIndex and
-    pname:dstQueueFamilyIndex must: either both be
-    ename:VK_QUEUE_FAMILY_IGNORED, or both be a valid queue family (see
-    <<devsandqueues-queueprops>>)
-\ifdef::VK_KHR_external_memory[]
-    unless one of them is ename:VK_QUEUE_FAMILY_EXTERNAL_KHR and the other
-    is ename:VK_QUEUE_FAMILY_IGNORED.
-\endif::VK_KHR_external_memory[]
+\ifndef::VK_VERSION_1_3[]
+  * At least one of the following must: be true:
+\ifdef::VK_EXT_extended_dynamic_state[]
+  ** the <<features-extendedDynamicState, pname:extendedDynamicState>>
+     feature is enabled
+\endif::VK_EXT_extended_dynamic_state[]
+\ifdef::VK_EXT_shader_object[]
+  ** the <<features-shaderObject, pname:shaderObject>>
+     feature is enabled
+\endif::VK_EXT_shader_object[]
+\endif::VK_VERSION_1_3[]
 ----
 +
-Use
+where the version overrides the need for the features, add a condition for
+the version too:
 +
 [source,asciidoc]
 .Example Markup
 ----
-ifndef::VK_KHR_external_memory[]
-  * If pname:buffer was created with a sharing mode of
-    ename:VK_SHARING_MODE_EXCLUSIVE, pname:srcQueueFamilyIndex and
-    pname:dstQueueFamilyIndex must: either both be
-    ename:VK_QUEUE_FAMILY_IGNORED, or both be a valid queue family (see
-    <<devsandqueues-queueprops>>)
-endif::VK_KHR_external_memory[]
-ifdef::VK_KHR_external_memory[]
-  * If pname:buffer was created with a sharing mode of
-    ename:VK_SHARING_MODE_EXCLUSIVE, pname:srcQueueFamilyIndex and
-    pname:dstQueueFamilyIndex must: either both be
-    ename:VK_QUEUE_FAMILY_IGNORED, both be a valid queue family (see
-    <<devsandqueues-queueprops>>), or be
-    ename:VK_QUEUE_FAMILY_EXTERNAL_KHR and ename:VK_QUEUE_FAMILY_IGNORED in
-    either order
-endif::VK_KHR_external_memory[]
+  * At least one of the following must: be true:
+\ifdef::VK_EXT_extended_dynamic_state[]
+  ** the <<features-extendedDynamicState, pname:extendedDynamicState>>
+     feature is enabled
+\endif::VK_EXT_extended_dynamic_state[]
+\ifdef::VK_EXT_shader_object[]
+  ** the <<features-shaderObject, pname:shaderObject>>
+     feature is enabled
+\endif::VK_EXT_shader_object[]
+\ifdef::VK_VERSION_1_3[]
+  ** the value of slink:VkApplicationInfo::pname:apiVersion used to create
+     the slink:VkInstance parent of pname:commandBuffer is greater than or
+     equal to Version 1.3
+\endif::VK_VERSION_1_3[]
 ----
 
 When writing language dependent on the interaction of multiple extensions,
@@ -784,6 +782,7 @@ Add a new feature:
     versions.
 
 
+[[extensions-assigning-token-values]]
 == Assigning Extension Token Values
 
 Extensions can define their own enumeration types and assign any values to
@@ -833,11 +832,13 @@ The information needed to add new values to the XML are as follows:
     (`dir="-"`) when needed for negative etext:VkResult values indicating
     errors, like etext:VK_ERROR_SURFACE_LOST_KHR.
     The default direction is positive, if not specified.
+  * The **extension number** is usually implicit and taken from metadata of
+    the extension being defined.
+    It is used to create a range of unused values specific to that
+    extension.
 
-Implicit is the registered number of an extension, which is used to create a
-range of unused values offset against a global extension base value.
-Individual enumerant values are calculated as offsets in that range.
-Values are calculated as follows:
+Individual enumerant values are calculated as offsets in the range defined
+by the extension number, as follows:
 
   * [eq]#_base_value_ = 1000000000#
   * [eq]#_range_size_ = 1000#
@@ -847,12 +848,15 @@ Values are calculated as follows:
   * Negative values: [eq]#enum_offset(_extension_number_, _offset_})#
 
 The exact syntax for specifying extension enumerant values is defined in the
-`readme.pdf` specifying the format of `vk.xml`, and extension authors can
-also refer to existing extensions for examples.
+<<vulkan-registry, Vulkan API Registry>> schema documentation.
+Extension authors should also refer to existing extensions for examples.
 
-If an extension becomes part of core, the enumerant values should remain the
-same as they were in the original extension, in order to maintain binary
-compatibility with existing applications.
+If an extension is promoted to another extension or to a core API version,
+the enumerant values should remain the same as they were in the original
+extension, in order to maintain binary compatibility with existing
+applications.
+In this case, the extension number will need to be specified explicitly to
+keep the promoted enumerant value unchanged.
 
 
 [[extensions-reserving-bitmask-values]]
@@ -878,6 +882,10 @@ An example reservation for a disabled extension is:
     <enum bitpos="6" extends="VkQueueFlagBits" name="VK_QUEUE_RESERVED_6_BIT_KHR"/>
 ----
 
+Bit position 31 may not be used, due to inconsistent behavior by C
+compilers.
+This is enforced by the generator scripts.
+
 [NOTE]
 .Note
 ====
@@ -896,7 +904,7 @@ When a 32-bit flags type is close to running out of bits, a corresponding
 tlink:VkAccessFlags and tlink:VkAccessFlags2KHR types.
 These flag types have corresponding 32- and 64-bit bitmask types
 (elink:VkAccessFlagBits and elink:VkAccessFlagBits2KHR).
-When reserving remaining bits at bit positions 0 through 31, a similarly
+When reserving remaining bits at bit positions 0 through 30, a similarly
 named bit should be reserved in both bitmask types
 (ename:VK_ACCESS_MEMORY_READ_BIT and ename:VK_ACCESS_2_MEMORY_READ_BIT), to
 avoid having the same bit used for different purposes in two otherwise very
@@ -953,9 +961,8 @@ extensions must define two additional tokens.
     differ.
     The revision value indicates a patch version of the extension
     specification, and differences in this version number maintain full
-    compatibility, as defined in the
-    link:html/vkspec.html#_compatibility_guarantees_informative[Compatibility
-    Guarantees] section of the <<vulkan-spec,Vulkan API Specification>>.
+    compatibility, as defined in the "`Compatibility Guarantees`" section of
+    the <<vulkan-spec,Vulkan API Specification>>.
 
 [NOTE]
 .Note
@@ -1060,7 +1067,7 @@ implementations.
 ====
 
 
-== Accessing Extension Functions from Programs
+== Accessing Extension Functions From Programs
 
 fname:vkGetInstanceProcAddr and fname:vkGetDeviceProcAddr can be used in
 order to obtain function pointer addresses for core and extension commands
@@ -1132,8 +1139,8 @@ discouraged.
 ====
 
 Validation of structure types in pname:pNext chains is automatically
-generated from the registry, based on the description of attr:structextends
-in link:registry.html[the registry document].
+generated from the registry, based on the description of `structextends` in
+link:registry.html[the registry document].
 
 
 [[extensions-interactions-parent]]

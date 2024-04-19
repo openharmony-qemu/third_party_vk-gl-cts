@@ -1,9 +1,20 @@
-// Copyright 2015-2022 The Khronos Group Inc.
+// Copyright 2015-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
 [[writing]]
 = Writing Style
+
+New specification language should, whenever possible, closely follow related
+examples in the existing specification documents.
+
+Whenever possible follow existing API design patterns.
+Some specific patterns to follow (this list is very incomplete) include:
+
+  * Behavior of queries which return arrays of unknown length (see e.g.
+    `vkEnumeratePhysicalDevices`).
+  * Behavior of creation commands which create multiple objects at once (see
+    e.g. `vkCreateGraphicsPipelines`).
 
 
 [[writing-misc]]
@@ -21,6 +32,26 @@ the "`and`" separating the last item.
 Also see this
 link:https://blog.oxforddictionaries.com/2015/01/21/video-oxford-comma/[video
 discussion of the Oxford comma] provided by the Oxford Dictionary.
+
+
+[[writing-titlecase]]
+=== Use AP Title Case for Chapter and Section Titles
+
+Here is a link:https://titlecaseconverter.com/rules/[summary] of the rules:
+
+  * Capitalize the first word and the last word of the title.
+  * Capitalize the principal words.
+  * Capitalize "`to`" in infinitives.
+  * Capitalize all words of four letters or more.
+  * Do not capitalize articles, conjunctions, and prepositions of three
+    letters or fewer.
+
+[NOTE]
+.Note
+====
+The actual AP style guide is behind a paywall.
+The summary here is from a commercial website.
+====
 
 
 === Date Format
@@ -209,8 +240,9 @@ Never use the redundant terminology "`any *given* element`".
 === Compound Words and Preferred Orthography
 
 Unless there is longstanding precedent in computer science literature, or
-the word is a noted exception in the table below, do not arbitrarily cram
-terms together.
+the word is a <<spelling-exception-table, noted exception>>, do not
+arbitrarily combine terms together with hyphens, or as a single compound
+word without hyphens.
 
 This does not apply to parameter names in the API, where capitalization is
 used to distinguish words.
@@ -249,23 +281,39 @@ of a structure as a "`color space`" value.
 | render pass   | renderpass     |
 | reuse         | re-use         |
 | side effect   | side-effect    |
-3+h| Exceptions
+| use case      | use-case       |
+|====
+
+[[spelling-exception-table]]
+.Spelling Exceptions
+[width="70%",options="header",cols="20%,20%,60%"]
+|====
+| general-purpose
+                | general purpose| When used as an adjective
+| happen-before +
+  happen-after  | happen before +
+                  happen after   | As used in concurrent languages such as
+                                   C++11, Java and OpenCL C.
+| implementation-dependent
+                | implementation dependent
+                                 | When used as an adjective
 | mipmap        | mip map        | Exception for historical reasons
 | pname:pNext chain
                 | pname:pNext-chain, +
                   pname:pNext extension chain
                                  |
-| general-purpose
-                | general purpose| When used as an adjective
-| implementation-dependent
-                | implementation dependent
-                                 | When used as an adjective
 | swapchain     | swap chain     | Exception due to heavy use in WSI extensions
-| happen-before +
-  happen-after  | happen before +
-                  happen after   | As used in concurrent languages such as
-                                   C++11, Java and OpenCL C.
 |====
+
+[NOTE]
+.Note
+====
+These examples are not complete, and will be added to over time when there
+is reason to.
+
+Different sources and individuals can and do reasonably disagree with regard
+to some of the examples.
+====
 
 
 ==== Words With "Pre-" Prefixes
@@ -286,8 +334,8 @@ Association for Computing Machinery Citation Style>>.
 Most citations in our specifications should follow the _For an online
 document/WWW resource_ style, using the actual date on the document being
 referenced rather than the document retrieval date.
-See the <<vulkan-spec, Vulkan Specification>> citation in this document for
-an example.
+See the <<vulkan-spec, Vulkan API Specification>> citation in this document
+for an example.
 
 
 [[writing-undefined]]
@@ -360,7 +408,7 @@ Occasional non-normative explanations can be included in the
 
 
 [[writing-describing-errors]]
-=== Commands which Return Error Codes
+=== Commands Which Return Error Codes
 
 Commands which return elink:VkResult values must list all possible error
 codes for the command in the `errorcodes` XML attribute for the command.
@@ -561,14 +609,14 @@ Some workarounds we use are:
 .LaTeX math replacements for KaTeX compatibility
 [width="70%",options="header",cols="20%,20%,60%"]
 |====
-| Replace              | With              | Comments
-| `\begin{equation}`   | _nothing_         | Unnecessary in blocks. Should not be used for inline.
-| `\end{equation}`     | _nothing_         | Unnecessary in blocks. Should not be used for inline.
-| `\begin{align*}`     | `\begin{aligned}` |
-| `\end{align*}`       | `\end{aligned}`   |
-| `\operatorname{foo}` | `\mathbin{foo}`   |
-| `{\rm A}`            | `\mathrm{A}`      |
-| `\text{for }`        | `\text{for}\ `    | Text ending in spaces is unpredictable - favour escaped spaces after text
+| Replace                  | With                  | Comments
+| `++\begin{equation}++`, +
+  `++\end{equation}++`     | _nothing_             | Unnecessary in blocks. Should not be used for inline.
+| `\begin{align*}`         | `++\begin{aligned}++` |
+| `\end{align*}`           | `++\end{aligned}++`   |
+| `++\operatorname{foo}++` | `++\mathbin{foo}++`   |
+| `{\rm A}`                | `++\mathrm{A}++`      |
+| `\text{for }`            | `\text{++for++}\`     | Text ending in spaces is unpredictable - favour escaped spaces after text
 |====
 
 The KaTeX repository provides a
@@ -722,13 +770,13 @@ from the `\{generated}/api/protos/` directory:
 // https://discuss.asciidoctor.org/Another-markup-escaping-question-td5665.html
 
 [source,asciidoc,subs=attributes+]
-~~~~
+----
 [open,refpage='vkCreateCommandPool',desc='Create a new command pool object',type='protos']
 {blank}--
 To create a command pool, call:
 
 \include::\{generated}/api/protos/vkCreateCommandPool.adoc[]
-~~~~
+----
 
 Note that each autogenerated command, enumeration, flag, or structure
 definition include file also defines a corresponding asciidoctor anchor
@@ -785,22 +833,22 @@ If there is a general description of the command, add it following the
 parameter descriptions:
 
 [source,asciidoc,subs=attributes+]
-~~~~
+----
 This is a general description of creating a command pool.
-~~~~
+----
 
 If there are _explicit_ valid usage statements for the command, add them in
 their own valid usage block:
 
 [source,asciidoc,subs=attributes+]
-~~~~
+----
 .Valid Usage
 ****
   * [[VUID-vkCreateCommandPool-queueFamilyIndex-01937]]
     pname:pCreateInfo->queueFamilyIndex must: be the index of a queue family
     available in the logical device pname:device
 ****
-~~~~
+----
 
 Although a valid usage ID is shown in the rendered example above, do not
 specify the ID when initially writing the statement, as
@@ -816,10 +864,10 @@ It is harmless to include a nonexistent file, in the rare cases where no
 implicit validity language exists.
 
 [source,asciidoc,subs=attributes+]
-~~~~
+----
 \include::\{generated}/validity/protos/vkCreateCommandPool.adoc[]
 {blank}--
-~~~~
+----
 
 Close the open block surrounding the command description after the implicit
 validity include.
@@ -856,17 +904,17 @@ After the description, include the autogenerated definition for the
 structure from the `\{generated}/api/structs/` directory:
 
 [source,asciidoc,subs=attributes+]
-~~~~
+----
 [open,refpage='VkCommandPoolCreateInfo',desc='Structure specifying parameters of a newly created command pool',type='structs']
 {blank}--
 
 The sname:VkCommandPoolCreateInfo structure is defined as:
 
 \include::\{generated}/api/structs/VkCommandPoolCreateInfo.adoc[]
-~~~~
+----
 ====
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 +
@@ -892,8 +940,8 @@ boilerplate for their descriptions.
 Descriptions of other members of the structure follow.
 
 [source,asciidoc,subs=attributes+]
-~~~~
-  * pname:sType is the type of this structure.
+----
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 +
@@ -909,7 +957,7 @@ based on.
     <<devsandqueues-queueprops,Queue Family Properties>>.
     All command buffers allocated from this command pool must: be submitted
     on queues from the same queue family.
-~~~~
+----
 
 These entries should be short and functional, without describing details of
 e.g. new enumerant values, function of individual parameter settings, etc.
@@ -948,7 +996,7 @@ include in the same fashion as described for commands above, then close the
 open block.
 
 [source,asciidoc,subs=attributes+]
-~~~~
+----
 .Valid Usage
 ****
 ifdef::VK_VERSION_1_1[]
@@ -961,7 +1009,7 @@ endif::VK_VERSION_1_1[]
 
 \include::\{generated}/validity/structs/VkCommandPoolCreateInfo.adoc[]
 {blank}--
-~~~~
+----
 ====
 
 [open,refpage='VkCommandPoolCreateFlagBits',desc='Bitmask specifying usage behavior for a command pool',type='enums']
@@ -981,14 +1029,14 @@ commands and structures.
 Use boilerplate language similar to that above to introduce the type.
 
 [source,asciidoc,subs=attributes+]
-~~~~
+----
 [open,refpage='VkCommandPoolCreateFlagBits',desc='Bitmask specifying usage behavior for a command pool',type='enums']
 {blank}--
 Bits which can: be set in slink:VkCommandPoolCreateInfo::pname:flags to
 specify usage behavior for a command pool are:
 
 \include::\{generated}/api/enums/VkCommandPoolCreateFlagBits.adoc[]
-~~~~
+----
 ====
 
   * ename:VK_COMMAND_POOL_CREATE_TRANSIENT_BIT specifies that command
@@ -1012,7 +1060,7 @@ core versions with asciidoctor conditionals.
 Close the open block after all enumerants are described.
 
 [source,asciidoc,subs=attributes+]
-~~~~
+----
   * ename:VK_COMMAND_POOL_CREATE_TRANSIENT_BIT specifies that command
     buffers allocated from the pool will be short-lived, meaning that they
     will be reset or freed in a relatively short timeframe.
@@ -1023,7 +1071,7 @@ Close the open block after all enumerants are described.
     buffers allocated from the pool are protected command buffers.
 \endif::VK_VERSION_1_1[]
 {blank}--
-~~~~
+----
 ====
 
 
@@ -1050,20 +1098,25 @@ consistency.
 In many cases, it may lead to a simpler VU statement, or splitting one large
 VU into multiple new ones.
 
-Do not use nested bullet lists or other writing structure where valid usage
-statements are not self-contained.
-This would make it impossible to extract semantically meaningful
-descriptions for each assigned <<vuid, Valid Usage ID Tag>>.
+A valid usage statement may used nested bullet lists or other asciidoc
+markup.
 
 Be clear on the distinction between a "`valid pointer`" and a "`pointer to a
 valid object`" when writing valid usage statements.
 See the "`Valid Usage`" section of the Vulkan Specification, and
 particularly the "`Valid Usage for Pointers`" section.
 
-When valid usage statements apply only when specific extensions and/or core
-API versions are enabled at runtime, surround those statements in their
-entirety with appropriate asciidoctor conditionals.
-Never use asciidoctor conditionals _inside_ a valid usage statement.
+When clauses in valid usage statements apply only when specific extensions
+and/or core API versions are enabled at runtime, use appropriate asciidoctor
+conditionals around such clauses.
+
+[NOTE]
+====
+Prior to specification update 1.3.255, there were stronger restrictions on
+placement of asciidoctor conditionals that have been relaxed, allowing
+writing such valid usage statements in a more natural manner and with less
+duplication of language.
+====
 
 Explicit valid usage statements must be assigned Valid Usage ID tags before
 publication.
@@ -1094,7 +1147,7 @@ and then the file can be included in the relevant API features using
 standard include syntax:
 
 [source,asciidoc,subs=attributes+]
-~~~~
+----
 .Valid Usage
 ****
 \include::\{chapters}/commonvalidity/draw_common.adoc[]
@@ -1103,7 +1156,7 @@ standard include syntax:
     sname:VkPhysicalDeviceTransformFeedbackFeaturesEXT::pname:transformFeedback
     must: be enabled
 ****
-~~~~
+----
 
 Common VU includes should appear before individual VUs for consistency.
 
@@ -1114,7 +1167,7 @@ statement bullets outside of a valid usage block.
 For example:
 
 [source,asciidoc]
-~~~~
+----
 // Common Valid Usage
 // Common to drawing commands that consume vertex binding state
   * All vertex input bindings accessed via vertex input variables declared
@@ -1124,7 +1177,7 @@ For example:
     entirely contained within the corresponding vertex buffer binding, as
     described in <<fxvertex-input>>
 // Common Valid Usage
-~~~~
+----
 
 Finally, the original feature section needs to define the `:refpage:`
 attribute to match the name of the feature, as this is used to correctly
@@ -1132,11 +1185,11 @@ generate links to expanded common valid usage statements in the built
 specification.
 
 [source,asciidoc]
-~~~~
+----
 [open,refpage='vkCmdDrawIndirectByteCountEXT',desc='Draw primitives where the vertex count is derived from the counter byte value in the counter buffer',type='protos']
 --
 :refpage: vkCmdDrawIndirectByteCountEXT
-~~~~
+----
 
 In general, this methodology should be preferred over any other method of
 consolidation - e.g. calling out a block of common valid usage statements,
@@ -1148,7 +1201,7 @@ valid usage statement), the original VUs can be left intact.
 
 
 [[writing-empty-enumerations]]
-== Markup For Empty Enumerated Types
+== Markup for Empty Enumerated Types
 
 Sometimes an enumerated type has all values defined by extensions, and each
 enumerated value defined by the type will be surrounded by an asciidoctor
@@ -1185,7 +1238,7 @@ extensions are enabled in this build of the specification.
 
 
 [[writing-refpages]]
-== Markup For Automatic Reference Page Extraction
+== Markup for Automatic Reference Page Extraction
 
 The Vulkan reference pages are (mostly) extracted from corresponding
 sections of the API Specification.

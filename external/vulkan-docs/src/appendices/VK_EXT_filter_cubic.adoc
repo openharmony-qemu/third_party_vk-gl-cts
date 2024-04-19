@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Khronos Group Inc.
+// Copyright 2019-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -14,7 +14,7 @@ include::{generated}/meta/{refprefix}VK_EXT_filter_cubic.adoc[]
   - Daniel Koch, NVIDIA
   - Donald Scorgie, Imagination Technologies
   - Graeme Leese, Broadcom
-  - Jan-Herald Fredericksen, ARM
+  - Jan-Harald Fredriksen, ARM
   - Jeff Leger, Qualcomm Technologies, Inc.
   - Tobias Hector, AMD
   - Tom Olson, ARM

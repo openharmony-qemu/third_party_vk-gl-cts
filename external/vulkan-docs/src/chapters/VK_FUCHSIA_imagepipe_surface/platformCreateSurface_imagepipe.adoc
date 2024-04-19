@@ -1,4 +1,4 @@
-// Copyright 2014-2022 The Khronos Group Inc.
+// Copyright 2014-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -7,6 +7,8 @@
 
 [open,refpage='vkCreateImagePipeSurfaceFUCHSIA',desc='Create a slink:VkSurfaceKHR object for a Fuchsia ImagePipe',type='protos']
 --
+:refpage: vkCreateImagePipeSurfaceFUCHSIA
+
 To create a sname:VkSurfaceKHR object for a Fuchsia ImagePipe, call:
 
 include::{generated}/api/protos/vkCreateImagePipeSurfaceFUCHSIA.adoc[]
@@ -30,7 +32,7 @@ The sname:VkImagePipeSurfaceCreateInfoFUCHSIA structure is defined as:
 
 include::{generated}/api/structs/VkImagePipeSurfaceCreateInfoFUCHSIA.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.

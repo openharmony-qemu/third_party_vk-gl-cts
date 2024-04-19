@@ -9,8 +9,6 @@ include::{generated}/meta/{refprefix}VK_HUAWEI_subpass_shading.adoc[]
 *Last Modified Date*::
     2021-06-01
 *Interactions and External Dependencies*::
-  - This extension requires
-    {spirv}/HUAWEI/SPV_HUAWEI_subpass_shading.html[`SPV_HUAWEI_subpass_shading`].
   - This extension provides API support for
     {GLSLregistry}/huawei/GLSL_HUAWEI_subpass_shading.txt[`GL_HUAWEI_subpass_shading`].
 *Contributors*::
@@ -55,7 +53,7 @@ include::{generated}/interfaces/VK_HUAWEI_subpass_shading.adoc[]
 Example of subpass shading in a GLSL shader
 
 [source,c]
----------------------------------------------------
+----
 #extension GL_HUAWEI_subpass_shading: enable
 #extension GL_KHR_shader_subgroup_arithmetic: enable
 
@@ -70,24 +68,24 @@ void main()
   float minD = subgroupMin(d);
   float maxD = subgroupMax(d);
 }
----------------------------------------------------
+----
 
 Example of subpass shading dispatching in a subpass
 
 [source,c]
----------------------------------------------------
+----
 vkCmdNextSubpass(commandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_SUBPASS_SHADING_HUAWEI, subpassShadingPipeline);
 vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_SUBPASS_SHADING_HUAWEI, subpassShadingPipelineLayout,
   firstSet, descriptorSetCount, pDescriptorSets, dynamicOffsetCount, pDynamicOffsets);
 vkCmdSubpassShadingHUAWEI(commandBuffer)
 vkCmdEndRenderPass(commandBuffer);
----------------------------------------------------
+----
 
 Example of subpass shading render pass creation
 
 [source,c]
----------------------------------------------------
+----
 VkAttachmentDescription2 attachments[] = {
   {
     VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2, NULL,
@@ -175,12 +173,12 @@ VkSubpassDescription2 subpasses[] = {
 VkMemoryBarrier2KHR fragmentToSubpassShading = {
   VK_STRUCTURE_TYPE_MEMORY_BARRIER_2_KHR, NULL,
   VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT_KHR, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT|VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-  VK_PIPELINE_STAGE_2_SUBPASS_SHADING_BIT_HUAWEI, VK_ACCESS_INPUT_ATTACHMENT_READ_BIT
+  VK_PIPELINE_STAGE_2_SUBPASS_SHADER_BIT_HUAWEI, VK_ACCESS_INPUT_ATTACHMENT_READ_BIT
 };
 
 VkMemoryBarrier2KHR subpassShadingToFragment = {
   VK_STRUCTURE_TYPE_MEMORY_BARRIER_2_KHR, NULL,
-  VK_PIPELINE_STAGE_2_SUBPASS_SHADING_BIT_HUAWEI, VK_ACCESS_SHADER_WRITE_BIT,
+  VK_PIPELINE_STAGE_2_SUBPASS_SHADER_BIT_HUAWEI, VK_ACCESS_SHADER_WRITE_BIT,
   VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT_KHR, VK_ACCESS_SHADER_READ_BIT
 };
 
@@ -208,12 +206,12 @@ VkRenderPassCreateInfo2 renderPassCreateInfo = {
 };
 VKRenderPass renderPass;
 vkCreateRenderPass2(device, &renderPassCreateInfo, NULL, &renderPass);
----------------------------------------------------
+----
 
 Example of subpass shading pipeline creation
 
 [source,c]
----------------------------------------------------
+----
 VkExtent2D maxWorkgroupSize;
 
 VkSpecializationMapEntry subpassShadingConstantMapEntries[] = {
@@ -249,15 +247,18 @@ VKPipeline pipeline;
 vkGetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI(device, renderPass, &maxWorkgroupSize);
 vkCreateComputePipelines(device, pipelineCache, 1, &subpassShadingComputePipelineCreateInfo, NULL, &pipeline);
 
----------------------------------------------------
+----
 
 
 === Version History
 
+  * Revision 3, 2023-06-19 (Pan Gao)
+  ** Rename `VK_PIPELINE_STAGE_2_SUBPASS_SHADING_BIT_HUAWEI` to
+     `VK_PIPELINE_STAGE_2_SUBPASS_SHADER_BIT_HUAWEI` to better aligned with
+     naming of other pipeline stages
   * Revision 2, 2021-06-28 (Hueilong Wang)
   ** Change vkGetSubpassShadingMaxWorkgroupSizeHUAWEI to
      vkGetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI to resolve issue
      https://github.com/KhronosGroup/Vulkan-Docs/issues/1564[`pub1564`]
   * Revision 1, 2020-12-15 (Hueilong Wang)
   ** Initial draft.
-

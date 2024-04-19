@@ -1,4 +1,4 @@
-// Copyright 2016-2022 The Khronos Group Inc.
+// Copyright 2016-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -11,8 +11,6 @@ include::{generated}/meta/{refprefix}VK_EXT_shader_subgroup_vote.adoc[]
 *IP Status*::
     No known IP claims.
 *Interactions and External Dependencies*::
-  - This extension requires
-    {spirv}/KHR/SPV_KHR_subgroup_vote.html[`SPV_KHR_subgroup_vote`]
   - This extension provides API support for
     {GLregistry}/ARB/ARB_shader_group_vote.txt[`GL_ARB_shader_group_vote`]
 *Contributors*::
@@ -58,13 +56,13 @@ invocations and execute them concurrently.
 When executing code like
 
 [source,c++]
-----------------------------------------
+----
 if (condition) {
   result = do_fast_path();
 } else {
   result = do_general_path();
 }
-----------------------------------------
+----
 
 where code:condition diverges between invocations, an implementation might
 first execute code:do_fast_path() for the invocations where code:condition
@@ -79,13 +77,13 @@ This extension provides the ability to avoid divergent execution by
 evaluating a condition across an entire subgroup using code like:
 
 [source,c++]
-----------------------------------------
+----
 if (allInvocationsARB(condition)) {
   result = do_fast_path();
 } else {
   result = do_general_path();
 }
-----------------------------------------
+----
 
 The built-in function code:allInvocationsARB() will return the same value
 for all invocations in the group, so the group will either execute

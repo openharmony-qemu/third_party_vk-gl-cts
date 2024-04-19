@@ -48,7 +48,6 @@ config("amberenginevulkan_config") {
     "AMBER_ENABLE_RTTI=1",
     "AMBER_ENABLE_SHADERC=0",
     "AMBER_ENABLE_SPIRV_TOOLS=0",
-    "AMBER_ENABLE_VK_DEBUGGING=0",
     "AMBER_ENGINE_DAWN=0",
     "AMBER_ENGINE_VULKAN=1",
   ]
@@ -65,7 +64,6 @@ ohos_source_set("amberenginevulkan_source") {
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/descriptor.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/device.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/engine_vulkan.cc",
-    "//third_party/vk-gl-cts/external/amber/src/src/vulkan/engine_vulkan_debugger.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/frame_buffer.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/graphics_pipeline.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/image_descriptor.cc",

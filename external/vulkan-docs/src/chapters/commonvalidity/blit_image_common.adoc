@@ -1,4 +1,4 @@
-// Copyright 2020-2022 The Khronos Group Inc.
+// Copyright 2020-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -43,6 +43,15 @@ ifdef::VK_KHR_shared_presentable_image[]
     pname:srcImageLayout must: be ename:VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR,
     ename:VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL or
     ename:VK_IMAGE_LAYOUT_GENERAL
+endif::VK_KHR_shared_presentable_image[]
+  * [[VUID-{refpage}-srcImage-09459]]
+    If pname:srcImage and pname:dstImage are the same, and an elements of
+    pname:pRegions contains the pname:srcSubresource and
+    pname:dstSubresource with matching pname:mipLevel and overlapping array
+    layers, then the pname:srcImageLayout and pname:dstImageLayout must: be
+    ename:VK_IMAGE_LAYOUT_GENERAL
+ifdef::VK_KHR_shared_presentable_image[]
+    or ename:VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR
 endif::VK_KHR_shared_presentable_image[]
   * [[VUID-{refpage}-dstImage-02000]]
     The <<resources-image-format-features,format features>> of
@@ -116,12 +125,20 @@ endif::VK_IMG_filter_cubic,VK_EXT_filter_cubic[]
     pname:pRegions must: be less than the pname:mipLevels specified in
     slink:VkImageCreateInfo when pname:dstImage was created
   * [[VUID-{refpage}-srcSubresource-01707]]
-    The [eq]#pname:srcSubresource.baseArrayLayer {plus}
+ifdef::VK_KHR_maintenance5[]
+    If pname:srcSubresource.layerCount is not
+    ename:VK_REMAINING_ARRAY_LAYERS,
+endif::VK_KHR_maintenance5[]
+    [eq]#pname:srcSubresource.baseArrayLayer {plus}
     pname:srcSubresource.layerCount# of each element of pname:pRegions must:
     be less than or equal to the pname:arrayLayers specified in
     slink:VkImageCreateInfo when pname:srcImage was created
   * [[VUID-{refpage}-dstSubresource-01708]]
-    The [eq]#pname:dstSubresource.baseArrayLayer {plus}
+ifdef::VK_KHR_maintenance5[]
+    If pname:srcSubresource.layerCount is not
+    ename:VK_REMAINING_ARRAY_LAYERS,
+endif::VK_KHR_maintenance5[]
+    [eq]#pname:dstSubresource.baseArrayLayer {plus}
     pname:dstSubresource.layerCount# of each element of pname:pRegions must:
     be less than or equal to the pname:arrayLayers specified in
     slink:VkImageCreateInfo when pname:dstImage was created
@@ -130,7 +147,6 @@ ifdef::VK_EXT_fragment_density_map[]
     pname:dstImage and pname:srcImage must: not have been created with
     pname:flags containing ename:VK_IMAGE_CREATE_SUBSAMPLED_BIT_EXT
 endif::VK_EXT_fragment_density_map[]
-// Common Valid Usage
   * [[VUID-{refpage}-srcImage-00240]]
     If either pname:srcImage or pname:dstImage is of type
     ename:VK_IMAGE_TYPE_3D, then for each element of pname:pRegions,
@@ -192,3 +208,4 @@ endif::VK_EXT_fragment_density_map[]
     ename:VK_IMAGE_TYPE_2D, then for each element of pname:pRegions,
     pname:dstOffsets[0].z must: be `0` and pname:dstOffsets[1].z must: be
     `1`
+// Common Valid Usage

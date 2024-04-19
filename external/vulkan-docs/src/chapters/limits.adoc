@@ -1,4 +1,4 @@
-// Copyright 2015-2022 The Khronos Group Inc.
+// Copyright 2015-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -118,6 +118,19 @@ flink:vkGetPhysicalDeviceProperties.
     resources.
     This is an upper bound on the sum of the sizes of all sparse resources,
     regardless of whether any memory is bound to them.
+ifdef::VK_NV_extended_sparse_address_space[]
+    If the <<features-extendedSparseAddressSpace,
+    pname:extendedSparseAddressSpace>> feature is enabled, then the
+    difference between <<limits-extendedSparseAddressSpaceSize,
+    pname:extendedSparseAddressSpaceSize>> and pname:sparseAddressSpaceSize
+    can also be used, by sname:VkImage created with the pname:usage member
+    of slink:VkImageCreateInfo only containing bits in
+    <<limits-extendedSparseImageUsageFlags,
+    pname:extendedSparseImageUsageFlags>> and sname:VkBuffer created with
+    the pname:usage member of slink:VkBufferCreateInfo only containing bits
+    in <<limits-extendedSparseBufferUsageFlags,
+    pname:extendedSparseBufferUsageFlags>>.
+endif::VK_NV_extended_sparse_address_space[]
   * [[limits-maxBoundDescriptorSets]] pname:maxBoundDescriptorSets is the
     maximum number of descriptor sets that can: be simultaneously used by a
     pipeline.
@@ -461,29 +474,6 @@ endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
     declared with the code:Workgroup storage class in shader modules (or
     with the code:shared storage qualifier in GLSL) in the compute shader
     stage.
-ifdef::VK_KHR_workgroup_memory_explicit_layout[]
-    When variables declared with the code:Workgroup storage class are
-    explicitly laid out (hence they are also decorated with code:Block), the
-    amount of storage consumed is the size of the largest Block variable,
-    not counting any padding at the end.
-endif::VK_KHR_workgroup_memory_explicit_layout[]
-    The amount of storage consumed by the
-ifdef::VK_KHR_workgroup_memory_explicit_layout[]
-    non-Block
-endif::VK_KHR_workgroup_memory_explicit_layout[]
-    variables declared with the code:Workgroup storage class is
-    implementation-dependent.
-    However, the amount of storage consumed may not exceed the largest block
-    size that would be obtained if all active
-ifdef::VK_KHR_workgroup_memory_explicit_layout[]
-    non-Block
-endif::VK_KHR_workgroup_memory_explicit_layout[]
-    variables declared with code:Workgroup storage class were assigned
-    offsets in an arbitrary order by successively taking the smallest valid
-    offset according to the <<interfaces-resources-standard-layout,Standard
-    Storage Buffer Layout>> rules, and with code:Boolean values considered
-    as 32-bit integer values for the purpose of this calculation.
-    (This is equivalent to using the GLSL std430 layout rules.)
   * [[limits-maxComputeWorkGroupCount]] pname:maxComputeWorkGroupCount[3] is
     the maximum number of local workgroups that can: be dispatched by a
     single dispatching command.
@@ -672,6 +662,15 @@ endif::VK_VERSION_1_3,VK_EXT_texel_buffer_alignment[]
     maximum layer count for a layered framebuffer.
     The pname:layers member of the slink:VkFramebufferCreateInfo structure
     must: be less than or equal to this limit.
+ifdef::VKSC_VERSION_1_0[]
+ifdef::hidden[]
+// tag::scdeviation[]
+  * slink:VkPhysicalDeviceLimits::pname:maxFramebufferLayers may: be 1 if
+    neither pname:geometryShader or pname:shaderOutputLayer are supported
+    <<SCID-8>>.
+// end::scdeviation[]
+endif::hidden[]
+endif::VKSC_VERSION_1_0[]
   * [[limits-framebufferColorSampleCounts]]
     pname:framebufferColorSampleCounts is a bitmask^1^ of
     elink:VkSampleCountFlagBits indicating the color sample counts that are
@@ -814,6 +813,10 @@ ifdef::VK_VERSION_1_3,VK_KHR_copy_commands2[]
     flink:vkCmdCopyBufferToImage2, flink:vkCmdCopyBufferToImage,
     flink:vkCmdCopyImageToBuffer2, and flink:vkCmdCopyImageToBuffer.
 endif::VK_VERSION_1_3,VK_KHR_copy_commands2[]
+ifdef::VK_EXT_host_image_copy[]
+    This value is also the optimal host memory offset alignment in bytes for
+    flink:vkCopyMemoryToImageEXT and flink:vkCopyImageToMemoryEXT.
+endif::VK_EXT_host_image_copy[]
     The per texel alignment requirements are enforced, but applications
     should: use the optimal alignment for optimal performance and power use.
     The value must: be a power of two.
@@ -827,6 +830,10 @@ ifdef::VK_VERSION_1_3,VK_KHR_copy_commands2[]
     flink:vkCmdCopyBufferToImage2, flink:vkCmdCopyBufferToImage,
     flink:vkCmdCopyImageToBuffer2, and flink:vkCmdCopyImageToBuffer.
 endif::VK_VERSION_1_3,VK_KHR_copy_commands2[]
+ifdef::VK_EXT_host_image_copy[]
+    This value is also the optimal host memory row pitch alignment in bytes
+    for flink:vkCopyMemoryToImageEXT and flink:vkCopyImageToMemoryEXT.
+endif::VK_EXT_host_image_copy[]
     Row pitch is the number of bytes between texels with the same X
     coordinate in adjacent rows (Y coordinates differ by one).
     The per texel alignment requirements are enforced, but applications
@@ -887,11 +894,12 @@ as:
 
 include::{generated}/api/structs/VkPhysicalDevicePushDescriptorPropertiesKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-maxPushDescriptors]] pname:maxPushDescriptors is the maximum
-    number of descriptors that can: be used in a descriptor set created with
+    number of descriptors that can: be used in a descriptor set layout
+    created with
     ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR set.
 
 :refpage: VkPhysicalDevicePushDescriptorPropertiesKHR
@@ -914,7 +922,7 @@ or the equivalent
 include::{generated}/api/structs/VkPhysicalDeviceMultiviewPropertiesKHR.adoc[]
 endif::VK_KHR_multiview[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -951,7 +959,7 @@ or the equivalent
 include::{generated}/api/structs/VkPhysicalDeviceFloatControlsPropertiesKHR.adoc[]
 endif::VK_KHR_shader_float_controls[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -1108,7 +1116,7 @@ as:
 
 include::{generated}/api/structs/VkPhysicalDeviceDiscardRectanglePropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-maxDiscardRectangles]] pname:maxDiscardRectangles is the
@@ -1129,7 +1137,7 @@ as:
 
 include::{generated}/api/structs/VkPhysicalDeviceSampleLocationsPropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-sampleLocationSampleCounts]] pname:sampleLocationSampleCounts
@@ -1167,7 +1175,7 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceExternalMemoryHostPropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-minImportedHostPointerAlignment]]
@@ -1191,7 +1199,7 @@ is defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceMultiviewPerViewAttributesPropertiesNVX.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-perViewPositionAllComponents]]
@@ -1219,7 +1227,7 @@ or the equivalent
 include::{generated}/api/structs/VkPhysicalDevicePointClippingPropertiesKHR.adoc[]
 endif::VK_KHR_maintenance2[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -1246,7 +1254,7 @@ The sname:VkPhysicalDeviceSubgroupProperties structure is defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceSubgroupProperties.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -1363,7 +1371,7 @@ or the equivalent
 include::{generated}/api/structs/VkPhysicalDeviceSubgroupSizeControlPropertiesEXT.adoc[]
 endif::VK_EXT_subgroup_size_control[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -1417,7 +1425,7 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceBlendOperationAdvancedPropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-advancedBlendMaxColorAttachments]]
@@ -1464,12 +1472,18 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceVertexAttributeDivisorPropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
-  * [[limits-maxVertexAttribDivisor]] pname:maxVertexAttribDivisor is the
-    maximum value of the number of instances that will repeat the value of
-    vertex attribute data when instanced rendering is enabled.
+
+// Must have preceding whitespace
+ifdef::VK_KHR_vertex_attribute_divisor[:anchor-prefix: extension-]
+ifndef::VK_KHR_vertex_attribute_divisor[:anchor-prefix:]
+// tag::VK_KHR_vertex_attribute_divisor-properties[]
+  * [[{anchor-prefix}limits-maxVertexAttribDivisor]]
+    pname:maxVertexAttribDivisor is the maximum value of the number of
+    instances that will repeat the value of vertex attribute data when
+    instanced rendering is enabled.
 
 :refpage: VkPhysicalDeviceVertexAttributeDivisorPropertiesEXT
 include::{chapters}/limits.adoc[tag=limits_desc]
@@ -1477,6 +1491,34 @@ include::{chapters}/limits.adoc[tag=limits_desc]
 include::{generated}/validity/structs/VkPhysicalDeviceVertexAttributeDivisorPropertiesEXT.adoc[]
 --
 endif::VK_EXT_vertex_attribute_divisor[]
+
+ifdef::VK_KHR_vertex_attribute_divisor[]
+[open,refpage='VkPhysicalDeviceVertexAttributeDivisorPropertiesKHR',desc='Structure describing max value of vertex attribute divisor that can be supported by an implementation',type='structs']
+--
+The sname:VkPhysicalDeviceVertexAttributeDivisorPropertiesKHR structure is
+defined as:
+
+include::{generated}/api/structs/VkPhysicalDeviceVertexAttributeDivisorPropertiesKHR.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * [[limits-maxVertexAttribDivisor]] pname:maxVertexAttribDivisor is the
+    maximum value of the number of instances that will repeat the value of
+    vertex attribute data when instanced rendering is enabled.
+  * [[limits-supportsNonZeroFirstInstance]]
+    pname:supportsNonZeroFirstInstance specifies whether a non-zero value
+    for the pname:firstInstance parameter of <<drawing, drawing commands>>
+    is supported when
+    slink:VkVertexInputBindingDivisorDescriptionKHR::pname:divisor is not
+    `1`.
+
+:refpage: VkPhysicalDeviceVertexAttributeDivisorPropertiesKHR
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+include::{generated}/validity/structs/VkPhysicalDeviceVertexAttributeDivisorPropertiesKHR.adoc[]
+--
+endif::VK_KHR_vertex_attribute_divisor[]
 
 ifdef::VK_VERSION_1_2,VK_EXT_sampler_filter_minmax[]
 [open,refpage='VkPhysicalDeviceSamplerFilterMinmaxProperties',desc='Structure describing sampler filter minmax limits that can be supported by an implementation',type='structs',alias='VkPhysicalDeviceSamplerFilterMinmaxPropertiesEXT']
@@ -1492,7 +1534,7 @@ or the equivalent
 include::{generated}/api/structs/VkPhysicalDeviceSamplerFilterMinmaxPropertiesEXT.adoc[]
 endif::VK_EXT_sampler_filter_minmax[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -1557,7 +1599,7 @@ The sname:VkPhysicalDeviceProtectedMemoryProperties structure is defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceProtectedMemoryProperties.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -1598,7 +1640,7 @@ or the equivalent
 include::{generated}/api/structs/VkPhysicalDeviceMaintenance3PropertiesKHR.adoc[]
 endif::VK_KHR_maintenance3[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -1638,7 +1680,7 @@ or the equivalent
 include::{generated}/api/structs/VkPhysicalDeviceMaintenance4PropertiesKHR.adoc[]
 endif::VK_KHR_maintenance4[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -1657,6 +1699,76 @@ include::{generated}/validity/structs/VkPhysicalDeviceMaintenance4Properties.ado
 --
 endif::VK_VERSION_1_3,VK_KHR_maintenance4[]
 
+ifdef::VK_KHR_maintenance5[]
+[open,refpage='VkPhysicalDeviceMaintenance5PropertiesKHR',desc='Structure describing various implementation-defined properties introduced with VK_KHR_maintenance5',type='structs',alias='VkPhysicalDeviceMaintenance5PropertiesKHR']
+--
+The sname:VkPhysicalDeviceMaintenance5PropertiesKHR structure is defined as:
+
+include::{generated}/api/structs/VkPhysicalDeviceMaintenance5PropertiesKHR.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:earlyFragmentMultisampleCoverageAfterSampleCounting is a boolean
+    value indicating whether the <<fragops-shader,fragment shading>> and
+    <<fragops-covg, multisample coverage>> operations are performed after
+    <<fragops-samplecount, sample counting>> for <<fragops-shader, fragment
+    shaders>> with code:EarlyFragmentTests execution mode.
+  * pname:earlyFragmentSampleMaskTestBeforeSampleCounting is a boolean value
+    indicating whether the <<fragops-samplemask,sample mask test>> operation
+    is performed before <<fragops-samplecount, sample counting>> for
+    <<fragops-shader, fragment shaders>> using the code:EarlyFragmentTests
+    execution mode.
+  * pname:depthStencilSwizzleOneSupport is a boolean indicating that
+    depth/stencil texturing operations with ename:VK_COMPONENT_SWIZZLE_ONE
+    have defined behavior.
+  * pname:polygonModePointSize is a boolean value indicating whether the
+    point size of the final rasterization of polygons with
+    ename:VK_POLYGON_MODE_POINT is controlled by code:PointSize.
+  * pname:nonStrictSinglePixelWideLinesUseParallelogram is a boolean value
+    indicating whether non-strict lines with a width of 1.0 are rasterized
+    as parallelograms or using Bresenham's algorithm.
+  * pname:nonStrictWideLinesUseParallelogram is a boolean value indicating
+    whether non-strict lines with a width greater than 1.0 are rasterized as
+    parallelograms or using Bresenham's algorithm.
+
+:refpage: VkPhysicalDeviceMaintenance5PropertiesKHR
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+include::{generated}/validity/structs/VkPhysicalDeviceMaintenance5PropertiesKHR.adoc[]
+--
+endif::VK_KHR_maintenance5[]
+
+ifdef::VK_KHR_maintenance6[]
+[open,refpage='VkPhysicalDeviceMaintenance6PropertiesKHR',desc='Structure describing various implementation-defined properties introduced with VK_KHR_maintenance6',type='structs',alias='VkPhysicalDeviceMaintenance6PropertiesKHR']
+--
+The sname:VkPhysicalDeviceMaintenance6PropertiesKHR structure is defined as:
+
+include::{generated}/api/structs/VkPhysicalDeviceMaintenance6PropertiesKHR.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:blockTexelViewCompatibleMultipleLayers is a boolean value
+     indicating that an implementation supports creating image views with
+     ename:VK_IMAGE_CREATE_BLOCK_TEXEL_VIEW_COMPATIBLE_BIT where the
+     pname:layerCount member of pname:subresourceRange is greater than `1`.
+  * pname:maxCombinedImageSamplerDescriptorCount is the maximum number of
+    combined image sampler descriptors that the implementation uses to
+    access any of the <<formats-requiring-sampler-ycbcr-conversion, formats
+    that require a sampler {YCbCr} conversion>> supported by the
+    implementation.
+  * pname:fragmentShadingRateClampCombinerInputs is a boolean value
+    indicating that an implementation clamps the inputs to
+    <<primsrast-fragment-shading-rate-combining, combiner operations>>.
+
+:refpage: VkPhysicalDeviceMaintenance6PropertiesKHR
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+include::{generated}/validity/structs/VkPhysicalDeviceMaintenance6PropertiesKHR.adoc[]
+--
+endif::VK_KHR_maintenance6[]
+
 ifdef::VK_NV_mesh_shader[]
 [open,refpage='VkPhysicalDeviceMeshShaderPropertiesNV',desc='Structure describing mesh shading properties',type='structs']
 --
@@ -1664,7 +1776,7 @@ The sname:VkPhysicalDeviceMeshShaderPropertiesNV structure is defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceMeshShaderPropertiesNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:maxDrawMeshTasksCount is the maximum number of local workgroups
@@ -1745,7 +1857,7 @@ include::{generated}/api/structs/VkPhysicalDeviceMeshShaderPropertiesEXT.adoc[]
 The members of the sname:VkPhysicalDeviceMeshShaderPropertiesEXT structure
 describe the following implementation-dependent limits:
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-maxTaskWorkGroupTotalCount]] pname:maxTaskWorkGroupTotalCount
@@ -1924,7 +2036,7 @@ or the equivalent
 include::{generated}/api/structs/VkPhysicalDeviceDescriptorIndexingPropertiesEXT.adoc[]
 endif::VK_EXT_descriptor_indexing[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -1987,9 +2099,9 @@ ifndef::VK_VERSION_1_2[:anchor-prefix:]
     disabled or all of these update-after-bind features must: be disabled.
   * [[{anchor-prefix}limits-quadDivergentImplicitLod]]
     pname:quadDivergentImplicitLod is a boolean value indicating whether
-    implicit level of detail calculations for image operations have
-    well-defined results when the image and/or sampler objects used for the
-    instruction are not uniform within a quad.
+    implicit LOD calculations for image operations have well-defined results
+    when the image and/or sampler objects used for the instruction are not
+    uniform within a quad.
     See <<textures-derivative-image-operations,Derivative Image
     Operations>>.
   * [[{anchor-prefix}limits-maxPerStageDescriptorUpdateAfterBindSamplers]]
@@ -2117,7 +2229,7 @@ or the equivalent
 include::{generated}/api/structs/VkPhysicalDeviceInlineUniformBlockPropertiesEXT.adoc[]
 endif::VK_EXT_inline_uniform_block[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -2129,7 +2241,7 @@ ifndef::VK_VERSION_1_3[:anchor-prefix:]
     pname:maxInlineUniformBlockSize is the maximum size in bytes of an
     <<descriptorsets-inlineuniformblock, inline uniform block>> binding.
   * [[{anchor-prefix}limits-maxPerStageDescriptorInlineUniformBlocks]]
-    pname:maxPerStageDescriptorInlineUniformBlock is the maximum number of
+    pname:maxPerStageDescriptorInlineUniformBlocks is the maximum number of
     inline uniform block bindings that can: be accessible to a single shader
     stage in a pipeline layout.
     Descriptor bindings with a descriptor type of
@@ -2192,7 +2304,7 @@ is defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceConservativeRasterizationPropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-primitiveOverestimationSize]] pname:primitiveOverestimationSize
@@ -2283,7 +2395,7 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceFragmentDensityMapPropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-minFragmentDensityTexelSize]] pname:minFragmentDensityTexelSize
@@ -2309,7 +2421,7 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceFragmentDensityMap2PropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-subsampledLoads]] pname:subsampledLoads specifies if performing
@@ -2343,7 +2455,7 @@ is defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceFragmentDensityMapOffsetPropertiesQCOM.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-fragmentdensityoffsetgranularity]]
@@ -2365,7 +2477,7 @@ The sname:VkPhysicalDeviceShaderCorePropertiesAMD structure is defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceShaderCorePropertiesAMD.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-shaderEngineCount]] pname:shaderEngineCount is an unsigned
@@ -2391,7 +2503,7 @@ include::{generated}/api/structs/VkPhysicalDeviceShaderCorePropertiesAMD.adoc[]
   * [[limits-wavefrontSize]] pname:wavefrontSize is an unsigned integer
     value indicating the maximum size of a subgroup.
   * [[limits-sgprsPerSimd]] pname:sgprsPerSimd is an unsigned integer value
-    indicating the number of physical Scalar General Purpose Registers
+    indicating the number of physical Scalar General-Purpose Registers
     (SGPRs) per SIMD.
   * [[limits-minSgprAllocation]] pname:minSgprAllocation is an unsigned
     integer value indicating the minimum number of SGPRs allocated for a
@@ -2403,7 +2515,7 @@ include::{generated}/api/structs/VkPhysicalDeviceShaderCorePropertiesAMD.adoc[]
     an unsigned integer value indicating the granularity of SGPR allocation
     for a wave.
   * [[limits-vgprsPerSimd]] pname:vgprsPerSimd is an unsigned integer value
-    indicating the number of physical Vector General Purpose Registers
+    indicating the number of physical Vector General-Purpose Registers
     (VGPRs) per SIMD.
   * [[limits-minVgprAllocation]] pname:minVgprAllocation is an unsigned
     integer value indicating the minimum number of VGPRs allocated for a
@@ -2429,7 +2541,7 @@ The sname:VkPhysicalDeviceShaderCoreProperties2AMD structure is defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceShaderCoreProperties2AMD.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[features-shaderCoreFeatures]] pname:shaderCoreFeatures is a bitmask of
@@ -2478,7 +2590,7 @@ or the equivalent
 include::{generated}/api/structs/VkPhysicalDeviceDepthStencilResolvePropertiesKHR.adoc[]
 endif::VK_KHR_depth_stencil_resolve[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -2490,12 +2602,34 @@ ifndef::VK_VERSION_1_2[:anchor-prefix:]
     pname:supportedDepthResolveModes is a bitmask of
     elink:VkResolveModeFlagBits indicating the set of supported depth
     resolve modes.
+ifdef::VKSC_VERSION_1_0[]
+    A value of ename:VK_RESOLVE_MODE_NONE indicates that depth resolve
+    operations are disallowed <<SCID-8>>.
+    If any bits are set then
+ifdef::hidden[]
+// tag::scdeviation[]
+  * slink:VkPhysicalDeviceVulkan12Properties::pname:supportedDepthResolveModes
+    may: be only ename:VK_RESOLVE_MODE_NONE <<SCID-8>>.
+// end::scdeviation[]
+endif::hidden[]
+endif::VKSC_VERSION_1_0[]
     ename:VK_RESOLVE_MODE_SAMPLE_ZERO_BIT must: be included in the set but
     implementations may: support additional modes.
   * [[{anchor-prefix}features-stencilResolveModes]]
     pname:supportedStencilResolveModes is a bitmask of
     elink:VkResolveModeFlagBits indicating the set of supported stencil
     resolve modes.
+ifdef::VKSC_VERSION_1_0[]
+    A value of ename:VK_RESOLVE_MODE_NONE indicates that stencil resolve
+    operations are disallowed <<SCID-8>>.
+    If any bits are set then
+ifdef::hidden[]
+// tag::scdeviation[]
+  * slink:VkPhysicalDeviceVulkan12Properties::pname:supportedStencilResolveModes
+    may: be only ename:VK_RESOLVE_MODE_NONE <<SCID-8>>.
+// end::scdeviation[]
+endif::hidden[]
+endif::VKSC_VERSION_1_0[]
     ename:VK_RESOLVE_MODE_SAMPLE_ZERO_BIT must: be included in the set but
     implementations may: support additional modes.
     ename:VK_RESOLVE_MODE_AVERAGE_BIT must: not be included in the set.
@@ -2532,7 +2666,7 @@ as:
 
 include::{generated}/api/structs/VkPhysicalDeviceShadingRateImagePropertiesNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-shadingRateTexelSize]] pname:shadingRateTexelSize indicates the
@@ -2567,7 +2701,7 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceMemoryDecompressionPropertiesNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:decompressionMethods is a bitmask of
@@ -2592,7 +2726,7 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceTransformFeedbackPropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-maxTransformFeedbackStreams]] pname:maxTransformFeedbackStreams
@@ -2662,7 +2796,7 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceCopyMemoryIndirectPropertiesNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:supportedQueues is a bitmask of elink:VkQueueFlagBits indicating
@@ -2686,7 +2820,7 @@ The sname:VkPhysicalDeviceRayTracingPropertiesNV structure is defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceRayTracingPropertiesNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:shaderGroupHandleSize is the size in bytes of the shader header.
@@ -2731,7 +2865,7 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceAccelerationStructurePropertiesKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-maxGeometryCount]] pname:maxGeometryCount is the maximum number
@@ -2807,7 +2941,7 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceRayTracingPipelinePropertiesKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:shaderGroupHandleSize is the size in bytes of the shader header.
@@ -2848,10 +2982,10 @@ as:
 
 include::{generated}/api/structs/VkPhysicalDeviceCooperativeMatrixPropertiesNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
-  * [[limits-cooperativeMatrixSupportedStages]]
+  * [[limits-cooperativeMatrixSupportedStages-NV]]
     pname:cooperativeMatrixSupportedStages is a bitfield of
     elink:VkShaderStageFlagBits describing the shader stages that
     cooperative matrix instructions are supported in.
@@ -2866,6 +3000,35 @@ include::{generated}/validity/structs/VkPhysicalDeviceCooperativeMatrixPropertie
 --
 endif::VK_NV_cooperative_matrix[]
 
+ifdef::VK_KHR_cooperative_matrix[]
+[open,refpage='VkPhysicalDeviceCooperativeMatrixPropertiesKHR',desc='Structure describing cooperative matrix properties supported by an implementation',type='structs']
+--
+The sname:VkPhysicalDeviceCooperativeMatrixPropertiesKHR structure is
+defined as:
+
+include::{generated}/api/structs/VkPhysicalDeviceCooperativeMatrixPropertiesKHR.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * [[limits-cooperativeMatrixSupportedStages]]
+    pname:cooperativeMatrixSupportedStages is a bitfield of
+    elink:VkShaderStageFlagBits describing the shader stages that
+    cooperative matrix instructions are supported in.
+    pname:cooperativeMatrixSupportedStages will have the
+    ename:VK_SHADER_STAGE_COMPUTE_BIT bit set if any of the physical
+    device's queues support ename:VK_QUEUE_COMPUTE_BIT.
+
+pname:cooperativeMatrixSupportedStages must: not have any bits other than
+ename:VK_SHADER_STAGE_COMPUTE_BIT set.
+
+:refpage: VkPhysicalDeviceCooperativeMatrixPropertiesKHR
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+include::{generated}/validity/structs/VkPhysicalDeviceCooperativeMatrixPropertiesKHR.adoc[]
+--
+endif::VK_KHR_cooperative_matrix[]
+
 ifdef::VK_NV_shader_sm_builtins[]
 [open,refpage='VkPhysicalDeviceShaderSMBuiltinsPropertiesNV',desc='Structure describing shader SM Builtins properties supported by an implementation',type='structs']
 --
@@ -2874,7 +3037,7 @@ as:
 
 include::{generated}/api/structs/VkPhysicalDeviceShaderSMBuiltinsPropertiesNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-shaderSMCount]] pname:shaderSMCount is the number of SMs on the
@@ -2903,7 +3066,7 @@ or the equivalent
 include::{generated}/api/structs/VkPhysicalDeviceTexelBufferAlignmentPropertiesEXT.adoc[]
 endif::VK_EXT_texel_buffer_alignment[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -2964,7 +3127,7 @@ or the equivalent
 include::{generated}/api/structs/VkPhysicalDeviceTimelineSemaphorePropertiesKHR.adoc[]
 endif::VK_KHR_timeline_semaphore[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -2993,7 +3156,7 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceLineRasterizationPropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-lineSubPixelPrecisionBits]] pname:lineSubPixelPrecisionBits is
@@ -3015,7 +3178,7 @@ The sname:VkPhysicalDeviceRobustness2PropertiesEXT structure is defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceRobustness2PropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-robustStorageBufferAccessSizeAlignment]]
@@ -3046,7 +3209,7 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceDeviceGeneratedCommandsPropertiesNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:maxGraphicsShaderGroupCount is the maximum number of shader groups
@@ -3088,7 +3251,7 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDevicePortabilitySubsetPropertiesKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-minVertexInputBindingStrideAlignment]]
@@ -3114,7 +3277,7 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceFragmentShadingRatePropertiesKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-minFragmentShadingRateAttachmentTexelSize]]
@@ -3239,7 +3402,7 @@ endif::VK_EXT_shader_stencil_export[]
     If this value is ename:VK_FALSE, writing to those built-ins will clamp
     the fragment shading rate to [eq]#(1,1)#.
   * [[limits-fragmentShadingRateWithSampleMask]]
-    pname:fragmentShadingRateWithSampleMask specifies whether the the
+    pname:fragmentShadingRateWithSampleMask specifies whether the
     implementation supports setting valid bits of
     slink:VkPipelineMultisampleStateCreateInfo::pname:pSampleMask to `0` for
     multi-pixel fragments.
@@ -3340,7 +3503,7 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceFragmentShadingRateEnumsPropertiesNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-maxFragmentShadingRateInvocationCount]]
@@ -3387,7 +3550,7 @@ as:
 
 include::{generated}/api/structs/VkPhysicalDeviceProvokingVertexPropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-provokingVertexModePerPipeline]]
@@ -3414,7 +3577,7 @@ as:
 
 include::{generated}/api/structs/VkPhysicalDeviceDescriptorBufferPropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-combinedImageSamplerDescriptorSingleArray]]
@@ -3583,7 +3746,7 @@ is defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceDescriptorBufferDensityMapPropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-combinedImageSamplerDensityMapDescriptorSize]]
@@ -3601,6 +3764,77 @@ endif::VK_EXT_fragment_density_map[]
 
 endif::VK_EXT_descriptor_buffer[]
 
+ifdef::VK_EXT_host_image_copy[]
+[open,refpage='VkPhysicalDeviceHostImageCopyPropertiesEXT',desc='Structure enumerating image layouts supported by an implementation for host memory copies',type='structs']
+--
+The sname:VkPhysicalDeviceHostImageCopyPropertiesEXT structure is defined
+as:
+
+include::{generated}/api/structs/VkPhysicalDeviceHostImageCopyPropertiesEXT.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:copySrcLayoutCount is an integer related to the number of image
+    layouts for host copies from images available or queried, as described
+    below.
+  * pname:pCopySrcLayouts is a pointer to an array of elink:VkImageLayout in
+    which supported image layouts for use with host copy operations from
+    images are returned.
+  * pname:copyDstLayoutCount is an integer related to the number of image
+    layouts for host copies to images available or queried, as described
+    below.
+  * pname:pCopyDstLayouts is a pointer to an array of elink:VkImageLayout in
+    which supported image layouts for use with host copy operations to
+    images are returned.
+  * pname:optimalTilingLayoutUUID is an array of ename:VK_UUID_SIZE
+    code:uint8_t values representing a universally unique identifier for the
+    implementation's swizzling layout of images created with
+    ename:VK_IMAGE_TILING_OPTIMAL.
+  * pname:identicalMemoryTypeRequirements indicates that specifying the
+    ename:VK_IMAGE_USAGE_HOST_TRANSFER_BIT_EXT flag in
+    slink:VkImageCreateInfo::pname:usage does not affect the memory type
+    requirements of the image.
+
+:refpage: VkPhysicalDeviceHostImageCopyPropertiesEXT
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+If pname:pCopyDstLayouts is `NULL`, then the number of image layouts that
+are supported in slink:VkCopyMemoryToImageInfoEXT::pname:dstImageLayout and
+slink:VkCopyImageToImageInfoEXT::pname:dstImageLayout is returned in
+pname:copyDstLayoutCount.
+Otherwise, pname:copyDstLayoutCount must: be set by the user to the number
+of elements in the pname:pCopyDstLayouts array, and on return the variable
+is overwritten with the number of values actually written to
+pname:pCopyDstLayouts.
+If the value of pname:copyDstLayoutCount is less than the number of image
+layouts that are supported, at most pname:copyDstLayoutCount values will be
+written to pname:pCopyDstLayouts.
+The implementation must: include the ename:VK_IMAGE_LAYOUT_GENERAL image
+layout in pname:pCopyDstLayouts.
+
+If pname:pCopySrcLayouts is `NULL`, then the number of image layouts that
+are supported in slink:VkCopyImageToMemoryInfoEXT::pname:srcImageLayout and
+slink:VkCopyImageToImageInfoEXT::pname:srcImageLayout is returned in
+pname:copySrcLayoutCount.
+Otherwise, pname:copySrcLayoutCount must: be set by the user to the number
+of elements in the pname:pCopySrcLayouts array, and on return the variable
+is overwritten with the number of values actually written to
+pname:pCopySrcLayouts.
+If the value of pname:copySrcLayoutCount is less than the number of image
+layouts that are supported, at most pname:copySrcLayoutCount values will be
+written to pname:pCopySrcLayouts.
+The implementation must: include the ename:VK_IMAGE_LAYOUT_GENERAL image
+layout in pname:pCopySrcLayouts.
+
+The pname:optimalTilingLayoutUUID value can be used to ensure compatible
+data layouts when using the ename:VK_HOST_IMAGE_COPY_MEMCPY_EXT flag in
+flink:vkCopyMemoryToImageEXT and flink:vkCopyImageToMemoryEXT.
+
+include::{generated}/validity/structs/VkPhysicalDeviceHostImageCopyPropertiesEXT.adoc[]
+--
+endif::VK_EXT_host_image_copy[]
+
 ifdef::VK_HUAWEI_subpass_shading[]
 [open,refpage='VkPhysicalDeviceSubpassShadingPropertiesHUAWEI',desc='Structure describing subpass shading properties supported by an implementation',type='structs']
 --
@@ -3609,7 +3843,7 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceSubpassShadingPropertiesHUAWEI.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-maxSubpassShadingWorkgroupSizeAspectRatio]]
@@ -3649,6 +3883,33 @@ include::{generated}/validity/structs/VkPhysicalDeviceMultiDrawPropertiesEXT.ado
 --
 
 endif::VK_EXT_multi_draw[]
+
+ifdef::VK_EXT_nested_command_buffer[]
+
+[open,refpage='VkPhysicalDeviceNestedCommandBufferPropertiesEXT',desc='Structure describing the nested command buffer limits of an implementation',type='structs']
+--
+The sname:VkPhysicalDeviceNestedCommandBufferPropertiesEXT structure is
+defined as:
+
+include::{generated}/api/structs/VkPhysicalDeviceNestedCommandBufferPropertiesEXT.adoc[]
+
+The members of the sname:VkPhysicalDeviceNestedCommandBufferPropertiesEXT
+structure describe the following features:
+
+  * [[limits-maxCommandBufferNestingLevel]]
+    pname:maxCommandBufferNestingLevel indicates the maximum nesting level
+    of calls to flink:vkCmdExecuteCommands from <<glossary, Secondary
+    Command Buffers>>.
+    A pname:maxCommandBufferNestingLevel of code:UINT32_MAX means there is
+    no limit to the nesting level.
+
+:refpage: VkPhysicalDeviceNestedCommandBufferPropertiesEXT
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+include::{generated}/validity/structs/VkPhysicalDeviceNestedCommandBufferPropertiesEXT.adoc[]
+--
+
+endif::VK_EXT_nested_command_buffer[]
 
 ifdef::VK_EXT_graphics_pipeline_library[]
 [open,refpage='VkPhysicalDeviceGraphicsPipelineLibraryPropertiesEXT',desc='Structure describing additional properties of graphics pipeline libraries',type='structs']
@@ -3692,12 +3953,15 @@ is defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceFragmentShaderBarycentricPropertiesKHR.adoc[]
 
-  * [[limits-triStripVertexOrderIndependentOfProvokingVertex]]
-    pname:triStripVertexOrderIndependentOfProvokingVertex indicates that the
-    implementation does not change its vertex numbering for triangle strip
-    primitives when the <<vertexpostproc-flatshading,provoking vertex mode>>
-    is ename:VK_PROVOKING_VERTEX_MODE_LAST_VERTEX_EXT, as shown in the
+  * [[limits-triStripVertexOrderIndependentOfProvokingVertex]] When the
+    <<vertexpostproc-flatshading,provoking vertex mode>> is
+    ename:VK_PROVOKING_VERTEX_MODE_LAST_VERTEX_EXT, and the primitive order
+    is odd in a triangle strip, the ordering of vertices is defined in
     <<primsrast-barycentric-order-table-last-vertex, last vertex table>>.
+    pname:triStripVertexOrderIndependentOfProvokingVertex equal to
+    ename:VK_TRUE indicates that the implementation ignores this and uses
+    the vertex order defined by
+    ename:VK_PROVOKING_VERTEX_MODE_FIRST_VERTEX_EXT instead.
 
 :refpage: VkPhysicalDeviceFragmentShaderBarycentricPropertiesKHR
 include::{chapters}/limits.adoc[tag=limits_desc]
@@ -3762,7 +4026,7 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDevicePipelineRobustnessPropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:defaultRobustnessStorageBuffers describes the behaviour of out of
@@ -3822,7 +4086,7 @@ The sname:VkPhysicalDeviceOpticalFlowPropertiesNV structure is defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceOpticalFlowPropertiesNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-supportedOutputGridSizes]] pname:supportedOutputGridSizes are
@@ -3871,7 +4135,7 @@ as:
 
 include::{generated}/api/structs/VkPhysicalDeviceOpacityMicromapPropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:maxOpacity2StateSubdivisionLevel is the maximum allowed
@@ -3888,6 +4152,27 @@ include::{generated}/validity/structs/VkPhysicalDeviceOpacityMicromapPropertiesE
 --
 endif::VK_EXT_opacity_micromap[]
 
+ifdef::VK_NV_displacement_micromap[]
+[open,refpage='VkPhysicalDeviceDisplacementMicromapPropertiesNV',desc='Structure describing the displacement micromap properties of a physical device',type='structs']
+--
+The sname:VkPhysicalDeviceDisplacementMicromapPropertiesNV structure is
+defined as:
+
+include::{generated}/api/structs/VkPhysicalDeviceDisplacementMicromapPropertiesNV.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:maxDisplacementMicromapSubdivisionLevel is the maximum allowed
+    pname:subdivisionLevel for displacement micromaps.
+
+:refpage: VkPhysicalDeviceDisplacementMicromapPropertiesNV
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+include::{generated}/validity/structs/VkPhysicalDeviceDisplacementMicromapPropertiesNV.adoc[]
+--
+endif::VK_NV_displacement_micromap[]
+
 ifdef::VK_ARM_shader_core_builtins[]
 [open,refpage='VkPhysicalDeviceShaderCoreBuiltinsPropertiesARM',desc='Structure describing shader core builtins properties supported by an implementation',type='structs']
 --
@@ -3896,7 +4181,7 @@ defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceShaderCoreBuiltinsPropertiesARM.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * [[limits-shaderCoreMask]] pname:shaderCoreMask is a bitfield where each
@@ -3956,6 +4241,281 @@ include::{generated}/validity/structs/VkPhysicalDeviceRayTracingInvocationReorde
 --
 endif::VK_NV_ray_tracing_invocation_reorder[]
 
+ifdef::VK_HUAWEI_cluster_culling_shader[]
+[open,refpage='VkPhysicalDeviceClusterCullingShaderPropertiesHUAWEI',desc='Structure describing cluster culling shader properties supported by an implementation',type='structs']
+--
+The sname:VkPhysicalDeviceClusterCullingShaderPropertiesHUAWEI structure is
+defined as:
+
+include::{generated}/api/structs/VkPhysicalDeviceClusterCullingShaderPropertiesHUAWEI.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:maxWorkGroupCount[3] is the maximum number of local workgroups
+    that can be launched by a single command.
+    These three value represent the maximum local workgroup count in the X,
+    Y and Z dimensions, respectively.
+    In the current implementation, the values of Y and Z are both implicitly
+    set as one.
+    groupCountX of DrawCluster command must be less than or equal to
+    maxWorkGroupCount[0].
+  * pname:maxWorkGroupSize[3] is the maximum size of a local workgroup.
+    These three value represent the maximum local workgroup size in the X, Y
+    and Z dimensions, respectively.
+    The x, y and z sizes, as specified by the code:LocalSize
+ifdef::VK_VERSION_1_3,VK_KHR_maintenance4[or code:LocalSizeId]
+    execution mode or by the object decorated by the WorkgroupSize
+    decoration in shader modules, must be less than or equal to the
+    corresponding limit.
+    In the current implementation, the maximum workgroup size of the X
+    dimension is 32, the others are 1.
+  * pname:maxOutputClusterCount is the maximum number of output cluster a
+    single cluster culling shader workgroup can emit.
+  * pname:indirectBufferOffsetAlignment indicates the alignment for cluster
+    drawing command buffer stride.
+    flink:vkCmdDrawClusterIndirectHUAWEI::pname:offset must be a multiple of
+    this value.
+
+:refpage: VkPhysicalDeviceClusterCullingShaderPropertiesHUAWEI
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+include::{generated}/validity/structs/VkPhysicalDeviceClusterCullingShaderPropertiesHUAWEI.adoc[]
+--
+endif::VK_HUAWEI_cluster_culling_shader[]
+
+ifdef::VK_ARM_shader_core_properties[]
+[open,refpage='VkPhysicalDeviceShaderCorePropertiesARM',desc='Structure describing shader core properties that can be supported by an implementation',type='structs']
+--
+The sname:VkPhysicalDeviceShaderCorePropertiesARM structure is defined as:
+
+include::{generated}/api/structs/VkPhysicalDeviceShaderCorePropertiesARM.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:pixelRate is an unsigned integer value indicating the maximum
+    number of pixels output per clock per shader core.
+  * pname:texelRate is an unsigned integer value indicating the maximum
+    number of texels per clock per shader core.
+  * pname:fmaRate is an unsigned integer value indicating the maximum number
+    of single-precision fused multiply-add operations per clock per shader
+    core.
+
+If a throughput rate cannot be determined on the physical device, the value
+`0` will be returned for that rate.
+
+:refpage: VkPhysicalDeviceShaderCorePropertiesARM
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+include::{generated}/validity/structs/VkPhysicalDeviceShaderCorePropertiesARM.adoc[]
+--
+endif::VK_ARM_shader_core_properties[]
+
+ifdef::VK_EXT_shader_object[]
+[open,refpage='VkPhysicalDeviceShaderObjectPropertiesEXT',desc='Structure describing shader object properties supported by an implementation',type='structs']
+--
+The sname:VkPhysicalDeviceShaderObjectPropertiesEXT structure is defined as:
+
+include::{generated}/api/structs/VkPhysicalDeviceShaderObjectPropertiesEXT.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * [[limits-shaderBinaryUUID]] pname:shaderBinaryUUID is an array of
+    ename:VK_UUID_SIZE code:uint8_t values representing a universally unique
+    identifier for one or more implementations whose shader binaries are
+    guaranteed to be compatible with each other.
+  * [[limits-shaderBinaryVersion]] pname:shaderBinaryVersion is an unsigned
+    integer incremented to represent backwards compatible differences
+    between implementations with the same pname:shaderBinaryUUID.
+
+The purpose and usage of the values of this structure are described in
+greater detail in <<shaders-objects-binary-compatibility, Binary Shader
+Compatibility>>.
+
+:refpage: VkPhysicalDeviceShaderObjectPropertiesEXT
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+include::{generated}/validity/structs/VkPhysicalDeviceShaderObjectPropertiesEXT.adoc[]
+--
+endif::VK_EXT_shader_object[]
+
+
+ifdef::VK_AMDX_shader_enqueue[]
+[open,refpage='VkPhysicalDeviceShaderEnqueuePropertiesAMDX',desc='Structure describing shader enqueue limits of an implementation',type='structs']
+--
+The sname:VkPhysicalDeviceShaderEnqueuePropertiesAMDX structure is defined
+as:
+
+include::{generated}/api/structs/VkPhysicalDeviceShaderEnqueuePropertiesAMDX.adoc[]
+
+The members of the sname:VkPhysicalDeviceShaderEnqueuePropertiesAMDX
+structure describe the following limits:
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * [[limits-maxExecutionGraphDepth]] pname:maxExecutionGraphDepth defines
+    the maximum node chain depth in the graph.
+    The dispatched node is at depth 1 and the node enqueued by it is at
+    depth 2, and so on.
+    If a node enqueues itself, each recursive enqueue increases the depth by
+    1 as well.
+  * [[limits-maxExecutionGraphShaderOutputNodes]]
+    pname:maxExecutionGraphShaderOutputNodes specifies the maximum number of
+    unique nodes that can be dispatched from a single shader, and must be at
+    least 256.
+  * [[limits-maxExecutionGraphShaderPayloadSize]]
+    pname:maxExecutionGraphShaderPayloadSize specifies the maximum total
+    size of payload declarations in a shader.
+    For any payload declarations that share resources, indicated by
+    code:NodeSharesPayloadLimitsWithAMDX decorations, the maximum size of
+    each set of shared payload declarations is taken.
+    The sum of each shared set's maximum size and the size of each unshared
+    payload is counted against this limit.
+  * [[limits-maxExecutionGraphShaderPayloadCount]]
+    pname:maxExecutionGraphShaderPayloadCount specifies the maximum number
+    of output payloads that can be initialized in a single workgroup.
+  * [[limits-executionGraphDispatchAddressAlignment]]
+    pname:executionGraphDispatchAddressAlignment specifies the alignment of
+    non-scratch basetype:VkDeviceAddress arguments consumed by graph
+    dispatch commands.
+
+:refpage: VkPhysicalDeviceShaderEnqueuePropertiesAMDX
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+include::{generated}/validity/structs/VkPhysicalDeviceShaderEnqueuePropertiesAMDX.adoc[]
+--
+endif::VK_AMDX_shader_enqueue[]
+
+ifdef::VK_NV_extended_sparse_address_space[]
+[open,refpage='VkPhysicalDeviceExtendedSparseAddressSpacePropertiesNV',desc='Structure describing sparse address space limits of an implementation',type='structs']
+--
+The sname:VkPhysicalDeviceExtendedSparseAddressSpacePropertiesNV structure
+is defined as:
+
+include::{generated}/api/structs/VkPhysicalDeviceExtendedSparseAddressSpacePropertiesNV.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * [[limits-extendedSparseAddressSpaceSize]]
+    pname:extendedSparseAddressSpaceSize is the total amount of address
+    space available, in bytes, for sparse memory resources of all usages if
+    the <<features-extendedSparseAddressSpace,
+    pname:extendedSparseAddressSpace>> feature is enabled.
+    This must: be greater than or equal to
+    sname:VkPhysicalDeviceLimits::pname:sparseAddressSpaceSize, and the
+    difference in space must: only be used with usages allowed below.
+    This is an upper bound on the sum of the sizes of all sparse resources,
+    regardless of whether any memory is bound to them.
+  * [[limits-extendedSparseImageUsageFlags]]
+    pname:extendedSparseImageUsageFlags is a bitmask of
+    elink:VkImageUsageFlagBits of usages which may: allow an implementation
+    to use the full pname:extendedSparseAddressSpaceSize space.
+  * [[limits-extendedSparseBufferUsageFlags]]
+    pname:extendedSparseBufferUsageFlags is a bitmask of
+    elink:VkBufferUsageFlagBits of usages which may: allow an implementation
+    to use the full pname:extendedSparseAddressSpaceSize space.
+
+:refpage: VkPhysicalDeviceExtendedSparseAddressSpacePropertiesNV
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+include::{generated}/validity/structs/VkPhysicalDeviceExtendedSparseAddressSpacePropertiesNV.adoc[]
+--
+endif::VK_NV_extended_sparse_address_space[]
+
+ifdef::VK_NV_cuda_kernel_launch[]
+[open,refpage='VkPhysicalDeviceCudaKernelLaunchPropertiesNV',desc='Structure describing the compute capability version available',type='structs']
+--
+The sname:VkPhysicalDeviceCudaKernelLaunchPropertiesNV structure is defined
+as:
+
+include::{generated}/api/structs/VkPhysicalDeviceCudaKernelLaunchPropertiesNV.adoc[]
+
+The members of the sname:VkPhysicalDeviceCudaKernelLaunchPropertiesNV
+structure describe the following features:
+
+  * [[limits-computeCapabilityMinor]] pname:computeCapabilityMinor indicates
+    the minor version number of the compute code.
+  * [[limits-computeCapabilityMajor]] pname:computeCapabilityMajor indicates
+    the major version number of the compute code.
+
+:refpage: VkPhysicalDeviceCudaKernelLaunchPropertiesNV
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+include::{generated}/validity/structs/VkPhysicalDeviceCudaKernelLaunchPropertiesNV.adoc[]
+--
+endif::VK_NV_cuda_kernel_launch[]
+
+ifdef::VK_ANDROID_external_format_resolve[]
+[open,refpage='VkPhysicalDeviceExternalFormatResolvePropertiesANDROID',desc='Structure describing external format resolve supported by an implementation',type='structs']
+--
+The sname:VkPhysicalDeviceExternalFormatResolvePropertiesANDROID structure
+is defined as:
+
+include::{generated}/api/structs/VkPhysicalDeviceExternalFormatResolvePropertiesANDROID.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * [[limits-nullColorAttachmentWithExternalFormatResolve]]
+    pname:nullColorAttachmentWithExternalFormatResolve indicates that there
+    must: be no color attachment image when performing external format
+    resolves if it is ename:VK_TRUE.
+  * [[limits-externalFormatResolveChromaOffsetX]]
+    pname:externalFormatResolveChromaOffsetX indicates the
+    elink:VkChromaLocation that an implementation uses in the X axis for
+    accesses to an external format image as a resolve attachment.
+    This must: be consistent between external format resolves and load
+    operations from external format resolve attachments to color attachments
+    when pname:nullColorAttachmentWithExternalFormatResolve is
+    ename:VK_TRUE.
+  * [[limits-externalFormatResolveChromaOffsetY]]
+    pname:externalFormatResolveChromaOffsetY indicates the
+    elink:VkChromaLocation that an implementation uses in the Y axis for
+    accesses to an external format image as a resolve attachment.
+    This must: be consistent between external format resolves and load
+    operations from external format resolve attachments to color attachments
+    when pname:nullColorAttachmentWithExternalFormatResolve is
+    ename:VK_TRUE.
+
+:refpage: VkPhysicalDeviceExternalFormatResolvePropertiesANDROID
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+include::{generated}/validity/structs/VkPhysicalDeviceExternalFormatResolvePropertiesANDROID.adoc[]
+--
+endif::VK_ANDROID_external_format_resolve[]
+
+ifdef::VK_ARM_render_pass_striped[]
+
+[open,refpage='VkPhysicalDeviceRenderPassStripedPropertiesARM',desc='Structure describing striped rendering limits of an implementation',type='structs']
+--
+The sname:VkPhysicalDeviceRenderPassStripedPropertiesARM structure is
+defined as:
+
+include::{generated}/api/structs/VkPhysicalDeviceRenderPassStripedPropertiesARM.adoc[]
+
+The members of the sname:VkPhysicalDeviceRenderPassStripedPropertiesARM
+structure describe the following limits:
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * [[limits-renderPassStripeGranularity]] pname:renderPassStripeGranularity
+    indicates the minimum supported granularity of striped render pass
+    regions.
+  * [[limits-maxRenderPassStripes]] pname:maxRenderPassStripes indicates the
+    maximum number of stripes supported in striped rendering.
+
+:refpage: VkPhysicalDeviceRenderPassStripedPropertiesARM
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+include::{generated}/validity/structs/VkPhysicalDeviceRenderPassStripedPropertiesARM.adoc[]
+--
+
+endif::VK_ARM_render_pass_striped[]
 
 [[limits-minmax]]
 == Limit Requirements
@@ -4052,7 +4612,9 @@ whether or not the feature is enabled.
 | code:uint32_t            | pname:subPixelInterpolationOffsetBits      | pname:sampleRateShading
 | code:uint32_t            | pname:maxFramebufferWidth                  | -
 | code:uint32_t            | pname:maxFramebufferHeight                 | -
-| code:uint32_t            | pname:maxFramebufferLayers                 | -
+| code:uint32_t            | pname:maxFramebufferLayers                 |
+ifdef::VKSC_VERSION_1_0[pname:geometryShader, pname:shaderOutputLayer]
+ifndef::VKSC_VERSION_1_0[-]
 | tlink:VkSampleCountFlags | pname:framebufferColorSampleCounts         | -
 ifdef::VK_VERSION_1_2[]
 | tlink:VkSampleCountFlags | pname:framebufferIntegerColorSampleCounts  | -
@@ -4094,7 +4656,7 @@ ifdef::VK_VERSION_1_2[`<<features-samplerFilterMinmax, pname:samplerFilterMinmax
 ifdef::VK_EXT_sampler_filter_minmax[`apiext:VK_EXT_sampler_filter_minmax`]
 endif::VK_VERSION_1_2,VK_EXT_sampler_filter_minmax[]
 ifdef::VK_VERSION_1_3,VK_KHR_maintenance4[]
-| basetype:VkDeviceSize    | pname:maxBufferSize                        | `<<features-maintenance4,  pname:maintenance4>>`
+| basetype:VkDeviceSize    | pname:maxBufferSize                        | `<<features-maintenance4, pname:maintenance4>>`
 endif::VK_VERSION_1_3,VK_KHR_maintenance4[]
 ifdef::VK_EXT_conservative_rasterization[]
 | code:float           | pname:primitiveOverestimationSize                 | `apiext:VK_EXT_conservative_rasterization`
@@ -4138,9 +4700,11 @@ endif::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
 ifdef::VK_VERSION_1_3[]
 | code:uint32_t     | pname:maxInlineUniformTotalSize                               |`<<features-inlineUniformBlock, pname:inlineUniformBlock>>`
 endif::VK_VERSION_1_3[]
-ifdef::VK_EXT_vertex_attribute_divisor[]
-| code:uint32_t            | pname:maxVertexAttribDivisor               | `apiext:VK_EXT_vertex_attribute_divisor`
-endif::VK_EXT_vertex_attribute_divisor[]
+ifdef::VK_EXT_vertex_attribute_divisor,VK_KHR_vertex_attribute_divisor[]
+| code:uint32_t            | pname:maxVertexAttribDivisor               |
+ifdef::VK_KHR_vertex_attribute_divisor[`apiext:VK_KHR_vertex_attribute_divisor`]
+ifndef::VK_KHR_vertex_attribute_divisor[`apiext:VK_EXT_vertex_attribute_divisor`]
+endif::VK_EXT_vertex_attribute_divisor,VK_KHR_vertex_attribute_divisor[]
 ifdef::VK_NV_mesh_shader[]
 | code:uint32_t            | slink:VkPhysicalDeviceMeshShaderPropertiesNV::pname:maxDrawMeshTasksCount               | `apiext:VK_NV_mesh_shader`
 | code:uint32_t            | slink:VkPhysicalDeviceMeshShaderPropertiesNV::pname:maxTaskWorkGroupInvocations         | `apiext:VK_NV_mesh_shader`
@@ -4323,6 +4887,26 @@ endif::VK_EXT_descriptor_buffer[]
 ifdef::VK_HUAWEI_subpass_shading[]
 | code:uint32_t                 | pname:maxSubpassShadingWorkgroupSizeAspectRatio | `<<features-subpassShading, pname:subpassShading>>`
 endif::VK_HUAWEI_subpass_shading[]
+ifdef::VKSC_VERSION_1_0[]
+| basetype:VkBool32        | pname:deviceNoDynamicHostAllocations                   | -
+| basetype:VkBool32        | pname:deviceDestroyFreesMemory                         | -
+| basetype:VkBool32        | pname:commandPoolMultipleCommandBuffersRecording       | -
+| basetype:VkBool32        | pname:commandPoolResetCommandBuffer                    | -
+| basetype:VkBool32        | pname:commandBufferSimultaneousUse                     | -
+| basetype:VkBool32        | pname:secondaryCommandBufferNullOrImagelessFramebuffer | -
+| basetype:VkBool32        | pname:recycleDescriptorSetMemory                       | -
+| basetype:VkBool32        | pname:recyclePipelineMemory                            | -
+| code:uint32_t            | pname:maxRenderPassSubpasses                           | -
+| code:uint32_t            | pname:maxRenderPassDependencies                        | -
+| code:uint32_t            | pname:maxSubpassInputAttachments                       | -
+| code:uint32_t            | pname:maxSubpassPreserveAttachments                    | -
+| code:uint32_t            | pname:maxFramebufferAttachments                        | -
+| code:uint32_t            | pname:maxDescriptorSetLayoutBindings                   | -
+| code:uint32_t            | pname:maxQueryFaultCount                               | -
+| code:uint32_t            | pname:maxCallbackFaultCount                            | -
+| code:uint32_t            | pname:maxCommandPoolCommandBuffers                     | -
+| basetype:VkDeviceSize    | pname:maxCommandBufferSize                             | -
+endif::VKSC_VERSION_1_0[]
 ifdef::VK_EXT_graphics_pipeline_library[]
 | basetype:VkBool32             | pname:graphicsPipelineLibraryFastLinking                  | `<<features-graphicsPipelineLibrary, pname:graphicsPipelineLibrary>>`
 | basetype:VkBool32             | pname:graphicsPipelineLibraryIndependentInterpolationDecoration | `<<features-graphicsPipelineLibrary, pname:graphicsPipelineLibrary>>`
@@ -4346,6 +4930,26 @@ endif::VK_EXT_opacity_micromap[]
 ifdef::VK_NV_memory_decompression[]
 | code:uint64_t                 | pname:maxDecompressionIndirectCount                       | `apiext:VK_NV_memory_decompression`
 endif::VK_NV_memory_decompression[]
+ifdef::VK_HUAWEI_cluster_culling_shader[]
+|  3 {times} code:uint32_t                 |
+pname:maxWorkGroupCount | `apiext:VK_HUAWEI_cluster_culling_shader`
+|  3 {times} code:uint32_t                 |
+pname:maxWorkGroupSize | `apiext:VK_HUAWEI_cluster_culling_shader`
+| code:uint32_t                 |
+pname:maxOutputClusterCount | `apiext:VK_HUAWEI_cluster_culling_shader`
+| basetype:VkDeviceSize                 |
+pname:indirectBufferOffsetAlignment | `apiext:VK_HUAWEI_cluster_culling_shader`
+endif::VK_HUAWEI_cluster_culling_shader[]
+ifdef::VK_AMDX_shader_enqueue[]
+| code:uint32_t                 | pname:maxExecutionGraphDepth                              | `<<features-shaderEnqueue,pname:shaderEnqueue>>`
+| code:uint32_t                 | pname:maxExecutionGraphShaderOutputNodes                  | `<<features-shaderEnqueue,pname:shaderEnqueue>>`
+| code:uint32_t                 | pname:maxExecutionGraphShaderPayloadSize                  | `<<features-shaderEnqueue,pname:shaderEnqueue>>`
+| code:uint32_t                 | pname:maxExecutionGraphShaderPayloadCount                 | `<<features-shaderEnqueue,pname:shaderEnqueue>>`
+| code:uint32_t                 | pname:executionGraphDispatchAddressAlignment              | `<<features-shaderEnqueue,pname:shaderEnqueue>>`
+endif::VK_AMDX_shader_enqueue[]
+ifdef::VK_NV_extended_sparse_address_space[]
+| basetype:VkDeviceSize         | pname:extendedSparseAddressSpaceSize                      | pname:sparseBinding, `<<features-extendedSparseAddressSpace, pname:extendedSparseAddressSpace>>`
+endif::VK_NV_extended_sparse_address_space[]
 |====
 
 [[limits-required]]
@@ -4437,7 +5041,10 @@ endif::VK_KHR_portability_subset[]
 | pname:subPixelInterpolationOffsetBits      | 0 | 4 ^5^ | min
 | pname:maxFramebufferWidth                  | - | 4096  | min
 | pname:maxFramebufferHeight                 | - | 4096  | min
-| pname:maxFramebufferLayers                 | - | 256   | min
+| pname:maxFramebufferLayers                 |
+ifdef::VKSC_VERSION_1_0[1]
+ifndef::VKSC_VERSION_1_0[-]
+| 256   | min
 | pname:framebufferColorSampleCounts         | - | (ename:VK_SAMPLE_COUNT_1_BIT \| ename:VK_SAMPLE_COUNT_4_BIT) | min
 ifdef::VK_VERSION_1_2[]
 | pname:framebufferIntegerColorSampleCounts  | - | (ename:VK_SAMPLE_COUNT_1_BIT)                                | min
@@ -4553,9 +5160,9 @@ endif::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
 ifdef::VK_VERSION_1_3[]
 | pname:maxInlineUniformTotalSize                               | - | 256   | min
 endif::VK_VERSION_1_3[]
-ifdef::VK_EXT_vertex_attribute_divisor[]
+ifdef::VK_EXT_vertex_attribute_divisor,VK_KHR_vertex_attribute_divisor[]
 | pname:maxVertexAttribDivisor               | - | 2^16^-1   | min
-endif::VK_EXT_vertex_attribute_divisor[]
+endif::VK_EXT_vertex_attribute_divisor,VK_KHR_vertex_attribute_divisor[]
 ifdef::VK_NV_mesh_shader[]
 | slink:VkPhysicalDeviceMeshShaderPropertiesNV::pname:maxDrawMeshTasksCount                | - | 2^16^-1   | min
 | slink:VkPhysicalDeviceMeshShaderPropertiesNV::pname:maxTaskWorkGroupInvocations          | - | 32        | min
@@ -4721,27 +5328,27 @@ ifdef::VK_EXT_descriptor_buffer[]
 | pname:imageViewCaptureReplayDescriptorDataSize    | - | 64 | max
 | pname:samplerCaptureReplayDescriptorDataSize      | - | 64 | max
 | pname:accelerationStructureCaptureReplayDescriptorDataSize | - | 64 | max
-| pname:samplerDescriptorSize                       | - | 64 | max
-| pname:combinedImageSamplerDescriptorSize          | - | 128 | max
-| pname:sampledImageDescriptorSize                  | - | 64 | max
-| pname:storageImageDescriptorSize                  | - | 128 | max
-| pname:uniformTexelBufferDescriptorSize            | - | 64 | max
-| pname:robustUniformTexelBufferDescriptorSize      | - | 64 | max
-| pname:storageTexelBufferDescriptorSize            | - | 128 | max
-| pname:robustStorageTexelBufferDescriptorSize      | - | 128 | max
-| pname:uniformBufferDescriptorSize                 | - | 64 | max
-| pname:robustUniformBufferDescriptorSize           | - | 64 | max
-| pname:storageBufferDescriptorSize                 | - | 128 | max
-| pname:robustStorageBufferDescriptorSize           | - | 128 | max
-| pname:inputAttachmentDescriptorSize               | - | 64 | max
-| pname:accelerationStructureDescriptorSize         | - | 64 | max
+| pname:samplerDescriptorSize                       | - | 256 | max
+| pname:combinedImageSamplerDescriptorSize          | - | 256 | max
+| pname:sampledImageDescriptorSize                  | - | 256 | max
+| pname:storageImageDescriptorSize                  | - | 256 | max
+| pname:uniformTexelBufferDescriptorSize            | - | 256 | max
+| pname:robustUniformTexelBufferDescriptorSize      | - | 256 | max
+| pname:storageTexelBufferDescriptorSize            | - | 256 | max
+| pname:robustStorageTexelBufferDescriptorSize      | - | 256 | max
+| pname:uniformBufferDescriptorSize                 | - | 256 | max
+| pname:robustUniformBufferDescriptorSize           | - | 256 | max
+| pname:storageBufferDescriptorSize                 | - | 256 | max
+| pname:robustStorageBufferDescriptorSize           | - | 256 | max
+| pname:inputAttachmentDescriptorSize               | - | 256 | max
+| pname:accelerationStructureDescriptorSize         | - | 256 | max
 | pname:maxSamplerDescriptorBufferRange             | - | [eq]#2^11^ {times} pname:samplerDescriptorSize# | min
-| pname:maxResourceDescriptorBufferRange            | - | [eq]#(2^20^ - 2^15^) {times} ptext:maxResourceDescriptorSize# ^11^ | min
+| pname:maxResourceDescriptorBufferRange            | - | [eq]#(2^20^ - 2^15^) {times} ptext:maxResourceDescriptorSize# ^12^ | min
 | pname:samplerDescriptorBufferAddressSpaceSize     | - | 2^27^ | min
 | pname:resourceDescriptorBufferAddressSpaceSize    | - | 2^27^ | min
 | pname:descriptorBufferAddressSpaceSize            | - | 2^27^ | min
 ifdef::VK_EXT_fragment_density_map[]
-| pname:combinedImageSamplerDensityMapDescriptorSize          | - | 192 | max
+| pname:combinedImageSamplerDensityMapDescriptorSize          | - | 256 | max
 endif::VK_EXT_fragment_density_map[]
 endif::VK_EXT_descriptor_buffer[]
 ifdef::VK_HUAWEI_subpass_shading[]
@@ -4750,6 +5357,29 @@ endif::VK_HUAWEI_subpass_shading[]
 ifdef::VK_EXT_multi_draw[]
 | pname:maxMultiDrawCount               | - | 1024 | min
 endif::VK_EXT_multi_draw[]
+ifdef::VK_EXT_nested_command_buffer[]
+| pname:maxCommandBufferNestingLevel                        | - | 1 | min
+endif::VK_EXT_nested_command_buffer[]
+ifdef::VKSC_VERSION_1_0[]
+| pname:deviceNoDynamicHostAllocations                      | - | -      | implementation-dependent
+| pname:deviceDestroyFreesMemory                            | - | -      | implementation-dependent
+| pname:commandPoolMultipleCommandBuffersRecording          | - | -      | implementation-dependent
+| pname:commandPoolResetCommandBuffer                       | - | -      | implementation-dependent
+| pname:commandBufferSimultaneousUse                        | - | -      | implementation-dependent
+| pname:secondaryCommandBufferNullOrImagelessFramebuffer    | - | -      | implementation-dependent
+| pname:recycleDescriptorSetMemory                          | - | -      | implementation-dependent
+| pname:recyclePipelineMemory                               | - | -      | implementation-dependent
+| pname:maxRenderPassSubpasses                              | - | 1      | min
+| pname:maxRenderPassDependencies                           | - | 18     | min
+| pname:maxSubpassInputAttachments                          | - | 0      | min
+| pname:maxSubpassPreserveAttachments                       | - | 0      | min
+| pname:maxFramebufferAttachments                           | - | 9 ^11^ | min
+| pname:maxDescriptorSetLayoutBindings                      | - | 64     | min
+| pname:maxQueryFaultCount                                  | - | 16     | min
+| pname:maxCallbackFaultCount                               | - | 1      | min
+| pname:maxCommandPoolCommandBuffers                        | - | 256    | min
+| pname:maxCommandBufferSize                                | - | 2^20^  | min
+endif::VKSC_VERSION_1_0[]
 ifdef::VK_EXT_graphics_pipeline_library[]
 | pname:graphicsPipelineLibraryFastLinking                  | - | false | implementation-dependent
 | pname:graphicsPipelineLibraryIndependentInterpolationDecoration | - | false | implementation-dependent
@@ -4773,6 +5403,26 @@ endif::VK_EXT_opacity_micromap[]
 ifdef::VK_NV_memory_decompression[]
 | pname:maxDecompressionIndirectCount    | 1 | 2^16^-1 | min
 endif::VK_NV_memory_decompression[]
+ifdef::VK_HUAWEI_cluster_culling_shader[]
+| pname:maxWorkGroupCount | - | (65536,1,1) | min
+| pname:maxWorkGroupSize  | - | (32,1,1) | min
+| pname:maxOutputClusterCount | - | 1024 | min
+| pname:indirectBufferOffsetAlignment | - | - | implementation-dependent
+endif::VK_HUAWEI_cluster_culling_shader[]
+ifdef::VK_AMDX_shader_enqueue[]
+| pname:maxExecutionGraphDepth                              |   -   | 32      | min
+| pname:maxExecutionGraphShaderOutputNodes                  |   -   | 256     | min
+| pname:maxExecutionGraphShaderPayloadSize                  |   -   | 32768   | min
+| pname:maxExecutionGraphShaderPayloadCount                 |   -   | 256     | min
+| pname:executionGraphDispatchAddressAlignment              |   -   | 4       | max
+endif::VK_AMDX_shader_enqueue[]
+ifdef::VK_NV_extended_sparse_address_space[]
+| pname:extendedSparseAddressSpaceSize                      |   0   | pname:sparseAddressSpaceSize | min
+endif::VK_NV_extended_sparse_address_space[]
+ifdef::VK_ARM_render_pass_striped[]
+| pname:renderPassStripeGranularity               | - | (64,64) | max
+| pname:maxRenderPassStripes                      | - | 32 | min
+endif::VK_ARM_render_pass_striped[]
 |====
 
 1::
@@ -4842,8 +5492,15 @@ ifdef::VK_KHR_portability_subset[]
      required minimum value of pname:maxVertexInputBindings is code:8.
 endif::VK_KHR_portability_subset[]
 
+ifdef::VKSC_VERSION_1_0[]
+11:: ptext:maxFramebufferAttachments must: be greater than or equal to two
+     times pname:maxColorAttachments (for color and resolve attachments)
+     plus one (for the depth/stencil attachment), or else must: be equal to
+     2^32^-1.
+endif::VKSC_VERSION_1_0[]
+
 ifdef::VK_EXT_descriptor_buffer[]
-11::
+12::
      ptext:maxResourceDescriptorSize is defined as the maximum value of
      pname:storageImageDescriptorSize, pname:sampledImageDescriptorSize,
      pname:robustUniformTexelBufferDescriptorSize,
@@ -4885,7 +5542,7 @@ The sname:VkMultisamplePropertiesEXT structure is defined as
 
 include::{generated}/api/structs/VkMultisamplePropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:maxSampleLocationGridSize is the maximum size of the pixel grid in
@@ -4906,7 +5563,7 @@ respectively, otherwise both members must: be `0`.
 endif::VK_EXT_sample_locations[]
 
 // If you are adding a new features structure, it must be placed at the end
-// of the previous section (immediately before [[limits-multisample]]).
+// of the previous section (immediately before <<limits-multisample>>).
 
 
 ifdef::VK_VERSION_1_3[]

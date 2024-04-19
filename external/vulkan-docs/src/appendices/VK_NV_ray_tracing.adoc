@@ -9,8 +9,6 @@ include::{generated}/meta/{refprefix}VK_NV_ray_tracing.adoc[]
 *Last Modified Date*::
     2018-11-20
 *Interactions and External Dependencies*::
-  - This extension requires
-    {spirv}/NV/SPV_NV_ray_tracing.html[`SPV_NV_ray_tracing`]
   - This extension provides API support for
     {GLSLregistry}/nv/GLSL_NV_ray_tracing.txt[`GL_NV_ray_tracing`]
 *Contributors*::
@@ -85,7 +83,7 @@ include::{generated}/interfaces/VK_NV_ray_tracing.adoc[]
 Example ray generation GLSL shader
 
 [source,c]
----------------------------------------------------
+----
 #version 450 core
 #extension GL_NV_ray_tracing : require
 layout(set = 0, binding = 0, rgba8) uniform image2D image;
@@ -105,7 +103,7 @@ void main()
 
    imageStore(image, ivec2(gl_LaunchIDNV.xy), col);
 }
----------------------------------------------------
+----
 
 === Version History
 

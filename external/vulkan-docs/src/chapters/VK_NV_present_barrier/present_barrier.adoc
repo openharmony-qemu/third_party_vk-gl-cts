@@ -21,7 +21,7 @@ barrier, whether or not that queued request has executed.
 A given presentation request is added, when created by calling
 flink:vkQueuePresentKHR and specifying a swapchain using the present
 barrier, either to the oldest existing set of corresponding requests for
-which there is no existing member associated with the request's swapcahin,
+which there is no existing member associated with the request's swapchain,
 or to a new set of corresponding requests if no such set exists.
 
 A set of corresponding requests is said to be _full_ when it contains one
@@ -47,7 +47,7 @@ The slink:VkSwapchainPresentBarrierCreateInfoNV structure is defined as:
 
 include::{generated}/api/structs/VkSwapchainPresentBarrierCreateInfoNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:presentBarrierEnable is a boolean value indicating a request for

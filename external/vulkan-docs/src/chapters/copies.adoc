@@ -1,4 +1,4 @@
-// Copyright 2015-2022 The Khronos Group Inc.
+// Copyright 2015-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -98,13 +98,12 @@ endif::VK_KHR_copy_commands2[]
   * pname:pCopyBufferInfo is a pointer to a slink:VkCopyBufferInfo2
     structure describing the copy parameters.
 
-Each source region specified by pname:pCopyBufferInfo->pname:pRegions is
-copied from the source buffer to the destination region of the destination
-buffer.
-If any of the specified regions in pname:pCopyBufferInfo->pname:srcBuffer
-overlaps in memory with any of the specified regions in
-pname:pCopyBufferInfo->pname:dstBuffer, values read from those overlapping
-regions are undefined:.
+Each source region specified by pname:pCopyBufferInfo->pRegions is copied
+from the source buffer to the destination region of the destination buffer.
+If any of the specified regions in pname:pCopyBufferInfo->srcBuffer overlaps
+in memory with any of the specified regions in
+pname:pCopyBufferInfo->dstBuffer, values read from those overlapping regions
+are undefined:.
 
 .Valid Usage
 ****
@@ -128,7 +127,7 @@ or the equivalent
 include::{generated}/api/structs/VkCopyBufferInfo2KHR.adoc[]
 endif::VK_KHR_copy_commands2[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:srcBuffer is the source buffer.
@@ -159,7 +158,7 @@ or the equivalent
 include::{generated}/api/structs/VkBufferCopy2KHR.adoc[]
 endif::VK_KHR_copy_commands2[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:srcOffset is the starting offset in bytes from the start of
@@ -233,12 +232,29 @@ ename:VK_IMAGE_TYPE_2D with multiple layers, then each slice is copied to or
 from a different layer; pname:depth slices in the 3D image correspond to
 pname:layerCount layers in the 2D image, with an effective pname:depth of
 `1` used for the 2D image.
+ifndef::VK_KHR_maintenance5[]
+Other combinations of image types are disallowed.
+endif::VK_KHR_maintenance5[]
+ifdef::VK_KHR_maintenance5[]
+If <<features-maintenance5,pname:maintenance5>> is enabled, all other
+combinations are allowed and function as if 1D images are 2D images with a
+height of 1.
+Otherwise, other combinations of image types are disallowed.
+endif::VK_KHR_maintenance5[]
 endif::VK_VERSION_1_1,VK_KHR_maintenance1[]
 
 .Valid Usage
 ****
 include::{chapters}/commonvalidity/copy_image_command_buffer_common.adoc[]
 include::{chapters}/commonvalidity/copy_image_common.adoc[]
+
+:imageparam: srcImage
+:imagesubresource: srcSubresource
+include::{chapters}/commonvalidity/copy_anyimage_to_imageany_common.adoc[]
+
+:imageparam: dstImage
+:imagesubresource: dstSubresource
+include::{chapters}/commonvalidity/copy_anyimage_to_imageany_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdCopyImage.adoc[]
@@ -295,8 +311,16 @@ ifdef::VK_EXT_image_drm_format_modifier[]
     pname:aspectMask must: not include
     `VK_IMAGE_ASPECT_MEMORY_PLANE__{ibit}__BIT_EXT` for any index _i_
 endif::VK_EXT_image_drm_format_modifier[]
+  * [[VUID-VkImageSubresourceLayers-layerCount-09243]]
+    {empty}
+ifdef::VK_KHR_maintenance5[]
+    If the <<features-maintenance5, pname:maintenance5>> feature is not
+    enabled,
+endif::VK_KHR_maintenance5[]
+    pname:layerCount must: not be ename:VK_REMAINING_ARRAY_LAYERS
   * [[VUID-VkImageSubresourceLayers-layerCount-01700]]
-    pname:layerCount must: be greater than 0
+    If pname:layerCount is not ename:VK_REMAINING_ARRAY_LAYERS, it must: be
+    greater than 0
 ****
 
 include::{generated}/validity/structs/VkImageSubresourceLayers.adoc[]
@@ -353,7 +377,7 @@ or the equivalent
 include::{generated}/api/structs/VkCopyImageInfo2KHR.adoc[]
 endif::VK_KHR_copy_commands2[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:srcImage is the source image.
@@ -370,6 +394,14 @@ endif::VK_KHR_copy_commands2[]
 .Valid Usage
 ****
 include::{chapters}/commonvalidity/copy_image_common.adoc[]
+
+:imageparam: srcImage
+:imagesubresource: srcSubresource
+include::{chapters}/commonvalidity/copy_anyimage_to_imageany_common.adoc[]
+
+:imageparam: dstImage
+:imagesubresource: dstSubresource
+include::{chapters}/commonvalidity/copy_anyimage_to_imageany_common.adoc[]
 ****
 
 include::{generated}/validity/structs/VkCopyImageInfo2.adoc[]
@@ -389,7 +421,7 @@ or the equivalent
 include::{generated}/api/structs/VkImageCopy2KHR.adoc[]
 endif::VK_KHR_copy_commands2[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:srcSubresource and pname:dstSubresource are
@@ -429,18 +461,18 @@ block extent>> and size of the format being copied.
 For a set of coordinates [eq]#(x,y,z,layer)#, where:
 
   {empty}:: [eq]#x# is in the range [eq]#[pname:imageOffset.x / blockWidth,
-    {lceil}(pname:imageOffset.x {plus} pname:imageExtent.width) /
-    blockWidth{rceil})#,
+            {lceil}(pname:imageOffset.x {plus} pname:imageExtent.width) /
+            blockWidth{rceil})#,
   {empty}:: [eq]#y# is in the range [eq]#[pname:imageOffset.y / blockHeight,
-    {lceil}(pname:imageOffset.y {plus} pname:imageExtent.height) /
-    blockHeight{rceil})#,
+            {lceil}(pname:imageOffset.y {plus} pname:imageExtent.height) /
+            blockHeight{rceil})#,
   {empty}:: [eq]#z# is in the range [eq]#[pname:imageOffset.z / blockDepth,
-    {lceil}(pname:imageOffset.z {plus} pname:imageExtent.depth) /
-    blockDepth{rceil})#,
+            {lceil}(pname:imageOffset.z {plus} pname:imageExtent.depth) /
+            blockDepth{rceil})#,
   {empty}:: [eq]#layer# is in the range
-    [pname:imageSubresource.baseArrayLayer,
-    pname:imageSubresource.baseArrayLayer {plus}
-    pname:imageSubresource.layerCount),
+            [pname:imageSubresource.baseArrayLayer,
+            pname:imageSubresource.baseArrayLayer {plus}
+            pname:imageSubresource.layerCount),
 
 and where [eq]#blockWidth#, [eq]#blockHeight#, and [eq]#blockDepth# are the
 dimensions of the <<formats-compatibility-classes,texel block extent>> of
@@ -491,33 +523,33 @@ to the specified elink:VkSurfaceTransformFlagBitsKHR:
       {empty}:: [eq]#imageHeight' = imageHeight#
   * If ename:VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR is specified
       {empty}:: [eq]#x'# is in the range [eq]#[{lceil}(pname:imageOffset.x
-        {minus} pname:imageExtent.height) / blockHeight{rceil},
-        pname:imageOffset.x {minus} image/ blockHeight)#
+                {minus} pname:imageExtent.height) / blockHeight{rceil},
+                pname:imageOffset.x {minus} image/ blockHeight)#
       {empty}:: [eq]#y'# is in the range [eq]#[pname:imageOffset.y /
-        blockWidth, {lceil}(pname:imageOffset.y {plus}
-        pname:imageExtent.width) / blockWidth{rceil})#
+                blockWidth, {lceil}(pname:imageOffset.y {plus}
+                pname:imageExtent.width) / blockWidth{rceil})#
       {empty}:: [eq]#blockWidth' = blockHeight#
       {empty}:: [eq]#blockHeight' = blockWidth#
       {empty}:: [eq]#imageWidth' = imageHeight#
       {empty}:: [eq]#imageHeight' = imageWidth#
   * If ename:VK_SURFACE_TRANSFORM_ROTATE_180_BIT_KHR is specified:
       {empty}:: [eq]#x'# is in the range [eq]#[{lceil}(pname:imageOffset.x
-        {minus} pname:imageExtent.width) / blockWidth{rceil},
-        pname:imageOffset.x / blockWidth)#,
+                {minus} pname:imageExtent.width) / blockWidth{rceil},
+                pname:imageOffset.x / blockWidth)#,
       {empty}:: [eq]#y'# is in the range [eq]#[{lceil}(pname:imageOffset.x
-        {plus} pname:imageExtent.height) / blockHeight{rceil},
-        pname:imageOffset.x / blockHeight)#,
+                {plus} pname:imageExtent.height) / blockHeight{rceil},
+                pname:imageOffset.x / blockHeight)#,
       {empty}:: [eq]#blockWidth' = blockWidth#
       {empty}:: [eq]#blockHeight' = blockHeight#
       {empty}:: [eq]#imageWidth' = imageWidth#
       {empty}:: [eq]#imageHeight' = imageHeight#
   * If ename:VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR is specified:
       {empty}:: [eq]#x# is in the range [eq]#[pname:imageOffset.x /
-        blockHeight, {lceil}(pname:imageOffset.x {plus}
-        pname:imageExtent.height) / blockHeight{rceil})#
+                blockHeight, {lceil}(pname:imageOffset.x {plus}
+                pname:imageExtent.height) / blockHeight{rceil})#
       {empty}:: [eq]#y# is in the range [eq]#[{lceil}(pname:imageOffset.y
-        {minus} pname:imageExtent.width) / blockWidth{rceil},
-        pname:imageOffset.y / blockWidth)#.
+                {minus} pname:imageExtent.width) / blockWidth{rceil},
+                pname:imageOffset.y / blockWidth)#.
       {empty}:: [eq]#blockWidth' = blockHeight#
       {empty}:: [eq]#blockHeight' = blockWidth#
       {empty}:: [eq]#imageWidth' = imageHeight#
@@ -620,27 +652,24 @@ Copy regions for the image must: be aligned to a multiple of the texel block
 extent in each dimension, except at the edges of the image, where region
 extents must: match the edge of the image.
 
-:imageparam: pname:dstImage
+:imageparam: dstImage
+:imagesubresource: imageSubresource
+:imageoffset: imageOffset
+:imageextent: imageExtent
+:bufferrowlength: bufferRowLength
+:bufferimageheight: bufferImageHeight
 :regionsparam: pname:pRegions
 
 .Valid Usage
 ****
+include::{chapters}/commonvalidity/copy_anyimage_to_imageany_common.adoc[]
+include::{chapters}/commonvalidity/copy_anyimage_to_imageany_no_rotation_common.adoc[]
+include::{chapters}/commonvalidity/copy_anyimage_to_imageany_single_sampled_common.adoc[]
 include::{chapters}/commonvalidity/copy_buffer_to_image_command_buffer_common.adoc[]
-include::{chapters}/commonvalidity/copy_bufferimage_to_imagebuffer_common.adoc[]
 include::{chapters}/commonvalidity/copy_buffer_to_image_common.adoc[]
-  * [[VUID-vkCmdCopyBufferToImage-pRegions-06217]]
-    The image region specified by each element of pname:pRegions must: be
-    contained within the specified pname:imageSubresource of pname:dstImage
-  * [[VUID-vkCmdCopyBufferToImage-pRegions-06218]]
-    For each element of pname:pRegions, pname:imageOffset.x and
-    [eq]#(pname:imageExtent.width {plus} pname:imageOffset.x)# must: both be
-    greater than or equal to `0` and less than or equal to the width of the
-    specified pname:imageSubresource of pname:dstImage
-  * [[VUID-vkCmdCopyBufferToImage-pRegions-06219]]
-    For each element of pname:pRegions, pname:imageOffset.y and
-    [eq]#(pname:imageExtent.height {plus} pname:imageOffset.y)# must: both
-    be greater than or equal to `0` and less than or equal to the height of
-    the specified pname:imageSubresource of pname:dstImage
+include::{chapters}/commonvalidity/copy_bufferimage_to_imagebuffer_common.adoc[]
+include::{chapters}/commonvalidity/copy_bufferimage_to_imagebuffer_not_both_image_common.adoc[]
+include::{chapters}/commonvalidity/copy_bufferimage_to_imagebuffer_buffer_alignment_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdCopyBufferToImage.adoc[]
@@ -676,27 +705,24 @@ Copy regions for the image must: be aligned to a multiple of the texel block
 extent in each dimension, except at the edges of the image, where region
 extents must: match the edge of the image.
 
-:imageparam: pname:srcImage
+:imageparam: srcImage
+:imagesubresource: imageSubresource
+:imageoffset: imageOffset
+:imageextent: imageExtent
+:bufferrowlength: bufferRowLength
+:bufferimageheight: bufferImageHeight
 :regionsparam: pname:pRegions
 
 .Valid Usage
 ****
+include::{chapters}/commonvalidity/copy_anyimage_to_imageany_common.adoc[]
+include::{chapters}/commonvalidity/copy_anyimage_to_imageany_no_rotation_common.adoc[]
+include::{chapters}/commonvalidity/copy_anyimage_to_imageany_single_sampled_common.adoc[]
 include::{chapters}/commonvalidity/copy_image_to_buffer_command_buffer_common.adoc[]
-include::{chapters}/commonvalidity/copy_bufferimage_to_imagebuffer_common.adoc[]
 include::{chapters}/commonvalidity/copy_image_to_buffer_common.adoc[]
-  * [[VUID-vkCmdCopyImageToBuffer-pRegions-06220]]
-    The image region specified by each element of pname:pRegions must: be
-    contained within the specified pname:imageSubresource of pname:srcImage
-  * [[VUID-vkCmdCopyImageToBuffer-pRegions-06221]]
-    For each element of pname:pRegions, pname:imageOffset.x and
-    [eq]#(pname:imageExtent.width {plus} pname:imageOffset.x)# must: both be
-    greater than or equal to `0` and less than or equal to the width of the
-    specified pname:imageSubresource of pname:srcImage
-  * [[VUID-vkCmdCopyImageToBuffer-pRegions-06222]]
-    For each element of pname:pRegions, pname:imageOffset.y and
-    [eq]#(imageExtent.height {plus} pname:imageOffset.y)# must: both be
-    greater than or equal to `0` and less than or equal to the height of the
-    specified pname:imageSubresource of pname:srcImage
+include::{chapters}/commonvalidity/copy_bufferimage_to_imagebuffer_common.adoc[]
+include::{chapters}/commonvalidity/copy_bufferimage_to_imagebuffer_not_both_image_common.adoc[]
+include::{chapters}/commonvalidity/copy_bufferimage_to_imagebuffer_buffer_alignment_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdCopyImageToBuffer.adoc[]
@@ -726,9 +752,12 @@ include::{generated}/api/structs/VkBufferImageCopy.adoc[]
   * pname:imageExtent is the size in texels of the image to copy in
     pname:width, pname:height and pname:depth.
 
+:bufferrowlength: bufferRowLength
+:bufferimageheight: bufferImageHeight
+
 .Valid Usage
 ****
-include::{chapters}/commonvalidity/buffer_image_copy_common.adoc[]
+include::{chapters}/commonvalidity/buffer_or_memory_image_copy_common.adoc[]
 ****
 
 include::{generated}/validity/structs/VkBufferImageCopy.adoc[]
@@ -787,7 +816,7 @@ or the equivalent
 include::{generated}/api/structs/VkCopyBufferToImageInfo2KHR.adoc[]
 endif::VK_KHR_copy_commands2[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:srcBuffer is the source buffer.
@@ -798,19 +827,25 @@ endif::VK_KHR_copy_commands2[]
   * pname:pRegions is a pointer to an array of slink:VkBufferImageCopy2
     structures specifying the regions to copy.
 
+:imageparam: dstImage
+:imagesubresource: imageSubresource
+:imageoffset: imageOffset
+:imageextent: imageExtent
+:bufferrowlength: bufferRowLength
+:bufferimageheight: bufferImageHeight
+:regionsparam: pname:pRegions
+
 .Valid Usage
 ****
-ifndef::VK_QCOM_rotated_copy_commands[]
-  * [[VUID-VkCopyBufferToImageInfo2-pRegions-00172]]
-    The image region specified by each element of pname:pRegions must: be
-    contained within the specified pname:imageSubresource of pname:dstImage
-endif::VK_QCOM_rotated_copy_commands[]
-ifdef::VK_QCOM_rotated_copy_commands[]
   * [[VUID-VkCopyBufferToImageInfo2-pRegions-04565]]
-    If the image region specified by each element of pname:pRegions does not
-    contain slink:VkCopyCommandTransformInfoQCOM in its pname:pNext chain,
-    it must: be a region that is contained within the specified
-    pname:imageSubresource of pname:dstImage
+    The image region specified by each element of pname:pRegions
+ifdef::VK_QCOM_rotated_copy_commands[]
+    that does not contain slink:VkCopyCommandTransformInfoQCOM in its
+    pname:pNext chain
+endif::VK_QCOM_rotated_copy_commands[]
+    must: be contained within the specified pname:imageSubresource of
+    pname:dstImage
+ifdef::VK_QCOM_rotated_copy_commands[]
   * [[VUID-VkCopyBufferToImageInfo2KHR-pRegions-04554]]
     If the image region specified by each element of pname:pRegions contains
     slink:VkCopyCommandTransformInfoQCOM in its pname:pNext chain, the
@@ -833,6 +868,11 @@ ifdef::VK_QCOM_rotated_copy_commands[]
     <<formats-requiring-sampler-ycbcr-conversion, multi-planar format>>
 endif::VK_QCOM_rotated_copy_commands[]
 include::{chapters}/commonvalidity/copy_buffer_to_image_common.adoc[]
+include::{chapters}/commonvalidity/copy_anyimage_to_imageany_common.adoc[]
+include::{chapters}/commonvalidity/copy_anyimage_to_imageany_single_sampled_common.adoc[]
+include::{chapters}/commonvalidity/copy_bufferimage_to_imagebuffer_common.adoc[]
+include::{chapters}/commonvalidity/copy_bufferimage_to_imagebuffer_not_both_image_common.adoc[]
+include::{chapters}/commonvalidity/copy_bufferimage_to_imagebuffer_buffer_alignment_common.adoc[]
   * [[VUID-VkCopyBufferToImageInfo2-pRegions-06223]]
     For each element of pname:pRegions not containing
     sname:VkCopyCommandTransformInfoQCOM in its pname:pNext chain,
@@ -847,9 +887,6 @@ include::{chapters}/commonvalidity/copy_buffer_to_image_common.adoc[]
     pname:imageOffset.y)# must: both be greater than or equal to `0` and
     less than or equal to the height of the specified pname:imageSubresource
     of pname:dstImage
-
-:imageparam: pname:dstImage
-include::{chapters}/commonvalidity/copy_bufferimage_to_imagebuffer_common.adoc[]
 ****
 
 include::{generated}/validity/structs/VkCopyBufferToImageInfo2.adoc[]
@@ -904,7 +941,7 @@ or the equivalent
 include::{generated}/api/structs/VkCopyImageToBufferInfo2KHR.adoc[]
 endif::VK_KHR_copy_commands2[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:srcImage is the source image.
@@ -915,19 +952,25 @@ endif::VK_KHR_copy_commands2[]
   * pname:pRegions is a pointer to an array of slink:VkBufferImageCopy2
     structures specifying the regions to copy.
 
+:imageparam: srcImage
+:imagesubresource: imageSubresource
+:imageoffset: imageOffset
+:imageextent: imageExtent
+:bufferrowlength: bufferRowLength
+:bufferimageheight: bufferImageHeight
+:regionsparam: pname:pRegions
+
 .Valid Usage
 ****
-ifndef::VK_QCOM_rotated_copy_commands[]
-  * [[VUID-VkCopyImageToBufferInfo2-pRegions-00182]]
-    The image region specified by each element of pname:pRegions must: be
-    contained within the specified pname:imageSubresource of pname:srcImage
-endif::VK_QCOM_rotated_copy_commands[]
-ifdef::VK_QCOM_rotated_copy_commands[]
   * [[VUID-VkCopyImageToBufferInfo2-pRegions-04566]]
-    If the image region specified by each element of pname:pRegions does not
-    contain slink:VkCopyCommandTransformInfoQCOM in its pname:pNext chain,
-    it must: be contained within the specified pname:imageSubresource of
+    The image region specified by each element of pname:pRegions
+ifdef::VK_QCOM_rotated_copy_commands[]
+    that does not contain slink:VkCopyCommandTransformInfoQCOM in its
+    pname:pNext chain
+endif::VK_QCOM_rotated_copy_commands[]
+    must: be contained within the specified pname:imageSubresource of
     pname:srcImage
+ifdef::VK_QCOM_rotated_copy_commands[]
   * [[VUID-VkCopyImageToBufferInfo2KHR-pRegions-04557]]
     If the image region specified by each element of pname:pRegions contains
     slink:VkCopyCommandTransformInfoQCOM in its pname:pNext chain, the
@@ -950,6 +993,11 @@ ifdef::VK_QCOM_rotated_copy_commands[]
     <<formats-requiring-sampler-ycbcr-conversion, multi-planar format>>
 endif::VK_QCOM_rotated_copy_commands[]
 include::{chapters}/commonvalidity/copy_image_to_buffer_common.adoc[]
+include::{chapters}/commonvalidity/copy_anyimage_to_imageany_common.adoc[]
+include::{chapters}/commonvalidity/copy_anyimage_to_imageany_single_sampled_common.adoc[]
+include::{chapters}/commonvalidity/copy_bufferimage_to_imagebuffer_common.adoc[]
+include::{chapters}/commonvalidity/copy_bufferimage_to_imagebuffer_not_both_image_common.adoc[]
+include::{chapters}/commonvalidity/copy_bufferimage_to_imagebuffer_buffer_alignment_common.adoc[]
   * [[VUID-VkCopyImageToBufferInfo2-imageOffset-00197]]
     For each element of pname:pRegions not containing
     sname:VkCopyCommandTransformInfoQCOM in its pname:pNext chain,
@@ -964,9 +1012,6 @@ include::{chapters}/commonvalidity/copy_image_to_buffer_common.adoc[]
     pname:imageOffset.y)# must: both be greater than or equal to `0` and
     less than or equal to the height of the specified pname:imageSubresource
     of pname:srcImage
-
-:imageparam: pname:srcImage
-include::{chapters}/commonvalidity/copy_bufferimage_to_imagebuffer_common.adoc[]
 ****
 
 include::{generated}/validity/structs/VkCopyImageToBufferInfo2.adoc[]
@@ -987,7 +1032,7 @@ or the equivalent
 include::{generated}/api/structs/VkBufferImageCopy2KHR.adoc[]
 endif::VK_KHR_copy_commands2[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:bufferOffset is the offset in bytes from the start of the buffer
@@ -1009,9 +1054,12 @@ This structure is functionally identical to slink:VkBufferImageCopy, but
 adds pname:sType and pname:pNext parameters, allowing it to be more easily
 extended.
 
+:bufferrowlength: bufferRowLength
+:bufferimageheight: bufferImageHeight
+
 .Valid Usage
 ****
-include::{chapters}/commonvalidity/buffer_image_copy_common.adoc[]
+include::{chapters}/commonvalidity/buffer_or_memory_image_copy_common.adoc[]
 ****
 
 include::{generated}/validity/structs/VkBufferImageCopy2.adoc[]
@@ -1025,7 +1073,7 @@ The sname:VkCopyCommandTransformInfoQCOM structure is defined as:
 
 include::{generated}/api/structs/VkCopyCommandTransformInfoQCOM.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:transform is a elink:VkSurfaceTransformFlagBitsKHR value
@@ -1063,6 +1111,10 @@ be specified for single-plane 2D images with a 1x1x1
 include::{generated}/validity/structs/VkCopyCommandTransformInfoQCOM.adoc[]
 --
 endif::VK_QCOM_rotated_copy_commands[]
+
+ifdef::VK_EXT_host_image_copy[]
+include::{chapters}/VK_EXT_host_image_copy/copies.adoc[]
+endif::VK_EXT_host_image_copy[]
 
 
 ifdef::VK_NV_copy_memory_indirect[]
@@ -1120,10 +1172,10 @@ sname:VkCopyMemoryIndirectCommandNV is defined as:
 
 include::{generated}/api/structs/VkCopyMemoryIndirectCommandNV.adoc[]
 
-  * pname:srcAddress is the starting address of the source host or device
-    memory to copy from.
-  * pname:dstAddress is the starting address of the destination host or
-    device memory to copy to.
+  * pname:srcAddress is the starting address of the source device memory to
+    copy from.
+  * pname:dstAddress is the starting address of the destination device
+    memory to copy to.
   * pname:size is the size of the copy in bytes.
 
 .Valid Usage
@@ -1141,6 +1193,8 @@ include::{generated}/validity/structs/VkCopyMemoryIndirectCommandNV.adoc[]
 
 [open,refpage='vkCmdCopyMemoryToImageIndirectNV',desc='Copy data from a memory region into an image',type='protos']
 --
+:refpage: vkCmdCopyMemoryToImageIndirectNV
+
 To copy data from a memory region to an image object by specifying copy
 parameters in a buffer, call:
 
@@ -1166,10 +1220,12 @@ Each region in pname:copyBufferAddress is copied from the source memory
 region to an image region in the destination image.
 If the destination image is of type ename:VK_IMAGE_TYPE_3D, the starting
 slice and number of slices to copy are specified in
-pname:pImageSubresources::pname:baseArrayLayer and
-pname:pImageSubresources::pname:layerCount respectively.
+pname:pImageSubresources->baseArrayLayer and
+pname:pImageSubresources->layerCount respectively.
 The copy must: be performed on a queue that supports indirect copy
 operations, see slink:VkPhysicalDeviceCopyMemoryIndirectPropertiesNV.
+
+:imageparam: dstImage
 
 .Valid Usage
 ****
@@ -1190,32 +1246,26 @@ operations, see slink:VkPhysicalDeviceCopyMemoryIndirectPropertiesNV.
   * [[VUID-vkCmdCopyMemoryToImageIndirectNV-dstImage-07665]]
     If pname:dstImage is non-sparse then it must: be bound completely and
     contiguously to a single sname:VkDeviceMemory object
-  * [[VUID-vkCmdCopyMemoryToImageIndirectNV-dstImage-07666]]
-    pname:dstImage must: have a sample count equal to
-    ename:VK_SAMPLE_COUNT_1_BIT
+include::{chapters}/commonvalidity/copy_anyimage_to_imageany_single_sampled_common.adoc[]
   * [[VUID-vkCmdCopyMemoryToImageIndirectNV-dstImageLayout-07667]]
     pname:dstImageLayout must: specify the layout of the image subresources
     of pname:dstImage at the time this command is executed on a
     sname:VkDevice
-ifndef::VK_KHR_shared_presentable_image[]
-  * [[VUID-vkCmdCopyMemoryToImageIndirectNV-dstImageLayout-07668]]
-    pname:dstImageLayout must: be ename:VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
-    or ename:VK_IMAGE_LAYOUT_GENERAL
-endif::VK_KHR_shared_presentable_image[]
-ifdef::VK_KHR_shared_presentable_image[]
   * [[VUID-vkCmdCopyMemoryToImageIndirectNV-dstImageLayout-07669]]
     pname:dstImageLayout must: be
     ename:VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-    ename:VK_IMAGE_LAYOUT_GENERAL, or
-    ename:VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR
+ifdef::VK_KHR_shared_presentable_image[]
+    ename:VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR,
 endif::VK_KHR_shared_presentable_image[]
+    or ename:VK_IMAGE_LAYOUT_GENERAL
   * [[VUID-vkCmdCopyMemoryToImageIndirectNV-mipLevel-07670]]
     The specified pname:mipLevel of each region must: be less than the
     pname:mipLevels specified in slink:VkImageCreateInfo when pname:dstImage
     was created
-  * [[VUID-vkCmdCopyMemoryToImageIndirectNV-baseArrayLayer-07671]]
-    The specified pname:baseArrayLayer {plus} pname:layerCount of each
-    region must: be less than or equal to the pname:arrayLayers specified in
+  * [[VUID-vkCmdCopyMemoryToImageIndirectNV-layerCount-08764]]
+    If pname:layerCount is not ename:VK_REMAINING_ARRAY_LAYERS, the
+    specified pname:baseArrayLayer {plus} pname:layerCount of each region
+    must: be less than or equal to the pname:arrayLayers specified in
     slink:VkImageCreateInfo when pname:dstImage was created
   * [[VUID-vkCmdCopyMemoryToImageIndirectNV-imageOffset-07672]]
     The pname:imageOffset and pname:imageExtent members of each region must:
@@ -1254,8 +1304,8 @@ The sname:VkCopyMemoryToImageIndirectCommandNV is defined as:
 
 include::{generated}/api/structs/VkCopyMemoryToImageIndirectCommandNV.adoc[]
 
-  * pname:srcAddress is the starting address of the source host or device
-    memory to copy from.
+  * pname:srcAddress is the starting address of the source device memory to
+    copy from.
   * pname:bufferRowLength and pname:bufferImageHeight specify in texels a
     subregion of a larger two- or three-dimensional image in buffer memory,
     and control the addressing calculations.
@@ -1294,7 +1344,7 @@ endif::VK_NV_copy_memory_indirect[]
 
 
 [[copies-imagescaling]]
-== Image Copies with Scaling
+== Image Copies With Scaling
 
 [open,refpage='vkCmdBlitImage',desc='Copy regions of an image, potentially performing format conversion,',type='protos']
 --
@@ -1498,7 +1548,7 @@ or the equivalent
 include::{generated}/api/structs/VkBlitImageInfo2KHR.adoc[]
 endif::VK_KHR_copy_commands2[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:srcImage is the source image.
@@ -1531,10 +1581,45 @@ ifdef::VK_QCOM_rotated_copy_commands[]
     pname:srcImage must: not have a
     <<formats-requiring-sampler-ycbcr-conversion, multi-planar format>>
 endif::VK_QCOM_rotated_copy_commands[]
+ifdef::VK_QCOM_filter_cubic_weights[]
+  * [[VUID-VkBlitImageInfo2-filter-09204]]
+    If pname:filter is ename:VK_FILTER_CUBIC_EXT and if the
+    <<features-filter-cubic-weight-selection,selectableCubicWeights>>
+    feature is not enabled then the cubic weights must: be
+    ename:VK_CUBIC_FILTER_WEIGHTS_CATMULL_ROM_QCOM
+endif::VK_QCOM_filter_cubic_weights[]
 ****
 
 include::{generated}/validity/structs/VkBlitImageInfo2.adoc[]
 --
+
+ifdef::VK_QCOM_filter_cubic_weights[]
+
+If pname:filter is ename:VK_FILTER_CUBIC_EXT and if the pname:pNext chain of
+slink:VkBlitImageInfo2 includes a sname:VkBlitImageCubicWeightsInfoQCOM
+structure, then that structure specifies cubic weights are used in the blit.
+If that structure is not present, then cubic weights are considered to be
+ename:VK_CUBIC_FILTER_WEIGHTS_CATMULL_ROM_QCOM.
+
+[open,refpage='VkBlitImageCubicWeightsInfoQCOM',desc='Structure specifying image blit cubic weight info',type='structs',alias='VkImageBlit2KHR']
+--
+:refpage: VkBlitImageCubicWeightsInfoQCOM
+
+The sname:VkBlitImageCubicWeightsInfoQCOM structure is defined as:
+
+include::{generated}/api/structs/VkBlitImageCubicWeightsInfoQCOM.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:cubicWeights is a elink:VkCubicFilterWeightsQCOM value controlling
+    cubic filter weights for the blit.
+
+include::{generated}/validity/structs/VkBlitImageCubicWeightsInfoQCOM.adoc[]
+--
+
+endif::VK_QCOM_filter_cubic_weights[]
+
 
 [open,refpage='VkImageBlit2',desc='Structure specifying an image blit operation',type='structs',alias='VkImageBlit2KHR']
 --
@@ -1550,7 +1635,7 @@ or the equivalent
 include::{generated}/api/structs/VkImageBlit2KHR.adoc[]
 endif::VK_KHR_copy_commands2[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:srcSubresource is the subresource to blit from.
@@ -1724,7 +1809,7 @@ or the equivalent
 include::{generated}/api/structs/VkResolveImageInfo2KHR.adoc[]
 endif::VK_KHR_copy_commands2[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:srcImage is the source image.
@@ -1759,7 +1844,7 @@ or the equivalent
 include::{generated}/api/structs/VkImageResolve2KHR.adoc[]
 endif::VK_KHR_copy_commands2[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:srcSubresource and pname:dstSubresource are
@@ -1781,6 +1866,10 @@ include::{chapters}/commonvalidity/image_resolve_common.adoc[]
 include::{generated}/validity/structs/VkImageResolve2.adoc[]
 --
 endif::VK_VERSION_1_3,VK_KHR_copy_commands2[]
+
+ifdef::VK_KHR_object_refresh[]
+include::{chapters}/VK_KHR_object_refresh/copies.adoc[]
+endif::VK_KHR_object_refresh[]
 
 ifdef::VK_AMD_buffer_marker[]
 include::{chapters}/VK_AMD_buffer_marker/copies.adoc[]

@@ -1,4 +1,4 @@
-// Copyright 2014-2022 The Khronos Group Inc.
+// Copyright 2014-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -85,6 +85,11 @@ endif::VK_KHR_shared_presentable_image[]
 
 [open,refpage='vkCreateSwapchainKHR',desc='Create a swapchain',type='protos']
 --
+:refpage: vkCreateSwapchainKHR
+:objectnameplural: swapchains
+:objectnamecamelcase: swapchain
+:objectcount: 1
+
 To create a swapchain, call:
 
 include::{generated}/api/protos/vkCreateSwapchainKHR.adoc[]
@@ -151,10 +156,11 @@ endif::VK_VERSION_1_1,VK_KHR_device_group,VK_KHR_swapchain_mutable_format[]
 The pname:pCreateInfo->surface must: not be destroyed until after the
 swapchain is destroyed.
 
-If pname:pCreateInfo->oldSwapchain is dlink:VK_NULL_HANDLE, and the native
-window referred to by pname:pCreateInfo->surface is already associated with
-a Vulkan swapchain, ename:VK_ERROR_NATIVE_WINDOW_IN_USE_KHR must: be
-returned.
+ifdef::VKSC_VERSION_1_0[If]
+ifndef::VKSC_VERSION_1_0[If pname:oldSwapchain is dlink:VK_NULL_HANDLE, and]
+the native window referred to by pname:pCreateInfo->surface is already
+associated with a Vulkan swapchain, ename:VK_ERROR_NATIVE_WINDOW_IN_USE_KHR
+must: be returned.
 
 If the native window referred to by pname:pCreateInfo->surface is already
 associated with a non-Vulkan graphics API surface,
@@ -166,8 +172,10 @@ Vulkan swapchains have been destroyed.
 
 fname:vkCreateSwapchainKHR will return ename:VK_ERROR_DEVICE_LOST if the
 logical device was lost.
+ifndef::VKSC_VERSION_1_0[]
 The sname:VkSwapchainKHR is a child of the pname:device, and must: be
 destroyed before the pname:device.
+endif::VKSC_VERSION_1_0[]
 However, sname:VkSurfaceKHR is not a child of any sname:VkDevice and is not
 affected by the lost device.
 After successfully recreating a sname:VkDevice, the same sname:VkSurfaceKHR
@@ -232,6 +240,15 @@ the application.
 In this scenario ename:VK_ERROR_INITIALIZATION_FAILED is returned.
 endif::VK_NV_acquire_winrt_display[]
 
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
+
+ifdef::VKSC_VERSION_1_0[]
+.Valid Usage
+****
+include::{chapters}/commonvalidity/memory_reservation_request_count_common.adoc[]
+****
+endif::VKSC_VERSION_1_0[]
+
 include::{generated}/validity/protos/vkCreateSwapchainKHR.adoc[]
 --
 
@@ -241,7 +258,7 @@ The sname:VkSwapchainCreateInfoKHR structure is defined as:
 
 include::{generated}/api/structs/VkSwapchainCreateInfoKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is a bitmask of elink:VkSwapchainCreateFlagBitsKHR
@@ -326,12 +343,19 @@ to read back the content of presentable images before presenting them or
 after reacquiring them, and if their fragment shaders do not have any side
 effects that require them to run for all pixels in the presentable image.
 ====
+ifdef::VKSC_VERSION_1_0[]
+  * pname:oldSwapchain must: be dlink:VK_NULL_HANDLE in Vulkan SC
+    <<SCID-4>>.
+endif::VKSC_VERSION_1_0[]
+ifndef::VKSC_VERSION_1_0[]
   * pname:oldSwapchain is dlink:VK_NULL_HANDLE, or the existing non-retired
     swapchain currently associated with pname:surface.
     Providing a valid pname:oldSwapchain may: aid in the resource reuse, and
     also allows the application to still present any images that are already
     acquired from it.
+endif::VKSC_VERSION_1_0[]
 
+ifndef::VKSC_VERSION_1_0[]
 Upon calling fname:vkCreateSwapchainKHR with an pname:oldSwapchain that is
 not dlink:VK_NULL_HANDLE, pname:oldSwapchain is retired -- even if creation
 of the new swapchain fails.
@@ -367,33 +391,29 @@ swapchain, as long as it has not entered a state that causes it to return
 ename:VK_ERROR_OUT_OF_DATE_KHR.
 endif::VK_KHR_shared_presentable_image[]
 ====
+endif::VKSC_VERSION_1_0[]
 
 .Valid Usage
 ****
   * [[VUID-VkSwapchainCreateInfoKHR-surface-01270]]
     pname:surface must: be a surface that is supported by the device as
     determined using flink:vkGetPhysicalDeviceSurfaceSupportKHR
-ifndef::VK_KHR_shared_presentable_image[]
-  * [[VUID-VkSwapchainCreateInfoKHR-minImageCount-01271]]
-    pname:minImageCount must: be greater than or equal to the value returned
-    in the pname:minImageCount member of the sname:VkSurfaceCapabilitiesKHR
-    structure returned by flink:vkGetPhysicalDeviceSurfaceCapabilitiesKHR
-    for the surface
-endif::VK_KHR_shared_presentable_image[]
   * [[VUID-VkSwapchainCreateInfoKHR-minImageCount-01272]]
     pname:minImageCount must: be less than or equal to the value returned in
     the pname:maxImageCount member of the sname:VkSurfaceCapabilitiesKHR
     structure returned by fname:vkGetPhysicalDeviceSurfaceCapabilitiesKHR
     for the surface if the returned pname:maxImageCount is not zero
-ifdef::VK_KHR_shared_presentable_image[]
   * [[VUID-VkSwapchainCreateInfoKHR-presentMode-02839]]
+ifdef::VK_KHR_shared_presentable_image[]
     If pname:presentMode is not
     ename:VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR nor
     ename:VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR, then
+endif::VK_KHR_shared_presentable_image[]
     pname:minImageCount must: be greater than or equal to the value returned
     in the pname:minImageCount member of the sname:VkSurfaceCapabilitiesKHR
     structure returned by flink:vkGetPhysicalDeviceSurfaceCapabilitiesKHR
     for the surface
+ifdef::VK_KHR_shared_presentable_image[]
   * [[VUID-VkSwapchainCreateInfoKHR-minImageCount-01383]]
     pname:minImageCount must: be `1` if pname:presentMode is either
     ename:VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR or
@@ -404,24 +424,19 @@ endif::VK_KHR_shared_presentable_image[]
     and pname:colorSpace members, respectively, of one of the
     sname:VkSurfaceFormatKHR structures returned by
     fname:vkGetPhysicalDeviceSurfaceFormatsKHR for the surface
-ifndef::VK_EXT_swapchain_maintenance1[]
-  * [[VUID-VkSwapchainCreateInfoKHR-imageExtent-01274]]
+  * [[VUID-VkSwapchainCreateInfoKHR-pNext-07781]]
+ifdef::VK_EXT_swapchain_maintenance1[]
+    If a slink:VkSwapchainPresentScalingCreateInfoEXT structure was not
+    included in the pname:pNext chain, or it is included and
+    slink:VkSwapchainPresentScalingCreateInfoEXT::pname:scalingBehavior is
+    zero then
+endif::VK_EXT_swapchain_maintenance1[]
     pname:imageExtent must: be between pname:minImageExtent and
     pname:maxImageExtent, inclusive, where pname:minImageExtent and
     pname:maxImageExtent are members of the sname:VkSurfaceCapabilitiesKHR
     structure returned by fname:vkGetPhysicalDeviceSurfaceCapabilitiesKHR
     for the surface
-endif::VK_EXT_swapchain_maintenance1[]
 ifdef::VK_EXT_swapchain_maintenance1[]
-  * [[VUID-VkSwapchainCreateInfoKHR-pNext-07781]]
-    If a slink:VkSwapchainPresentScalingCreateInfoEXT structure was not
-    included in the pname:pNext chain, or it is included and
-    slink:VkSwapchainPresentScalingCreateInfoEXT::pname:scalingBehavior is
-    zero then pname:imageExtent must: be between pname:minImageExtent and
-    pname:maxImageExtent, inclusive, where pname:minImageExtent and
-    pname:maxImageExtent are members of the sname:VkSurfaceCapabilitiesKHR
-    structure returned by fname:vkGetPhysicalDeviceSurfaceCapabilitiesKHR
-    for the surface
   * [[VUID-VkSwapchainCreateInfoKHR-pNext-07782]]
     If a slink:VkSwapchainPresentScalingCreateInfoEXT structure was included
     in the pname:pNext chain and
@@ -465,23 +480,15 @@ endif::VK_KHR_shared_presentable_image[]
   * [[VUID-VkSwapchainCreateInfoKHR-imageSharingMode-01278]]
     If pname:imageSharingMode is ename:VK_SHARING_MODE_CONCURRENT,
     pname:queueFamilyIndexCount must: be greater than `1`
-ifndef::VK_VERSION_1_1,VK_KHR_get_physical_device_properties2[]
-  * [[VUID-VkSwapchainCreateInfoKHR-imageSharingMode-01393]]
-    If pname:imageSharingMode is ename:VK_SHARING_MODE_CONCURRENT, each
-    element of pname:pQueueFamilyIndices must: be unique and must: be less
-    than pname:pQueueFamilyPropertyCount returned by
-    flink:vkGetPhysicalDeviceQueueFamilyProperties for the
-    pname:physicalDevice that was used to create pname:device
-endif::VK_VERSION_1_1,VK_KHR_get_physical_device_properties2[]
-ifdef::VK_VERSION_1_1,VK_KHR_get_physical_device_properties2[]
   * [[VUID-VkSwapchainCreateInfoKHR-imageSharingMode-01428]]
     If pname:imageSharingMode is ename:VK_SHARING_MODE_CONCURRENT, each
     element of pname:pQueueFamilyIndices must: be unique and must: be less
     than pname:pQueueFamilyPropertyCount returned by either
-    flink:vkGetPhysicalDeviceQueueFamilyProperties or
-    flink:vkGetPhysicalDeviceQueueFamilyProperties2 for the
-    pname:physicalDevice that was used to create pname:device
+    flink:vkGetPhysicalDeviceQueueFamilyProperties
+ifdef::VK_VERSION_1_1,VK_KHR_get_physical_device_properties2[]
+    or flink:vkGetPhysicalDeviceQueueFamilyProperties2
 endif::VK_VERSION_1_1,VK_KHR_get_physical_device_properties2[]
+    for the pname:physicalDevice that was used to create pname:device
   * [[VUID-VkSwapchainCreateInfoKHR-preTransform-01279]]
     pname:preTransform must: be one of the bits present in the
     pname:supportedTransforms member of the sname:VkSurfaceCapabilitiesKHR
@@ -498,15 +505,24 @@ endif::VK_VERSION_1_1,VK_KHR_get_physical_device_properties2[]
     surface
 ifdef::VK_VERSION_1_1,VK_KHR_device_group[]
   * [[VUID-VkSwapchainCreateInfoKHR-physicalDeviceCount-01429]]
+ifndef::VKSC_VERSION_1_0[]
     If the logical device was created with
     slink:VkDeviceGroupDeviceCreateInfo::pname:physicalDeviceCount equal to
-    1, pname:flags must: not contain
+    1,
+endif::VKSC_VERSION_1_0[]
+    pname:flags must: not contain
     ename:VK_SWAPCHAIN_CREATE_SPLIT_INSTANCE_BIND_REGIONS_BIT_KHR
 endif::VK_VERSION_1_1,VK_KHR_device_group[]
+ifndef::VKSC_VERSION_1_0[]
   * [[VUID-VkSwapchainCreateInfoKHR-oldSwapchain-01933]]
     If pname:oldSwapchain is not dlink:VK_NULL_HANDLE, pname:oldSwapchain
     must: be a non-retired swapchain associated with native window referred
     to by pname:surface
+endif::VKSC_VERSION_1_0[]
+ifdef::VKSC_VERSION_1_0[]
+  * [[VUID-VkSwapchainCreateInfoKHR-oldSwapchain-05073]]
+    pname:oldSwapchain must: be dlink:VK_NULL_HANDLE
+endif::VKSC_VERSION_1_0[]
   * [[VUID-VkSwapchainCreateInfoKHR-imageFormat-01778]]
     The <<swapchain-wsi-image-create-info, implied image creation
     parameters>> of the swapchain must: be supported as reported by
@@ -552,20 +568,27 @@ ifdef::VK_EXT_full_screen_exclusive+VK_KHR_win32_surface[]
     included in the pname:pNext chain
 endif::VK_EXT_full_screen_exclusive+VK_KHR_win32_surface[]
 ifdef::VK_EXT_image_compression_control[]
-ifndef::VK_EXT_image_compression_control_swapchain[]
-  * [[VUID-VkSwapchainCreateInfoKHR-pNext-06751]]
-    The pname:pNext chain must: not include an
-    slink:VkImageCompressionControlEXT structure
-endif::VK_EXT_image_compression_control_swapchain[]
-ifdef::VK_EXT_image_compression_control_swapchain[]
   * [[VUID-VkSwapchainCreateInfoKHR-pNext-06752]]
+ifdef::VK_EXT_image_compression_control_swapchain[]
     If the <<features-imageCompressionControlSwapchain,
     pname:imageCompressionControlSwapchain>> feature is not enabled, the
+endif::VK_EXT_image_compression_control_swapchain[]
+ifndef::VK_EXT_image_compression_control_swapchain[The]
     pname:pNext chain must: not include an
     slink:VkImageCompressionControlEXT structure
-endif::VK_EXT_image_compression_control_swapchain[]
 endif::VK_EXT_image_compression_control[]
 ****
+ifdef::VKSC_VERSION_1_0[]
+ifdef::hidden[]
+// tag::scdeviation[]
+  * slink:VkSwapchainCreateInfoKHR::pname:flags must: not contain
+    ename:VK_SWAPCHAIN_CREATE_SPLIT_INSTANCE_BIND_REGIONS_BIT_KHR
+    <<SCID-8>>.
+  * slink:VkSwapchainCreateInfoKHR::pname:oldSwapchain must: be
+    dlink:VK_NULL_HANDLE <<SCID-4>>.
+// end::scdeviation[]
+endif::hidden[]
+endif::VKSC_VERSION_1_0[]
 
 include::{generated}/validity/structs/VkSwapchainCreateInfoKHR.adoc[]
 --
@@ -582,6 +605,9 @@ ifdef::VK_VERSION_1_1,VK_KHR_device_group[]
     that images created from the swapchain (i.e. with the pname:swapchain
     member of slink:VkImageSwapchainCreateInfoKHR set to this swapchain's
     handle) must: use ename:VK_IMAGE_CREATE_SPLIT_INSTANCE_BIND_REGIONS_BIT.
+ifdef::VKSC_VERSION_1_0[]
+    This flag is not supported in Vulkan SC <<SCID-8>>.
+endif::VKSC_VERSION_1_0[]
 endif::VK_VERSION_1_1,VK_KHR_device_group[]
 ifdef::VK_VERSION_1_1[]
   * ename:VK_SWAPCHAIN_CREATE_PROTECTED_BIT_KHR specifies that images
@@ -629,7 +655,7 @@ The sname:VkDeviceGroupSwapchainCreateInfoKHR structure is defined as:
 
 include::{generated}/api/structs/VkDeviceGroupSwapchainCreateInfoKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:modes is a bitfield of modes that the swapchain can: be used with.
@@ -653,7 +679,7 @@ The sname:VkSwapchainDisplayNativeHdrCreateInfoAMD structure is defined as:
 
 include::{generated}/api/structs/VkSwapchainDisplayNativeHdrCreateInfoAMD.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:localDimmingEnable specifies whether local dimming is enabled for
@@ -722,6 +748,21 @@ include::{chapters}/VK_EXT_swapchain_maintenance1/SwapchainPresentModesCreateInf
 include::{chapters}/VK_EXT_swapchain_maintenance1/SwapchainPresentScalingCreateInfo.adoc[]
 endif::VK_EXT_swapchain_maintenance1[]
 
+ifdef::VKSC_VERSION_1_0[]
+ifdef::hidden[]
+// tag::scremoved[]
+  * fname:vkDestroySwapchainKHR <<SCID-4>>
+// end::scremoved[]
+endif::hidden[]
+
+Swapchains cannot: be destroyed <<SCID-4>>.
+If
+slink:VkPhysicalDeviceVulkanSC10Properties::<<limits-deviceDestroyFreesMemory,pname:deviceDestroyFreesMemory>>
+is ename:VK_TRUE, the memory for swapchain images is returned to the system
+when the device is destroyed.
+
+endif::VKSC_VERSION_1_0[]
+ifndef::VKSC_VERSION_1_0[]
 [open,refpage='vkDestroySwapchainKHR',desc='Destroy a swapchain object',type='protos']
 --
 To destroy a swapchain object call:
@@ -760,16 +801,19 @@ endif::VK_EXT_full_screen_exclusive[]
   * [[VUID-vkDestroySwapchainKHR-swapchain-01282]]
     All uses of presentable images acquired from pname:swapchain must: have
     completed execution
+ifndef::VKSC_VERSION_1_0[]
   * [[VUID-vkDestroySwapchainKHR-swapchain-01283]]
     If sname:VkAllocationCallbacks were provided when pname:swapchain was
     created, a compatible set of callbacks must: be provided here
   * [[VUID-vkDestroySwapchainKHR-swapchain-01284]]
     If no sname:VkAllocationCallbacks were provided when pname:swapchain was
     created, pname:pAllocator must: be `NULL`
+endif::VKSC_VERSION_1_0[]
 ****
 
 include::{generated}/validity/protos/vkDestroySwapchainKHR.adoc[]
 --
+endif::VKSC_VERSION_1_0[]
 
 ifdef::VK_KHR_display_swapchain[]
 include::{chapters}/VK_KHR_display_swapchain/create_shared_swapchains.adoc[]
@@ -777,6 +821,8 @@ endif::VK_KHR_display_swapchain[]
 
 [open,refpage='vkGetSwapchainImagesKHR',desc='Obtain the array of presentable images associated with a swapchain',type='protos']
 --
+:refpage: vkGetSwapchainImagesKHR
+
 To obtain the array of presentable images associated with a swapchain, call:
 
 include::{generated}/api/protos/vkGetSwapchainImagesKHR.adoc[]
@@ -799,6 +845,8 @@ presentable images for pname:swapchain, at most pname:pSwapchainImageCount
 structures will be written, and ename:VK_INCOMPLETE will be returned instead
 of ename:VK_SUCCESS, to indicate that not all the available presentable
 images were returned.
+
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
 
 include::{generated}/validity/protos/vkGetSwapchainImagesKHR.adoc[]
 --
@@ -829,10 +877,14 @@ All presentable images are initially in the ename:VK_IMAGE_LAYOUT_UNDEFINED
 layout, thus before using presentable images, the application must:
 transition them to a valid layout for the intended use.
 
+ifndef::VKSC_VERSION_1_0[]
+
 Further, the lifetime of presentable images is controlled by the
 implementation, so applications must: not destroy a presentable image.
 See flink:vkDestroySwapchainKHR for further details on the lifetime of
 presentable images.
+
+endif::VKSC_VERSION_1_0[]
 
 ifdef::VK_VERSION_1_1,VK_KHR_device_group[]
 
@@ -850,6 +902,8 @@ endif::VK_VERSION_1_1,VK_KHR_device_group[]
 
 [open,refpage='vkAcquireNextImageKHR',desc='Retrieve the index of the next available presentable image',type='protos']
 --
+:refpage: vkAcquireNextImageKHR
+
 To acquire an available presentable image to use, and retrieve the index of
 that image, call:
 
@@ -873,6 +927,8 @@ whose index is returned in pname:pImageIndex will be fully backed by memory
 before this call returns to the application, as if it is bound completely
 and contiguously to a single sname:VkDeviceMemory object.
 endif::VK_EXT_swapchain_maintenance1[]
+
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
 
 .Valid Usage
 ****
@@ -905,6 +961,12 @@ endif::VK_VERSION_1_2,VK_KHR_timeline_semaphore[]
 include::{generated}/validity/protos/vkAcquireNextImageKHR.adoc[]
 --
 
+If an image is acquired successfully, fname:vkAcquireNextImageKHR must:
+either return ename:VK_SUCCESS or ename:VK_SUBOPTIMAL_KHR.
+The implementation may: return ename:VK_SUBOPTIMAL_KHR if the swapchain no
+longer matches the surface properties exactly, but can: still be used for
+presentation.
+
 When successful, fname:vkAcquireNextImageKHR acquires a presentable image
 from pname:swapchain that an application can: use, and sets
 pname:pImageIndex to the index of that image within the swapchain.
@@ -912,9 +974,12 @@ The presentation engine may: not have finished reading from the image at the
 time it is acquired, so the application must: use pname:semaphore and/or
 pname:fence to ensure that the image layout and contents are not modified
 until the presentation engine reads have completed.
-If pname:semaphore is not dlink:VK_NULL_HANDLE, the application may assume
-that, once fname:vkAcquireNextImageKHR returns, the semaphore signal
-operation referenced by pname:semaphore has been submitted for execution.
+Once fname:vkAcquireNextImageKHR successfully acquires an image, the
+semaphore signal operation referenced by pname:semaphore, if not
+dlink:VK_NULL_HANDLE, and the fence signal operation referenced by
+pname:fence, if not dlink:VK_NULL_HANDLE, are submitted for execution.
+If fname:vkAcquireNextImageKHR does not successfully acquire an image,
+pname:semaphore and pname:fence are unaffected.
 The order in which images are acquired is implementation-dependent, and may:
 be different than the order the images were presented.
 
@@ -965,12 +1030,6 @@ For example, a scenario here is when a compositor holds on to images which
 are currently being presented, and there are not any vacant images left to
 be acquired.
 ====
-
-If an image is acquired successfully, fname:vkAcquireNextImageKHR must:
-either return ename:VK_SUCCESS or ename:VK_SUBOPTIMAL_KHR.
-The implementation may: return ename:VK_SUBOPTIMAL_KHR if the swapchain no
-longer matches the surface properties exactly, but can: still be used for
-presentation.
 
 [NOTE]
 .Note
@@ -1125,6 +1184,8 @@ size without any undefined: contents, or apply some other mapping.
 ifdef::VK_VERSION_1_1,VK_KHR_device_group[]
 [open,refpage='vkAcquireNextImage2KHR',desc='Retrieve the index of the next available presentable image',type='protos']
 --
+:refpage: vkAcquireNextImage2KHR
+
 To acquire an available presentable image to use, and retrieve the index of
 that image, call:
 
@@ -1143,6 +1204,8 @@ whose index is returned in pname:pImageIndex will be fully backed by memory
 before this call returns to the application.
 endif::VK_EXT_swapchain_maintenance1[]
 
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
+
 .Valid Usage
 ****
   * [[VUID-vkAcquireNextImage2KHR-surface-07784]]
@@ -1160,7 +1223,7 @@ The sname:VkAcquireNextImageInfoKHR structure is defined as:
 
 include::{generated}/api/structs/VkAcquireNextImageInfoKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:swapchain is a non-retired swapchain from which an image is
@@ -1222,6 +1285,8 @@ endif::VK_VERSION_1_1,VK_KHR_device_group[]
 
 [open,refpage='vkQueuePresentKHR',desc='Queue an image for presentation',type='protos']
 --
+:refpage: vkQueuePresentKHR
+
 After queueing all rendering commands and transitioning the image to the
 correct layout, to queue an image for presentation, call:
 
@@ -1239,6 +1304,8 @@ There is no requirement for an application to present images in the same
 order that they were acquired - applications can arbitrarily present any
 image that is currently acquired.
 ====
+
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
 
 .Valid Usage
 ****
@@ -1258,22 +1325,18 @@ endif::VK_KHR_display_swapchain[]
     by the elements of the pname:pWaitSemaphores member of
     pname:pPresentInfo executes on pname:queue, there must: be no other
     queues waiting on the same semaphore
-  * [[VUID-vkQueuePresentKHR-pWaitSemaphores-01295]]
-    All elements of the pname:pWaitSemaphores member of pname:pPresentInfo
-    must: be semaphores that are signaled, or have
-    <<synchronization-semaphores-signaling, semaphore signal operations>>
-    previously submitted for execution
 ifdef::VK_VERSION_1_2,VK_KHR_timeline_semaphore[]
   * [[VUID-vkQueuePresentKHR-pWaitSemaphores-03267]]
     All elements of the pname:pWaitSemaphores member of pname:pPresentInfo
     must: be created with a elink:VkSemaphoreType of
     ename:VK_SEMAPHORE_TYPE_BINARY
+endif::VK_VERSION_1_2,VK_KHR_timeline_semaphore[]
   * [[VUID-vkQueuePresentKHR-pWaitSemaphores-03268]]
     All elements of the pname:pWaitSemaphores member of pname:pPresentInfo
     must: reference a semaphore signal operation that has been submitted for
-    execution and any semaphore signal operations on which it depends (if
-    any) must: have also been submitted for execution
-endif::VK_VERSION_1_2,VK_KHR_timeline_semaphore[]
+    execution and any <<synchronization-semaphores-signaling, semaphore
+    signal operations>> on which it depends must: have also been submitted
+    for execution
 ****
 
 Any writes to memory backing the images referenced by the
@@ -1344,7 +1407,7 @@ The sname:VkPresentInfoKHR structure is defined as:
 
 include::{generated}/api/structs/VkPresentInfoKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:waitSemaphoreCount is the number of semaphores to wait for before
@@ -1357,7 +1420,6 @@ include::{generated}/api/structs/VkPresentInfoKHR.adoc[]
     this command.
   * pname:pSwapchains is a pointer to an array of slink:VkSwapchainKHR
     objects with pname:swapchainCount entries.
-    A given swapchain must: not appear in this list more than once.
   * pname:pImageIndices is a pointer to an array of indices into the array
     of each swapchain's presentable images, with pname:swapchainCount
     entries.
@@ -1396,29 +1458,29 @@ parameter should: be set to ename:VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT.
 
 .Valid Usage
 ****
-ifndef::VK_KHR_shared_presentable_image[]
-  * [[VUID-VkPresentInfoKHR-pImageIndices-01296]]
-    Each element of pname:pImageIndices must: be the index of a presentable
-    image acquired from the swapchain specified by the corresponding element
-    of the pname:pSwapchains array, and the presented image subresource
-    must: be in the ename:VK_IMAGE_LAYOUT_PRESENT_SRC_KHR layout at the time
-    the operation is executed on a sname:VkDevice
-endif::VK_KHR_shared_presentable_image[]
-ifdef::VK_KHR_shared_presentable_image[]
+  * [[VUID-VkPresentInfoKHR-pSwapchain-09231]]
+    Elements of pname:pSwapchain must: be unique
   * [[VUID-VkPresentInfoKHR-pImageIndices-01430]]
     Each element of pname:pImageIndices must: be the index of a presentable
     image acquired from the swapchain specified by the corresponding element
     of the pname:pSwapchains array, and the presented image subresource
-    must: be in the ename:VK_IMAGE_LAYOUT_PRESENT_SRC_KHR or
-    ename:VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR layout at the time the
-    operation is executed on a sname:VkDevice
+    must: be in the ename:VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+ifdef::VK_KHR_shared_presentable_image[]
+    or ename:VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR
 endif::VK_KHR_shared_presentable_image[]
+    layout at the time the operation is executed on a sname:VkDevice
 ifdef::VK_KHR_present_id[]
   * [[VUID-VkPresentInfoKHR-pNext-06235]]
     If a slink:VkPresentIdKHR structure is included in the pname:pNext
     chain, and the <<features-presentId, pname:presentId>> feature is not
     enabled, each pname:presentIds entry in that structure must: be NULL
 endif::VK_KHR_present_id[]
+ifdef::VK_EXT_swapchain_maintenance1[]
+  * [[VUID-VkPresentInfoKHR-pSwapchains-09199]]
+    If any element of the pname:pSwapchains array has been created with
+    slink:VkSwapchainPresentModesCreateInfoEXT, all of the elements of this
+    array must: be created with slink:VkSwapchainPresentModesCreateInfoEXT
+endif::VK_EXT_swapchain_maintenance1[]
 ****
 
 include::{generated}/validity/structs/VkPresentInfoKHR.adoc[]
@@ -1443,7 +1505,7 @@ The sname:VkDeviceGroupPresentInfoKHR structure is defined as:
 
 include::{generated}/api/structs/VkDeviceGroupPresentInfoKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:swapchainCount is zero or the number of elements in
@@ -1547,8 +1609,8 @@ include::{chapters}/VK_EXT_swapchain_maintenance1/SwapchainPresentModeInfo.adoc[
 include::{chapters}/VK_EXT_swapchain_maintenance1/SwapchainPresentFenceInfo.adoc[]
 endif::VK_EXT_swapchain_maintenance1[]
 
-fname:vkQueuePresentKHR, releases the acquisition of the images referenced
-by pname:imageIndices.
+fname:vkQueuePresentKHR releases the acquisition of the images referenced by
+pname:imageIndices.
 The queue family corresponding to the queue fname:vkQueuePresentKHR is
 executed on must: have ownership of the presented images as defined in
 <<resources-sharing,Resource Sharing>>.
@@ -1650,7 +1712,7 @@ The sname:VkReleaseSwapchainImagesInfoEXT structure is defined as:
 
 include::{generated}/api/structs/VkReleaseSwapchainImagesInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:swapchain is a swapchain to which images are being released.

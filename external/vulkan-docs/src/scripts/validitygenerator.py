@@ -1,6 +1,6 @@
 #!/usr/bin/python3 -i
 #
-# Copyright 2013-2022 The Khronos Group Inc.
+# Copyright 2013-2024 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -15,10 +15,6 @@ from spec_tools.attributes import ExternSyncEntry, LengthEntry
 from spec_tools.util import (findNamedElem, findNamedObject, findTypedElem,
                              getElemName, getElemType)
 from spec_tools.validity import ValidityCollection, ValidityEntry
-
-
-# For parsing/splitting queue bit names - Vulkan only
-QUEUE_BITS_RE = re.compile(r'([^,]+)')
 
 
 class UnhandledCaseError(RuntimeError):
@@ -62,19 +58,6 @@ def _genericIsDisjoint(a, b):
     return True
 
 
-def _parse_queue_bits(cmd):
-    """Return a generator of queue bits, with underscores turned to spaces.
-
-    Vulkan-only.
-
-    Return None if the queues attribute is not specified."""
-    queuetypes = cmd.get('queues')
-    if not queuetypes:
-        return None
-    return (qt.replace('_', ' ')
-            for qt in QUEUE_BITS_RE.findall(queuetypes))
-
-
 class ValidityOutputGenerator(OutputGenerator):
     """ValidityOutputGenerator - subclass of OutputGenerator.
 
@@ -96,6 +79,9 @@ class ValidityOutputGenerator(OutputGenerator):
         super().__init__(*args, **kwargs)
 
         self.currentExtension = ''
+
+        # Tracks whether we are tracing operations
+        self.trace = False
 
     @property
     def null(self):
@@ -419,7 +405,7 @@ class ValidityOutputGenerator(OutputGenerator):
 
         if self.paramIsStaticArray(param):
             if paramtype != 'char':
-                entry += 'Any given element of '
+                entry += 'Each element of '
             return entry
 
         if self.paramIsArray(param) and param.get('len') != LengthEntry.NULL_TERMINATED_STRING:
@@ -484,6 +470,12 @@ class ValidityOutputGenerator(OutputGenerator):
         paramtype = getElemType(param)
 
         entry = self.makeParamValidityPre(param, params, selector)
+
+        # pAllocator is not supported in VulkanSC and must always be NULL
+        if self.conventions.xml_api_name == "vulkansc" and param_name == 'pAllocator' and paramtype == 'VkAllocationCallbacks':
+            entry = ValidityEntry(anchor=(param_name, 'null'))
+            entry += 'pname:pAllocator must: be `NULL`'
+            return entry
 
         # This is for a child member of a union
         if selector:
@@ -766,14 +758,27 @@ class ValidityOutputGenerator(OutputGenerator):
         param_name = getElemName(param)
         paramtype = getElemType(param)
 
-        # Deal with handle parents
-        handleparent = self.getHandleParent(paramtype)
-        if handleparent is None:
-            return None
+        # Iterate up the handle parent hierarchy for the first parameter of
+        # a parent type.
+        # This enables cases where a more distant ancestor is present, such
+        # as VkDevice and VkCommandBuffer (but no direct parent
+        # VkCommandPool).
 
-        otherparam = findTypedElem(params, handleparent)
-        if otherparam is None:
-            return None
+        while True:
+            # If we run out of ancestors, give up
+            handleparent = self.getHandleParent(paramtype)
+            if handleparent is None:
+                if self.trace:
+                    print(f'makeHandleValidityParent:{param_name} has no handle parent, skipping')
+                return None
+
+            # Look for a parameter of the ancestor type
+            otherparam = findTypedElem(params, handleparent)
+            if otherparam is not None:
+                break
+
+            # Continue up the hierarchy
+            paramtype = handleparent
 
         parent_name = getElemName(otherparam)
         entry = ValidityEntry(anchor=(param_name, 'parent'))
@@ -1063,6 +1068,43 @@ class ValidityOutputGenerator(OutputGenerator):
             videocoding = 'outside'
         return videocoding
 
+    def conditionallyRemoveQueueType(self, queues, queuetype, condition):
+        """Removes a queue type from a queue list based on the specified condition."""
+        if queuetype in queues and condition:
+            queues.remove(queuetype)
+
+    def getQueueList(self, cmd):
+        """Returns the list of queue types a command is supported on."""
+        queues = cmd.get('queues')
+        if queues is None:
+            return None
+        queues = queues.split(',')
+
+        # Filter queue types that have dependencies
+        self.conditionallyRemoveQueueType(queues, 'sparse_binding', self.conventions.xml_api_name == "vulkansc")
+        self.conditionallyRemoveQueueType(queues, 'decode',         'VK_KHR_video_decode_queue' not in self.registry.requiredextensions)
+        self.conditionallyRemoveQueueType(queues, 'encode',         'VK_KHR_video_encode_queue' not in self.registry.requiredextensions)
+        self.conditionallyRemoveQueueType(queues, 'opticalflow',    'VK_NV_optical_flow' not in self.registry.requiredextensions)
+
+        # Verify that no new queue type is introduced accidentally
+        for queue in queues:
+            if queue not in [ 'transfer', 'compute', 'graphics', 'sparse_binding', 'decode', 'encode', 'opticalflow' ]:
+                self.logMsg('error', f'Unknown queue type "{queue}".')
+
+        return queues
+
+    def getPrettyQueueList(self, cmd):
+        """Returns a prettified version of the queue list which can be included in spec language text."""
+        queues = self.getQueueList(cmd)
+        if queues is None:
+            return None
+
+        replace = {
+            'sparse_binding': 'sparse binding',
+            'opticalflow': 'optical flow'
+        }
+        return [replace[queue] if queue in replace else queue for queue in queues]
+
     def makeStructOrCommandValidity(self, cmd, blockname, params):
         """Generate all the valid usage information for a given struct or command."""
         validity = self.makeValidityCollection(blockname)
@@ -1113,11 +1155,11 @@ class ValidityOutputGenerator(OutputGenerator):
         # For any vkQueue* functions, there might be queue type data
         if 'vkQueue' in blockname:
             # The queue type must be valid
-            queuebits = _parse_queue_bits(cmd)
-            if queuebits:
+            queues = self.getPrettyQueueList(cmd)
+            if queues:
                 entry = ValidityEntry(anchor=('queuetype',))
                 entry += 'The pname:queue must: support '
-                entry += self.makeProseList(queuebits,
+                entry += self.makeProseList(queues,
                                             fmt=plf.OR, comma_for_two_elts=True)
                 entry += ' operations'
                 validity += entry
@@ -1145,10 +1187,10 @@ class ValidityOutputGenerator(OutputGenerator):
                     entry += 'graphics or compute operations'
             else:
                 # The queue type must be valid
-                queuebits = _parse_queue_bits(cmd)
-                assert(queuebits)
+                queues = self.getPrettyQueueList(cmd)
+                assert(queues)
                 entry += 'The sname:VkCommandPool that pname:commandBuffer was allocated from must: support '
-                entry += self.makeProseList(queuebits,
+                entry += self.makeProseList(queues,
                                             fmt=plf.OR, comma_for_two_elts=True)
                 entry += ' operations'
             validity += entry
@@ -1332,23 +1374,20 @@ class ValidityOutputGenerator(OutputGenerator):
         return header
 
     def makeCommandPropertiesTableEntry(self, cmd, name):
+        cmdbufferlevel, renderpass, videocoding, queues, tasks = None, None, None, None, None
 
         if 'vkCmd' in name:
             # Must be called in primary/secondary command buffers appropriately
             cmdbufferlevel = cmd.get('cmdbufferlevel')
             cmdbufferlevel = (' + \n').join(cmdbufferlevel.title().split(','))
-            entry = '|' + cmdbufferlevel
 
             # Must be called inside/outside a render pass appropriately
             renderpass = cmd.get('renderpass')
             renderpass = renderpass.capitalize()
-            entry += '|' + renderpass
 
             # Must be called inside/outside a video coding scope appropriately
             if self.videocodingRequired():
-                videocoding = self.getVideocoding(cmd)
-                videocoding = videocoding.capitalize()
-                entry += '|' + videocoding
+                videocoding = self.getVideocoding(cmd).capitalize()
 
             #
             # This test for vkCmdFillBuffer is a hack, since we have no path
@@ -1356,38 +1395,36 @@ class ValidityOutputGenerator(OutputGenerator):
             # As the VU stuff is all moving out (hopefully soon), this hack solves the issue for now
             if name == 'vkCmdFillBuffer':
                 if self.isVKVersion11() or 'VK_KHR_maintenance1' in self.registry.requiredextensions:
-                    queues = 'Transfer + \nGraphics + \nCompute'
+                    queues = [ 'transfer', 'graphics', 'compute' ]
                 else:
-                    queues = 'Graphics + \nCompute'
+                    queues = [ 'graphics', 'compute' ]
             else:
-                queues = cmd.get('queues')
-                queues = (' + \n').join(queues.title().split(','))
+                queues = self.getQueueList(cmd)
+            queues = (' + \n').join([queue.title() for queue in queues])
 
-            entry += '|' + queues
-
-            # Print the task type
             tasks = cmd.get('tasks')
             tasks = (' + \n').join(tasks.title().split(','))
-            entry += '|' + tasks
-
-            return entry
         elif 'vkQueue' in name:
             # For queue commands there are no command buffer level, render
-            # pass, or video coding scope specific restrictions, but the
-            # queue types are considered
-            entry = '|-|-|'
+            # pass, or video coding scope specific restrictions,
+            # or command type, but the queue types are considered
+            cmdbufferlevel = '-'
+            renderpass = '-'
             if self.videocodingRequired():
-                entry += '-|'
+                videocoding = '-'
 
-            queues = cmd.get('queues')
+            queues = self.getQueueList(cmd)
             if queues is None:
                 queues = 'Any'
             else:
-                queues = (' + \n').join(queues.upper().split(','))
+                queues = (' + \n').join([queue.upper() for queue in queues])
 
-            return entry + queues
+            tasks = '-'
 
-        return None
+        table_items = (cmdbufferlevel, renderpass, videocoding, queues, tasks)
+        entry = '|'.join(filter(None, table_items))
+
+        return ('|' + entry) if entry else None
 
 
     def findRequiredEnums(self, enums):

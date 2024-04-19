@@ -1,4 +1,4 @@
-// Copyright 2020-2022 The Khronos Group Inc.
+// Copyright 2020-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -61,6 +61,14 @@ endif::VK_EXT_private_data[]
 ****
   * [[VUID-vkCreatePrivateDataSlot-privateData-04564]]
     The <<features-privateData, pname:privateData>> feature must: be enabled
+ifdef::VKSC_VERSION_1_0[]
+  * [[VUID-vkCreatePrivateDataSlotEXT-device-05000]]
+    The number of private data slots currently allocated from pname:device
+    plus 1 must: be less than or equal to the total number of private data
+    slots requested via
+    slink:VkDevicePrivateDataCreateInfoEXT::pname:privateDataSlotRequestCount
+    when pname:device was created
+endif::VKSC_VERSION_1_0[]
 ****
 
 include::{generated}/validity/protos/vkCreatePrivateDataSlot.adoc[]
@@ -78,7 +86,7 @@ or the equivalent
 include::{generated}/api/structs/VkPrivateDataSlotCreateInfoEXT.adoc[]
 endif::VK_EXT_private_data[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.
@@ -120,6 +128,7 @@ endif::VK_EXT_private_data[]
     <<memory-allocation, Memory Allocation>> chapter.
   * pname:privateDataSlot is the private data slot to destroy.
 
+ifndef::VKSC_VERSION_1_0[]
 .Valid Usage
 ****
   * [[VUID-vkDestroyPrivateDataSlot-privateDataSlot-04062]]
@@ -129,6 +138,7 @@ endif::VK_EXT_private_data[]
     If no sname:VkAllocationCallbacks were provided when
     pname:privateDataSlot was created, pname:pAllocator must: be `NULL`
 ****
+endif::VKSC_VERSION_1_0[]
 
 include::{generated}/validity/protos/vkDestroyPrivateDataSlot.adoc[]
 --
@@ -207,8 +217,10 @@ slink:VkSwapchainKHR.
 .Valid Usage
 ****
   * [[VUID-vkGetPrivateData-objectType-04018]]
-    pname:objectType must: be ename:VK_OBJECT_TYPE_DEVICE, or an object type
-    whose parent is slink:VkDevice
+    pname:objectHandle must: be pname:device or a child of pname:device
+  * [[VUID-vkGetPrivateData-objectHandle-09498]]
+    pname:objectHandle must: be a valid handle to an object of type
+    pname:objectType
 ****
 
 include::{generated}/validity/protos/vkGetPrivateData.adoc[]

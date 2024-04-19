@@ -1,4 +1,4 @@
-// Copyright 2017-2022 The Khronos Group Inc.
+// Copyright 2017-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -11,9 +11,9 @@ include::{generated}/meta/{refprefix}VK_EXT_external_memory_dma_buf.adoc[]
 *IP Status*::
     No known IP claims.
 *Contributors*::
-  - Chad Versace, Google
+  - Lina Versace, Google
   - James Jones, NVIDIA
-  - Jason Ekstrand, Intel
+  - Faith Ekstrand, Intel
 
 === Description
 
@@ -55,5 +55,5 @@ to code:dma_buf.
 
 === Version History
 
-  * Revision 1, 2017-10-10 (Chad Versace)
+  * Revision 1, 2017-10-10 (Lina Versace)
   ** Squashed internal revisions

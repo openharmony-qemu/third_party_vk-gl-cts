@@ -1,4 +1,4 @@
-// Copyright 2020-2022 The Khronos Group Inc.
+// Copyright 2020-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -28,7 +28,7 @@ include::{generated}/interfaces/VK_EXT_fragment_density_map2.adoc[]
 ifdef::isrefpage[]
 === Examples
 
-==== Additional limits for subsampling
+==== Additional Limits for Subsampling
 
 Some implementations may not support subsampled samplers if certain
 implementation limits are not observed by the app.
@@ -36,7 +36,7 @@ slink:VkPhysicalDeviceFragmentDensityMap2PropertiesEXT provides additional
 limits to require apps remain within these boundaries if they wish to use
 subsampling.
 
-==== Improved host latency
+==== Improved Host Latency
 
 By default, the fragment density map is locked by the host for reading
 between flink:vkCmdBeginRenderPass during recording and
@@ -55,14 +55,14 @@ flink:vkEndCommandBuffer.
 
 
 [source,c++]
-----------------------------------------
+----
 // Create view for fragment density map
 VkImageViewCreateInfo createInfo =
 {
-   VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+   .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
    // ...
-   VK_IMAGE_VIEW_CREATE_FRAGMENT_DENSITY_MAP_DEFERRED_BIT_EXT,
-   fdmImage, // Created with VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT
+   .viewType = VK_IMAGE_VIEW_CREATE_FRAGMENT_DENSITY_MAP_DEFERRED_BIT_EXT,
+   .format = fdmImage, // Created with VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT
    // ...
 };
 
@@ -86,8 +86,7 @@ result = vkEndCommandBuffer(commandBuffer);
 // VK_PIPELINE_STAGE_FRAGMENT_DENSITY_PROCESS_BIT_EXT of
 // the last executing draw that uses the fdmImage in the
 // last submit of commandBuffer.
-
-----------------------------------------
+----
 endif::isrefpage[]
 
 === Version History

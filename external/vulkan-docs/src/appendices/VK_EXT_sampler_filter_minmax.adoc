@@ -1,4 +1,4 @@
-// Copyright 2017-2022 The Khronos Group Inc.
+// Copyright 2017-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -8,8 +8,6 @@ include::{generated}/meta/{refprefix}VK_EXT_sampler_filter_minmax.adoc[]
 
 *Last Modified Date*::
     2017-05-19
-*Interactions and External Dependencies*::
-  - Promoted to Vulkan 1.2 Core
 *IP Status*::
     No known IP claims.
 *Contributors*::
