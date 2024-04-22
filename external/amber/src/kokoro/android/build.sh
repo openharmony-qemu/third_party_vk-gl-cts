@@ -19,20 +19,25 @@ BUILD_ROOT="$PWD"
 SRC="$PWD/github/amber"
 BUILD_TYPE="Release"
 
-export ANDROID_NDK="$BUILD_ROOT/android-ndk-r20"
+export ANDROID_NDK="$BUILD_ROOT/android-ndk-r25b"
 ANDROID_STL="c++_static"
 ANDROID_PLATFORM="android-14"
 ANDROID_ABI="armeabi-v7a with NEON"
 
 TOOLCHAIN_PATH="$ANDROID_NDK/build/cmake/android.toolchain.cmake"
 
+# Disable git's "detected dubious ownership" error - kokoro checks out the repo with a different
+# user, and we don't care about this warning.
+git config --global --add safe.directory '*'
+
 # removing the old version
 echo y | sudo apt-get purge --auto-remove cmake
 
-# Installing the 3.10.2 version
-wget http://www.cmake.org/files/v3.10/cmake-3.10.2.tar.gz
-tar -xvzf cmake-3.10.2.tar.gz
-pushd cmake-3.10.2/
+# Installing the 3.14.0 version.
+#   Glslang requires 3.14.0
+wget http://www.cmake.org/files/v3.18/cmake-3.18.6.tar.gz
+tar -xvzf cmake-3.18.6.tar.gz
+pushd cmake-3.18.6/
 ./configure
 make
 sudo make install
@@ -45,8 +50,8 @@ unzip -q ninja-linux.zip
 export PATH="$PWD:$PATH"
 
 # Get Android NDK.
-wget -q https://dl.google.com/android/repository/android-ndk-r20-linux-x86_64.zip
-unzip -q android-ndk-r20-linux-x86_64.zip
+wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
+unzip -q android-ndk-r25b-linux.zip
 # ANDROID_NDK is set earlier.
 
 cd "$SRC"

@@ -1,4 +1,4 @@
-// Copyright 2016-2022 The Khronos Group Inc.
+// Copyright 2016-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -8,14 +8,12 @@ include::{generated}/meta/{refprefix}VK_KHR_maintenance1.adoc[]
 
 *Last Modified Date*::
     2018-03-13
-*Interactions and External Dependencies*::
-  - Promoted to Vulkan 1.1 Core
 *Contributors*::
   - Dan Ginsburg, Valve
   - Daniel Koch, NVIDIA
   - Daniel Rakos, AMD
   - Jan-Harald Fredriksen, ARM
-  - Jason Ekstrand, Intel
+  - Faith Ekstrand, Intel
   - Jeff Bolz, NVIDIA
   - Jesse Hall, Google
   - John Kessenich, Google

@@ -1,4 +1,4 @@
-// Copyright 2018-2022 The Khronos Group Inc.
+// Copyright 2018-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -13,9 +13,9 @@ include::{generated}/meta/{refprefix}VK_EXT_image_drm_format_modifier.adoc[]
 *Contributors*::
   - Antoine Labour, Google
   - Bas Nieuwenhuizen, Google
-  - Chad Versace, Google
+  - Lina Versace, Google
   - James Jones, NVIDIA
-  - Jason Ekstrand, Intel
+  - Faith Ekstrand, Intel
   - Jőrg Wagner, ARM
   - Kristian Høgsberg Kristensen, Google
   - Ray Smith, ARM
@@ -104,8 +104,8 @@ Therefore, when receiving a DRM format from an external API, often the
 application must use information from the external API to accurately map the
 DRM format to a elink:VkFormat.
 For example, DRM formats do not distinguish between RGB and sRGB (as of
-2018-03-28); external information is required to identify the image's
-colorspace.
+2018-03-28); external information is required to identify the image's color
+space.
 
 The mapping between elink:VkFormat and DRM format is also incomplete.
 For some DRM formats there exist no corresponding Vulkan format, and for
@@ -227,7 +227,7 @@ is the inverse of `EGL_EXT_image_dma_buf_import_modifiers`.
 The Linux kernel modesetting API (KMS), when configuring the display's
 framebuffer with `struct
 drm_mode_fb_cmd2`^<<VK_EXT_image_drm_format_modifier-fn4,4>>^, allows one to
-specify the frambuffer's _modifier_ as well as a per-plane memory handle,
+specify the framebuffer's _modifier_ as well as a per-plane memory handle,
 offset, and row pitch.
 
 GBM, a graphics buffer manager for Linux, allows creation of a `gbm_bo`
@@ -405,7 +405,7 @@ _requires_ the application to set pname:size to 0.
 
 ==== Version History
 
-  * Revision 1, 2018-08-29 (Chad Versace)
+  * Revision 1, 2018-08-29 (Lina Versace)
   ** First stable revision
   * Revision 2, 2021-09-30 (Jon Leech)
   ** Add interaction with `apiext:VK_KHR_format_feature_flags2` to `vk.xml`

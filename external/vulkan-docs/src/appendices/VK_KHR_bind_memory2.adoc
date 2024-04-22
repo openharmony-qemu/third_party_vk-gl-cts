@@ -1,4 +1,4 @@
-// Copyright 2016-2022 The Khronos Group Inc.
+// Copyright 2016-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -10,8 +10,6 @@ include::{generated}/meta/{refprefix}VK_KHR_bind_memory2.adoc[]
     2017-09-05
 *IP Status*::
     No known IP claims.
-*Interactions and External Dependencies*::
-  - Promoted to Vulkan 1.1 Core
 *Contributors*::
   - Jeff Bolz, NVIDIA
   - Tobias Hector, Imagination Technologies

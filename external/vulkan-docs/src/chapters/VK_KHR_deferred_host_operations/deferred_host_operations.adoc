@@ -1,4 +1,4 @@
-// Copyright 2014-2022 The Khronos Group Inc.
+// Copyright 2014-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -57,8 +57,10 @@ using the flink:vkGetDeferredOperationMaxConcurrencyKHR or
 flink:vkGetDeferredOperationResultKHR commands.
 
 Parameters to the command requesting a deferred operation may: be accessed
-at any time until the deferred operation enters the pending state.
-While a deferred operation is pending:
+by the implementation at any time until the deferred operation enters the
+complete state.
+The application must: obey the following rules while a deferred operation is
+pending:
 
   * Externally synchronized parameters must: not be accessed.
   * Pointer parameters must: not be modified (e.g. reallocated/freed).
@@ -192,12 +194,14 @@ include::{generated}/api/protos/vkDestroyDeferredOperationKHR.adoc[]
 
 .Valid Usage
 ****
+ifndef::VKSC_VERSION_1_0[]
   * [[VUID-vkDestroyDeferredOperationKHR-operation-03434]]
     If sname:VkAllocationCallbacks were provided when pname:operation was
     created, a compatible set of callbacks must: be provided here
   * [[VUID-vkDestroyDeferredOperationKHR-operation-03435]]
     If no sname:VkAllocationCallbacks were provided when pname:operation was
     created, pname:pAllocator must: be `NULL`
+endif::VKSC_VERSION_1_0[]
   * [[VUID-vkDestroyDeferredOperationKHR-operation-03436]]
     pname:operation must: be completed
 ****

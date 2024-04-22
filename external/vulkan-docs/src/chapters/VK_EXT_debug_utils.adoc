@@ -1,4 +1,4 @@
-// Copyright 2018-2022 The Khronos Group Inc.
+// Copyright 2018-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -28,9 +28,20 @@ callback to capture debug messages from a variety of Vulkan components.
 
 It can be useful for an application to provide its own content relative to a
 specific Vulkan object.
+
 The following commands allow application developers to associate
 user-defined information with Vulkan objects.
-
+These commands are device-level commands but they may: reference
+instance-level objects (such as slink:VkInstance) and physical device-level
+objects (such as slink:VkPhysicalDevice) with a few restrictions:
+  * The data for the corresponding object may: still be available after the
+    slink:VkDevice used in the corresponding API call to set it is
+    destroyed, but access to this data is not guaranteed and should be
+    avoided.
+  * Subsequent calls to change the data of the same object across multiple
+    sname:VkDevice objects, may: result in the data being changed to the
+    most recent version for all sname:VkDevice objects and not just the
+    sname:VkDevice used in the most recent API call.
 
 [[debugging-object-naming]]
 ==== Object Naming
@@ -42,7 +53,8 @@ fname:vkSetDebugUtilsObjectNameEXT as defined below.
 --
 include::{generated}/api/protos/vkSetDebugUtilsObjectNameEXT.adoc[]
 
-  * pname:device is the device that created the object.
+  * pname:device is the device that is associated with the named object
+    passed in via pname:objectHandle.
   * pname:pNameInfo is a pointer to a slink:VkDebugUtilsObjectNameInfoEXT
     structure specifying parameters of the name to set on the object.
 
@@ -52,6 +64,20 @@ include::{generated}/api/protos/vkSetDebugUtilsObjectNameEXT.adoc[]
     pname:pNameInfo->objectType must: not be ename:VK_OBJECT_TYPE_UNKNOWN
   * [[VUID-vkSetDebugUtilsObjectNameEXT-pNameInfo-02588]]
     pname:pNameInfo->objectHandle must: not be dlink:VK_NULL_HANDLE
+  * [[VUID-vkSetDebugUtilsObjectNameEXT-pNameInfo-07872]]
+    If pname:pNameInfo->objectHandle is the valid handle of an
+    instance-level object, the slink:VkDevice identified by pname:device
+    must: be a descendent of the same slink:VkInstance as the object
+    identified by pname:pNameInfo->objectHandle
+  * [[VUID-vkSetDebugUtilsObjectNameEXT-pNameInfo-07873]]
+    If pname:pNameInfo->objectHandle is the valid handle of a
+    physical-device-level object, the slink:VkDevice identified by
+    pname:device must: be a descendant of the same slink:VkPhysicalDevice as
+    the object identified by pname:pNameInfo->objectHandle
+  * [[VUID-vkSetDebugUtilsObjectNameEXT-pNameInfo-07874]]
+    If pname:pNameInfo->objectHandle is the valid handle of a device-level
+    object, that object must: be a descendent of the slink:VkDevice
+    identified by pname:device
 ****
 
 include::{generated}/validity/protos/vkSetDebugUtilsObjectNameEXT.adoc[]
@@ -63,7 +89,7 @@ The sname:VkDebugUtilsObjectNameInfoEXT structure is defined as:
 
 include::{generated}/api/structs/VkDebugUtilsObjectNameInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:objectType is a elink:VkObjectType specifying the type of the
@@ -125,6 +151,24 @@ include::{generated}/api/protos/vkSetDebugUtilsObjectTagEXT.adoc[]
   * pname:pTagInfo is a pointer to a slink:VkDebugUtilsObjectTagInfoEXT
     structure specifying parameters of the tag to attach to the object.
 
+.Valid Usage
+****
+  * [[VUID-vkSetDebugUtilsObjectTagEXT-pNameInfo-07875]]
+    If pname:pNameInfo->objectHandle is the valid handle of an
+    instance-level object, the slink:VkDevice identified by pname:device
+    must: be a descendent of the same slink:VkInstance as the object
+    identified by pname:pNameInfo->objectHandle
+  * [[VUID-vkSetDebugUtilsObjectTagEXT-pNameInfo-07876]]
+    If pname:pNameInfo->objectHandle is the valid handle of a
+    physical-device-level object, the slink:VkDevice identified by
+    pname:device must: be a descendant of the same slink:VkPhysicalDevice as
+    the object identified by pname:pNameInfo->objectHandle
+  * [[VUID-vkSetDebugUtilsObjectTagEXT-pNameInfo-07877]]
+    If pname:pNameInfo->objectHandle is the valid handle of a device-level
+    object, that object must: be a descendent of the slink:VkDevice
+    identified by pname:device
+****
+
 include::{generated}/validity/protos/vkSetDebugUtilsObjectTagEXT.adoc[]
 --
 
@@ -134,7 +178,7 @@ The sname:VkDebugUtilsObjectTagInfoEXT structure is defined as:
 
 include::{generated}/api/structs/VkDebugUtilsObjectTagInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:objectType is a elink:VkObjectType specifying the type of the
@@ -201,7 +245,7 @@ The sname:VkDebugUtilsLabelEXT structure is defined as:
 
 include::{generated}/api/structs/VkDebugUtilsLabelEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:pLabelName is a pointer to a null-terminated UTF-8 string
@@ -400,7 +444,7 @@ The definition of sname:VkDebugUtilsMessengerCreateInfoEXT is:
 
 include::{generated}/api/structs/VkDebugUtilsMessengerCreateInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is `0` and is reserved for future use.
@@ -500,11 +544,11 @@ elink:VkDebugUtilsMessageSeverityFlagBitsEXT values.
 For example:
 
 [source,c++]
-~~~~
+----
     if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
         // Do something for warnings and errors
     }
-~~~~
+----
 
 In addition, space has been left between the enums to allow for later
 addition of new severities in between the existing values.
@@ -590,7 +634,7 @@ The definition of sname:VkDebugUtilsMessengerCallbackDataEXT is:
 
 include::{generated}/api/structs/VkDebugUtilsMessengerCallbackDataEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is `0` and is reserved for future use.
@@ -677,7 +721,7 @@ The definition of sname:VkDeviceAddressBindingCallbackDataEXT is:
 
 include::{generated}/api/structs/VkDeviceAddressBindingCallbackDataEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is a bitmask of elink:VkDeviceAddressBindingFlagBitsEXT
@@ -813,6 +857,7 @@ include::{generated}/api/protos/vkDestroyDebugUtilsMessengerEXT.adoc[]
   * pname:pAllocator controls host memory allocation as described in the
     <<memory-allocation, Memory Allocation>> chapter.
 
+ifndef::VKSC_VERSION_1_0[]
 .Valid Usage
 ****
   * [[VUID-vkDestroyDebugUtilsMessengerEXT-messenger-01915]]
@@ -822,6 +867,7 @@ include::{generated}/api/protos/vkDestroyDebugUtilsMessengerEXT.adoc[]
     If no sname:VkAllocationCallbacks were provided when pname:messenger was
     created, pname:pAllocator must: be `NULL`
 ****
+endif::VKSC_VERSION_1_0[]
 
 include::{generated}/validity/protos/vkDestroyDebugUtilsMessengerEXT.adoc[]
 

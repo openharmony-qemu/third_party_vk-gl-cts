@@ -1,4 +1,4 @@
-// Copyright 2015-2022 The Khronos Group Inc.
+// Copyright 2015-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -280,7 +280,7 @@ or the equivalent
 include::{generated}/api/structs/VkPhysicalDeviceProperties2KHR.adoc[]
 endif::VK_KHR_get_physical_device_properties2[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:properties is a slink:VkPhysicalDeviceProperties structure
@@ -301,7 +301,7 @@ The sname:VkPhysicalDeviceVulkan11Properties structure is defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceVulkan11Properties.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -359,7 +359,7 @@ The sname:VkPhysicalDeviceVulkan12Properties structure is defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceVulkan12Properties.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -393,6 +393,111 @@ include::{generated}/validity/structs/VkPhysicalDeviceVulkan12Properties.adoc[]
 --
 endif::VK_VERSION_1_2[]
 
+ifdef::VKSC_VERSION_1_0[]
+[open,refpage='VkPhysicalDeviceVulkanSC10Properties',desc='Structure describing safety critical properties supported by an implementation',type='structs']
+--
+The sname:VkPhysicalDeviceVulkanSC10Properties structure is defined as:
+
+include::{generated}/api/structs/VkPhysicalDeviceVulkanSC10Properties.adoc[]
+
+:anchor-prefix:
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * [[limits-deviceNoDynamicHostAllocations]]
+    pname:deviceNoDynamicHostAllocations indicates whether the
+    implementation will perform dynamic host memory allocations for physical
+    or logical device commands.
+    If pname:deviceNoDynamicHostAllocations is ename:VK_TRUE the
+    implementation will allocate host memory for objects based on the
+    provided slink:VkDeviceObjectReservationCreateInfo limits during
+    flink:vkCreateDevice.
+    Under valid API usage, ename:VK_ERROR_OUT_OF_HOST_MEMORY may: only be
+    returned by commands which do not explicitly disallow it.
+  * [[limits-deviceDestroyFreesMemory]] pname:deviceDestroyFreesMemory
+    indicates whether destroying the device frees all memory resources back
+    to the system.
+  * [[limits-commandPoolMultipleCommandBuffersRecording]]
+    pname:commandPoolMultipleCommandBuffersRecording indicates whether
+    multiple command buffers from the same command pool can: be in the
+    <<commandbuffers-lifecycle, recording state>> at the same time.
+  * [[limits-commandPoolResetCommandBuffer]]
+    pname:commandPoolResetCommandBuffer indicates whether command buffers
+    support flink:vkResetCommandBuffer, and flink:vkBeginCommandBuffer when
+    not in the <<commandbuffers-lifecycle, initial state>>.
+  * [[limits-commandBufferSimultaneousUse]]
+    pname:commandBufferSimultaneousUse indicates whether command buffers
+    support ename:VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT.
+  * [[limits-secondaryCommandBufferNullOrImagelessFramebuffer]]
+    pname:secondaryCommandBufferNullOrImagelessFramebuffer indicates whether
+    the pname:framebuffer member of sname:VkCommandBufferInheritanceInfo
+    may: be equal to dlink:VK_NULL_HANDLE or be created with a
+    slink:VkFramebufferCreateInfo::pname:flags value that includes
+    ename:VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT if the command buffer will be
+    executed within a render pass instance.
+  * [[limits-recycleDescriptorSetMemory]] pname:recycleDescriptorSetMemory
+    indicates whether descriptor pools are able to immediately reuse pool
+    memory from descriptor sets that have been freed.
+    If this is ename:VK_FALSE, then memory may: only be reallocated after
+    flink:vkResetDescriptorPool is called.
+  * [[limits-recyclePipelineMemory]] pname:recyclePipelineMemory indicates
+    whether the memory for a pipeline is available for reuse by new
+    pipelines after the pipeline is destroyed.
+  * [[limits-maxRenderPassSubpasses]] pname:maxRenderPassSubpasses is the
+    maximum number of subpasses in a render pass.
+  * [[limits-maxRenderPassDependencies]] pname:maxRenderPassDependencies is
+    the maximum number of dependencies in a render pass.
+  * [[limits-maxSubpassInputAttachments]] pname:maxSubpassInputAttachments
+    is the maximum number of input attachments in a subpass.
+  * [[limits-maxSubpassPreserveAttachments]]
+    pname:maxSubpassPreserveAttachments is the maximum number of preserve
+    attachments in a subpass.
+  * [[limits-maxFramebufferAttachments]] pname:maxFramebufferAttachments is
+    the maximum number of attachments in a framebuffer, as well as the
+    maximum number of attachments in a render pass.
+  * [[limits-maxDescriptorSetLayoutBindings]]
+    pname:maxDescriptorSetLayoutBindings is the maximum number of bindings
+    in a descriptor set layout.
+  * [[limits-maxQueryFaultCount]] pname:maxQueryFaultCount is the maximum
+    number of faults that the implementation can: record, to be reported via
+    flink:vkGetFaultData.
+  * [[limits-maxCallbackFaultCount]] pname:maxCallbackFaultCount is the
+    maximum number of faults that the implementation can: report via a
+    single call to tlink:PFN_vkFaultCallbackFunction.
+  * [[limits-maxCommandPoolCommandBuffers]]
+    pname:maxCommandPoolCommandBuffers is the maximum number of command
+    buffers that can: be allocated from a single command pool.
+  * [[limits-maxCommandBufferSize]] pname:maxCommandBufferSize is the
+    maximum supported size of a single command buffer in bytes.
+    Applications can: use flink:vkGetCommandPoolMemoryConsumption to compare
+    a command buffer's current memory usage to this limit.
+
+[NOTE]
+.Note
+====
+Implementations that do not have a fixed upper bound on the number of
+command buffers that may: be allocated from a command pool can: report
+0xFFFFFFFFU for pname:maxCommandPoolCommandBuffers.
+
+Implementations that do not have a fixed upper bound on the command buffer
+size can: report code:UINT64_MAX for pname:maxCommandBufferSize.
+====
+
+:refpage: VkPhysicalDeviceVulkanSC10Properties
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+These properties correspond to Vulkan SC 1.0 functionality.
+
+ifdef::hidden[]
+// tag::scaddition[]
+  * slink:VkPhysicalDeviceVulkanSC10Properties <<SCID-1>>
+// end::scaddition[]
+endif::hidden[]
+
+include::{generated}/validity/structs/VkPhysicalDeviceVulkanSC10Properties.adoc[]
+--
+endif::VKSC_VERSION_1_0[]
+
 ifdef::VK_VERSION_1_3[]
 [open,refpage='VkPhysicalDeviceVulkan13Properties',desc='Structure specifying physical device properties for functionality promoted to Vulkan 1.3',type='structs']
 --
@@ -400,7 +505,7 @@ The sname:VkPhysicalDeviceVulkan13Properties structure is defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceVulkan13Properties.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -444,7 +549,7 @@ or the equivalent
 include::{generated}/api/structs/VkPhysicalDeviceIDPropertiesKHR.adoc[]
 endif::VK_KHR_external_memory_capabilities[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -602,7 +707,7 @@ or the equivalent
 include::{generated}/api/structs/VkPhysicalDeviceDriverPropertiesKHR.adoc[]
 endif::VK_KHR_driver_properties[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -721,7 +826,7 @@ The sname:VkPhysicalDevicePCIBusInfoPropertiesEXT structure is defined as:
 
 include::{generated}/api/structs/VkPhysicalDevicePCIBusInfoPropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:pciDomain is the PCI bus domain.
@@ -745,7 +850,7 @@ The sname:VkPhysicalDeviceDrmPropertiesEXT structure is defined as:
 
 include::{generated}/api/structs/VkPhysicalDeviceDrmPropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:hasPrimary is a boolean indicating whether the physical device has
@@ -781,7 +886,7 @@ or the equivalent
 include::{generated}/api/structs/VkPhysicalDeviceShaderIntegerDotProductPropertiesKHR.adoc[]
 endif::VK_KHR_shader_integer_dot_product[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 
@@ -969,24 +1074,23 @@ as:
 
 include::{generated}/api/structs/VkPhysicalDeviceImageProcessingPropertiesQCOM.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
-  * [[limits-weightfilter-phases]]pname:maxWeightFilterPhases is the maximum
-    value that can: be specified for
-    slink:VkImageViewSampleWeightCreateInfoQCOM::pname:numPhases.
-    in <<textures-weightimage-filterphases, weight image sampling>>
-    operations.
-  * [[limits-weightfilter-maxdimension]]pname:maxWeightFilterDimension is a
+  * [[limits-weightfilter-phases]] pname:maxWeightFilterPhases is the
+    maximum value that can: be specified for
+    slink:VkImageViewSampleWeightCreateInfoQCOM::pname:numPhases in
+    <<textures-weightimage-filterphases, weight image sampling>> operations.
+  * [[limits-weightfilter-maxdimension]] pname:maxWeightFilterDimension is a
     slink:VkExtent2D describing the largest dimensions (pname:width and
     pname:height) that can: be specified for
     slink:VkImageViewSampleWeightCreateInfoQCOM::pname:filterSize.
-  * [[limits-blockmatch-maxblocksize]]pname:maxBlockMatchRegion is a
+  * [[limits-blockmatch-maxblocksize]] pname:maxBlockMatchRegion is a
     slink:VkExtent2D describing the largest dimensions (pname:width and
     pname:height) that can: be specified for code:blockSize in
     <<textures-blockmatch,block matching>> operations.
-  * [[limits-boxfilter-maxblocksize]]pname:maxBoxFilterBlockSize is a
-    slink:VkExtent2D describing the the maximum dimensions (pname:width and
+  * [[limits-boxfilter-maxblocksize]] pname:maxBoxFilterBlockSize is a
+    slink:VkExtent2D describing the maximum dimensions (pname:width and
     pname:height) that can: be specified for code:blocksize in
     <<textures-boxfilter,box filter sampling>> operations.
 
@@ -999,6 +1103,135 @@ device.
 include::{generated}/validity/structs/VkPhysicalDeviceImageProcessingPropertiesQCOM.adoc[]
 --
 endif::VK_QCOM_image_processing[]
+
+ifdef::VK_EXT_shader_tile_image[]
+[open,refpage='VkPhysicalDeviceShaderTileImagePropertiesEXT',desc='Structure containing information about tile image support for a physical device',type='structs']
+--
+The sname:VkPhysicalDeviceShaderTileImagePropertiesEXT structure is defined
+as:
+
+include::{generated}/api/structs/VkPhysicalDeviceShaderTileImagePropertiesEXT.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:shaderTileImageCoherentReadAccelerated is a boolean that will be
+    ename:VK_TRUE if coherent reads of tile image data is accelerated.
+  * pname:shaderTileImageReadSampleFromPixelRateInvocation is a boolean that
+    will be ename:VK_TRUE if reading from samples from a pixel rate fragment
+    invocation is supported when
+    slink:VkPipelineMultisampleStateCreateInfo::pname:rasterizationSamples > 1.
+  * pname:shaderTileImageReadFromHelperInvocation is a boolean that will be
+    ename:VK_TRUE if reads of tile image data from helper fragment
+    invocations result in valid values.
+
+:refpage: VkPhysicalDeviceShaderTileImagePropertiesEXT
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+These are properties of the tile image information of a physical device.
+
+include::{generated}/validity/structs/VkPhysicalDeviceShaderTileImagePropertiesEXT.adoc[]
+--
+endif::VK_EXT_shader_tile_image[]
+
+ifdef::VK_QCOM_image_processing2[]
+[open,refpage='VkPhysicalDeviceImageProcessing2PropertiesQCOM',desc='Structure containing image processing2 properties',type='structs']
+--
+The sname:VkPhysicalDeviceImageProcessing2PropertiesQCOM structure is
+defined as:
+
+include::{generated}/api/structs/VkPhysicalDeviceImageProcessing2PropertiesQCOM.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+
+  * [[limits-blockmatch-maxWindowExtent]] pname:maxBlockMatchWindow is a
+    slink:VkExtent2D describing the largest dimensions (pname:width and
+    pname:height) that can: be specified for the block match window.
+
+:refpage: VkPhysicalDeviceImageProcessing2PropertiesQCOM
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+These are properties of the image processing2 information of a physical
+device.
+
+include::{generated}/validity/structs/VkPhysicalDeviceImageProcessing2PropertiesQCOM.adoc[]
+--
+endif::VK_QCOM_image_processing2[]
+
+ifdef::VK_MSFT_layered_driver[]
+[open,refpage='VkPhysicalDeviceLayeredDriverPropertiesMSFT',desc='Structure containing information about driver layering for a physical device',type='structs']
+--
+The sname:VkPhysicalDeviceLayeredDriverPropertiesMSFT structure is defined
+as:
+
+include::{generated}/api/structs/VkPhysicalDeviceLayeredDriverPropertiesMSFT.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:underlyingAPI is a elink:VkLayeredDriverUnderlyingApiMSFT value
+    indicating which underlying API is used to implement the layered driver,
+    or ename:VK_LAYERED_DRIVER_UNDERLYING_API_NONE_MSFT if the driver is not
+    layered.
+
+These are properties of the driver layering information of a physical
+device.
+
+include::{generated}/validity/structs/VkPhysicalDeviceLayeredDriverPropertiesMSFT.adoc[]
+--
+
+[open,refpage='VkLayeredDriverUnderlyingApiMSFT',desc='Layered driver underlying APIs',type='enums']
+--
+Underlying APIs which may: be returned in
+slink:VkPhysicalDeviceLayeredDriverPropertiesMSFT::pname:underlyingAPI are:
+
+include::{generated}/api/enums/VkLayeredDriverUnderlyingApiMSFT.adoc[]
+--
+endif::VK_MSFT_layered_driver[]
+
+ifdef::VK_ARM_scheduling_controls[]
+[open,refpage='VkPhysicalDeviceSchedulingControlsPropertiesARM',desc='Structure containing scheduling control properties of a physical device',type='structs']
+--
+The sname:VkPhysicalDeviceSchedulingControlsPropertiesARM structure is
+defined as:
+
+include::{generated}/api/structs/VkPhysicalDeviceSchedulingControlsPropertiesARM.adoc[]
+
+  * [[limits-schedulingControlsFlags]]pname:schedulingControlsFlags
+    specifies the specific scheduling controls that a physical device
+    supports.
+
+:refpage: VkPhysicalDeviceSchedulingControlsPropertiesARM
+include::{chapters}/limits.adoc[tag=limits_desc]
+
+include::{generated}/validity/structs/VkPhysicalDeviceSchedulingControlsPropertiesARM.adoc[]
+--
+
+[open,refpage='VkPhysicalDeviceSchedulingControlsFlagBitsARM',desc='Bitmask specifying scheduling controls supported by a physical device',type='enums']
+--
+Bits which can: be set in
+slink:VkPhysicalDeviceSchedulingControlsPropertiesARM::pname:schedulingControlsFlags,
+specifying supported scheduling controls, are:
+
+include::{generated}/api/enums/VkPhysicalDeviceSchedulingControlsFlagBitsARM.adoc[]
+
+  * ename:VK_PHYSICAL_DEVICE_SCHEDULING_CONTROLS_SHADER_CORE_COUNT_ARM
+    indicates that a slink:VkDeviceQueueShaderCoreControlCreateInfoARM
+    structure may: be included in the pname:pNext chain of a
+    slink:VkDeviceQueueCreateInfo or slink:VkDeviceCreateInfo structure.
+--
+
+[open,refpage='VkPhysicalDeviceSchedulingControlsFlagsARM',desc='Bitmask of VkPhysicalDeviceSchedulingControlsFlagBitsARM',type='flags']
+--
+include::{generated}/api/flags/VkPhysicalDeviceSchedulingControlsFlagsARM.adoc[]
+
+tname:VkPhysicalDeviceSchedulingControlsFlagsARM is a bitmask type for
+setting a mask of zero or more
+elink:VkPhysicalDeviceSchedulingControlsFlagBitsARM.
+--
+endif::VK_ARM_scheduling_controls[]
 
 [open,refpage='vkGetPhysicalDeviceQueueFamilyProperties',desc='Reports properties of the queues of the specified physical device',type='protos']
 --
@@ -1124,6 +1357,15 @@ include::{generated}/api/enums/VkQueueFlagBits.adoc[]
     <<sparsememory,Sparse Resources>>).
     If any of the sparse resource features are enabled, then at least one
     queue family must: support this bit.
+ifdef::VKSC_VERSION_1_0[]
+    This flag is not supported in Vulkan SC <<SCID-8>>.
+ifdef::hidden[]
+// tag::scremoved[]
+  * elink:VkQueueFlagBits
+  ** ename:VK_QUEUE_SPARSE_BINDING_BIT <<SCID-8>>
+// end::scremoved[]
+endif::hidden[]
+endif::VKSC_VERSION_1_0[]
 ifdef::VK_KHR_video_decode_queue[]
   * ename:VK_QUEUE_VIDEO_DECODE_BIT_KHR specifies that queues in this queue
     family support <<video-decode-operations,video decode operations>>.
@@ -1222,7 +1464,7 @@ or the equivalent
 include::{generated}/api/structs/VkQueueFamilyProperties2KHR.adoc[]
 endif::VK_KHR_get_physical_device_properties2[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:queueFamilyProperties is a slink:VkQueueFamilyProperties structure
@@ -1244,7 +1486,7 @@ or the equivalent
 include::{generated}/api/structs/VkQueueFamilyGlobalPriorityPropertiesEXT.adoc[]
 endif::VK_EXT_global_priority_query[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:priorityCount is the number of supported global queue priorities
@@ -1307,7 +1549,7 @@ The slink:VkQueueFamilyVideoPropertiesKHR structure is defined as:
 
 include::{generated}/api/structs/VkQueueFamilyVideoPropertiesKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:videoCodecOperations is a bitmask of
@@ -1329,7 +1571,7 @@ as:
 
 include::{generated}/api/structs/VkQueueFamilyQueryResultStatusPropertiesKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:queryResultStatusSupport reports ename:VK_TRUE if query type
@@ -1452,7 +1694,7 @@ or the equivalent
 include::{generated}/api/structs/VkPhysicalDeviceGroupPropertiesKHR.adoc[]
 endif::VK_KHR_device_group_creation[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:physicalDeviceCount is the number of physical devices in the
@@ -1530,14 +1772,81 @@ flink:vkEnumerateDeviceExtensionProperties.
 Support for features can: similarly be checked by querying
 flink:vkGetPhysicalDeviceFeatures.
 
+ifdef::VKSC_VERSION_1_0[]
+fname:vkCreateDevice also verifies that mandatory structures and features
+for Vulkan SC are present and enabled:
+
+  * The pname:pNext chain must: include a
+    slink:VkDeviceObjectReservationCreateInfo structure.
+  * The pname:pNext chain must: include a
+    slink:VkPhysicalDeviceVulkanSC10Features structure.
+ifdef::hidden[]
+// tag::scdeviation[]
+  * The slink:VkDeviceCreateInfo::pname:pNext chain must: include a
+    slink:VkDeviceObjectReservationCreateInfo structure <<SCID-4>>.
+  * The slink:VkDeviceCreateInfo::pname:pNext chain must: include a
+    slink:VkPhysicalDeviceVulkanSC10Features structure <<SCID-1>>.
+// end::scdeviation[]
+endif::hidden[]
+
+If any of these conditions are not met, fname:vkCreateDevice must: return
+ename:VK_ERROR_INITIALIZATION_FAILED.
+endif::VKSC_VERSION_1_0[]
+
 After verifying and enabling the extensions the sname:VkDevice object is
 created and returned to the application.
 
+ifndef::VKSC_VERSION_1_0[]
 Multiple logical devices can: be created from the same physical device.
 Logical device creation may: fail due to lack of device-specific resources
 (in addition to other errors).
+endif::VKSC_VERSION_1_0[]
+ifdef::VKSC_VERSION_1_0[]
+An implementation may: allow multiple logical devices to be created from the
+same physical device.
+Logical device creation may: fail due to lack of device-specific resources,
+including too many other logical devices, in addition to other errors.
+endif::VKSC_VERSION_1_0[]
 If that occurs, fname:vkCreateDevice will return
 ename:VK_ERROR_TOO_MANY_OBJECTS.
+
+ifdef::VKSC_VERSION_1_0[]
+If the pipeline cache data pointed to by the pname:pInitialData member of
+any element of
+slink:VkDeviceObjectReservationCreateInfo::pname:pPipelineCacheCreateInfos
+is not compatible with the device, then fname:vkCreateDevice will return
+ename:VK_ERROR_INVALID_PIPELINE_CACHE_DATA.
+ifdef::hidden[]
+// tag::scdeviation[]
+  * flink:vkCreateDevice returns ename:VK_ERROR_INVALID_PIPELINE_CACHE_DATA
+    if the pname:pInitialData member of any element of
+    slink:VkDeviceObjectReservationCreateInfo::pname:pPipelineCacheCreateInfos
+    is a pointer to incompatible pipeline cache data <<SCID-1>>.
+// end::scdeviation[]
+endif::hidden[]
+endif::VKSC_VERSION_1_0[]
+
+ifdef::VK_EXT_application_parameters[]
+To provide _application parameters_ at device creation time, an application
+can: link one or more slink:VkApplicationParametersEXT structures to the
+pname:pNext chain of the sname:VkDeviceCreateInfo structure.
+
+If the slink:VkApplicationParametersEXT::pname:vendorID and
+slink:VkApplicationParametersEXT::pname:deviceID values do not match the
+slink:VkPhysicalDeviceProperties::pname:vendorID and
+slink:VkPhysicalDeviceProperties::pname:deviceID of pname:physicalDevice,
+flink:vkCreateDevice must: return ename:VK_ERROR_INITIALIZATION_FAILED.
+
+If slink:VkApplicationParametersEXT::pname:key is not a valid
+implementation-defined application parameter key for the device being
+created, or if pname:value is not a valid value for the specified pname:key,
+flink:vkCreateDevice will fail and return
+ename:VK_ERROR_INITIALIZATION_FAILED.
+
+For any implementation-defined application parameter pname:key that exists
+but is not set by the application, the implementation-specific default value
+is used.
+endif::VK_EXT_application_parameters[]
 
 .Valid Usage
 ****
@@ -1546,6 +1855,23 @@ ename:VK_ERROR_TOO_MANY_OBJECTS.
     extensions>> for each extension in the
     slink:VkDeviceCreateInfo::pname:ppEnabledExtensionNames list must: also
     be present in that list
+ifdef::VK_EXT_application_parameters[]
+  * [[VUID-vkCreateDevice-key-05092]]
+    The pname:key value of each slink:VkApplicationParametersEXT structure
+    in the slink:VkDeviceCreateInfo::pname:pNext chain must: be unique
+endif::VK_EXT_application_parameters[]
+ifdef::VKSC_VERSION_1_0[]
+  * [[VUID-vkCreateDevice-deviceMemoryRequestCount-05095]]
+    The sum of pname:deviceMemoryRequestCount over all
+    sname:VkDeviceObjectReservationCreateInfo structures included in the
+    slink:VkDeviceCreateInfo::pname:pNext chain must: be less than or equal
+    to slink:VkPhysicalDeviceLimits::pname:maxMemoryAllocationCount
+  * [[VUID-vkCreateDevice-samplerRequestCount-05096]]
+    The sum of pname:samplerRequestCount over all
+    sname:VkDeviceObjectReservationCreateInfo structures included in the
+    slink:VkDeviceCreateInfo::pname:pNext chain must: be less than or equal
+    to slink:VkPhysicalDeviceLimits::pname:maxSamplerAllocationCount
+endif::VKSC_VERSION_1_0[]
 ****
 
 include::{generated}/validity/protos/vkCreateDevice.adoc[]
@@ -1557,7 +1883,7 @@ The sname:VkDeviceCreateInfo structure is defined as:
 
 include::{generated}/api/structs/VkDeviceCreateInfo.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.
@@ -1586,18 +1912,15 @@ include::{generated}/api/structs/VkDeviceCreateInfo.adoc[]
 
 .Valid Usage
 ****
-ifndef::VK_VERSION_1_1[]
-  * [[VUID-VkDeviceCreateInfo-queueFamilyIndex-00372]]
-    The pname:queueFamilyIndex member of each element of
-    pname:pQueueCreateInfos must: be unique within pname:pQueueCreateInfos
-endif::VK_VERSION_1_1[]
-ifdef::VK_VERSION_1_1[]
   * [[VUID-VkDeviceCreateInfo-queueFamilyIndex-02802]]
     The pname:queueFamilyIndex member of each element of
-    pname:pQueueCreateInfos must: be unique within pname:pQueueCreateInfos,
-    except that two members can share the same pname:queueFamilyIndex if one
-    describes protected-capable queues and one describes queues that are not
-    protected-capable
+    pname:pQueueCreateInfos must: be unique within pname:pQueueCreateInfos
+ifdef::VK_VERSION_1_1[]
+    , except that two members can share the same pname:queueFamilyIndex if
+    one describes protected-capable queues and one describes queues that are
+    not protected-capable
+endif::VK_VERSION_1_1[]
+ifdef::VK_VERSION_1_1[]
   * [[VUID-VkDeviceCreateInfo-pQueueCreateInfos-06755]]
     If multiple elements of pname:pQueueCreateInfos share the same
     pname:queueFamilyIndex, the sum of their pname:queueCount members must:
@@ -1622,17 +1945,16 @@ endif::VK_VERSION_1_1,VK_KHR_get_physical_device_properties2[]
 ifdef::VK_AMD_negative_viewport_height[]
 ifdef::VK_VERSION_1_1[]
   * [[VUID-VkDeviceCreateInfo-ppEnabledExtensionNames-01840]]
-    pname:ppEnabledExtensionNames must: not contain
+    If slink:VkPhysicalDeviceProperties::pname:apiVersion advertises Vulkan
+    1.1 or later, pname:ppEnabledExtensionNames must: not contain
     `apiext:VK_AMD_negative_viewport_height`
 endif::VK_VERSION_1_1[]
-ifndef::VK_VERSION_1_1[]
 ifdef::VK_KHR_maintenance1[]
   * [[VUID-VkDeviceCreateInfo-ppEnabledExtensionNames-00374]]
     pname:ppEnabledExtensionNames must: not contain both
     `apiext:VK_KHR_maintenance1` and
     `apiext:VK_AMD_negative_viewport_height`
 endif::VK_KHR_maintenance1[]
-endif::VK_VERSION_1_1[]
 endif::VK_AMD_negative_viewport_height[]
 ifdef::VK_EXT_buffer_device_address+VK_KHR_buffer_device_address[]
   * [[VUID-VkDeviceCreateInfo-ppEnabledExtensionNames-03328]]
@@ -1643,7 +1965,7 @@ endif::VK_EXT_buffer_device_address+VK_KHR_buffer_device_address[]
 ifdef::VK_VERSION_1_2[]
 ifdef::VK_EXT_buffer_device_address[]
   * [[VUID-VkDeviceCreateInfo-pNext-04748]]
-    if the pname:pNext chain includes a
+    If the pname:pNext chain includes a
     slink:VkPhysicalDeviceVulkan12Features structure and
     slink:VkPhysicalDeviceVulkan12Features::pname:bufferDeviceAddress is
     ename:VK_TRUE, pname:ppEnabledExtensionNames must: not contain
@@ -1812,6 +2134,19 @@ ifdef::VK_AMD_shader_fragment_mask[]
     `apiext:VK_AMD_shader_fragment_mask`
 endif::VK_AMD_shader_fragment_mask[]
 endif::VK_EXT_descriptor_buffer[]
+ifdef::VK_ARM_scheduling_controls[]
+  * [[VUID-VkDeviceCreateInfo-pNext-09396]]
+    If the pname:pNext chain includes a
+    slink:VkDeviceQueueShaderCoreControlCreateInfoARM structure, then it
+    must: not be included in the pname:pNext chain of any of the
+    slink:VkDeviceQueueCreateInfo structures in pname:pQueueCreateInfos.
+  * [[VUID-VkDeviceCreateInfo-pNext-09397]]
+    If the pname:pNext chain includes a
+    slink:VkDeviceQueueShaderCoreControlCreateInfoARM structure then
+    slink:VkPhysicalDeviceSchedulingControlsPropertiesARM::pname:schedulingControlsFlags
+    must: contain
+    ename:VK_PHYSICAL_DEVICE_SCHEDULING_CONTROLS_SHADER_CORE_COUNT_ARM.
+endif::VK_ARM_scheduling_controls[]
 ****
 
 include::{generated}/validity/structs/VkDeviceCreateInfo.adoc[]
@@ -1841,7 +2176,7 @@ or the equivalent
 include::{generated}/api/structs/VkDeviceGroupDeviceCreateInfoKHR.adoc[]
 endif::VK_KHR_device_group_creation[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:physicalDeviceCount is the number of elements in the
@@ -1894,7 +2229,7 @@ ename:VK_MEMORY_OVERALLOCATION_BEHAVIOR_DEFAULT_AMD value is used.
 
 include::{generated}/api/structs/VkDeviceMemoryOverallocationCreateInfoAMD.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:overallocationBehavior is the desired overallocation behavior.
@@ -1932,7 +2267,7 @@ structure.
 
 include::{generated}/api/structs/VkDeviceDiagnosticsConfigCreateInfoNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is a bitmask of elink:VkDeviceDiagnosticsConfigFlagBitsNV
@@ -1985,7 +2320,7 @@ chain of the slink:VkDeviceCreateInfo structure.
 
 include::{generated}/api/structs/VkDeviceDeviceMemoryReportCreateInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is 0 and reserved for future use.
@@ -2029,7 +2364,7 @@ The definition of sname:VkDeviceMemoryReportCallbackDataEXT is:
 
 include::{generated}/api/structs/VkDeviceMemoryReportCallbackDataEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is 0 and reserved for future use.
@@ -2161,7 +2496,7 @@ or the equivalent
 include::{generated}/api/structs/VkDevicePrivateDataCreateInfoEXT.adoc[]
 endif::VK_EXT_private_data[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:privateDataSlotRequestCount is the amount of slots to reserve.
@@ -2170,6 +2505,284 @@ include::{generated}/validity/structs/VkDevicePrivateDataCreateInfo.adoc[]
 --
 endif::VK_VERSION_1_3,VK_EXT_private_data[]
 
+ifdef::VKSC_VERSION_1_0[]
+
+[open,refpage='VkDeviceObjectReservationCreateInfo',desc='Request memory reservation',type='structs']
+--
+Data structures for objects are reserved by the implementation at device
+creation time.
+The application must: provide upper bounds on numbers of objects and other
+limits at device creation time.
+To reserve data structures for use by objects created from this device, add
+a slink:VkDeviceObjectReservationCreateInfo structure to the pname:pNext
+chain of the slink:VkDeviceCreateInfo structure.
+
+include::{generated}/api/structs/VkDeviceObjectReservationCreateInfo.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:pipelineCacheCreateInfoCount is the length of the
+    pname:pPipelineCacheCreateInfos array.
+  * pname:pPipelineCacheCreateInfos is a pointer to an array of
+    slink:VkPipelineCacheCreateInfo structures that contain the creation
+    information of the pipeline caches that can: be created on this device.
+  * pname:pipelinePoolSizeCount is the length of the
+    pname:pPipelinePoolSizes array.
+  * pname:pPipelinePoolSizes is a pointer to an array of
+    slink:VkPipelinePoolSize structures requesting memory be reserved for
+    pipelines of the specified sizes.
+  * pname:semaphoreRequestCount is the requested maximum number of
+    sname:VkSemaphore objects that can: exist at the same time.
+  * pname:commandBufferRequestCount is the requested maximum number of
+    sname:VkCommandBuffer objects that can: be reserved by all
+    sname:VkCommandPool objects.
+  * pname:fenceRequestCount is the requested maximum number of sname:VkFence
+    objects that can: exist at the same time.
+  * pname:deviceMemoryRequestCount is the requested maximum number of
+    sname:VkDeviceMemory objects that can: exist at the same time.
+  * pname:bufferRequestCount is the requested maximum number of
+    sname:VkBuffer objects that can: exist at the same time.
+  * pname:imageRequestCount is the requested maximum number of sname:VkImage
+    objects that can: exist at the same time.
+  * pname:eventRequestCount is the requested maximum number of sname:VkEvent
+    objects that can: exist at the same time.
+  * pname:queryPoolRequestCount is the requested maximum number of
+    sname:VkQueryPool objects that can: exist at the same time.
+  * pname:bufferViewRequestCount is the requested maximum number of
+    sname:VkBufferView objects that can: exist at the same time.
+  * pname:imageViewRequestCount is the requested maximum number of
+    sname:VkImageView objects that can: exist at the same time.
+  * pname:layeredImageViewRequestCount is the requested maximum number
+    sname:VkImageView objects created with
+    slink:VkImageViewCreateInfo::pname:subresourceRange.layerCount greater
+    than `1` that can: exist at the same time.
+  * pname:pipelineCacheRequestCount is the requested maximum number of
+    sname:VkPipelineCache objects that can: exist at the same time.
+  * pname:pipelineLayoutRequestCount is the requested maximum number of
+    sname:VkPipelineLayout objects that can: exist at the same time.
+  * pname:renderPassRequestCount is the requested maximum number of
+    sname:VkRenderPass objects that can: exist at the same time.
+  * pname:graphicsPipelineRequestCount is the requested maximum number of
+    graphics sname:VkPipeline objects that can: exist at the same time.
+  * pname:computePipelineRequestCount is the requested maximum number of
+    compute sname:VkPipeline objects that can: exist at the same time.
+  * pname:descriptorSetLayoutRequestCount is the requested maximum number of
+    sname:VkDescriptorSetLayout objects that can: exist at the same time.
+  * pname:samplerRequestCount is the requested maximum number of
+    sname:VkSampler objects that can: exist at the same time.
+  * pname:descriptorPoolRequestCount is the requested maximum number of
+    sname:VkDescriptorPool objects that can: exist at the same time.
+  * pname:descriptorSetRequestCount is the requested maximum number of
+    sname:VkDescriptorSet objects that can: exist at the same time.
+  * pname:framebufferRequestCount is the requested maximum number of
+    sname:VkFramebuffer objects that can: exist at the same time.
+  * pname:commandPoolRequestCount is the requested maximum number of
+    sname:VkCommandPool objects that can: exist at the same time.
+  * pname:samplerYcbcrConversionRequestCount is the requested maximum number
+    of sname:VkSamplerYcbcrConversion objects that can: exist at the same
+    time.
+  * pname:surfaceRequestCount is deprecated and implementations must: ignore
+    it.
+  * pname:swapchainRequestCount is the requested maximum number of
+    sname:VkSwapchainKHR objects that can: exist at the same time.
+  * pname:displayModeRequestCount is deprecated and implementations must:
+    ignore it.
+  * pname:subpassDescriptionRequestCount is the requested maximum sum of all
+    slink:VkRenderPassCreateInfo2::pname:subpassCount values across all
+    sname:VkRenderPass objects that can: exist at the same time.
+  * pname:attachmentDescriptionRequestCount is the requested maximum sum of
+    all slink:VkRenderPassCreateInfo2::pname:attachmentCount values across
+    all sname:VkRenderPass objects that can: exist at the same time.
+  * pname:descriptorSetLayoutBindingRequestCount is the requested maximum
+    sum of all slink:VkDescriptorSetLayoutCreateInfo::pname:bindingCount
+    values across all sname:VkDescriptorSetLayout objects that can: exist at
+    the same time.
+  * pname:descriptorSetLayoutBindingLimit is one greater than the maximum
+    value of slink:VkDescriptorSetLayoutBinding::pname:binding that can: be
+    used.
+  * pname:maxImageViewMipLevels is the maximum value of
+    slink:VkImageViewCreateInfo::pname:subresourceRange.levelCount that can:
+    be used.
+  * pname:maxImageViewArrayLayers is the maximum value of
+    slink:VkImageViewCreateInfo::pname:subresourceRange.layerCount that can:
+    be used.
+  * pname:maxLayeredImageViewMipLevels is the maximum value of
+    slink:VkImageViewCreateInfo::pname:subresourceRange.levelCount that can:
+    be used when
+    slink:VkImageViewCreateInfo::pname:subresourceRange.layerCount is
+    greater than `1`.
+  * pname:maxOcclusionQueriesPerPool is the requested maximum number of
+    ename:VK_QUERY_TYPE_OCCLUSION queries that can: exist at the same time
+    in a single query pool.
+  * pname:maxPipelineStatisticsQueriesPerPool is the requested maximum
+    number of ename:VK_QUERY_TYPE_PIPELINE_STATISTICS queries that can:
+    exist at the same time in a single query pool.
+  * pname:maxTimestampQueriesPerPool is the requested maximum number of
+    ename:VK_QUERY_TYPE_TIMESTAMP queries that can: exist at the same time
+    in a single query pool.
+  * pname:maxImmutableSamplersPerDescriptorSetLayout is the requested
+    maximum number of immutable samplers that can be used across all
+    bindings in a descriptor set layout.
+
+Multiple sname:VkDeviceObjectReservationCreateInfo structures can: be
+chained together.
+The maximum value from all instances of pname:maxImageViewMipLevels,
+pname:maxImageViewArrayLayers, pname:maxLayeredImageViewMipLevels,
+pname:descriptorSetLayoutBindingLimit, pname:maxOcclusionQueriesPerPool,
+pname:maxPipelineStatisticsQueriesPerPool, pname:maxTimestampQueriesPerPool,
+and pname:maxImmutableSamplersPerDescriptorSetLayout will be reserved.
+For the remaining members, the sum of the requested resources from all
+instances of sname:VkDeviceObjectReservationCreateInfo will be reserved.
+
+If
+slink:VkPhysicalDeviceVulkanSC10Properties::<<limits-deviceDestroyFreesMemory,
+pname:deviceDestroyFreesMemory>> is ename:VK_TRUE, the reserved memory is
+returned to the system when the device is destroyed, otherwise it may: not
+be returned to the system until the process is terminated.
+
+ifdef::hidden[]
+// tag::scaddition[]
+  * slink:VkDeviceObjectReservationCreateInfo <<SCID-4>>
+// end::scaddition[]
+endif::hidden[]
+
+.Valid Usage
+****
+  * [[VUID-VkDeviceObjectReservationCreateInfo-maxImageViewArrayLayers-05014]]
+    pname:maxImageViewArrayLayers must: be less than or equal to
+    slink:VkPhysicalDeviceLimits::pname:maxImageArrayLayers
+  * [[VUID-VkDeviceObjectReservationCreateInfo-maxImageViewMipLevels-05015]]
+    pname:maxImageViewMipLevels must: be less than or equal to the number of
+    levels in the complete mipmap chain based on the maximum of
+    slink:VkPhysicalDeviceLimits::pname:maxImageDimension1D,
+    pname:maxImageDimension2D, pname:maxImageDimension3D, and
+    pname:maxImageDimensionCube
+  * [[VUID-VkDeviceObjectReservationCreateInfo-maxLayeredImageViewMipLevels-05016]]
+    pname:maxLayeredImageViewMipLevels must: be less than or equal to the
+    number of levels in the complete mipmap chain based on
+    slink:VkPhysicalDeviceLimits::pname:maxImageDimension1D,
+    pname:maxImageDimension2D, pname:maxImageDimension3D, and
+    pname:maxImageDimensionCube
+  * [[VUID-VkDeviceObjectReservationCreateInfo-subpassDescriptionRequestCount-05017]]
+    pname:subpassDescriptionRequestCount must: be less than or equal to
+    pname:renderPassRequestCount multiplied by
+    slink:VkPhysicalDeviceVulkanSC10Properties::pname:maxRenderPassSubpasses
+  * [[VUID-VkDeviceObjectReservationCreateInfo-attachmentDescriptionRequestCount-05018]]
+    pname:attachmentDescriptionRequestCount must: be less than or equal to
+    pname:renderPassRequestCount multiplied by
+    slink:VkPhysicalDeviceVulkanSC10Properties::pname:maxFramebufferAttachments
+****
+
+include::{generated}/validity/structs/VkDeviceObjectReservationCreateInfo.adoc[]
+--
+
+ifdef::VK_KHR_performance_query[]
+[open,refpage='VkPerformanceQueryReservationInfoKHR',desc='Request memory reservation',type='structs']
+--
+If the pname:pNext chain of slink:VkDeviceObjectReservationCreateInfo
+includes a slink:VkPerformanceQueryReservationInfoKHR structure, then the
+structure indicates upper bounds on the number of performance queries that
+can: exist at the same time in a query pool.
+
+The sname:VkPerformanceQueryReservationInfoKHR structure is defined as:
+
+include::{generated}/api/structs/VkPerformanceQueryReservationInfoKHR.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:maxPerformanceQueriesPerPool is the requested maximum number of
+    ename:VK_QUERY_TYPE_PERFORMANCE_QUERY_KHR queries that can: exist at the
+    same time in a single query pool.
+
+If the sname:VkDeviceObjectReservationCreateInfo::pname:pNext chain does not
+include this structure, then pname:maxPerformanceQueriesPerPool defaults to
+`0`.
+
+Multiple sname:VkPerformanceQueryReservationInfoKHR structures can be
+chained together.
+The maximum value from all instances of pname:maxPerformanceQueriesPerPool
+will be reserved.
+
+ifdef::hidden[]
+// tag::scaddition[]
+ifdef::VK_KHR_performance_query[]
+  * slink:VkPerformanceQueryReservationInfoKHR <<SCID-4>>
+endif::VK_KHR_performance_query[]
+// end::scaddition[]
+endif::hidden[]
+
+include::{generated}/validity/structs/VkPerformanceQueryReservationInfoKHR.adoc[]
+--
+endif::VK_KHR_performance_query[]
+
+ifdef::VK_NV_external_sci_sync2[]
+[open,refpage='VkDeviceSemaphoreSciSyncPoolReservationCreateInfoNV',desc='Request memory reservation',type='structs']
+--
+If the pname:pNext chain of slink:VkDeviceObjectReservationCreateInfo
+includes a slink:VkDeviceSemaphoreSciSyncPoolReservationCreateInfoNV
+structure, then the structure indicates the maximum number of
+slink:VkSemaphoreSciSyncPoolNV objects that can: exist at the same time.
+
+The sname:VkDeviceSemaphoreSciSyncPoolReservationCreateInfoNV structure is
+defined as:
+
+include::{generated}/api/structs/VkDeviceSemaphoreSciSyncPoolReservationCreateInfoNV.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:semaphoreSciSyncPoolRequestCount is the requested maximum number
+    of slink:VkSemaphoreSciSyncPoolNV objects that can: exist at the same
+    time.
+
+If the sname:VkDeviceObjectReservationCreateInfo::pname:pNext chain does not
+include this structure, then pname:semaphoreSciSyncPoolRequestCount defaults
+to `0`.
+
+Multiple sname:VkDeviceSemaphoreSciSyncPoolReservationCreateInfoNV
+structures can: be chained together.
+The sum of the pname:semaphoreSciSyncPoolRequestCount values from all
+instances of sname:VkDeviceSemaphoreSciSyncPoolReservationCreateInfoNV will
+be reserved.
+
+include::{generated}/validity/structs/VkDeviceSemaphoreSciSyncPoolReservationCreateInfoNV.adoc[]
+--
+endif::VK_NV_external_sci_sync2[]
+
+[open,refpage='VkPipelinePoolSize',desc='Request memory for pipelines',type='structs']
+--
+Memory for pipelines is reserved by the implementation at device creation
+time.
+The application specifies sizes to be reserved and a count for each size,
+and when a pipeline is created the application specifies which size to use.
+
+include::{generated}/api/structs/VkPipelinePoolSize.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:poolEntrySize is the size to reserve for each entry.
+  * pname:poolEntryCount is the number of entries to reserve.
+
+ifdef::hidden[]
+// tag::scaddition[]
+  * slink:VkPipelinePoolSize <<SCID-4>>
+// end::scaddition[]
+endif::hidden[]
+
+include::{generated}/validity/structs/VkPipelinePoolSize.adoc[]
+--
+
+endif::VKSC_VERSION_1_0[]
+
+ifdef::VK_ARM_scheduling_controls[]
+The number of shader cores used by all the queues of a device can: be
+controlled by adding a sname:VkDeviceQueueShaderCoreControlCreateInfoARM
+structure to the pname:pNext chain of the slink:VkDeviceCreateInfo
+structure.
+endif::VK_ARM_scheduling_controls[]
 
 [[devsandqueues-use]]
 === Device Use
@@ -2199,6 +2812,17 @@ references on where to find more information:
 A logical device may: become _lost_ for a number of implementation-specific
 reasons, indicating that pending and future command execution may: fail and
 cause resources and backing memory to become undefined:.
+
+ifdef::VKSC_VERSION_1_0[]
+[NOTE]
+.Note
+====
+<<fault-handling>> can be used by the implementation to provide more
+information on the cause of a device becoming _lost_.
+Allowing applications to take appropriate corrective behavior for the cause
+of the device lost.
+====
+endif::VKSC_VERSION_1_0[]
 
 [NOTE]
 .Note
@@ -2275,6 +2899,17 @@ of determining whether a command buffer is in the
 considered in-use by the device, a return value of
 ename:VK_ERROR_DEVICE_LOST is equivalent to ename:VK_SUCCESS.
 
+ifdef::VK_KHR_maintenance5[]
+If a device was created with the <<features-maintenance5,
+pname:maintenance5>> feature enabled, and any device command returns
+ename:VK_ERROR_DEVICE_LOST, then all device commands for which
+ename:VK_ERROR_DEVICE_LOST is a valid return value and which happen-after it
+on the same host thread must: return ename:VK_ERROR_DEVICE_LOST.
+
+Device commands executing on other threads must: begin returning
+ename:VK_ERROR_DEVICE_LOST within finite time.
+endif::VK_KHR_maintenance5[]
+
 ifdef::VK_VERSION_1_1,VK_KHR_external_memory[]
 
 The content of any external memory objects that have been exported from or
@@ -2346,17 +2981,32 @@ explicitly free all of these resources prior to calling
 fname:vkDestroyDevice.
 ====
 
+ifdef::VKSC_VERSION_1_0[]
+If
+slink:VkPhysicalDeviceVulkanSC10Properties::<<limits-deviceDestroyFreesMemory,
+pname:deviceDestroyFreesMemory>> is ename:VK_TRUE, the reserved memory for
+child objects without explicit free or destroy commands is returned to the
+system when the device is destroyed, otherwise it may: not be returned to
+the system until the process is terminated.
+endif::VKSC_VERSION_1_0[]
+
 .Valid Usage
 ****
-  * [[VUID-vkDestroyDevice-device-00378]]
-    All child objects created on pname:device must: have been destroyed
-    prior to destroying pname:device
+  * [[VUID-vkDestroyDevice-device-05137]]
+    All child objects created on pname:device
+ifdef::VKSC_VERSION_1_0[]
+    , except those with no explicit <<fundamentals-objectmodel-no-destroy,
+    free or destroy command>>,
+endif::VKSC_VERSION_1_0[]
+    must: have been destroyed prior to destroying pname:device
+ifndef::VKSC_VERSION_1_0[]
   * [[VUID-vkDestroyDevice-device-00379]]
     If sname:VkAllocationCallbacks were provided when pname:device was
     created, a compatible set of callbacks must: be provided here
   * [[VUID-vkDestroyDevice-device-00380]]
     If no sname:VkAllocationCallbacks were provided when pname:device was
     created, pname:pAllocator must: be `NULL`
+endif::VKSC_VERSION_1_0[]
 ****
 
 include::{generated}/validity/protos/vkDestroyDevice.adoc[]
@@ -2424,7 +3074,7 @@ The sname:VkDeviceQueueCreateInfo structure is defined as:
 
 include::{generated}/api/structs/VkDeviceQueueCreateInfo.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 ifndef::VK_VERSION_1_1[]
@@ -2470,6 +3120,14 @@ ifdef::VK_VERSION_1_1[]
     pname:queueFamilyIndex must: be the index of a queue family that
     includes the ename:VK_QUEUE_PROTECTED_BIT capability
 endif::VK_VERSION_1_1[]
+ifdef::VK_ARM_scheduling_controls[]
+  * [[VUID-VkDeviceQueueCreateInfo-pNext-09398]]
+    If the pname:pNext chain includes a
+    slink:VkDeviceQueueShaderCoreControlCreateInfoARM structure then
+    slink:VkPhysicalDeviceSchedulingControlsPropertiesARM::pname:schedulingControlsFlags
+    must: contain
+    ename:VK_PHYSICAL_DEVICE_SCHEDULING_CONTROLS_SHADER_CORE_COUNT_ARM.
+endif::VK_ARM_scheduling_controls[]
 ****
 
 include::{generated}/validity/structs/VkDeviceQueueCreateInfo.adoc[]
@@ -2519,7 +3177,7 @@ or the equivalent
 include::{generated}/api/structs/VkDeviceQueueGlobalPriorityCreateInfoEXT.adoc[]
 endif::VK_EXT_global_priority[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:globalPriority is the system-wide priority associated to these
@@ -2595,6 +3253,39 @@ In this scenario, ename:VK_ERROR_INITIALIZATION_FAILED is returned.
 endif::VK_EXT_global_priority_query,VK_KHR_global_priority[]
 endif::VK_EXT_global_priority,VK_KHR_global_priority[]
 
+ifdef::VK_ARM_scheduling_controls[]
+[open,refpage='VkDeviceQueueShaderCoreControlCreateInfoARM',desc='Control the number of shader cores used by queues',type='structs']
+--
+The number of shader cores used by a queue can: be controlled by adding a
+sname:VkDeviceQueueShaderCoreControlCreateInfoARM structure to the
+pname:pNext chain of slink:VkDeviceQueueCreateInfo structures.
+
+The sname:VkDeviceQueueShaderCoreControlCreateInfoARM structure is defined
+as:
+
+include::{generated}/api/structs/VkDeviceQueueShaderCoreControlCreateInfoARM.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:shaderCoreCount is the number of shader cores this queue uses.
+
+Queues created without specifying
+sname:VkDeviceQueueShaderCoreControlCreateInfoARM will default to using all
+the shader cores available.
+
+.Valid Usage
+****
+  * [[VUID-VkDeviceQueueShaderCoreControlCreateInfoARM-shaderCoreCount-09399]]
+    pname:shaderCoreCount must: be greater than 0 and less than or equal to
+    the total number of shader cores as reported via
+    slink:VkPhysicalDeviceShaderCoreBuiltinsPropertiesARM::pname:shaderCoreCount.
+****
+
+include::{generated}/validity/structs/VkDeviceQueueShaderCoreControlCreateInfoARM.adoc[]
+--
+endif::VK_ARM_scheduling_controls[]
+
 [open,refpage='vkGetDeviceQueue',desc='Get a queue handle from a device',type='protos']
 --
 To retrieve a handle to a slink:VkQueue object, call:
@@ -2657,7 +3348,7 @@ The sname:VkDeviceQueueInfo2 structure is defined as:
 
 include::{generated}/api/structs/VkDeviceQueueInfo2.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
     The pname:pNext chain of sname:VkDeviceQueueInfo2 can: be used to
@@ -2821,6 +3512,7 @@ All work described by a queue submission command must: be submitted to the
 queue before the command returns.
 
 
+ifndef::VKSC_VERSION_1_0[]
 [[devsandqueues-sparsebinding]]
 ==== Sparse Memory Binding
 
@@ -2839,6 +3531,7 @@ binding is updated.
 See the <<synchronization,Synchronization and Cache Control>> chapter for
 how this synchronization is accomplished.
 
+endif::VKSC_VERSION_1_0[]
 
 [[devsandqueues-queuedestruction]]
 === Queue Destruction

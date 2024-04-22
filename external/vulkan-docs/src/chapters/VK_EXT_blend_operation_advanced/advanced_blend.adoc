@@ -1,4 +1,4 @@
-// Copyright 2018-2022 The Khronos Group Inc.
+// Copyright 2018-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -24,7 +24,7 @@ defined as:
 
 include::{generated}/api/structs/VkPipelineColorBlendAdvancedStateCreateInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:srcPremultiplied specifies whether the source color of the blend
@@ -58,7 +58,7 @@ ename:VK_BLEND_OVERLAP_UNCORRELATED_EXT.
 include::{generated}/validity/structs/VkPipelineColorBlendAdvancedStateCreateInfoEXT.adoc[]
 --
 
-ifdef::VK_EXT_extended_dynamic_state3[]
+ifdef::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 [open,refpage='vkCmdSetColorBlendAdvancedEXT',desc='Specify the advanced color blend state dynamically for a command buffer',type='protos']
 --
 To <<pipelines-dynamic-state, dynamically set>> the advanced blend state,
@@ -77,20 +77,28 @@ include::{generated}/api/protos/vkCmdSetColorBlendAdvancedEXT.adoc[]
     corresponding attachments.
 
 This command sets the advanced blend operation parameters of the specified
-attachments for subsequent drawing commands when the graphics pipeline is
-created with ename:VK_DYNAMIC_STATE_COLOR_BLEND_ADVANCED_EXT set in
+attachments for subsequent drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
+ename:VK_DYNAMIC_STATE_COLOR_BLEND_ADVANCED_EXT set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineColorBlendAdvancedStateCreateInfoEXT::pname:srcPremultiplied,
 slink:VkPipelineColorBlendAdvancedStateCreateInfoEXT::pname:dstPremultiplied,
 and slink:VkPipelineColorBlendAdvancedStateCreateInfoEXT::pname:blendOverlap
 values used to create the currently active pipeline.
 
+:refpage: vkCmdSetColorBlendAdvancedEXT
+:requiredfeature: extendedDynamicState3ColorBlendAdvanced
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetColorBlendAdvancedEXT-extendedDynamicState3ColorBlendAdvanced-07504]]
-    The <<features-extendedDynamicState3ColorBlendAdvanced,
-    pname:extendedDynamicState3ColorBlendAdvanced>> feature must: be enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdSetColorBlendAdvancedEXT.adoc[]
@@ -132,7 +140,7 @@ include::{generated}/api/structs/VkColorBlendAdvancedEXT.adoc[]
 
 include::{generated}/validity/structs/VkColorBlendAdvancedEXT.adoc[]
 --
-endif::VK_EXT_extended_dynamic_state3[]
+endif::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 When using one of the operations in table
 <<framebuffer-blend-advanced-fxyz-modes,f/X/Y/Z Advanced Blend Operations>>
@@ -647,7 +655,7 @@ In the equations below, a blended RGB color is produced according to the
 following pseudocode:
 
 [source,c++]
-----------------------------------------
+----
   float minv3(vec3 c) {
     return min(min(c.r, c.g), c.b);
   }
@@ -706,7 +714,7 @@ following pseudocode:
     }
     return SetLum(color, clum);
   }
-----------------------------------------
+----
 
 [[framebuffer-blend-advanced-hsl-modes]]
 .Hue-Saturation-Luminosity Advanced Blend Operations

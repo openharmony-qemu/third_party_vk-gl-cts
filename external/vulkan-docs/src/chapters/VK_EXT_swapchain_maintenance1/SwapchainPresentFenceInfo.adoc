@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Khronos Group Inc.
+// Copyright 2019-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -8,7 +8,7 @@ The sname:VkSwapchainPresentFenceInfoEXT structure is defined as:
 
 include::{generated}/api/structs/VkSwapchainPresentFenceInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:swapchainCount is the number of swapchains being presented to by
@@ -40,9 +40,9 @@ fence must: not signal until all such semaphore payloads have been reset by
 the presentation engine.
 
 The application can: destroy the wait semaphores associated with a given
-presentation operation when the associated fence is signaled, and can:
-destroy the swapchain when the fences associated with all past presentation
-requests have signaled.
+presentation operation when at least one of the associated fences is
+signaled, and can: destroy the swapchain when the fences associated with all
+past presentation requests referring to that swapchain have signaled.
 
 Fences associated with presentations to the same swapchain on the same
 slink:VkQueue must: be signaled in the same order as the present operations.

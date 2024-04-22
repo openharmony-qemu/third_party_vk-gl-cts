@@ -1,4 +1,4 @@
-// Copyright 2015-2022 The Khronos Group Inc.
+// Copyright 2015-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -51,7 +51,7 @@ For example:
 [source,asciidoc]
 .Example Markup
 ----
-// Copyright 2018-2022 The Khronos Group Inc.
+// Copyright 2018-2024 The Khronos Group Inc.
 // SPDX-License-Identifier: CC-BY-4.0
 
 ----
@@ -130,7 +130,7 @@ in the Table of Contents.
 
 
 [[markup-layout]]
-== Asciidoc Markup And Text Layout
+== Asciidoc Markup and Text Layout
 
 Asciidoc source should be text filled to 76 columns with hard line breaks.
 Each sentence in a paragraph ends with a newline to minimize git diff
@@ -204,12 +204,12 @@ The block types and delimiters are shown in the following table.
 [width="70%",options="header",cols="25%,10%,65%"]
 |====
 | Table Type    | Delimiter     | Comments
-| Open          | `--`          | For <<markup-sample-section-bullet-lists,continuation blocks>>
+| Open          | `--`          | For <<markup-sample-section-bullet-lists,continuation blocks>> and reference pages
+| Open (alt.)   | `----`        | For continuation blocks inside reference pages. Must be preceded by `[open]`
 | Example       | `====`        | For <<markup-informative-notes,Notes>>
 | Passthrough   | `pass:[++++]` | For some kinds of <<writing-math,math markup>>
 | Comment       | `////`        |
 | Listing       | `----`        | For source code listings
-| Listing (alt.)| `pass:[~~~~]` | For source code listings <<markup-blocks-source, imbedded in Open blocks>>
 | Sidebar       | `pass:[****]` | For <<markup-implementors-notes,implementor's notes>>
 | Table         | `\|====`      | For <<markup-sample-section-tables,tables>>
 | Quote         | `pass:[____]` |
@@ -217,16 +217,26 @@ The block types and delimiters are shown in the following table.
 |====
 
 
-[[markup-blocks-source]]
-==== Listing Blocks Imbedded in Open Blocks
+[[markup-blocks-nested-open]]
+==== Open Blocks Nested in Open Blocks
 
-If you need to include a `source` block that would normally use `----`
-delimiters inside an open block delimiting a reference page, use
-`pass:[~~~~]` delimiters around the inner source block instead.
-This avoids confusing some of the toolchain which makes assumptions about
-block delimiters not being nested, such as the VUID assignment script.
-Tildes are not standard asciidoctor markup, but are supported by a custom
-Ruby extension.
+If you need to include an `open` block that would normally use `--`
+delimiters inside an open block delimiting a reference page, such as a
+continuation block, use the markup:
+
+[source,asciidoc,subs=attributes+]
+.Example Markup
+----
+[open]
+{blank}----
+Open block contents
+{blank}----
+----
+
+This replaces prior use of `pass:[~~~~]` delimiters and is enabled by a
+custom asciidoctor extension.
+The `[open]` block type is required in this case, to distinguish the block
+from a regular listing block using the same delimiter.
 
 
 [[markup-footnotes]]
@@ -754,7 +764,7 @@ replacement substitutions], resulting in a unicode arrow: ->.
 
 
 [[markup-macros-api-name]]
-==== When To Use *name: Macros
+==== When to Use *name: Macros
 
 Only use the fname{cl}, sname{cl}, tname{cl}, and dname{cl} macros if no
 definition of the target type with a corresponding anchor exists in the
@@ -774,7 +784,7 @@ definitions.
 
 
 [[markup-macros-api-text]]
-==== When To Use *text: Macros
+==== When to Use *text: Macros
 
 Only use the ftext{cl}, stext{cl}, etext{cl}, and ptext{cl} macros when
 describing something that should be rendered like a command, structure,
@@ -1061,6 +1071,9 @@ This list may not be comprehensive; when in doubt, be guided by the existing
                   always referring to the current state of the objects
                   they are validating.
                   Rare exceptions may be justified in other cases.
+| called in a command buffer
+                | called on a command buffer
+                | Technically correct.
 | command       | function
                 | Except when talking about function pointers returned by
                   ftext:vkGet*ProcAddr commands.
@@ -1093,7 +1106,7 @@ This list may not be comprehensive; when in doubt, be guided by the existing
 | implementor   | implementer    | For consistency with historical specification practice
 | indices       | indexes        | More common
 | _handle_ is not dlink{cl}VK_NULL_HANDLE
-                | _handle_ is a valid structure
+                | _handle_ is a valid structure |
 | member        | field          |
 | ename:enumerant specifies
                 | ename:enumerant indicates (denotes)

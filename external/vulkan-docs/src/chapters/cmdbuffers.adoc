@@ -1,4 +1,4 @@
-// Copyright 2015-2022 The Khronos Group Inc.
+// Copyright 2015-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -160,6 +160,11 @@ include::{generated}/api/handles/VkCommandPool.adoc[]
 
 [open,refpage='vkCreateCommandPool',desc='Create a new command pool object',type='protos']
 --
+:refpage: vkCreateCommandPool
+:objectnameplural: command pools
+:objectnamecamelcase: commandPool
+:objectcount: 1
+
 To create a command pool, call:
 
 include::{generated}/api/protos/vkCreateCommandPool.adoc[]
@@ -172,11 +177,14 @@ include::{generated}/api/protos/vkCreateCommandPool.adoc[]
   * pname:pCommandPool is a pointer to a slink:VkCommandPool handle in which
     the created pool is returned.
 
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
+
 .Valid Usage
 ****
   * [[VUID-vkCreateCommandPool-queueFamilyIndex-01937]]
     pname:pCreateInfo->queueFamilyIndex must: be the index of a queue family
     available in the logical device pname:device
+include::{chapters}/commonvalidity/memory_reservation_request_count_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCreateCommandPool.adoc[]
@@ -188,7 +196,7 @@ The sname:VkCommandPoolCreateInfo structure is defined as:
 
 include::{generated}/api/structs/VkCommandPoolCreateInfo.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is a bitmask of elink:VkCommandPoolCreateFlagBits indicating
@@ -206,7 +214,21 @@ ifdef::VK_VERSION_1_1[]
     not enabled, the ename:VK_COMMAND_POOL_CREATE_PROTECTED_BIT bit of
     pname:flags must: not be set
 endif::VK_VERSION_1_1[]
+ifdef::VKSC_VERSION_1_0[]
+  * [[VUID-VkCommandPoolCreateInfo-pNext-05002]]
+    The pname:pNext chain must: include a
+    slink:VkCommandPoolMemoryReservationCreateInfo structure
+endif::VKSC_VERSION_1_0[]
 ****
+ifdef::VKSC_VERSION_1_0[]
+ifdef::hidden[]
+// tag::scdeviation[]
+  * The slink:VkCommandPoolCreateInfo::pname:pNext chain must: include a
+    valid slink:VkCommandPoolMemoryReservationCreateInfo structure
+    <<SCID-4>>.
+// end::scdeviation[]
+endif::hidden[]
+endif::VKSC_VERSION_1_0[]
 
 include::{generated}/validity/structs/VkCommandPoolCreateInfo.adoc[]
 --
@@ -244,6 +266,162 @@ tname:VkCommandPoolCreateFlags is a bitmask type for setting a mask of zero
 or more elink:VkCommandPoolCreateFlagBits.
 --
 
+ifdef::VKSC_VERSION_1_0[]
+
+[open,refpage='VkCommandPoolMemoryReservationCreateInfo',desc='Structure specifying command pool memory reservation info',type='structs']
+--
+
+The pname:pNext chain of slink:VkCommandPoolCreateInfo must: include a
+sname:VkCommandPoolMemoryReservationCreateInfo structure.
+This structure controls how much memory is allocated at command pool
+creation time to be used for all command buffers recorded from this pool.
+
+The sname:VkCommandPoolMemoryReservationCreateInfo structure is defined as:
+
+include::{generated}/api/structs/VkCommandPoolMemoryReservationCreateInfo.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:commandPoolReservedSize is the number of bytes to be allocated for
+    all command buffer data recorded into this pool.
+  * pname:commandPoolMaxCommandBuffers is the maximum number of command
+    buffers that can be allocated from this command pool.
+
+The number of command buffers reserved using
+pname:commandPoolMaxCommandBuffers is permanently counted against the total
+number of command buffers requested via
+slink:VkDeviceObjectReservationCreateInfo::pname:commandBufferRequestCount
+even if the command buffers are freed at a later time.
+
+Each command recorded into a command buffer has an implementation-dependent
+size that counts against pname:commandPoolReservedSize.
+There is no minimum command pool size, but some sizes may be too small for
+any commands to be recorded in them on a given implementation.
+Applications are expected to estimate their worst-case command buffer memory
+usage at development time using flink:vkGetCommandPoolMemoryConsumption and
+reserve large enough command buffers.
+This command can: also be used at runtime to verify expected memory usage.
+
+While the memory consumption of a particular command is
+implementation-dependent, it is a deterministic function of the parameters
+to the command and of the objects used by the command (including the command
+buffer itself).
+Two command buffers will consume the same amount of pool memory if:
+
+  * all numerical parameters to each command match exactly,
+  * all objects used by each command are
+    <<glossary-identically-defined,identically defined>>, and
+  * the order of the commands is the same.
+
+[NOTE]
+.Note
+====
+The rules for identically defined objects apply recursively, implying for
+example that if the command buffers are created in different devices that
+those devices must have been created with the same features enabled.
+====
+
+Each command buffer may: require some base alignment in the pool, so the
+total pool memory will match if each command buffer's consumption matches
+and the command buffers are recorded one at a time and in the same order.
+
+If all these criteria are satisfied, then a command pool memory consumption
+returned by flink:vkGetCommandPoolMemoryConsumption will be sufficient to
+record the same command buffers again.
+
+ifdef::hidden[]
+// tag::scaddition[]
+  * slink:VkCommandPoolMemoryReservationCreateInfo <<SCID-4>>
+// end::scaddition[]
+endif::hidden[]
+
+.Valid Usage
+****
+  * [[VUID-VkCommandPoolMemoryReservationCreateInfo-commandPoolReservedSize-05003]]
+    pname:commandPoolReservedSize must: be greater than `0`
+  * [[VUID-VkCommandPoolMemoryReservationCreateInfo-commandPoolMaxCommandBuffers-05004]]
+    pname:commandPoolMaxCommandBuffers must: be greater than `0`
+  * [[VUID-VkCommandPoolMemoryReservationCreateInfo-commandPoolMaxCommandBuffers-05090]]
+    pname:commandPoolMaxCommandBuffers must: be less than or equal to
+    slink:VkPhysicalDeviceVulkanSC10Properties::pname:maxCommandPoolCommandBuffers
+  * [[VUID-VkCommandPoolMemoryReservationCreateInfo-commandPoolMaxCommandBuffers-05074]]
+    The number of command buffers reserved by all command pools plus
+    pname:commandPoolMaxCommandBuffers must: be less than or equal to the
+    total number of command buffers requested via
+    slink:VkDeviceObjectReservationCreateInfo::pname:commandBufferRequestCount
+****
+
+include::{generated}/validity/structs/VkCommandPoolMemoryReservationCreateInfo.adoc[]
+--
+
+[open,refpage='vkGetCommandPoolMemoryConsumption',desc='Get memory usage information for a command pool object',type='protos']
+--
+
+ifdef::hidden[]
+// tag::scaddition[]
+  * flink:vkGetCommandPoolMemoryConsumption <<SCID-1>>
+// end::scaddition[]
+endif::hidden[]
+
+To get memory usage information for a command pool object, call:
+
+include::{generated}/api/protos/vkGetCommandPoolMemoryConsumption.adoc[]
+
+  * pname:device is the logical device that owns the command pool.
+  * pname:commandPool is the command pool from which to query the memory
+    usage.
+  * pname:commandBuffer is an optional command buffer from which to query
+    the memory usage.
+  * pname:pConsumption is a pointer to a
+    sname:VkCommandPoolMemoryConsumption structure where the memory usage is
+    written.
+
+include::{generated}/validity/protos/vkGetCommandPoolMemoryConsumption.adoc[]
+--
+
+[open,refpage='VkCommandPoolMemoryConsumption',desc='Structure where memory usage information is written',type='structs']
+--
+
+The sname:VkCommandPoolMemoryConsumption structure is defined as:
+
+include::{generated}/api/structs/VkCommandPoolMemoryConsumption.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:commandPoolAllocated is the number of bytes currently allocated
+    from this pool for command buffer data.
+  * pname:commandPoolReservedSize is the total number of bytes available for
+    all command buffer data recorded into this pool.
+    This is equal to the value requested in
+    slink:VkCommandPoolMemoryReservationCreateInfo::pname:commandPoolReservedSize.
+  * pname:commandBufferAllocated is the number of bytes currently allocated
+    from this pool for the specified command buffer's data.
+    This number will be less than or equal to
+    slink:VkPhysicalDeviceVulkanSC10Properties::pname:maxCommandBufferSize.
+    If no command buffer is specified, then this is set to zero.
+
+ifdef::hidden[]
+// tag::scaddition[]
+  * slink:VkCommandPoolMemoryConsumption <<SCID-1>>
+// end::scaddition[]
+endif::hidden[]
+
+include::{generated}/validity/structs/VkCommandPoolMemoryConsumption.adoc[]
+--
+
+endif::VKSC_VERSION_1_0[]
+
+ifdef::VKSC_VERSION_1_0[]
+ifdef::hidden[]
+// tag::scremoved[]
+  * fname:vkTrimCommandPool, fname:vkTrimCommandPoolKHR <<SCID-8>>
+  * tname:VkCommandPoolTrimFlags, tname:VkCommandPoolTrimFlagsKHR <<SCID-8>>
+// end::scremoved[]
+endif::hidden[]
+endif::VKSC_VERSION_1_0[]
+ifndef::VKSC_VERSION_1_0[]
 ifdef::VK_VERSION_1_1,VK_KHR_maintenance1[]
 [open,refpage='vkTrimCommandPool',desc='Trim a command pool',type='protos']
 --
@@ -279,7 +457,7 @@ On reset, a command buffer can return memory to its command pool, but the
 only way to release memory from a command pool to the system requires
 calling flink:vkResetCommandPool, which cannot be executed while any command
 buffers from that pool are still in use.
-Subsequent recording operations into command buffers will re-use this memory
+Subsequent recording operations into command buffers will reuse this memory
 but since total memory requirements fluctuate over time, unused memory can
 accumulate.
 
@@ -323,6 +501,7 @@ tname:VkCommandPoolTrimFlags is a bitmask type for setting a mask, but is
 currently reserved for future use.
 --
 endif::VK_VERSION_1_1,VK_KHR_maintenance1[]
+endif::VKSC_VERSION_1_0[]
 
 [open,refpage='vkResetCommandPool',desc='Reset a command pool',type='protos']
 --
@@ -362,9 +541,20 @@ the reset operation, are:
 
 include::{generated}/api/enums/VkCommandPoolResetFlagBits.adoc[]
 
-  * ename:VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT specifies that
-    resetting a command pool recycles all of the resources from the command
-    pool back to the system.
+  * ename:VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT
+ifndef::VKSC_VERSION_1_0[]
+    specifies that resetting a command pool recycles all of the resources
+    from the command pool back to the system.
+endif::VKSC_VERSION_1_0[]
+ifdef::VKSC_VERSION_1_0[]
+    is not supported in Vulkan SC <<SCID-4>>.
+ifdef::hidden[]
+// tag::scremoved[]
+  * elink:VkCommandPoolResetFlagBits
+  ** ename:VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT <<SCID-4>>
+// end::scremoved[]
+endif::hidden[]
+endif::VKSC_VERSION_1_0[]
 --
 
 [open,refpage='VkCommandPoolResetFlags',desc='Bitmask of VkCommandPoolResetFlagBits',type='flags']
@@ -374,6 +564,22 @@ include::{generated}/api/flags/VkCommandPoolResetFlags.adoc[]
 tname:VkCommandPoolResetFlags is a bitmask type for setting a mask of zero
 or more elink:VkCommandPoolResetFlagBits.
 --
+
+ifdef::VKSC_VERSION_1_0[]
+ifdef::hidden[]
+// tag::scremoved[]
+  * fname:vkDestroyCommandPool <<SCID-4>>
+// end::scremoved[]
+endif::hidden[]
+
+Command pools cannot: be destroyed or trimmed <<SCID-4>>.
+If
+slink:VkPhysicalDeviceVulkanSC10Properties::<<limits-deviceDestroyFreesMemory,pname:deviceDestroyFreesMemory>>
+is ename:VK_TRUE, then the memory used by command pools is returned to the
+system when the device is destroyed.
+
+endif::VKSC_VERSION_1_0[]
+ifndef::VKSC_VERSION_1_0[]
 
 [open,refpage='vkDestroyCommandPool',desc='Destroy a command pool object',type='protos']
 --
@@ -410,18 +616,21 @@ into it, becomes <<commandbuffers-lifecycle, invalid>>.
 include::{generated}/validity/protos/vkDestroyCommandPool.adoc[]
 --
 
+endif::VKSC_VERSION_1_0[]
 
 [[commandbuffer-allocation]]
 == Command Buffer Allocation and Management
 
 [open,refpage='vkAllocateCommandBuffers',desc='Allocate command buffers from an existing command pool',type='protos']
 --
+:refpage: vkAllocateCommandBuffers
+
 To allocate command buffers, call:
 
 include::{generated}/api/protos/vkAllocateCommandBuffers.adoc[]
 
   * pname:device is the logical device that owns the command pool.
-  * pname:pAllocateInfo is a pointer to a sname:VkCommandBufferAllocateInfo
+  * pname:pAllocateInfo is a pointer to a slink:VkCommandBufferAllocateInfo
     structure describing parameters of the allocation.
   * pname:pCommandBuffers is a pointer to an array of slink:VkCommandBuffer
     handles in which the resulting command buffer objects are returned.
@@ -450,6 +659,8 @@ endif::VK_VERSION_1_1,VK_KHR_maintenance1[]
 When command buffers are first allocated, they are in the
 <<commandbuffers-lifecycle, initial state>>.
 
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
+
 include::{generated}/validity/protos/vkAllocateCommandBuffers.adoc[]
 --
 
@@ -459,7 +670,7 @@ The sname:VkCommandBufferAllocateInfo structure is defined as:
 
 include::{generated}/api/structs/VkCommandBufferAllocateInfo.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:commandPool is the command pool from which the command buffers are
@@ -468,6 +679,25 @@ include::{generated}/api/structs/VkCommandBufferAllocateInfo.adoc[]
     buffer level.
   * pname:commandBufferCount is the number of command buffers to allocate
     from the pool.
+
+ifdef::VKSC_VERSION_1_0[]
+The number of command buffers allocated using pname:commandBufferCount
+counts against the maximum number of command buffers reserved via
+slink:VkCommandPoolMemoryReservationCreateInfo::pname:commandPoolMaxCommandBuffers
+specified when pname:commandPool was created.
+Once command buffers are freed with flink:vkFreeCommandBuffers, they can be
+allocated from pname:commandPool again.
+
+.Valid Usage
+****
+  * [[VUID-VkCommandBufferAllocateInfo-commandPool-05006]]
+    The number of command buffers currently allocated from pname:commandPool
+    plus pname:commandBufferCount must: be less than or equal to the value
+    of
+    slink:VkCommandPoolMemoryReservationCreateInfo::pname:commandPoolMaxCommandBuffers
+    specified when pname:commandPool was created
+****
+endif::VKSC_VERSION_1_0[]
 
 include::{generated}/validity/structs/VkCommandBufferAllocateInfo.adoc[]
 --
@@ -510,7 +740,22 @@ it, becomes <<commandbuffers-lifecycle, invalid>>.
   * [[VUID-vkResetCommandBuffer-commandBuffer-00046]]
     pname:commandBuffer must: have been allocated from a pool that was
     created with the ename:VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
+ifdef::VKSC_VERSION_1_0[]
+  * [[VUID-vkResetCommandBuffer-commandPoolResetCommandBuffer-05135]]
+    <<limits-commandPoolResetCommandBuffer,pname:commandPoolResetCommandBuffer>>
+    must: be supported
+endif::VKSC_VERSION_1_0[]
 ****
+ifdef::VKSC_VERSION_1_0[]
+ifdef::hidden[]
+// tag::scdeviation[]
+  * If
+    <<limits-commandPoolResetCommandBuffer,pname:commandPoolResetCommandBuffer>>
+    is not supported <<SCID-8>>, flink:vkResetCommandBuffer must: not be
+    called.
+// end::scdeviation[]
+endif::hidden[]
+endif::VKSC_VERSION_1_0[]
 
 include::{generated}/validity/protos/vkResetCommandBuffer.adoc[]
 --
@@ -557,6 +802,20 @@ Any primary command buffer that is in the <<commandbuffers-lifecycle,
 recording or executable state>> and has any element of pname:pCommandBuffers
 recorded into it, becomes <<commandbuffers-lifecycle, invalid>>.
 
+ifdef::VKSC_VERSION_1_0[]
+Freeing a command buffer does not return the memory used by command
+recording back to its parent command pool.
+This memory will be reclaimed the next time flink:vkResetCommandPool is
+called.
+ifdef::hidden[]
+// tag::scdeviation[]
+  * flink:vkFreeCommandBuffers does not return the memory used by command
+    recording back to its parent command pool <<SCID-4>>.
+    This memory is reclaimed when flink:vkResetCommandPool is next called.
+// end::scdeviation[]
+endif::hidden[]
+endif::VKSC_VERSION_1_0[]
+
 .Valid Usage
 ****
   * [[VUID-vkFreeCommandBuffers-pCommandBuffers-00047]]
@@ -577,6 +836,9 @@ include::{generated}/validity/protos/vkFreeCommandBuffers.adoc[]
 
 [open,refpage='vkBeginCommandBuffer',desc='Start recording a command buffer',type='protos']
 --
+
+:refpage: vkBeginCommandBuffer
+
 To begin recording a command buffer, call:
 
 include::{generated}/api/protos/vkBeginCommandBuffer.adoc[]
@@ -586,6 +848,8 @@ include::{generated}/api/protos/vkBeginCommandBuffer.adoc[]
   * pname:pBeginInfo is a pointer to a slink:VkCommandBufferBeginInfo
     structure defining additional information about how the command buffer
     begins recording.
+
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
 
 .Valid Usage
 ****
@@ -597,6 +861,13 @@ include::{generated}/api/protos/vkBeginCommandBuffer.adoc[]
     did not have the ename:VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
     flag set, pname:commandBuffer must: be in the
     <<commandbuffers-lifecycle, initial state>>
+ifdef::VKSC_VERSION_1_0[]
+  * [[VUID-vkBeginCommandBuffer-commandPoolResetCommandBuffer-05136]]
+    If
+    <<limits-commandPoolResetCommandBuffer,pname:commandPoolResetCommandBuffer>>
+    is not supported, pname:commandBuffer must: be in the
+    <<commandbuffers-lifecycle, initial state>>
+endif::VKSC_VERSION_1_0[]
   * [[VUID-vkBeginCommandBuffer-commandBuffer-00051]]
     If pname:commandBuffer is a secondary command buffer, the
     pname:pInheritanceInfo member of pname:pBeginInfo must: be a valid
@@ -613,7 +884,41 @@ include::{generated}/api/protos/vkBeginCommandBuffer.adoc[]
     pname:pBeginInfo->flags must: not set both the
     ename:VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT and the
     ename:VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT flags
+ifdef::VKSC_VERSION_1_0[]
+  * [[VUID-vkBeginCommandBuffer-commandPoolMultipleCommandBuffersRecording-05007]]
+    If
+    <<limits-commandPoolMultipleCommandBuffersRecording,pname:commandPoolMultipleCommandBuffersRecording>>
+    is ename:VK_FALSE, then the command pool that pname:commandBuffer was
+    created from must: have no other command buffers in the
+    <<commandbuffers-lifecycle, recording state>>
+  * [[VUID-vkBeginCommandBuffer-commandBufferSimultaneousUse-05008]]
+    If
+    <<limits-commandBufferSimultaneousUse,pname:commandBufferSimultaneousUse>>
+    is ename:VK_FALSE, then pname:pBeginInfo->flags must: not include
+    ename:VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT
+endif::VKSC_VERSION_1_0[]
 ****
+ifdef::VKSC_VERSION_1_0[]
+ifdef::hidden[]
+// tag::scdeviation[]
+  * If
+    slink:VkPhysicalDeviceVulkanSC10Properties::pname:commandPoolMultipleCommandBuffersRecording
+    is ename:VK_FALSE, then only one command buffer from a command pool can
+    be in the <<commandbuffers-lifecycle, recording state>> at a time
+    <<SCID-8>>.
+  * If
+    slink:VkPhysicalDeviceVulkanSC10Properties::pname:commandBufferSimultaneousUse
+    is ename:VK_FALSE, then slink:VkCommandBufferBeginInfo::pname:flags
+    must: not include ename:VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT
+    <<SCID-8>>.
+  * If
+    <<limits-commandPoolResetCommandBuffer,pname:commandPoolResetCommandBuffer>>
+    is not supported, pname:commandBuffer must: be in the
+    <<commandbuffers-lifecycle, initial state>> when
+    flink:vkBeginCommandBuffer is called <<SCID-8>>.
+// end::scdeviation[]
+endif::hidden[]
+endif::VKSC_VERSION_1_0[]
 
 include::{generated}/validity/protos/vkBeginCommandBuffer.adoc[]
 --
@@ -624,50 +929,56 @@ The sname:VkCommandBufferBeginInfo structure is defined as:
 
 include::{generated}/api/structs/VkCommandBufferBeginInfo.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is a bitmask of elink:VkCommandBufferUsageFlagBits
     specifying usage behavior for the command buffer.
   * pname:pInheritanceInfo is a pointer to a
-    sname:VkCommandBufferInheritanceInfo structure, used if
+    slink:VkCommandBufferInheritanceInfo structure, used if
     pname:commandBuffer is a secondary command buffer.
     If this is a primary command buffer, then this value is ignored.
 
 .Valid Usage
 ****
-ifndef::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
-  * [[VUID-VkCommandBufferBeginInfo-flags-00053]]
+  * [[VUID-VkCommandBufferBeginInfo-flags-09123]]
     If pname:flags contains
     ename:VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT, the
-    pname:renderPass member of pname:pInheritanceInfo must: be a valid
-    sname:VkRenderPass
-  * [[VUID-VkCommandBufferBeginInfo-flags-00054]]
-    If pname:flags contains
-    ename:VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT, the
-    pname:subpass member of pname:pInheritanceInfo must: be a valid subpass
-    index within the pname:renderPass member of pname:pInheritanceInfo
-endif::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
+    slink:VkCommandPool that pname:commandBuffer was allocated from must:
+    support graphics operations
+ifndef::VKSC_VERSION_1_0[]
   * [[VUID-VkCommandBufferBeginInfo-flags-00055]]
     If pname:flags contains
     ename:VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT, the
     pname:framebuffer member of pname:pInheritanceInfo must: be either
     dlink:VK_NULL_HANDLE, or a valid sname:VkFramebuffer that is compatible
     with the pname:renderPass member of pname:pInheritanceInfo
+endif::VKSC_VERSION_1_0[]
+ifdef::VKSC_VERSION_1_0[]
+  * [[VUID-VkCommandBufferBeginInfo-flags-05009]]
+    If pname:flags contains
+    ename:VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT and
+    pname:secondaryCommandBufferNullOrImagelessFramebuffer is ename:VK_TRUE,
+    the pname:framebuffer member of pname:pInheritanceInfo must: be either
+    dlink:VK_NULL_HANDLE, or a valid sname:VkFramebuffer that is compatible
+    with the pname:renderPass member of pname:pInheritanceInfo
+  * [[VUID-VkCommandBufferBeginInfo-flags-05010]]
+    If pname:flags contains
+    ename:VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT and
+    pname:secondaryCommandBufferNullOrImagelessFramebuffer is
+    ename:VK_FALSE, the pname:framebuffer member of pname:pInheritanceInfo
+    must: be a valid sname:VkFramebuffer that is compatible with the
+    pname:renderPass member of pname:pInheritanceInfo and must: not have
+    been created with a slink:VkFramebufferCreateInfo::pname:flags value
+    that includes ename:VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT
+endif::VKSC_VERSION_1_0[]
 ifdef::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
-  * [[VUID-VkCommandBufferBeginInfo-flags-06000]]
+  * [[VUID-VkCommandBufferBeginInfo-flags-09240]]
     If pname:flags contains
     ename:VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT and the
-    pname:renderPass member of pname:pInheritanceInfo is not
-    dlink:VK_NULL_HANDLE, pname:renderPass must: be a valid
-    sname:VkRenderPass
-  * [[VUID-VkCommandBufferBeginInfo-flags-06001]]
-    If pname:flags contains
-    ename:VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT and the
-    pname:renderPass member of pname:pInheritanceInfo is not
-    dlink:VK_NULL_HANDLE, the pname:subpass member of pname:pInheritanceInfo
-    must: be a valid subpass index within the pname:renderPass member of
-    pname:pInheritanceInfo
+    <<features-dynamicRendering,pname:dynamicRendering>> feature is not
+    enabled, the pname:renderPass member of pname:pInheritanceInfo must: not
+    be dlink:VK_NULL_HANDLE
   * [[VUID-VkCommandBufferBeginInfo-flags-06002]]
     If pname:flags contains
     ename:VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT and the
@@ -687,7 +998,40 @@ ifdef::VK_AMD_mixed_attachment_samples,VK_NV_framebuffer_mixed_samples[]
     slink:VkCommandBufferInheritanceRenderingInfo::pname:colorAttachmentCount
 endif::VK_AMD_mixed_attachment_samples,VK_NV_framebuffer_mixed_samples[]
 endif::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
+  * [[VUID-VkCommandBufferBeginInfo-flags-06000]]
+    If pname:flags contains
+    ename:VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT
+ifdef::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
+    and the pname:renderPass member of pname:pInheritanceInfo is not
+    dlink:VK_NULL_HANDLE,
+endif::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
+    the pname:renderPass member of pname:pInheritanceInfo must: be a valid
+    sname:VkRenderPass
+  * [[VUID-VkCommandBufferBeginInfo-flags-06001]]
+    If pname:flags contains
+    ename:VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT
+ifdef::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
+    and the pname:renderPass member of pname:pInheritanceInfo is not
+    dlink:VK_NULL_HANDLE,
+endif::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
+    the pname:subpass member of pname:pInheritanceInfo must: be a valid
+    subpass index within the pname:renderPass member of
+    pname:pInheritanceInfo
 ****
+ifdef::VKSC_VERSION_1_0[]
+ifdef::hidden[]
+// tag::scdeviation[]
+  * If
+    slink:VkPhysicalDeviceVulkanSC10Properties::pname:secondaryCommandBufferNullOrImagelessFramebuffer
+    is ename:VK_FALSE, then
+    slink:VkCommandBufferInheritanceInfo:pname:framebuffer must: not be
+    dlink:VK_NULL_HANDLE and must: not have been created with a
+    slink:VkFramebufferCreateInfo::pname:flags value that includes
+    ename:VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT if the command buffer will be
+    executed within a render pass instance <<SCID-8>>.
+// end::scdeviation[]
+endif::hidden[]
+endif::VKSC_VERSION_1_0[]
 
 include::{generated}/validity/structs/VkCommandBufferBeginInfo.adoc[]
 --
@@ -707,8 +1051,9 @@ include::{generated}/api/enums/VkCommandBufferUsageFlagBits.adoc[]
     pass.
     If this is a primary command buffer, then this bit is ignored.
   * ename:VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT specifies that a
-    command buffer can: be resubmitted to a queue while it is in the
-    _pending state_, and recorded into multiple primary command buffers.
+    command buffer can: be resubmitted to any queue of the same queue family
+    while it is in the _pending state_, and recorded into multiple primary
+    command buffers.
 --
 
 [open,refpage='VkCommandBufferUsageFlags',desc='Bitmask of VkCommandBufferUsageFlagBits',type='flags']
@@ -727,7 +1072,7 @@ be inherited from the primary command buffer:
 
 include::{generated}/api/structs/VkCommandBufferInheritanceInfo.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:renderPass is a slink:VkRenderPass object defining which render
@@ -836,7 +1181,7 @@ defined as:
 
 include::{generated}/api/structs/VkCommandBufferInheritanceConditionalRenderingInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:conditionalRenderingEnable specifies whether the command buffer
@@ -879,7 +1224,7 @@ defined as:
 
 include::{generated}/api/structs/VkCommandBufferInheritanceRenderPassTransformInfoQCOM.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:transform is a elink:VkSurfaceTransformFlagBitsKHR value
@@ -916,7 +1261,7 @@ defined as:
 
 include::{generated}/api/structs/VkCommandBufferInheritanceViewportScissorInfoNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:viewportScissor2D specifies whether the listed dynamic state is
@@ -939,6 +1284,8 @@ ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
 endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
 ifdef::VK_EXT_discard_rectangles[]
   * ename:VK_DYNAMIC_STATE_DISCARD_RECTANGLE_EXT
+  * ename:VK_DYNAMIC_STATE_DISCARD_RECTANGLE_ENABLE_EXT
+  * ename:VK_DYNAMIC_STATE_DISCARD_RECTANGLE_MODE_EXT
 endif::VK_EXT_discard_rectangles[]
 
 as well as the following state, with restrictions on inherited depth values
@@ -1046,7 +1393,7 @@ or the equivalent
 include::{generated}/api/structs/VkCommandBufferInheritanceRenderingInfoKHR.adoc[]
 endif::VK_KHR_dynamic_rendering[]
 
-  * pname:sType is the type of this structure
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure
   * pname:flags is a bitmask of elink:VkRenderingFlagBits used by the render
@@ -1079,8 +1426,8 @@ is enabled, pname:rasterizationSamples is ignored.
 
 If pname:depthAttachmentFormat, pname:stencilAttachmentFormat, or any
 element of pname:pColorAttachmentFormats is ename:VK_FORMAT_UNDEFINED, it
-indicates that the corresponding attachment is unused within the render
-pass.
+indicates that the corresponding attachment is unused within the render pass
+and writes to those attachments are discarded.
 
 .Valid Usage
 ****
@@ -1092,28 +1439,21 @@ pass.
     pname:variableMultisampleRate>> feature is not enabled,
     pname:rasterizationSamples must: be a valid elink:VkSampleCountFlagBits
     value
-ifndef::VK_NV_linear_color_attachment[]
-  * [[VUID-VkCommandBufferInheritanceRenderingInfo-pColorAttachmentFormats-06006]]
-    If any element of pname:pColorAttachmentFormats is not
-    ename:VK_FORMAT_UNDEFINED, it must: be a format with
-    <<potential-format-features, potential format features>> that include
-    ename:VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT
-endif::VK_NV_linear_color_attachment[]
   * [[VUID-VkCommandBufferInheritanceRenderingInfo-depthAttachmentFormat-06540]]
     If pname:depthAttachmentFormat is not ename:VK_FORMAT_UNDEFINED, it
-    must: be a format that includes a depth aspect
+    must: be a format that includes a depth component
   * [[VUID-VkCommandBufferInheritanceRenderingInfo-depthAttachmentFormat-06007]]
     If pname:depthAttachmentFormat is not ename:VK_FORMAT_UNDEFINED, it
     must: be a format with <<potential-format-features, potential format
     features>> that include
     ename:VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
-ifdef::VK_NV_linear_color_attachment[]
-  * [[VUID-VkCommandBufferInheritanceRenderingInfoKHR-pColorAttachmentFormats-06492]]
+  * [[VUID-VkCommandBufferInheritanceRenderingInfo-pColorAttachmentFormats-06492]]
     If any element of pname:pColorAttachmentFormats is not
     ename:VK_FORMAT_UNDEFINED, it must: be a format with
     <<potential-format-features, potential format features>> that include
-    ename:VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT, or
-    ename:VK_FORMAT_FEATURE_2_LINEAR_COLOR_ATTACHMENT_BIT_NV if the
+    ename:VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT
+ifdef::VK_NV_linear_color_attachment[]
+    , or ename:VK_FORMAT_FEATURE_2_LINEAR_COLOR_ATTACHMENT_BIT_NV if the
     <<features-linearColorAttachment, pname:linearColorAttachment>> feature
     is enabled
 endif::VK_NV_linear_color_attachment[]
@@ -1161,7 +1501,7 @@ ifdef::VK_NV_framebuffer_mixed_samples[]
 include::{generated}/api/structs/VkAttachmentSampleCountInfoNV.adoc[]
 endif::VK_NV_framebuffer_mixed_samples[]
 
-  * pname:sType is the type of this structure
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure
   * pname:colorAttachmentCount is the number of color attachments specified
@@ -1190,7 +1530,7 @@ are ignored.
 sname:VkAttachmentSampleCountInfoAMD can: also be included in the
 pname:pNext chain of slink:VkGraphicsPipelineCreateInfo.
 When a graphics pipeline is created without a slink:VkRenderPass, if this
-structure is present in the pname:pNext chain of
+structure is included in the pname:pNext chain of
 slink:VkGraphicsPipelineCreateInfo, it specifies the sample count of
 attachments used for rendering.
 If this structure is not specified, and the pipeline does not include a
@@ -1217,20 +1557,58 @@ endif::VK_NV_device_generated_commands[]
 
 [open,refpage='vkEndCommandBuffer',desc='Finish recording a command buffer',type='protos']
 --
+
+:refpage: vkEndCommandBuffer
+
 To complete recording of a command buffer, call:
 
 include::{generated}/api/protos/vkEndCommandBuffer.adoc[]
 
   * pname:commandBuffer is the command buffer to complete recording.
 
-If there was an error during recording, the application will be notified by
-an unsuccessful return code returned by fname:vkEndCommandBuffer.
-If the application wishes to further use the command buffer, the command
-buffer must: be reset.
-
 The command buffer must: have been in the <<commandbuffers-lifecycle,
-recording state>>, and is moved to the <<commandbuffers-lifecycle,
-executable state>>.
+recording state>>, and, if successful, is moved to the
+<<commandbuffers-lifecycle, executable state>>.
+
+If there was an error during recording, the application will be notified by
+an unsuccessful return code returned by fname:vkEndCommandBuffer, and the
+command buffer will be moved to the <<commandbuffers-lifecycle, invalid
+state>>.
+
+ifdef::VK_KHR_video_encode_queue[]
+In case the application recorded one or more <<video-encode-operations,video
+encode operations>> into the command buffer, implementations may: return the
+ename:VK_ERROR_INVALID_VIDEO_STD_PARAMETERS_KHR error if any of the
+specified Video Std parameters do not adhere to the syntactic or semantic
+requirements of the used video compression standard, or if values derived
+from parameters according to the rules defined by the used video compression
+standard do not adhere to the capabilities of the video compression standard
+or the implementation.
+
+[NOTE]
+.Note
+====
+Applications should: not rely on the
+ename:VK_ERROR_INVALID_VIDEO_STD_PARAMETERS_KHR error being returned by any
+command as a means to verify Video Std parameters, as implementations are
+not required to report the error in any specific set of cases.
+====
+endif::VK_KHR_video_encode_queue[]
+
+ifdef::VKSC_VERSION_1_0[]
+If recording a command would exceed the amount of command pool memory
+reserved by
+slink:VkCommandPoolMemoryReservationCreateInfo::pname:commandPoolReservedSize,
+the implementation may: report a ename:VK_FAULT_TYPE_COMMAND_BUFFER_FULL
+fault.
+The command buffer remains in the <<commandbuffers-lifecycle, recording
+state>> until fname:vkEndCommandBuffer is called.
+When fname:vkEndCommandBuffer is called on a command buffer for which the
+command pool memory reservation was exceeded during recording, it must:
+return ename:VK_ERROR_OUT_OF_DEVICE_MEMORY.
+endif::VKSC_VERSION_1_0[]
+
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
 
 .Valid Usage
 ****
@@ -1292,6 +1670,9 @@ as possible.
 ifdef::VK_VERSION_1_3,VK_KHR_synchronization2[]
 [open,refpage='vkQueueSubmit2',desc='Submits command buffers to a queue',type='protos',alias='vkQueueSubmit2KHR']
 --
+
+:refpage: vkQueueSubmit2KHR
+
 To submit command buffers to a queue, call:
 
 ifdef::VK_VERSION_1_3[]
@@ -1344,6 +1725,8 @@ unable to make that guarantee, the implementation must: return
 ename:VK_ERROR_DEVICE_LOST.
 See <<devsandqueues-lost-device,Lost Device>>.
 
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
+
 .Valid Usage
 ****
   * [[VUID-vkQueueSubmit2-fence-04894]]
@@ -1382,22 +1765,17 @@ See <<devsandqueues-lost-device,Lost Device>>.
     defined by the pname:semaphore member of any element of the
     pname:pWaitSemaphoreInfos member of any element of pname:pSubmits, there
     must: be no other queues waiting on the same semaphore
-  * [[VUID-vkQueueSubmit2-semaphore-03872]]
-    The pname:semaphore member of any element of the
-    pname:pWaitSemaphoreInfos member of any element of pname:pSubmits must:
-    be semaphores that are signaled, or have
-    <<synchronization-semaphores-signaling, semaphore signal operations>>
-    previously submitted for execution
-ifdef::VK_KHR_timeline_semaphore[]
   * [[VUID-vkQueueSubmit2-semaphore-03873]]
-    Any pname:semaphore member of any element of the
-    pname:pWaitSemaphoreInfos member of any element of pname:pSubmits that
-    was created with a elink:VkSemaphoreTypeKHR of
-    ename:VK_SEMAPHORE_TYPE_BINARY_KHR must: reference a semaphore signal
-    operation that has been submitted for execution and any semaphore signal
-    operations on which it depends (if any) must: have also been submitted
+    The pname:semaphore member of any element of the
+    pname:pWaitSemaphoreInfos member of any element of pname:pSubmits
+ifdef::VK_VERSION_1_2,VK_KHR_timeline_semaphore[]
+    that was created with a elink:VkSemaphoreTypeKHR of
+    ename:VK_SEMAPHORE_TYPE_BINARY_KHR
+endif::VK_VERSION_1_2,VK_KHR_timeline_semaphore[]
+    must: reference a semaphore signal operation that has been submitted for
+    execution and any <<synchronization-semaphores-signaling, semaphore
+    signal operations>> on which it depends must: have also been submitted
     for execution
-endif::VK_KHR_timeline_semaphore[]
   * [[VUID-vkQueueSubmit2-commandBuffer-03874]]
     The pname:commandBuffer member of any element of the
     pname:pCommandBufferInfos member of any element of pname:pSubmits must:
@@ -1469,7 +1847,7 @@ or the equivalent
 include::{generated}/api/structs/VkSubmitInfo2KHR.adoc[]
 endif::VK_KHR_synchronization2[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is a bitmask of elink:VkSubmitFlagBits.
@@ -1613,7 +1991,7 @@ or the equivalent
 include::{generated}/api/structs/VkSemaphoreSubmitInfoKHR.adoc[]
 endif::VK_KHR_synchronization2[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:semaphore is a slink:VkSemaphore affected by this operation.
@@ -1649,6 +2027,13 @@ ifdef::VK_KHR_device_group_creation,VK_VERSION_1_1[]
     If the pname:device that pname:semaphore was created on is a device
     group, pname:deviceIndex must: be a valid device index
 endif::VK_KHR_device_group_creation,VK_VERSION_1_1[]
+ifdef::VK_NV_external_sci_sync,VK_NV_external_sci_sync2[]
+  * [[VUID-VkSemaphoreSubmitInfoKHR-semaphore-05094]]
+    If pname:semaphore has a payload of stext:NvSciSyncObj, pname:value
+    must: be calculated by application via <<NvSciSync-extension-page,
+    NvSciSync APIs>>.
+endif::VK_NV_external_sci_sync,VK_NV_external_sci_sync2[]
+
 ****
 
 include::{generated}/validity/structs/VkSemaphoreSubmitInfo.adoc[]
@@ -1666,7 +2051,7 @@ or the equivalent
 include::{generated}/api/structs/VkCommandBufferSubmitInfoKHR.adoc[]
 endif::VK_KHR_synchronization2[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:commandBuffer is a slink:VkCommandBuffer to be submitted for
@@ -1685,14 +2070,74 @@ ifdef::VK_KHR_device_group_creation,VK_VERSION_1_1[]
   * [[VUID-VkCommandBufferSubmitInfo-deviceMask-03891]]
     If pname:deviceMask is not `0`, it must: be a valid device mask
 endif::VK_KHR_device_group_creation,VK_VERSION_1_1[]
+ifdef::VK_ARM_render_pass_striped[]
+  * [[VUID-VkCommandBufferSubmitInfo-commandBuffer-09445]]
+    If any render pass instance in pname:commandBuffer was recorded with a
+    slink:VkRenderPassStripeBeginInfoARM structure in its pNext chain, a
+    slink:VkRenderPassStripeSubmitInfoARM must: be included in the
+    pname:pNext chain
+  * [[VUID-VkCommandBufferSubmitInfo-pNext-09446]]
+    If a slink:VkRenderPassStripeSubmitInfoARM is included in the
+    pname:pNext chain, the value of
+    slink:VkRenderPassStripeSubmitInfoARM::pname:stripeSemaphoreInfoCount
+    must: be equal to the sum of the
+    slink:VkRenderPassStripeBeginInfoARM::pname:stripeInfoCount parameters
+    provided to render pass instances recorded in pname:commandBuffer
+endif::VK_ARM_render_pass_striped[]
 ****
 
 include::{generated}/validity/structs/VkCommandBufferSubmitInfo.adoc[]
 --
 endif::VK_VERSION_1_3,VK_KHR_synchronization2[]
 
+ifdef::VK_ARM_render_pass_striped[]
+[open,refpage='VkRenderPassStripeSubmitInfoARM',desc='Structure specifying striped rendering submit information',type='structs']
+--
+The sname:VkRenderPassStripeSubmitInfoARM structure is defined as:
+
+include::{generated}/api/structs/VkRenderPassStripeSubmitInfoARM.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:stripeSemaphoreInfoCount is the number of semaphores used to
+    signal stripe completion in the render pass instances in the submitted
+    command buffer.
+  * pname:pStripeSemaphoreInfos is a pointer to an array of
+    pname:stripeSemaphoreInfoCount slink:VkSemaphoreSubmitInfo structures
+    describing the semaphores used to signal stripe completion.
+
+This structure can be included in the pname:pNext chain of
+slink:VkCommandBufferSubmitInfo to provide a set of semaphores to be
+signaled for each striped render pass instance.
+
+The elements of pname:pStripeSemaphoreInfos are mapped to render pass
+instances in slink:VkCommandBufferSubmitInfo::pname:commandBuffer in
+submission order and in stripe order within each render pass instance.
+Each semaphore in pname:pStripeSemaphoreInfos is signaled when the
+implementation has completed execution of the associated stripe.
+In a render pass instance that has multiview enabled, the stripe includes
+all views in the view mask.
+In a render pass instance with pname:layerCount greater than 1, the stripe
+includes all layers.
+
+.Valid Usage
+****
+  * [[VUID-VkRenderPassStripeSubmitInfoARM-semaphore-09447]]
+    The pname:semaphore member of each element of
+    pname:pStripeSemaphoreInfos must: have been created with a
+    elink:VkSemaphoreType of ename:VK_SEMAPHORE_TYPE_BINARY
+****
+
+include::{generated}/validity/structs/VkRenderPassStripeSubmitInfoARM.adoc[]
+--
+endif::VK_ARM_render_pass_striped[]
+
 [open,refpage='vkQueueSubmit',desc='Submits a sequence of semaphores or command buffers to a queue',type='protos']
 --
+
+:refpage: vkQueueSubmit
+
 To submit command buffers to a queue, call:
 
 include::{generated}/api/protos/vkQueueSubmit.adoc[]
@@ -1750,6 +2195,8 @@ to make that guarantee, the implementation must: return
 ename:VK_ERROR_DEVICE_LOST.
 See <<devsandqueues-lost-device,Lost Device>>.
 
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
+
 .Valid Usage
 ****
   * [[VUID-vkQueueSubmit-fence-00063]]
@@ -1781,22 +2228,16 @@ See <<devsandqueues-lost-device,Lost Device>>.
     by any element of the pname:pWaitSemaphores member of any element of
     pname:pSubmits executes on pname:queue, there must: be no other queues
     waiting on the same semaphore
-ifndef::VK_KHR_timeline_semaphore[]
-  * [[VUID-vkQueueSubmit-pWaitSemaphores-00069]]
-    All elements of the pname:pWaitSemaphores member of all elements of
-    pname:pSubmits must: be semaphores that are signaled, or have
-    <<synchronization-semaphores-signaling, semaphore signal operations>>
-    previously submitted for execution
-endif::VK_KHR_timeline_semaphore[]
-ifdef::VK_VERSION_1_2,VK_KHR_timeline_semaphore[]
   * [[VUID-vkQueueSubmit-pWaitSemaphores-03238]]
     All elements of the pname:pWaitSemaphores member of all elements of
-    pname:pSubmits created with a elink:VkSemaphoreType of
-    ename:VK_SEMAPHORE_TYPE_BINARY must: reference a semaphore signal
-    operation that has been submitted for execution and any semaphore signal
-    operations on which it depends (if any) must: have also been submitted
-    for execution
+    pname:pSubmits
+ifdef::VK_VERSION_1_2,VK_KHR_timeline_semaphore[]
+    created with a elink:VkSemaphoreType of ename:VK_SEMAPHORE_TYPE_BINARY
 endif::VK_VERSION_1_2,VK_KHR_timeline_semaphore[]
+    must: reference a semaphore signal operation that has been submitted for
+    execution and any <<synchronization-semaphores-signaling, semaphore
+    signal operations>> on which it depends must: have also been submitted
+    for execution
   * [[VUID-vkQueueSubmit-pCommandBuffers-00070]]
     Each element of the pname:pCommandBuffers member of each element of
     pname:pSubmits must: be in the <<commandbuffers-lifecycle, pending or
@@ -1867,7 +2308,7 @@ The sname:VkSubmitInfo structure is defined as:
 
 include::{generated}/api/structs/VkSubmitInfo.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:waitSemaphoreCount is the number of semaphores upon which to wait
@@ -2013,8 +2454,9 @@ ifdef::VK_VERSION_1_2,VK_KHR_timeline_semaphore[]
 To specify the values to use when waiting for and signaling semaphores
 created with a elink:VkSemaphoreType of ename:VK_SEMAPHORE_TYPE_TIMELINE,
 add a slink:VkTimelineSemaphoreSubmitInfo structure to the pname:pNext chain
-of the slink:VkSubmitInfo structure when using flink:vkQueueSubmit or the
-slink:VkBindSparseInfo structure when using flink:vkQueueBindSparse.
+of the slink:VkSubmitInfo structure when using flink:vkQueueSubmit
+ifndef::VKSC_VERSION_1_0[or the slink:VkBindSparseInfo structure when using flink:vkQueueBindSparse]
+.
 The sname:VkTimelineSemaphoreSubmitInfo structure is defined as:
 
 include::{generated}/api/structs/VkTimelineSemaphoreSubmitInfo.adoc[]
@@ -2025,7 +2467,7 @@ or the equivalent
 include::{generated}/api/structs/VkTimelineSemaphoreSubmitInfoKHR.adoc[]
 endif::VK_KHR_timeline_semaphore[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:waitSemaphoreValueCount is the number of semaphore wait values
@@ -2046,6 +2488,16 @@ not created with a elink:VkSemaphoreType of
 ename:VK_SEMAPHORE_TYPE_TIMELINE, the implementation must: ignore the value
 in the pname:pWaitSemaphoreValues or pname:pSignalSemaphoreValues entry.
 
+ifdef::VK_NV_external_sci_sync,VK_NV_external_sci_sync2[]
+If the semaphore in slink:VkSubmitInfo::pname:pWaitSemaphores or
+slink:VkSubmitInfo::pname:pSignalSemaphores corresponding to an entry in
+pname:pWaitSemaphoreValues or pname:pSignalSemaphoreValues respectively was
+created with a elink:VkSemaphoreType of ename:VK_SEMAPHORE_TYPE_TIMELINE,
+and has stext:NvSciSyncObj as the payload, the value in the
+pname:pWaitSemaphoreValues or pname:pSignalSemaphoreValues entry must: be
+calculated by application via <<NvSciSync-extension-page, NvSciSync APIs>>.
+endif::VK_NV_external_sci_sync,VK_NV_external_sci_sync2[]
+
 include::{generated}/validity/structs/VkTimelineSemaphoreSubmitInfo.adoc[]
 --
 endif::VK_VERSION_1_2,VK_KHR_timeline_semaphore[]
@@ -2061,7 +2513,7 @@ The sname:VkD3D12FenceSubmitInfoKHR structure is defined as:
 
 include::{generated}/api/structs/VkD3D12FenceSubmitInfoKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:waitSemaphoreValuesCount is the number of semaphore wait values
@@ -2105,14 +2557,12 @@ endif::VK_VERSION_1_2,VK_KHR_timeline_semaphore[]
 ****
   * [[VUID-VkD3D12FenceSubmitInfoKHR-waitSemaphoreValuesCount-00079]]
     pname:waitSemaphoreValuesCount must: be the same value as
-    sname:VkSubmitInfo::pname:waitSemaphoreCount, where sname:VkSubmitInfo
-    is in the pname:pNext chain of this sname:VkD3D12FenceSubmitInfoKHR
-    structure
+    sname:VkSubmitInfo::pname:waitSemaphoreCount, where this structure is in
+    the pname:pNext chain of a sname:VkSubmitInfo structure
   * [[VUID-VkD3D12FenceSubmitInfoKHR-signalSemaphoreValuesCount-00080]]
     pname:signalSemaphoreValuesCount must: be the same value as
-    sname:VkSubmitInfo::pname:signalSemaphoreCount, where sname:VkSubmitInfo
-    is in the pname:pNext chain of this sname:VkD3D12FenceSubmitInfoKHR
-    structure
+    sname:VkSubmitInfo::pname:signalSemaphoreCount, where this structure is
+    in the pname:pNext chain of a sname:VkSubmitInfo structure
 ****
 
 include::{generated}/validity/structs/VkD3D12FenceSubmitInfoKHR.adoc[]
@@ -2138,7 +2588,7 @@ The sname:VkWin32KeyedMutexAcquireReleaseInfoKHR structure is defined as:
 
 include::{generated}/api/structs/VkWin32KeyedMutexAcquireReleaseInfoKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:acquireCount is the number of entries in the pname:pAcquireSyncs,
@@ -2216,7 +2666,7 @@ or the equivalent
 include::{generated}/api/structs/VkDeviceGroupSubmitInfoKHR.adoc[]
 endif::VK_KHR_device_group[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:waitSemaphoreCount is the number of elements in the
@@ -2277,7 +2727,7 @@ The sname:VkPerformanceQuerySubmitInfoKHR structure is defined as:
 
 include::{generated}/api/structs/VkPerformanceQuerySubmitInfoKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:counterPassIndex specifies which counter pass index is active.
@@ -2353,9 +2803,9 @@ not be used.
 
 [open,refpage='vkCmdExecuteCommands',desc='Execute a secondary command buffer from a primary command buffer',type='protos']
 --
-A secondary command buffer must: not be directly submitted to a queue.
-Instead, secondary command buffers are recorded to execute as part of a
-primary command buffer with the command:
+Secondary command buffers must: not be directly submitted to a queue.
+To record a secondary command buffer to execute as part of a primary command
+buffer, call:
 
 include::{generated}/api/protos/vkCmdExecuteCommands.adoc[]
 
@@ -2373,6 +2823,12 @@ ename:VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT flag, and it was recorded
 into any other primary command buffer which is currently in the
 <<commandbuffers-lifecycle, executable or recording state>>, that primary
 command buffer becomes <<commandbuffers-lifecycle, invalid>>.
+
+ifdef::VK_EXT_nested_command_buffer[]
+If the <<features-nestedCommandBuffer, pname:nestedCommandBuffer>> feature
+is enabled it is valid usage for fname:vkCmdExecuteCommands to also be
+recorded to a <<glossary, secondary command buffer>>.
+endif::VK_EXT_nested_command_buffer[]
 
 .Valid Usage
 ****
@@ -2413,6 +2869,7 @@ command buffer becomes <<commandbuffers-lifecycle, invalid>>.
     instance begun with flink:vkCmdBeginRenderPass, its pname:contents
     parameter must: have been set to
     ename:VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS
+ifdef::VK_EXT_nested_command_buffer[, or ename:VK_SUBPASS_CONTENTS_INLINE_AND_SECONDARY_COMMAND_BUFFERS_EXT]
   * [[VUID-vkCmdExecuteCommands-pCommandBuffers-06019]]
     If fname:vkCmdExecuteCommands is being called within a render pass
     instance begun with flink:vkCmdBeginRenderPass, each element of
@@ -2426,25 +2883,6 @@ command buffer becomes <<commandbuffers-lifecycle, invalid>>.
     of the flink:vkBeginCommandBuffer commands used to begin recording each
     element of pname:pCommandBuffers must: be
     <<renderpass-compatibility,compatible>> with the current render pass
-ifndef::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
-  * [[VUID-vkCmdExecuteCommands-contents-00095]]
-    If fname:vkCmdExecuteCommands is being called within a render pass
-    instance, that render pass instance must: have been begun with the
-    pname:contents parameter of fname:vkCmdBeginRenderPass set to
-    ename:VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS
-  * [[VUID-vkCmdExecuteCommands-pCommandBuffers-00097]]
-    If fname:vkCmdExecuteCommands is being called within a render pass
-    instance, each element of pname:pCommandBuffers must: have been recorded
-    with sname:VkCommandBufferInheritanceInfo::pname:subpass set to the
-    index of the subpass which the given command buffer will be executed in
-  * [[VUID-vkCmdExecuteCommands-pInheritanceInfo-00098]]
-    If fname:vkCmdExecuteCommands is being called within a render pass
-    instance, the render passes specified in the
-    pname:pBeginInfo->pInheritanceInfo->renderPass members of the
-    flink:vkBeginCommandBuffer commands used to begin recording each element
-    of pname:pCommandBuffers must: be
-    <<renderpass-compatibility,compatible>> with the current render pass
-endif::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
 ifdef::VK_QCOM_render_pass_transform[]
   * [[VUID-vkCmdExecuteCommands-pNext-02865]]
     If fname:vkCmdExecuteCommands is being called within a render pass
@@ -2754,11 +3192,113 @@ ifdef::VK_AMD_mixed_attachment_samples,VK_NV_framebuffer_mixed_samples[]
     slink:VkCommandBufferInheritanceRenderingInfo::pname:rasterizationSamples
     must: be equal to the sample count used to create that image view
 endif::VK_AMD_mixed_attachment_samples,VK_NV_framebuffer_mixed_samples[]
+ifdef::VK_ANDROID_external_format_resolve[]
+  * [[VUID-vkCmdExecuteCommands-pNext-09299]]
+    If fname:vkCmdExecuteCommands is being called within a render pass
+    instance begun with flink:vkCmdBeginRendering, with any color attachment
+    using a resolve mode of
+    ename:VK_RESOLVE_MODE_EXTERNAL_FORMAT_DOWNSAMPLE_ANDROID, the
+    pname:pNext chain of slink:VkCommandBufferInheritanceInfo used to create
+    each element of pname:pCommandBuffers must: include a
+    slink:VkExternalFormatANDROID structure with a pname:externalFormat
+    matching that used to create the resolve attachment in the render pass
+  * [[VUID-vkCmdExecuteCommands-pNext-09300]]
+    If fname:vkCmdExecuteCommands is being called within a render pass
+    instance begun with flink:vkCmdBeginRendering with any color attachment
+    using a resolve mode of
+    ename:VK_RESOLVE_MODE_EXTERNAL_FORMAT_DOWNSAMPLE_ANDROID, and the
+    pname:pNext chain of slink:VkCommandBufferInheritanceInfo does not
+    include a slink:VkAttachmentSampleCountInfoAMD or
+    slink:VkAttachmentSampleCountInfoNV structure, the value of
+    slink:VkCommandBufferInheritanceRenderingInfo::pname:rasterizationSamples
+    must: be ename:VK_SAMPLE_COUNT_1_BIT
+endif::VK_ANDROID_external_format_resolve[]
 endif::VK_VERSION_1_3,VK_KHR_dynamic_rendering[]
+  * [[VUID-vkCmdExecuteCommands-commandBuffer-09375]]
+    pname:commandBuffer must: not be a <<glossary, secondary command
+    buffer>>
+ifdef::VK_EXT_nested_command_buffer[]
+    unless the <<features-nestedCommandBuffer, pname:nestedCommandBuffer>>
+    feature is enabled
+  * [[VUID-vkCmdExecuteCommands-nestedCommandBuffer-09376]]
+    If the <<features-nestedCommandBuffer, pname:nestedCommandBuffer>>
+    feature is enabled, the <<glossary, command buffer nesting level>> of
+    each element of pname:pCommandBuffers must: be less than
+    <<limits-maxCommandBufferNestingLevel,
+    pname:maxCommandBufferNestingLevel>>
+  * [[VUID-vkCmdExecuteCommands-nestedCommandBufferRendering-09377]]
+    If the <<features-nestedCommandBufferRendering,
+    pname:nestedCommandBufferRendering>> feature is not enabled, and
+    pname:commandBuffer is a <<glossary, secondary command buffer>>,
+    pname:commandBuffer must: not have been recorded with
+    ename:VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT
+  * [[VUID-vkCmdExecuteCommands-nestedCommandBufferSimultaneousUse-09378]]
+    If the <<features-nestedCommandBufferSimultaneousUse,
+    pname:nestedCommandBufferSimultaneousUse>> feature is not enabled, and
+    pname:commandBuffer is a <<glossary, secondary command buffer>>, each
+    element of pname:pCommandBuffers must: not have been recorded with
+    ename:VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT
+endif::VK_EXT_nested_command_buffer[]
 ****
 
 include::{generated}/validity/protos/vkCmdExecuteCommands.adoc[]
 --
+
+ifdef::VK_EXT_nested_command_buffer[]
+[[commandbuffers-nested]]
+== Nested Command Buffers
+
+In addition to secondary command buffer execution from primary command
+buffers, an implementation may: support <<glossary, nested command
+buffers>>, which enable secondary command buffers to be executed from other
+secondary command buffers.
+If the <<features-nestedCommandBuffer, pname:nestedCommandBuffer>> feature
+is enabled, the implementation supports <<glossary, nested command
+buffers>>.
+
+Nested command buffer execution works the same as primary-to-secondary
+execution, except that it is subject to some additional
+implementation-defined limits.
+
+Each secondary command buffer has a <<glossary, command buffer nesting
+level>>, which is determined at flink:vkEndCommandBuffer time and evaluated
+at flink:vkCmdExecuteCommands time.
+A secondary command buffer that executes no other secondary command buffers
+has a <<glossary, command buffer nesting level>> of zero.
+Otherwise, the <<glossary, command buffer nesting level>> of a secondary
+command buffer is equal to the maximum nesting level of all secondary
+command buffers executed by that command buffer plus one.
+Some implementations may: have a limit on the maximum nesting level of
+secondary command buffers that can: be recorded.
+This limit is advertised in <<limits-maxCommandBufferNestingLevel,
+pname:maxCommandBufferNestingLevel>>.
+
+If the <<features-nestedCommandBufferRendering,
+pname:nestedCommandBufferRendering>> feature is enabled, the implementation
+supports calling flink:vkCmdExecuteCommands inside secondary command buffers
+recorded with ename:VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT.
+If the <<features-nestedCommandBufferSimultaneousUse,
+pname:nestedCommandBufferSimultaneousUse>> feature is enabled, the
+implementation supports calling flink:vkCmdExecuteCommands with secondary
+command buffers recorded with
+ename:VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT.
+
+Whenever flink:vkCmdExecuteCommands is recorded inside a secondary command
+buffer recorded with ename:VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
+each member of pname:pCommandBuffers must: have been recorded with a
+slink:VkCommandBufferBeginInfo with slink:VkCommandBufferInheritanceInfo
+compatible with the slink:VkCommandBufferInheritanceInfo of the command
+buffer into which the flink:vkCmdExecuteCommands call is being recorded.
+The slink:VkCommandBufferInheritanceRenderingInfo structures are compatible
+when the sname:VkCommandBufferInheritanceRenderingInfo::pname:renderpass are
+<<renderpass-compatibility, compatible>>, or if they are
+dlink:VK_NULL_HANDLE then the slink:VkCommandBufferInheritanceRenderingInfo
+members match, and all other members of
+sname:VkCommandBufferInheritanceRenderingInfo match.
+This requirement applies recursively, down to the most nested command buffer
+and up to the command buffer where the render pass was originally begun.
+
+endif::VK_EXT_nested_command_buffer[]
 
 ifdef::VK_VERSION_1_1,VK_KHR_device_group[]
 [[commandbuffers-devicemask]]
@@ -2810,7 +3350,7 @@ or the equivalent
 include::{generated}/api/structs/VkDeviceGroupCommandBufferBeginInfoKHR.adoc[]
 endif::VK_KHR_device_group[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:deviceMask is the initial value of the command buffer's device

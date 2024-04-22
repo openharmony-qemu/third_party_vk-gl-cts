@@ -1,4 +1,4 @@
-// Copyright 2014-2022 The Khronos Group Inc.
+// Copyright 2014-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -43,7 +43,7 @@ version of the API.
   * Repeat until the headers and/or includes are correct
   * Commit your changes to your local git branch, push to your upstream git
     server (your personal repository clone of KhronosGroup/Vulkan-Docs on
-    Github, for people outside Khronos; the Khronos member gitlab server,
+    GitHub, for people outside Khronos; the Khronos member gitlab server,
     otherwise), and create a pull or merge request against the default
     branch (currently `main`) or other appropriate target.
 

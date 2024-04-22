@@ -11,8 +11,6 @@ include::{generated}/meta/{refprefix}VK_NV_shader_image_footprint.adoc[]
 *IP Status*::
     No known IP claims.
 *Interactions and External Dependencies*::
-  - This extension requires
-    {spirv}/NV/SPV_NV_shader_image_footprint.html[`SPV_NV_shader_image_footprint`]
   - This extension provides API support for
     {GLSLregistry}/nv/GLSL_NV_shader_texture_footprint.txt[`GL_NV_shader_texture_footprint`]
 *Contributors*::
@@ -172,7 +170,7 @@ accumulate aggregate footprint coverage, as described in the previous issue.
 Even if you ignore the anisotropic filtering case where the implementation
 may return a granularity larger than that requested by the caller, each
 shader invocation will need to use atomic functions to update up to four
-footprint image texels for each level of detail accessed.
+footprint image texels for each LOD accessed.
 Having each active shader invocation perform multiple atomic operations can
 be expensive, particularly when neighboring invocations will want to update
 the same footprint image texels.

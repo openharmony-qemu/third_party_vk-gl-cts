@@ -1,4 +1,4 @@
-// Copyright 2014-2022 The Khronos Group Inc.
+// Copyright 2014-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -7,6 +7,8 @@
 
 [open,refpage='vkCreateStreamDescriptorSurfaceGGP',desc='Create a slink:VkSurfaceKHR object for a Google Games Platform stream',type='protos']
 --
+:refpage: vkCreateStreamDescriptorSurfaceGGP
+
 To create a sname:VkSurfaceKHR object for a Google Games Platform stream
 descriptor, call:
 
@@ -31,7 +33,7 @@ The sname:VkStreamDescriptorSurfaceCreateInfoGGP structure is defined as:
 
 include::{generated}/api/structs/VkStreamDescriptorSurfaceCreateInfoGGP.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.

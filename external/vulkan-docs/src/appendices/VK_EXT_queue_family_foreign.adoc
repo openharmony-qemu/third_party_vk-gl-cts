@@ -1,4 +1,4 @@
-// Copyright 2017-2022 The Khronos Group Inc.
+// Copyright 2017-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -11,9 +11,9 @@ include::{generated}/meta/{refprefix}VK_EXT_queue_family_foreign.adoc[]
 *IP Status*::
     No known IP claims.
 *Contributors*::
-  - Chad Versace, Google
+  - Lina Versace, Google
   - James Jones, NVIDIA
-  - Jason Ekstrand, Intel
+  - Faith Ekstrand, Intel
   - Jesse Hall, Google
   - Daniel Rakos, AMD
   - Ray Smith, ARM
@@ -44,5 +44,5 @@ include::{generated}/interfaces/VK_EXT_queue_family_foreign.adoc[]
 
 === Version History
 
-  * Revision 1, 2017-11-01 (Chad Versace)
+  * Revision 1, 2017-11-01 (Lina Versace)
   ** Squashed internal revisions

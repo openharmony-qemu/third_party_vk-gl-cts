@@ -1,11 +1,43 @@
-// Copyright 2014-2022 The Khronos Group Inc.
-//
+// Copyright 2014-2024 The Khronos Group Inc.
 // SPDX-License-Identifier: CC-BY-4.0
 
 [appendix]
 [[revisions]]
 = Revision History
 
+* 2023-11-30 - Update introduction of the <<writing, Writing Style>> chapter
+  to recommend following existing language and API design patterms when
+  creating new specification language (internal issue 3707).
+* 2023-10-22 - Update <<extensions-naming-author-IDs, description of `EXT`
+  extensions>>, since some are now being ratified.
+* 2023-10-11 - Add rules for <<writing-titlecase, writing chapter and
+  section titles>>.
+* 2023-10-05 - Mention that <<extensions-reserving-bitmask-values, bit
+  position 31>> may not be used for enumerated type bitmasks, due to
+  portability concerns.
+* 2023-07-07 - Remove style guide requirement to
+  <<sample-writing-explicit-vu, not use nested bullet points or other
+  complex markup in a valid usage statement>>, which is now allowed due to
+  toolchain improvements.
+* 2023-07-07 - Add "`use case`" as <<writing-compound-words, preferred
+  orthography>> (internal merge request 5991).
+* 2023-07-05 - Change the boilerplate language for `sType` to refer to
+  `VkStructureType` (internal issue 3493).
+* 2023-06-21 - Remove the style guide advice to keep valid usage statements
+  "`atomic`" with respect to preprocessor directives, as a recent script and
+  validation layer change has enabled preprocessor directives within VUs.
+  In its place, add new advice about making sure all version and extension
+  information is included in the text of the valid usage statement rather
+  than relying on preprocessor directives.
+* 2023-05-03 - Add <<markup-word-choices, preferred way to write>> "`called
+  _in_ a command buffer`" (internal issue 3480).
+* 2023-04-30 - Update <<markup-blocks, Blocks>> to remove tilde markup for
+  source blocks inside refpages, and use `[open]`-tagged listing blocks for
+  <<markup-blocks-nested-open, continuation blocks inside refpages>>
+  instead.
+* 2023-02-26 - update description of computing numeric enumerant values, and
+  reference the normative references section for the registry schema
+  document (public issue 2069).
 * 2022-11-29 - Add a NOTE to the <<writing-conventions, Use American
   Spelling Conventions>> section explain why there are a few uses of
   "`colour`" in the Vulkan Video extensions (internal issue 3254).
@@ -234,3 +266,11 @@
 * 2015-12-15 - Make "`implementation`" preferred term instead of "`system`".
 * 2015-12-13 - Add tlink{cl}/tname{cl} macros for function pointer types.
 * 2015-12-10 - Initial release for feedback.
+
+
+ifdef::VKSC_VERSION_1_0[]
+== Vulkan SC Revision History
+
+* 2019-06-25 - Added <appendix-scid, Safety Critical ID Tags (SCID)>>
+  appendix.
+endif::VKSC_VERSION_1_0[]

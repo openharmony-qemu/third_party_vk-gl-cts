@@ -1,6 +1,7 @@
 use_relative_paths = True
 
 vars = {
+  'cpplint_git':  'https://github.com/cpplint',
   'google_git':  'https://github.com/google',
   'khronos_git': 'https://github.com/KhronosGroup',
   'llvm_git': 'https://github.com/llvm',
@@ -12,16 +13,15 @@ vars = {
 
   'clspv_llvm_revision': 'b70366c9c430e1eadd59d5a1dfbb9c4d84f83de5',
   'clspv_revision': 'f99809bdab1710846633b4ec24f5448263e75da7',
-  'cppdap_revision': '88e89520148b2f95e17ca9348587a28215ffc921',
-  'cpplint_revision': '26470f9ccb354ff2f6d098f831271a1833701b28',
+  'cpplint_revision': 'fa12a0bbdafa15291276ddd2a2dcd2ac7a2ce4cb',
   'dxc_revision': 'c45db48d565a9edc14b025e43b90e62264d06eea',
   'glslang_revision': '81cc10a498b25a90147cccd6e8939493c1e9e20e',
   'googletest_revision': '16f637fbf4ffc3f7a01fa4eceb7906634565242f',
   'json_revision': '4f8fba14066156b73f1189a2b8bd568bde5284c5',
   'lodepng_revision': '5601b8272a6850b7c5d693dd0c0e16da50be8d8d',
   'shaderc_revision': 'e72186b66bb90ed06aaf15cbdc9a053581a0616b',
-  'spirv_headers_revision': 'b42ba6d92faf6b4938e6f22ddd186dbdacc98d78',
-  'spirv_tools_revision': 'a73e724359a274d7cf4f4248eba5be1e7764fbfd',
+  'spirv_headers_revision': 'd13b52222c39a7e9a401b44646f0ca3a640fbd47',
+  'spirv_tools_revision': 'd87f61605b3647fbceae9aaa922fce0031afdc63',
   'swiftshader_revision': 'bca23447ad4667a7b79973569ab5d8d905d211ac',
   'vulkan_headers_revision': '1dace16d8044758d32736eb59802d171970e9448',
   'vulkan_loader_revision': '8aad559a09388ceb5b968af64a2b965d3886e5a0',
@@ -36,10 +36,7 @@ deps = {
   'third_party/clspv-llvm': Var('llvm_git') + '/llvm-project.git@' +
       Var('clspv_llvm_revision'),
 
-  'third_party/cppdap': Var('google_git') + '/cppdap.git@' +
-      Var('cppdap_revision'),
-
-  'third_party/cpplint': Var('google_git') + '/styleguide.git@' +
+  'third_party/cpplint': Var('cpplint_git') + '/cpplint.git@' +
       Var('cpplint_revision'),
 
   'third_party/dxc': Var('microsoft_git') + '/DirectXShaderCompiler.git@' +

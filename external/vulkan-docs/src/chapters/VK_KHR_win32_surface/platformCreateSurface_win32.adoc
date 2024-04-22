@@ -1,4 +1,4 @@
-// Copyright 2014-2022 The Khronos Group Inc.
+// Copyright 2014-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -7,6 +7,8 @@
 
 [open,refpage='vkCreateWin32SurfaceKHR',desc='Create a VkSurfaceKHR object for an Win32 native window',type='protos']
 --
+:refpage: vkCreateWin32SurfaceKHR
+
 To create a sname:VkSurfaceKHR object for a Win32 window, call:
 
 include::{generated}/api/protos/vkCreateWin32SurfaceKHR.adoc[]
@@ -22,6 +24,32 @@ include::{generated}/api/protos/vkCreateWin32SurfaceKHR.adoc[]
     created surface object is returned.
 
 include::{generated}/validity/protos/vkCreateWin32SurfaceKHR.adoc[]
+
+Some Vulkan functions may: call the `SendMessage` system API when
+interacting with a sname:VkSurfaceKHR through a sname:VkSwapchainKHR.
+In a multithreaded environment, calling `SendMessage` from a thread that is
+not the thread associated with pname:pCreateInfo::pname:hwnd will block
+until the application has processed the window message.
+Thus, applications should: either call these Vulkan functions on the message
+pump thread, or make sure their message pump is actively running.
+Failing to do so may: result in deadlocks.
+
+The functions subject to this requirement are:
+
+  * flink:vkCreateSwapchainKHR
+  * flink:vkDestroySwapchainKHR
+  * flink:vkAcquireNextImageKHR and flink:vkAcquireNextImage2KHR
+  * flink:vkQueuePresentKHR
+ifdef::VK_EXT_swapchain_maintenance1[]
+  * flink:vkReleaseSwapchainImagesEXT
+endif::VK_EXT_swapchain_maintenance1[]
+ifdef::VK_EXT_full_screen_exclusive[]
+  * flink:vkAcquireFullScreenExclusiveModeEXT
+  * flink:vkReleaseFullScreenExclusiveModeEXT
+endif::VK_EXT_full_screen_exclusive[]
+ifdef::VK_EXT_hdr_metadata[]
+  * flink:vkSetHdrMetadataEXT
+endif::VK_EXT_hdr_metadata[]
 --
 
 [open,refpage='VkWin32SurfaceCreateInfoKHR',desc='Structure specifying parameters of a newly created Win32 surface object',type='structs']
@@ -30,7 +58,7 @@ The sname:VkWin32SurfaceCreateInfoKHR structure is defined as:
 
 include::{generated}/api/structs/VkWin32SurfaceCreateInfoKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.

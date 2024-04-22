@@ -47,7 +47,6 @@ config("amber_config") {
     "AMBER_ENABLE_RTTI=1",
     "AMBER_ENABLE_SHADERC=0",
     "AMBER_ENABLE_SPIRV_TOOLS=0",
-    "AMBER_ENABLE_VK_DEBUGGING=0",
     "AMBER_ENGINE_DAWN=0",
     "AMBER_ENGINE_VULKAN=1",
   ]
@@ -61,7 +60,6 @@ ohos_source_set("amber_source") {
     "//third_party/vk-gl-cts/external/amber/src/src/buffer.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/command.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/command_data.cc",
-    "//third_party/vk-gl-cts/external/amber/src/src/debug.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/descriptor_set_and_binding_parser.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/engine.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/executor.cc",

@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Khronos Group Inc.
+// Copyright 2019-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -68,8 +68,8 @@ Performance query results are returned in an array of
 sname:VkPerformanceCounterResultKHR unions containing the data associated
 with each counter in the query, stored in the same order as the counters
 supplied in pname:pCounterIndices when creating the performance query.
-The slink:VkPerformanceCounterKHR::pname:unit enumeration specifies how to
-parse the counter data.
+slink:VkPerformanceCounterKHR::pname:storage specifies how to parse the
+counter data.
 
 include::{generated}/validity/structs/VkPerformanceCounterResultKHR.adoc[]
 --
@@ -80,6 +80,8 @@ include::{generated}/validity/structs/VkPerformanceCounterResultKHR.adoc[]
 
 [open,refpage='vkAcquireProfilingLockKHR',desc='Acquires the profiling lock',type='protos']
 --
+:refpage: vkAcquireProfilingLockKHR
+
 To record and submit a command buffer containing a performance query pool
 the profiling lock must: be held.
 The profiling lock must: be acquired prior to any call to
@@ -99,6 +101,8 @@ include::{generated}/api/protos/vkAcquireProfilingLockKHR.adoc[]
 Implementations may: allow multiple actors to hold the profiling lock
 concurrently.
 
+include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
+
 include::{generated}/validity/protos/vkAcquireProfilingLockKHR.adoc[]
 --
 
@@ -108,7 +112,7 @@ The sname:VkAcquireProfilingLockInfoKHR structure is defined as:
 
 include::{generated}/api/structs/VkAcquireProfilingLockInfoKHR.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.

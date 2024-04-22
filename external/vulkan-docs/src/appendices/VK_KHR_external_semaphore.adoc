@@ -1,4 +1,4 @@
-// Copyright 2016-2022 The Khronos Group Inc.
+// Copyright 2016-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -10,17 +10,15 @@ include::{generated}/meta/{refprefix}VK_KHR_external_semaphore.adoc[]
     2016-10-21
 *IP Status*::
     No known IP claims.
-*Interactions and External Dependencies*::
-  - Promoted to Vulkan 1.1 Core
 *Contributors*::
-  - Jason Ekstrand, Intel
+  - Faith Ekstrand, Intel
   - Jesse Hall, Google
   - Tobias Hector, Imagination Technologies
   - James Jones, NVIDIA
   - Jeff Juliano, NVIDIA
   - Matthew Netsch, Qualcomm Technologies, Inc.
   - Ray Smith, ARM
-  - Chad Versace, Google
+  - Lina Versace, Google
 
 === Description
 

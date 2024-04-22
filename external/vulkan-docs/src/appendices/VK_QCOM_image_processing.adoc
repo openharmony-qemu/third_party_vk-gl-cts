@@ -9,8 +9,6 @@ include::{generated}/meta/{refprefix}VK_QCOM_image_processing.adoc[]
 *Last Modified Date*::
     2022-07-08
 *Interactions and External Dependencies*::
-  - This extension requires
-    {spirv}/QCOM/SPV_QCOM_image_processing.html[`SPV_QCOM_image_processing`]
   - This extension provides API support for
     {GLSLregistry}/qcom/GLSL_QCOM_image_processing.txt[`GL_QCOM_image_processing`]
 
@@ -24,7 +22,7 @@ GPUs are commonly used to process images for various applications from 3D
 graphics to UI and from composition to compute applications.
 Simple scaling and filtering can be done with bilinear filtering, which
 comes for free during texture sampling.
-However, as screen sizes get larger and more use-cases rely on GPU such as
+However, as screen sizes get larger and more use cases rely on GPU such as
 camera and video post-processing needs, there is increasing demand for GPU
 to support higher order filtering and other advanced image processing.
 

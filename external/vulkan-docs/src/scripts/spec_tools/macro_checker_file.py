@@ -32,6 +32,20 @@ INTERNAL_PLACEHOLDER = re.compile(
     r'(?P<delim>__+)([a-zA-Z]+)(?P=delim)'
 )
 
+# Matches any include line.
+# Used to check for a leading path attribute.
+INCLUDE_PATH_ATTRIBUTE = re.compile(
+    r'include::(\{(?P<path_attribute>[a-z]+)\})?.*\[\]')
+
+allowed_path_attributes = {
+    '{appendices}',
+    '{chapters}',
+    '{config}',
+    '{generated}',
+    '{promoted}',
+    '{style}',
+}
+
 # Matches a generated (api or validity) include line.
 INCLUDE = re.compile(
     r'include::(?P<directory_traverse>((../){1,4}|\{generated\}/)(generated/)?)(?P<generated_type>(api|validity))/(?P<category>\w+)/(?P<entity_name>[^./]+).adoc[\[][\]]')
@@ -81,6 +95,32 @@ BRACKETS = re.compile(r'\[(?P<tags>.*)\]')
 REF_PAGE_ATTRIB = re.compile(
     r"(?P<key>[a-z]+)='(?P<value>[^'\\]*(?:\\.[^'\\]*)*)'")
 
+# Exceptions to:
+# error: Definition of link target {} with macro etext (used for category enums) does not exist. (-Wwrong_macro)
+# typically caused by using Vulkan-only enums in Vulkan SC blocks with "etext", or because they
+# are suffixed differently.
+CHECK_UNRECOGNIZED_ETEXT_EXCEPTIONS = (
+    'VK_COLORSPACE_SRGB_NONLINEAR_KHR',
+    'VK_COLOR_SPACE_DCI_P3_LINEAR_EXT',
+    'VK_PIPELINE_CACHE_CREATE_READ_ONLY_BIT',
+    'VK_STENCIL_FRONT_AND_BACK',
+    'VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETER_FEATURES',
+    'VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTER_FEATURES',
+    'VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES2_EXT',
+)
+
+# Exceptions to:
+# warning: Definition of link target {} with macro ename (used for category enums) does not exist. (-Wbad_enumerant)
+# typically caused by Vulkan SC enums not being recognized in Vulkan build
+CHECK_UNRECOGNIZED_ENAME_EXCEPTIONS = (
+    'VK_ERROR_INVALID_PIPELINE_CACHE_DATA',
+    'VK_ERROR_NO_PIPELINE_MATCH',
+    'VK_ERROR_VALIDATION_FAILED',
+    'VK_MEMORY_HEAP_SEU_SAFE_BIT',
+    'VK_PIPELINE_CACHE_CREATE_READ_ONLY_BIT',
+    'VK_PIPELINE_CACHE_CREATE_USE_APPLICATION_STORAGE_BIT',
+    'VK_PIPELINE_CACHE_HEADER_VERSION_SAFETY_CRITICAL_ONE',
+)
 
 class Attrib(Enum):
     """Attributes of a ref page."""
@@ -378,7 +418,21 @@ class MacroCheckerFile(object):
             return
 
         ###
-        # Detect include:::....[] lines
+        # Detect any include:: lines
+        match = INCLUDE_PATH_ATTRIBUTE.match(line)
+        if match:
+            path_attribute = match.group(1)
+            if path_attribute is None:
+                self.error(MessageId.MISSING_INCLUDE_PATH_ATTRIBUTE,
+                           '(no path attribute is present)')
+                return
+            if path_attribute not in allowed_path_attributes:
+                self.error(MessageId.MISSING_INCLUDE_PATH_ATTRIBUTE,
+                           f'(path attribute {{path_attribute}} is not one of {sorted(allowed_path_attributes)})')
+                return
+
+        ###
+        # Detect include:::....[] lines for generated API fragments
         match = INCLUDE.match(line)
         if match:
             self.match = match
@@ -721,6 +775,9 @@ class MacroCheckerFile(object):
 
         data = self.checker.findEntity(entity)
         if data:
+            if entity in CHECK_UNRECOGNIZED_ETEXT_EXCEPTIONS:
+                return False
+
             # We found the goof: incorrect macro
             msg.append('Apparently matching entity in category {} found.'.format(
                 data.category))
@@ -777,7 +834,10 @@ class MacroCheckerFile(object):
             # hard to check this.
             if self.checker.likelyRecognizedEntity(entity):
                 if not self.checkText():
-                    self.warning(MessageId.BAD_ENUMERANT, msg +
+                    if entity in CHECK_UNRECOGNIZED_ENAME_EXCEPTIONS:
+                        return False
+                    else:
+                        self.warning(MessageId.BAD_ENUMERANT, msg +
                                  ['Unrecognized ename:{} that we would expect to recognize since it fits the pattern for this API.'.format(entity)], see_also=see_also)
         else:
             # This is fine:
@@ -816,6 +876,9 @@ class MacroCheckerFile(object):
                 "No asterisk/leading or trailing underscore/bracket in the entity, so this might be a mistaken use of the 'text' macro {}:".format(macro)]
             data = self.checker.findEntity(entity)
             if data:
+                if entity in CHECK_UNRECOGNIZED_ETEXT_EXCEPTIONS:
+                    return False
+
                 # We found the goof: incorrect macro
                 msg.append('Apparently matching entity in category {} found.'.format(
                     data.category))
@@ -892,7 +955,7 @@ class MacroCheckerFile(object):
 
         if entity not in members:
             self.warning(MessageId.UNKNOWN_MEMBER, ["Could not find member/param named '{}' in {}".format(entity, pname_context),
-                                                    'Known {} mamber/param names are: {}'.format(
+                                                    'Known {} member/param names are: {}'.format(
                 pname_context, ', '.join(members))], group='entity_name')
 
     def checkIncludeRefPageRelation(self, entity, generated_type):

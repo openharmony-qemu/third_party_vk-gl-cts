@@ -1,6 +1,6 @@
 #!/usr/bin/python3 -i
 #
-# Copyright 2013-2022 The Khronos Group Inc.
+# Copyright 2013-2024 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -9,21 +9,25 @@ from generator import OutputGenerator, enquote, noneStr
 def mostOfficial(api, newapi):
     """Return the 'most official' of two related names, api and newapi.
        KHR is more official than EXT is more official than everything else.
-       If there is ambiguity, return api."""
+       If there is ambiguity, return api.
+       Accommodate APIs using lower-case vendor suffixes."""
 
-    if api[-3:] == 'KHR':
+    apicat = api[-3:].upper()
+    newapicat = newapi[-3:].upper()
+
+    if apicat == 'KHR':
         return api
-    if newapi[-3:] == 'KHR':
+    if newapicat == 'KHR':
         return newapi;
-    if api[-3:] == 'EXT':
+    if apicat == 'EXT':
         return api
-    if newapi[-3:] == 'EXT':
+    if newapicat == 'EXT':
         return newapi;
     return api
 
 class ScriptOutputGenerator(OutputGenerator):
     """ScriptOutputGenerator - subclass of OutputGenerator.
-    Base class to Generate script (Python/Ruby/etc.) data structures
+    Base class to Generate script (Python/Ruby/JS/etc.) data structures
     describing API names and relationships.
     Similar to DocOutputGenerator, but writes a single file."""
 
@@ -311,7 +315,7 @@ class ScriptOutputGenerator(OutputGenerator):
         self.enums[groupName] = sorted(enumerants)
 
     def genEnum(self, enuminfo, name, alias):
-        """Generate enumerant (compile-time constants).
+        """Generate enumerant (compile time constant).
 
         - Add the constant name to the 'consts' dictionary, with the
           value being None to indicate that the constant is not

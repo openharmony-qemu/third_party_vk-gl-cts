@@ -1,4 +1,4 @@
-// Copyright 2015-2022 The Khronos Group Inc.
+// Copyright 2015-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -22,6 +22,9 @@ endif::VK_NV_scissor_exclusive[]
   . <<fragops-samplemask,Sample mask test>>
   . Certain <<fragops-shader,Fragment shading>> operations:
   ** <<fragops-shader-samplemask, Sample Mask Accesses>>
+ifdef::VK_EXT_shader_tile_image[]
+  ** <<fragops-shader-tileimage-reads, Tile Image Reads>>
+endif::VK_EXT_shader_tile_image[]
   ** <<fragops-shader-depthreplacement, Depth Replacement>>
 ifdef::VK_EXT_shader_stencil_export[]
   ** <<fragops-shader-stencilrefreplacement, Stencil Reference Replacement>>
@@ -73,10 +76,45 @@ code:PostDepthCoverage execution mode, the <<fragops-samplemask, sample mask
 test>> is instead performed after the <<fragops-depth, depth test>>.
 endif::VK_EXT_post_depth_coverage[]
 
+ifdef::VK_KHR_maintenance5[]
+If
+sname:VkPhysicalDeviceMaintenance5PropertiesKHR::pname:earlyFragmentMultisampleCoverageAfterSampleCounting
+is set to ename:VK_TRUE and there is a <<fragops-shader, fragment shader>>
+which declares the code:EarlyFragmentTests execution mode, <<fragops-shader,
+fragment shading>> and <<fragops-covg, multisample coverage>> operations
+must: be performed after <<fragops-samplecount, sample counting>>.
+
+Otherwise, if
+sname:VkPhysicalDeviceMaintenance5PropertiesKHR::pname:earlyFragmentMultisampleCoverageAfterSampleCounting
+is set to ename:VK_FALSE and there is a <<fragops-shader, fragment shader>>
+which declares the code:EarlyFragmentTests execution mode, <<fragops-shader,
+fragment shading>> and <<fragops-covg, multisample coverage>> operations
+should: instead be performed after <<fragops-samplecount, sample counting>>,
+but may: be performed before <<fragops-samplecount, sample counting>>.
+
+If
+sname:VkPhysicalDeviceMaintenance5PropertiesKHR::pname:earlyFragmentSampleMaskTestBeforeSampleCounting
+is set to ename:VK_TRUE and there is a <<fragops-shader, fragment shader>>
+which declares the code:EarlyFragmentTests execution mode
+<<fragops-samplemask, sample mask test>> operations must: follow the order
+of fragment operations from above.
+
+Otherwise, if
+sname:VkPhysicalDeviceMaintenance5PropertiesKHR::pname:earlyFragmentSampleMaskTestBeforeSampleCounting
+is set to ename:VK_FALSE and there is a <<fragops-shader, fragment shader>>
+which declares the code:EarlyFragmentTests execution mode,
+<<fragops-samplemask, sample mask test>> operations should: follow the order
+of fragment operations from above but may: instead be performed after
+<<fragops-samplecount, sample counting>>.
+endif::VK_KHR_maintenance5[]
+ifndef::VK_KHR_maintenance5[]
 If there is a <<fragops-shader, fragment shader>> and it declares the
 code:EarlyFragmentTests execution mode, <<fragops-shader,fragment shading>>
 and <<fragops-covg, multisample coverage>> operations should: instead be
-performed after <<fragops-samplecount, sample counting>>.
+performed after <<fragops-samplecount, sample counting>>, and
+<<fragops-samplemask,sample mask test>> may: instead be performed after
+<<fragops-samplecount, sample counting>>.
+endif::VK_KHR_maintenance5[]
 
 ifdef::VK_AMD_shader_early_and_late_fragment_tests[]
 If there is a <<fragops-shader, fragment shader>> which declares the
@@ -100,23 +138,23 @@ For a pipeline with the following properties:
   * either
   ** the fragment shader specifies the code:StencilRefUnchangedFrontAMD
      execution mode;
-  ** the fragment shader specifies the code:StencilRefGreaterFrontAMD
-     execution mode and the pipeline uses a
-     slink:VkPipelineDepthStencilStateCreateInfo::pname:front.compareOp of
-     ename:VK_COMPARE_OP_GREATER or ename:VK_COMPARE_OP_GREATER_OR_EQUAL; or
   ** the fragment shader specifies the code:StencilRefLessFrontAMD execution
      mode and the pipeline uses a
+     slink:VkPipelineDepthStencilStateCreateInfo::pname:front.compareOp of
+     ename:VK_COMPARE_OP_GREATER or ename:VK_COMPARE_OP_GREATER_OR_EQUAL; or
+  ** the fragment shader specifies the code:StencilRefGreaterFrontAMD
+     execution mode and the pipeline uses a
      slink:VkPipelineDepthStencilStateCreateInfo::pname:front.compareOp of
      ename:VK_COMPARE_OP_LESS or ename:VK_COMPARE_OP_LESS_OR_EQUAL; and
   * either
   ** the fragment shader specifies the code:StencilRefUnchangedBackAMD
      execution mode;
-  ** the fragment shader specifies the code:StencilRefGreaterBackAMD
-     execution mode and the pipeline uses a
-     slink:VkPipelineDepthStencilStateCreateInfo::pname:back.compareOp of
-     ename:VK_COMPARE_OP_GREATER or ename:VK_COMPARE_OP_GREATER_OR_EQUAL; or
   ** the fragment shader specifies the code:StencilRefLessBackAMD execution
      mode and the pipeline uses a
+     slink:VkPipelineDepthStencilStateCreateInfo::pname:back.compareOp of
+     ename:VK_COMPARE_OP_GREATER or ename:VK_COMPARE_OP_GREATER_OR_EQUAL; or
+  ** the fragment shader specifies the code:StencilRefGreaterBackAMD
+     execution mode and the pipeline uses a
      slink:VkPipelineDepthStencilStateCreateInfo::pname:back.compareOp of
      ename:VK_COMPARE_OP_LESS or ename:VK_COMPARE_OP_LESS_OR_EQUAL
 
@@ -141,12 +179,12 @@ endif::VK_AMD_shader_early_and_late_fragment_tests[]
     and
   * either
   ** the fragment shader specifies the code:DepthUnchanged execution mode;
-  ** the fragment shader specifies the code:DepthGreater execution mode and
-     the pipeline uses a
-     slink:VkPipelineDepthStencilStateCreateInfo::pname:depthCompareOp of
-     ename:VK_COMPARE_OP_GREATER or ename:VK_COMPARE_OP_GREATER_OR_EQUAL; or
   ** the fragment shader specifies the code:DepthLess execution mode and the
      pipeline uses a
+     slink:VkPipelineDepthStencilStateCreateInfo::pname:depthCompareOp of
+     ename:VK_COMPARE_OP_GREATER or ename:VK_COMPARE_OP_GREATER_OR_EQUAL; or
+  ** the fragment shader specifies the code:DepthGreater execution mode and
+     the pipeline uses a
      slink:VkPipelineDepthStencilStateCreateInfo::pname:depthCompareOp of
      ename:VK_COMPARE_OP_LESS or ename:VK_COMPARE_OP_LESS_OR_EQUAL
 
@@ -193,7 +231,7 @@ as:
 
 include::{generated}/api/structs/VkPipelineDiscardRectangleStateCreateInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.
@@ -206,12 +244,24 @@ include::{generated}/api/structs/VkPipelineDiscardRectangleStateCreateInfoEXT.ad
 
 If the ename:VK_DYNAMIC_STATE_DISCARD_RECTANGLE_EXT dynamic state is enabled
 for a pipeline, the pname:pDiscardRectangles member is ignored.
+If the ename:VK_DYNAMIC_STATE_DISCARD_RECTANGLE_ENABLE_EXT dynamic state is
+not enabled for the pipeline the presence of this structure in the
+slink:VkGraphicsPipelineCreateInfo chain, and a pname:discardRectangleCount
+greater than zero, implicitly enables discard rectangles in the pipeline,
+otherwise discard rectangles must: enabled or disabled by
+flink:vkCmdSetDiscardRectangleEnableEXT.
+If the ename:VK_DYNAMIC_STATE_DISCARD_RECTANGLE_MODE_EXT dynamic state is
+enabled for the pipeline, the pname:discardRectangleMode member is ignored,
+and the discard rectangle mode must: be set by
+flink:vkCmdSetDiscardRectangleModeEXT.
 
 When this structure is included in the pname:pNext chain of
 slink:VkGraphicsPipelineCreateInfo, it defines parameters of the discard
 rectangle test.
-If this structure is not included in the pname:pNext chain, it is equivalent
-to specifying this structure with a pname:discardRectangleCount of `0`.
+If the ename:VK_DYNAMIC_STATE_DISCARD_RECTANGLE_EXT dynamic state is not
+enabled, and this structure is not included in the pname:pNext chain, it is
+equivalent to specifying this structure with a pname:discardRectangleCount
+of `0`.
 
 .Valid Usage
 ****
@@ -265,6 +315,7 @@ replace the current state for the discard rectangle at index
 pname:discardRectangleCount)#.
 
 This command sets the discard rectangles for subsequent drawing commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
 when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_DISCARD_RECTANGLE_EXT set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
@@ -300,6 +351,74 @@ endif::VK_NV_inherited_viewport_scissor[]
 
 include::{generated}/validity/protos/vkCmdSetDiscardRectangleEXT.adoc[]
 --
+
+[open,refpage='vkCmdSetDiscardRectangleEnableEXT',desc='Enable discard rectangles dynamically for a command buffer',type='protos']
+--
+To <<pipelines-dynamic-state, dynamically set>> whether discard rectangles
+are enabled, call:
+
+include::{generated}/api/protos/vkCmdSetDiscardRectangleEnableEXT.adoc[]
+
+  * pname:commandBuffer is the command buffer into which the command will be
+    recorded.
+  * pname:discardRectangleEnable specifies whether discard rectangles are
+    enabled or not.
+
+This command sets the discard rectangle enable for subsequent drawing
+commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
+when the graphics pipeline is created with
+ename:VK_DYNAMIC_STATE_DISCARD_RECTANGLE_ENABLE_EXT set in
+slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+Otherwise, this state is implied by the
+slink:VkPipelineDiscardRectangleStateCreateInfoEXT::pname:discardRectangleCount
+value used to create the currently active pipeline, where a non-zero
+pname:discardRectangleCount implicitly enables discard rectangles, otherwise
+they are disabled.
+
+.Valid Usage
+****
+  * [[VUID-vkCmdSetDiscardRectangleEnableEXT-specVersion-07851]]
+    The `apiext:VK_EXT_discard_rectangles` extension must: be enabled, and
+    the implementation must: support at least pname:specVersion `2` of this
+    extension
+****
+
+include::{generated}/validity/protos/vkCmdSetDiscardRectangleEnableEXT.adoc[]
+--
+
+[open,refpage='vkCmdSetDiscardRectangleModeEXT',desc='Sets the discard rectangle mode dynamically for a command buffer',type='protos']
+--
+To <<pipelines-dynamic-state, dynamically set>> the discard rectangle mode,
+call:
+
+include::{generated}/api/protos/vkCmdSetDiscardRectangleModeEXT.adoc[]
+
+  * pname:commandBuffer is the command buffer into which the command will be
+    recorded.
+  * pname:discardRectangleMode specifies the discard rectangle mode for all
+    discard rectangles, either inclusive or exclusive.
+
+This command sets the discard rectangle mode for subsequent drawing commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
+when the graphics pipeline is created with
+ename:VK_DYNAMIC_STATE_DISCARD_RECTANGLE_MODE_EXT set in
+slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+Otherwise, this state is specified by the
+slink:VkPipelineDiscardRectangleStateCreateInfoEXT::pname:discardRectangleMode
+value used to create the currently active pipeline.
+
+.Valid Usage
+****
+  * [[VUID-vkCmdSetDiscardRectangleModeEXT-specVersion-07852]]
+    The `apiext:VK_EXT_discard_rectangles` extension must: be enabled, and
+    the implementation must: support at least pname:specVersion `2` of this
+    extension
+****
+
+include::{generated}/validity/protos/vkCmdSetDiscardRectangleModeEXT.adoc[]
+--
+
 endif::VK_EXT_discard_rectangles[]
 
 
@@ -352,6 +471,7 @@ the current state for the scissor index [eq]#pname:firstScissor {plus} i#,
 for [eq]#i# in [eq]#[0, pname:scissorCount)#.
 
 This command sets the scissor rectangles for subsequent drawing commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
 when the graphics pipeline is created with ename:VK_DYNAMIC_STATE_SCISSOR
 set in slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
 Otherwise, this state is specified by the
@@ -425,7 +545,7 @@ defined as:
 
 include::{generated}/api/structs/VkPipelineViewportExclusiveScissorStateCreateInfoNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:exclusiveScissorCount is the number of exclusive scissor
@@ -480,7 +600,9 @@ pname:pExclusiveScissors replace the current state for the scissor index
 pname:exclusiveScissorCount)#.
 
 This command sets the exclusive scissor rectangles for subsequent drawing
-commands when the graphics pipeline is created with
+commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_EXCLUSIVE_SCISSOR_NV set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
 Otherwise, this state is specified by the
@@ -517,6 +639,52 @@ values used to create the currently active pipeline.
 
 include::{generated}/validity/protos/vkCmdSetExclusiveScissorNV.adoc[]
 --
+
+[open,refpage='vkCmdSetExclusiveScissorEnableNV',desc='Dynamically enable each exclusive scissor for a command buffer',type='protos']
+--
+To <<pipelines-dynamic-state, dynamically set>> whether an exclusive scissor
+is enabled or not, call:
+
+include::{generated}/api/protos/vkCmdSetExclusiveScissorEnableNV.adoc[]
+
+  * pname:commandBuffer is the command buffer into which the command will be
+    recorded.
+  * pname:firstExclusiveScissor is the index of the first exclusive scissor
+    rectangle whose state is updated by the command.
+  * pname:exclusiveScissorCount is the number of exclusive scissor
+    rectangles updated by the command.
+  * pname:pExclusiveScissorEnables is a pointer to an array of
+    basetype:VkBool32 values defining whether the exclusive scissor is
+    enabled.
+
+The exclusive scissor enables taken from element [eq]#i# of
+pname:pExclusiveScissorEnables replace the current state for the scissor
+index [eq]#pname:firstExclusiveScissor {plus} i#, for [eq]#i# in [eq]#[0,
+pname:exclusiveScissorCount)#.
+
+This command sets the exclusive scissor enable for subsequent drawing
+commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
+when the graphics pipeline is created with
+ename:VK_DYNAMIC_STATE_EXCLUSIVE_SCISSOR_ENABLE_NV set in
+slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+Otherwise, this state is implied by the
+slink:VkPipelineViewportExclusiveScissorStateCreateInfoNV::pname:exclusiveScissorCount
+value used to create the currently active pipeline, where all
+pname:exclusiveScissorCount exclusive scissors are implicitly enabled and
+the remainder up to sname:VkPhysicalDeviceLimits::pname:maxViewports are
+implicitly disabled.
+
+.Valid Usage
+****
+  * [[VUID-vkCmdSetExclusiveScissorEnableNV-exclusiveScissor-07853]]
+    The <<features-exclusiveScissor, pname:exclusiveScissor>> feature must:
+    be enabled, and the implementation must: support at least
+    pname:specVersion `2` of the `apiext:VK_NV_scissor_exclusive` extension
+****
+
+include::{generated}/validity/protos/vkCmdSetExclusiveScissorEnableNV.adoc[]
+--
 endif::VK_NV_scissor_exclusive[]
 
 
@@ -527,7 +695,7 @@ The sample mask test compares the <<primsrast-multisampling-coverage-mask,
 coverage mask>> for a fragment with the _sample mask_ defined by
 slink:VkPipelineMultisampleStateCreateInfo::pname:pSampleMask.
 
-ifdef::VK_EXT_extended_dynamic_state3[]
+ifdef::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 [open,refpage='vkCmdSetSampleMaskEXT',desc='Specify the sample mask dynamically for a command buffer',type='protos']
 --
@@ -539,27 +707,35 @@ include::{generated}/api/protos/vkCmdSetSampleMaskEXT.adoc[]
     recorded.
   * pname:samples specifies the number of sample bits in the
     pname:pSampleMask.
-  * pname:pSampleMask is a pointer to an array of VkSampleMask values, where
-    the array size is based on the pname:samples parameter.
+  * pname:pSampleMask is a pointer to an array of basetype:VkSampleMask
+    values, where the array size is based on the pname:samples parameter.
 
-This command sets the sample mask for subsequent drawing commands when the
-graphics pipeline is created with ename:VK_DYNAMIC_STATE_SAMPLE_MASK_EXT set
-in slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+This command sets the sample mask for subsequent drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
+ename:VK_DYNAMIC_STATE_SAMPLE_MASK_EXT set in
+slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineMultisampleStateCreateInfo::pname:pSampleMask value used to
 create the currently active pipeline.
 
+:refpage: vkCmdSetSampleMaskEXT
+:requiredfeature: extendedDynamicState3SampleMask
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetSampleMaskEXT-extendedDynamicState3SampleMask-07342]]
-    The <<features-extendedDynamicState3SampleMask,
-    pname:extendedDynamicState3SampleMask>> feature must: be enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdSetSampleMaskEXT.adoc[]
 --
 
-endif::VK_EXT_extended_dynamic_state3[]
+endif::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 Each bit of the coverage mask is associated with a sample index as described
 in the <<primsrast-multisampling-coverage-mask, rasterization chapter>>.
@@ -589,6 +765,12 @@ For fragment shaders invoked by fragments, the following rules apply:
      storage resources).
   ** Any other <<fragops, fragment operation>> discards the fragment, and
      the shader does not write to any storage resources.
+  ** If a fragment shader statically computes the same values for different
+     framebuffer locations, and does not write to any storage resources,
+     multiple fragments may: be shaded by one fragment shader invocation.
+     This may: affect
+     ename:VK_QUERY_PIPELINE_STATISTIC_FRAGMENT_SHADER_INVOCATIONS_BIT
+     results, but must: otherwise not be visible behavior to applications.
   * Otherwise, at least one fragment shader must: be executed.
   ** If <<primsrast-sampleshading,sample shading>> is enabled and multiple
      invocations per fragment are required:, additional invocations must: be
@@ -655,6 +837,152 @@ code:SampleMask>> built-in in the code:Output storage class will be used by
 the <<fragops-covg, multisample coverage>> operation, with the same encoding
 as the input built-in.
 
+ifdef::VK_EXT_shader_tile_image[]
+[[fragops-shader-tileimage-reads]]
+=== Fragment Shader Tile Image Reads
+If the `apiext:VK_EXT_shader_tile_image` extension is enabled,
+implementations divide the framebuffer into a grid of tiles.
+A <<glossary-tile-image, tile image>> is a view of a framebuffer attachment
+tile for fragments with locations within the tile.
+
+Within a render pass instance initiated by flink:vkCmdBeginRenderingKHR,
+fragment shader invocations can: read the framebuffer color, depth, and
+stencil values at the fragment location via tile images.
+
+[NOTE]
+.Note
+====
+Even though fragment shader invocation can only read from the corresponding
+fragment location, the abstraction of a tile image is introduced for the
+following reasons:
+
+  * Tile dimensions will be exposed in a future extension
+  * Future functionality such as executing compute dispatches within render
+    passes via tile shaders can leverage tile images.
+====
+
+Enabling <<features-shaderTileImageColorReadAccess,
+shaderTileImageColorReadAccess>>, <<features-shaderTileImageDepthReadAccess,
+shaderTileImageDepthReadAccess>>,
+<<features-shaderTileImageStencilReadAccess,
+shaderTileImageStencilReadAccess>> enables fragment shader invocations to
+read from color, depth, and stencil, respectively.
+
+Color values are read from tile image variables with
+code:OpColorAttachmentReadEXT.
+Tile image variables are linked to specific color attachments using
+code:Location decoration.
+See <<interfaces-fragmenttileimage, Fragment Tile Image Interface>> for more
+details.
+
+Depth values are read with code:OpDepthAttachmentReadEXT.
+
+Stencil values are read with code:OpStencilAttachmentReadEXT.
+
+The sample to read is specified by a
+<<primsrast-multisampling-coverage-mask, sample index>> value specified as
+the code:Sample operand to code:OpColorAttachmentReadEXT,
+code:OpDepthAttachmentReadEXT, or code:OpStencilAttachmentReadEXT.
+
+If <<primsrast-sampleshading, sample shading>> is disabled, a fragment
+invocation can: read from all sample locations associated with the fragment
+regardless of the fragment's coverage.
+This functionality is supported for
+slink:VkPipelineMultisampleStateCreateInfo::pname:rasterizationSamples > 1
+when
+slink:VkPhysicalDeviceShaderTileImagePropertiesEXT::pname:shaderTileImageReadSampleFromPixelRateInvocation
+is ename:VK_TRUE.
+
+If <<primsrast-sampleshading, sample shading>> is enabled, and
+pname:minSampleShading is 1.0, a fragment invocation must: only read from
+the <<primsrast-multisampling-coverageindex, coverage index>> sample.
+Tile image access must: not be used if the value of pname:minSampleShading
+is not 1.0.
+
+If the <<fragops-shader, fragment shader>> declares the
+code:EarlyFragmentTests execution mode, depth reads are allowed only if
+depth writes are disabled and stencil reads are allowed only if stencil
+writes are disabled.
+
+If
+slink:VkPhysicalDeviceShaderTileImagePropertiesEXT::pname:shaderTileImageReadFromHelperInvocation
+is ename:VK_FALSE, values read from helper invocations are undefined:
+otherwise the values read are subject to the coherency guarantees described
+below.
+
+code:OpDepthAttachmentReadEXT returns an undefined: value if no depth
+attachment is present.
+code:OpStencilAttachmentReadEXT returns an undefined: value if no stencil
+attachment is present.
+
+Tile image reads from color, depth and stencil attachments are said to be
+coherent when the accesses happen in raster order and without
+<<memory-model-access-data-race, data race>> with respect to accesses to the
+attachments from framebuffer-space pipeline stages.
+The samples which qualify for coherent access and the enabling conditions
+are described below.
+
+  * Let [eq]#Rc# be the set of components being read from an attachment
+    [eq]#A# in a draw call
+  * Let [eq]#Wc# be the set of components being written to [eq]#A# by the
+    draw call
+
+The samples which qualify for coherent tile image reads from an attachment
+[eq]#A# are:
+
+  * All samples in a pixel when [eq]#Rc# is disjoint with [eq]#Wc#.
+  * The samples with coverage in a fragment when [eq]#Rc# is not disjoint
+    with [eq]#Wc#.
+    The samples with coverage are determined by the coverage mask for the
+    fragment as calculated by fragment operations that executed prior to
+    fragment shading, including early fragment tests if enabled for the draw
+    call.
+
+A fragment shader can: declare code:NonCoherentColorAttachmentReadEXT,
+code:NonCoherentDepthAttachmentReadEXT, or
+code:NonCoherentStencilAttachmentReadEXT execution modes to enable
+non-coherent tile image reads which requires
+<<synchronization-pipeline-barriers-explicit-renderpass-tileimage, explicit
+tile image synchronization>> for the writes to an attachment to be made
+visible via tile image reads.
+
+When
+slink:VkPhysicalDeviceShaderTileImagePropertiesEXT::pname:shaderTileImageCoherentReadAccelerated
+is ename:VK_TRUE, the implementation prefers that coherent tile image reads
+are used, otherwise the implementation prefers that non-coherent tile image
+reads are used.
+
+[NOTE]
+.Note
+====
+In practice, the most common tile image reads usage patterns fall under one
+of the following:
+
+  * Programmable blending - each fragment reads from a single sample
+    (SampleID) at its location.
+    Per-sample shading is typically enabled when multisampled rendertargets
+    are used.
+  * G-buffer generation and shading in one render pass - in the shading
+    phase a fragment reads from a single sample at its location.
+  * Programmable resolve - a fragment reads from all samples at its location
+    (per-sample shading is disabled).
+    This requires the use of a "full-screen triangle" instead of a rectangle
+    composed of two triangles in order to avoid data races along the shared
+    edge of the triangles.
+  * 1:1 texturing with LOD - in use cases such a deferred screen space
+    decals a fragment reads a single sample (SampleID) from depth buffer,
+    but requires being able to read from helper threads to derive the
+    texture LOD.
+    This use case is supported as long as the attachment components being
+    read are not overwritten by color, depth, or stencil attachment writes.
+
+All of the above use cases are supported by coherent tile image reads, but
+only the latter three are supported when non-coherent reads are used as
+there is no mechanism to synchronize non-coherent reads with writes within a
+draw call.
+====
+
+endif::VK_EXT_shader_tile_image[]
 
 [[fragops-shader-depthreplacement]]
 === Depth Replacement
@@ -766,12 +1094,12 @@ endif::VK_EXT_line_rasterization[]
 pname:alphaToCoverageEnable and pname:alphaToOneEnable members of the
 slink:VkPipelineMultisampleStateCreateInfo structure.
 
-ifdef::VK_EXT_extended_dynamic_state3[]
+ifdef::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 [open,refpage='vkCmdSetAlphaToCoverageEnableEXT',desc='Specify the alpha to coverage enable state dynamically for a command buffer',type='protos']
 --
-To <<pipelines-dynamic-state, dynamically set>> the pname:alphaToOneEnable
-state, call:
+To <<pipelines-dynamic-state, dynamically set>> the
+pname:alphaToCoverageEnable state, call:
 
 include::{generated}/api/protos/vkCmdSetAlphaToCoverageEnableEXT.adoc[]
 
@@ -781,19 +1109,26 @@ include::{generated}/api/protos/vkCmdSetAlphaToCoverageEnableEXT.adoc[]
     state.
 
 This command sets the pname:alphaToCoverageEnable state for subsequent
-drawing commands when the graphics pipeline is created with
+drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_ALPHA_TO_COVERAGE_ENABLE_EXT set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineMultisampleStateCreateInfo::pname:alphaToCoverageEnable
 value used to create the currently active pipeline.
 
+:refpage: vkCmdSetAlphaToCoverageEnableEXT
+:requiredfeature: extendedDynamicState3AlphaToCoverageEnable
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetAlphaToCoverageEnableEXT-extendedDynamicState3AlphaToCoverageEnable-07343]]
-    The <<features-extendedDynamicState3AlphaToCoverageEnable,
-    pname:extendedDynamicState3AlphaToCoverageEnable>> feature must: be
-    enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdSetAlphaToCoverageEnableEXT.adoc[]
@@ -811,18 +1146,26 @@ include::{generated}/api/protos/vkCmdSetAlphaToOneEnableEXT.adoc[]
   * pname:alphaToOneEnable specifies the pname:alphaToOneEnable state.
 
 This command sets the pname:alphaToOneEnable state for subsequent drawing
-commands when the graphics pipeline is created with
+commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_ALPHA_TO_ONE_ENABLE_EXT set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineMultisampleStateCreateInfo::pname:alphaToOneEnable value
 used to create the currently active pipeline.
 
+:refpage: vkCmdSetAlphaToOneEnableEXT
+:requiredfeature: extendedDynamicState3AlphaToOneEnable
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetAlphaToOneEnableEXT-extendedDynamicState3AlphaToOneEnable-07345]]
-    The <<features-extendedDynamicState3AlphaToOneEnable,
-    pname:extendedDynamicState3AlphaToOneEnable>> feature must: be enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
   * [[VUID-vkCmdSetAlphaToOneEnableEXT-alphaToOne-07607]]
     If the <<features-alphaToOne, pname:alphaToOne>> feature is not enabled,
     pname:alphaToOneEnable must: be ename:VK_FALSE
@@ -831,7 +1174,7 @@ used to create the currently active pipeline.
 include::{generated}/validity/protos/vkCmdSetAlphaToOneEnableEXT.adoc[]
 --
 
-endif::VK_EXT_extended_dynamic_state3[]
+endif::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 All alpha values in this section refer only to the alpha component of the
 fragment shader output that has a code:Location and code:Index decoration of
@@ -887,7 +1230,7 @@ The sname:VkPipelineDepthStencilStateCreateInfo structure is defined as:
 
 include::{generated}/api/structs/VkPipelineDepthStencilStateCreateInfo.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
 ifndef::VK_EXT_rasterization_order_attachment_access,VK_ARM_rasterization_order_attachment_access[]
@@ -977,13 +1320,52 @@ include::{generated}/api/enums/VkPipelineDepthStencilStateCreateFlagBits.adoc[]
   * ename:VK_PIPELINE_DEPTH_STENCIL_STATE_CREATE_RASTERIZATION_ORDER_ATTACHMENT_DEPTH_ACCESS_BIT_EXT
     indicates that access to the depth aspects of depth/stencil and input
     attachments will have implicit framebuffer-local memory dependencies.
-    See <<renderpass-feedbackloop, renderpass feedback loops>> for more
-    information.
   * ename:VK_PIPELINE_DEPTH_STENCIL_STATE_CREATE_RASTERIZATION_ORDER_ATTACHMENT_STENCIL_ACCESS_BIT_EXT
     indicates that access to the stencil aspects of depth/stencil and input
     attachments will have implicit framebuffer-local memory dependencies.
-    See <<renderpass-feedbackloop, renderpass feedback loops>> for more
-    information.
+
+When
+ename:VK_PIPELINE_DEPTH_STENCIL_STATE_CREATE_RASTERIZATION_ORDER_ATTACHMENT_DEPTH_ACCESS_BIT_EXT
+is included in a pipeline, it forms a framebuffer-local memory dependency
+for each fragment generated by draw commands for that pipeline with the
+following scopes:
+
+  * The first <<synchronization-dependencies-scopes, synchronization scope>>
+    includes ename:VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT and
+    ename:VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT pipeline stages executed
+    by all previous fragments (as defined by <<drawing-primitive-order,
+    primitive order>>) in the corresponding
+    <<synchronization-framebuffer-regions, framebuffer regions>> including
+    those generated by the same draw command.
+  * The second <<synchronization-dependencies-scopes, synchronization
+    scope>> includes ename:VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT stage
+    executed by the generated fragment.
+  * The first <<synchronization-dependencies-access-scopes, access scope>>
+    includes all writes to the depth aspect of depth/stencil attachments.
+  * The second <<synchronization-dependencies-access-scopes, access scope>>
+    includes all reads from the depth aspect of input attachments.
+
+When
+ename:VK_PIPELINE_DEPTH_STENCIL_STATE_CREATE_RASTERIZATION_ORDER_ATTACHMENT_STENCIL_ACCESS_BIT_EXT
+is included in a pipeline, it forms a framebuffer-local memory dependency
+for each fragment generated by draw commands for that pipeline with the
+following scopes:
+
+  * The first <<synchronization-dependencies-scopes, synchronization scope>>
+    includes ename:VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
+    ename:VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT pipeline stages executed
+    by all previous fragments (as defined by <<drawing-primitive-order,
+    primitive order>>) in the corresponding
+    <<synchronization-framebuffer-regions, framebuffer regions>> including
+    those generated by the same draw command.
+  * The second <<synchronization-dependencies-scopes, synchronization
+    scope>> includes ename:VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT and
+    ename:VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT pipeline stages executed
+    by the generated fragment.
+  * The first <<synchronization-dependencies-access-scopes, access scope>>
+    includes all writes to the stencil aspect of depth/stencil attachments.
+  * The second <<synchronization-dependencies-access-scopes, access scope>>
+    includes all reads from the stencil aspect of input attachments.
 --
 endif::VK_EXT_rasterization_order_attachment_access,VK_ARM_rasterization_order_attachment_access[]
 
@@ -1002,9 +1384,9 @@ value.
 These values are either set by the
 slink:VkPipelineDepthStencilStateCreateInfo structure during pipeline
 creation, or dynamically by
-ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 flink:vkCmdSetDepthBoundsTestEnable and
-endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 flink:vkCmdSetDepthBounds.
 
 A given sample is considered within the depth bounds if [eq]#z~a~# is in the
@@ -1015,7 +1397,7 @@ their coverage set to `0`.
 If the depth bounds test is disabled, or if there is no depth attachment,
 the coverage mask is unmodified by this operation.
 
-ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 [open,refpage='vkCmdSetDepthBoundsTestEnable',desc='Set depth bounds test enable dynamically for a command buffer',type='protos',alias='vkCmdSetDepthBoundsTestEnableEXT']
 --
 To <<pipelines-dynamic-state, dynamically enable or disable>> the depth
@@ -1023,13 +1405,13 @@ bounds test, call:
 
 ifdef::VK_VERSION_1_3[]
 include::{generated}/api/protos/vkCmdSetDepthBoundsTestEnable.adoc[]
+
+ifdef::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[or the equivalent command]
 endif::VK_VERSION_1_3[]
 
-ifdef::VK_VERSION_1_3+VK_EXT_extended_dynamic_state[or the equivalent command]
-
-ifdef::VK_EXT_extended_dynamic_state[]
+ifdef::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 include::{generated}/api/protos/vkCmdSetDepthBoundsTestEnableEXT.adoc[]
-endif::VK_EXT_extended_dynamic_state[]
+endif::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 
   * pname:commandBuffer is the command buffer into which the command will be
     recorded.
@@ -1037,25 +1419,29 @@ endif::VK_EXT_extended_dynamic_state[]
     enabled.
 
 This command sets the depth bounds enable for subsequent drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
 when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_DEPTH_BOUNDS_TEST_ENABLE set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
 Otherwise, this state is specified by the
 slink:VkPipelineDepthStencilStateCreateInfo::pname:depthBoundsTestEnable
 value used to create the currently active pipeline.
 
-ifndef::VK_VERSION_1_3[]
+:refpage: vkCmdSetDepthBoundsTestEnable
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetDepthBoundsTestEnable-None-03349]]
-    The <<features-extendedDynamicState, pname:extendedDynamicState>>
-    feature must: be enabled
+include::{chapters}/commonvalidity/dynamic_state_feature_common.adoc[]
 ****
-endif::VK_VERSION_1_3[]
 
 include::{generated}/validity/protos/vkCmdSetDepthBoundsTestEnable.adoc[]
 --
-endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 
 [open,refpage='vkCmdSetDepthBounds',desc='Set depth bounds range dynamically for a command buffer',type='protos']
 --
@@ -1070,6 +1456,7 @@ include::{generated}/api/protos/vkCmdSetDepthBounds.adoc[]
   * pname:maxDepthBounds is the maximum depth bound.
 
 This command sets the depth bounds range for subsequent drawing commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
 when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_DEPTH_BOUNDS set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
@@ -1080,24 +1467,16 @@ used to create the currently active pipeline.
 
 .Valid Usage
 ****
-ifdef::VK_EXT_depth_range_unrestricted[]
   * [[VUID-vkCmdSetDepthBounds-minDepthBounds-00600]]
-    Unless the `apiext:VK_EXT_depth_range_unrestricted` extension is enabled
-    pname:minDepthBounds must: be between `0.0` and `1.0`, inclusive
-endif::VK_EXT_depth_range_unrestricted[]
-ifndef::VK_EXT_depth_range_unrestricted[]
-  * [[VUID-vkCmdSetDepthBounds-minDepthBounds-02508]]
-    pname:minDepthBounds must: be between `0.0` and `1.0`, inclusive
-endif::VK_EXT_depth_range_unrestricted[]
 ifdef::VK_EXT_depth_range_unrestricted[]
+    If the `apiext:VK_EXT_depth_range_unrestricted` extension is not enabled
+endif::VK_EXT_depth_range_unrestricted[]
+    pname:minDepthBounds must: be between `0.0` and `1.0`, inclusive
   * [[VUID-vkCmdSetDepthBounds-maxDepthBounds-00601]]
-    Unless the `apiext:VK_EXT_depth_range_unrestricted` extension is enabled
-    pname:maxDepthBounds must: be between `0.0` and `1.0`, inclusive
+ifdef::VK_EXT_depth_range_unrestricted[]
+    If the `apiext:VK_EXT_depth_range_unrestricted` extension is not enabled
 endif::VK_EXT_depth_range_unrestricted[]
-ifndef::VK_EXT_depth_range_unrestricted[]
-  * [[VUID-vkCmdSetDepthBounds-maxDepthBounds-02509]]
     pname:maxDepthBounds must: be between `0.0` and `1.0`, inclusive
-endif::VK_EXT_depth_range_unrestricted[]
 ****
 
 include::{generated}/validity/protos/vkCmdSetDepthBounds.adoc[]
@@ -1181,7 +1560,7 @@ and slink:VkPipelineDepthStencilStateCreateInfo::pname:back as:
 
   {empty}:: [eq]#s~a~ = (s~a~ & ¬s~w~) | (s~g~ & s~w~)#
 
-ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 [open,refpage='vkCmdSetStencilTestEnable',desc='Set stencil test enable dynamically for a command buffer',type='protos',alias='vkCmdSetStencilTestEnableEXT']
 --
 To <<pipelines-dynamic-state, dynamically enable or disable>> the stencil
@@ -1189,34 +1568,38 @@ test, call:
 
 ifdef::VK_VERSION_1_3[]
 include::{generated}/api/protos/vkCmdSetStencilTestEnable.adoc[]
+
+ifdef::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[or the equivalent command]
 endif::VK_VERSION_1_3[]
 
-ifdef::VK_VERSION_1_3+VK_EXT_extended_dynamic_state[or the equivalent command]
-
-ifdef::VK_EXT_extended_dynamic_state[]
+ifdef::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 include::{generated}/api/protos/vkCmdSetStencilTestEnableEXT.adoc[]
-endif::VK_EXT_extended_dynamic_state[]
+endif::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 
   * pname:commandBuffer is the command buffer into which the command will be
     recorded.
   * pname:stencilTestEnable specifies if the stencil test is enabled.
 
 This command sets the stencil test enable for subsequent drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
 when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_STENCIL_TEST_ENABLE set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
 Otherwise, this state is specified by the
 slink:VkPipelineDepthStencilStateCreateInfo::pname:stencilTestEnable value
 used to create the currently active pipeline.
 
-ifndef::VK_VERSION_1_3[]
+:refpage: vkCmdSetStencilTestEnable
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetStencilTestEnable-None-03350]]
-    The <<features-extendedDynamicState, pname:extendedDynamicState>>
-    feature must: be enabled
+include::{chapters}/commonvalidity/dynamic_state_feature_common.adoc[]
 ****
-endif::VK_VERSION_1_3[]
 
 include::{generated}/validity/protos/vkCmdSetStencilTestEnable.adoc[]
 --
@@ -1227,13 +1610,13 @@ To <<pipelines-dynamic-state, dynamically set>> the stencil operation, call:
 
 ifdef::VK_VERSION_1_3[]
 include::{generated}/api/protos/vkCmdSetStencilOp.adoc[]
+
+ifdef::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[or the equivalent command]
 endif::VK_VERSION_1_3[]
 
-ifdef::VK_VERSION_1_3+VK_EXT_extended_dynamic_state[or the equivalent command]
-
-ifdef::VK_EXT_extended_dynamic_state[]
+ifdef::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 include::{generated}/api/protos/vkCmdSetStencilOpEXT.adoc[]
-endif::VK_EXT_extended_dynamic_state[]
+endif::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 
   * pname:commandBuffer is the command buffer into which the command will be
     recorded.
@@ -1249,25 +1632,29 @@ endif::VK_EXT_extended_dynamic_state[]
     operator used in the stencil test.
 
 This command sets the stencil operation for subsequent drawing commands when
-the graphics pipeline is created with ename:VK_DYNAMIC_STATE_STENCIL_OP set
-in slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+when the graphics pipeline is created with ename:VK_DYNAMIC_STATE_STENCIL_OP
+set in slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
 Otherwise, this state is specified by the corresponding
 sname:VkPipelineDepthStencilStateCreateInfo::pname:failOp, pname:passOp,
 pname:depthFailOp, and pname:compareOp values used to create the currently
 active pipeline, for both front and back faces.
 
-ifndef::VK_VERSION_1_3[]
+:refpage: vkCmdSetStencilOp
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetStencilOp-None-03351]]
-    The <<features-extendedDynamicState, pname:extendedDynamicState>>
-    feature must: be enabled
+include::{chapters}/commonvalidity/dynamic_state_feature_common.adoc[]
 ****
-endif::VK_VERSION_1_3[]
 
 include::{generated}/validity/protos/vkCmdSetStencilOp.adoc[]
 --
-endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 
 [open,refpage='VkStencilOpState',desc='Structure specifying stencil operation state',type='structs']
 --
@@ -1307,6 +1694,7 @@ include::{generated}/api/protos/vkCmdSetStencilCompareMask.adoc[]
   * pname:compareMask is the new value to use as the stencil compare mask.
 
 This command sets the stencil compare mask for subsequent drawing commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
 when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_STENCIL_COMPARE_MASK set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
@@ -1330,6 +1718,15 @@ include::{generated}/api/enums/VkStencilFaceFlagBits.adoc[]
   * ename:VK_STENCIL_FACE_FRONT_AND_BACK is the combination of
     ename:VK_STENCIL_FACE_FRONT_BIT and ename:VK_STENCIL_FACE_BACK_BIT, and
     specifies that both sets of stencil state are updated.
+
+ifdef::VKSC_VERSION_1_0[]
+ifdef::hidden[]
+// tag::scremoved[]
+  * elink:VkStencilFaceFlagBits (deprecated alias)
+  ** etext:VK_STENCIL_FRONT_AND_BACK <<SCID-8>>
+// end::scremoved[]
+endif::hidden[]
+endif::VKSC_VERSION_1_0[]
 --
 
 [open,refpage='VkStencilFaceFlags',desc='Bitmask of VkStencilFaceFlagBits',type='flags']
@@ -1355,6 +1752,7 @@ include::{generated}/api/protos/vkCmdSetStencilWriteMask.adoc[]
   * pname:writeMask is the new value to use as the stencil write mask.
 
 This command sets the stencil write mask for subsequent drawing commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
 when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_STENCIL_WRITE_MASK set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
@@ -1381,7 +1779,9 @@ include::{generated}/api/protos/vkCmdSetStencilReference.adoc[]
   * pname:reference is the new value to use as the stencil reference value.
 
 This command sets the stencil reference value for subsequent drawing
-commands when the graphics pipeline is created with
+commands
+ifdef::VK_EXT_shader_object[when drawing using <<shaders-objects, shader objects>>, or]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_STENCIL_REFERENCE set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
 Otherwise, this state is specified by the
@@ -1454,7 +1854,8 @@ is enabled:
 
 ifdef::VK_EXT_depth_range_unrestricted[]
   * If the depth attachment has a floating-point format and
-    VK_EXT_depth_range_unrestricted is enabled then [eq]#z~f~# is unchanged.
+    apiext:VK_EXT_depth_range_unrestricted is enabled then [eq]#z~f~# is
+    unchanged.
   * Otherwise, [eq]#z~f~# is clamped to the range [eq]#[0, 1]#.
 endif::VK_EXT_depth_range_unrestricted[]
 ifndef::VK_EXT_depth_range_unrestricted[]
@@ -1480,17 +1881,17 @@ endif::VK_EXT_depth_range_unrestricted[]
 === Depth Comparison
 
 If the depth test is not enabled, as specified by
-ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 flink:vkCmdSetDepthTestEnable or
-endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 slink:VkPipelineDepthStencilStateCreateInfo::pname:depthTestEnable, then
 this step is skipped.
 
 The comparison operation performed is determined by the elink:VkCompareOp
 value set by
-ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 flink:vkCmdSetDepthCompareOp, or by
-endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 slink:VkPipelineDepthStencilStateCreateInfo::pname:depthCompareOp during
 pipeline creation.
 [eq]#z~f~# and [eq]#z~a~# are used as the _reference_ and _test_ values,
@@ -1504,15 +1905,15 @@ If the comparison evaluates to false, the coverage for the sample is set to
 === Depth Attachment Writes
 
 If depth writes are enabled, as specified by
-ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 flink:vkCmdSetDepthWriteEnable or
-endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 slink:VkPipelineDepthStencilStateCreateInfo::pname:depthWriteEnable, and the
 comparison evaluated to true, the depth attachment value [eq]#z~a~# is set
 to the sample's depth value [eq]#z~f~#.
 If there is no depth attachment, no value is written.
 
-ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 [open,refpage='vkCmdSetDepthTestEnable',desc='Set depth test enable dynamically for a command buffer',type='protos',alias='vkCmdSetDepthTestEnableEXT']
 --
 To <<pipelines-dynamic-state, dynamically enable or disable>> the depth
@@ -1520,34 +1921,38 @@ test, call:
 
 ifdef::VK_VERSION_1_3[]
 include::{generated}/api/protos/vkCmdSetDepthTestEnable.adoc[]
+
+ifdef::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[or the equivalent command]
 endif::VK_VERSION_1_3[]
 
-ifdef::VK_VERSION_1_3+VK_EXT_extended_dynamic_state[or the equivalent command]
-
-ifdef::VK_EXT_extended_dynamic_state[]
+ifdef::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 include::{generated}/api/protos/vkCmdSetDepthTestEnableEXT.adoc[]
-endif::VK_EXT_extended_dynamic_state[]
+endif::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 
   * pname:commandBuffer is the command buffer into which the command will be
     recorded.
   * pname:depthTestEnable specifies if the depth test is enabled.
 
-This command sets the depth test enable for subsequent drawing commands when
-the graphics pipeline is created with
+This command sets the depth test enable for subsequent drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
 Otherwise, this state is specified by the
 slink:VkPipelineDepthStencilStateCreateInfo::pname:depthTestEnable value
 used to create the currently active pipeline.
 
-ifndef::VK_VERSION_1_3[]
+:refpage: vkCmdSetDepthTestEnable
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetDepthTestEnable-None-03352]]
-    The <<features-extendedDynamicState, pname:extendedDynamicState>>
-    feature must: be enabled
+include::{chapters}/commonvalidity/dynamic_state_feature_common.adoc[]
 ****
-endif::VK_VERSION_1_3[]
 
 include::{generated}/validity/protos/vkCmdSetDepthTestEnable.adoc[]
 --
@@ -1559,13 +1964,13 @@ call:
 
 ifdef::VK_VERSION_1_3[]
 include::{generated}/api/protos/vkCmdSetDepthCompareOp.adoc[]
+
+ifdef::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[or the equivalent command]
 endif::VK_VERSION_1_3[]
 
-ifdef::VK_VERSION_1_3+VK_EXT_extended_dynamic_state[or the equivalent command]
-
-ifdef::VK_EXT_extended_dynamic_state[]
+ifdef::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 include::{generated}/api/protos/vkCmdSetDepthCompareOpEXT.adoc[]
-endif::VK_EXT_extended_dynamic_state[]
+endif::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 
   * pname:commandBuffer is the command buffer into which the command will be
     recorded.
@@ -1574,21 +1979,27 @@ endif::VK_EXT_extended_dynamic_state[]
     Comparison>> step of the <<fragops-depth,depth test>>.
 
 This command sets the depth comparison operator for subsequent drawing
-commands when the graphics pipeline is created with
+commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_DEPTH_COMPARE_OP set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
 Otherwise, this state is specified by the
 slink:VkPipelineDepthStencilStateCreateInfo::pname:depthCompareOp value used
 to create the currently active pipeline.
 
-ifndef::VK_VERSION_1_3[]
+:refpage: vkCmdSetDepthCompareOp
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetDepthCompareOp-None-03353]]
-    The <<features-extendedDynamicState, pname:extendedDynamicState>>
-    feature must: be enabled
+include::{chapters}/commonvalidity/dynamic_state_feature_common.adoc[]
 ****
-endif::VK_VERSION_1_3[]
+
 
 include::{generated}/validity/protos/vkCmdSetDepthCompareOp.adoc[]
 --
@@ -1600,38 +2011,42 @@ call:
 
 ifdef::VK_VERSION_1_3[]
 include::{generated}/api/protos/vkCmdSetDepthWriteEnable.adoc[]
+
+ifdef::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[or the equivalent command]
 endif::VK_VERSION_1_3[]
 
-ifdef::VK_VERSION_1_3+VK_EXT_extended_dynamic_state[or the equivalent command]
-
-ifdef::VK_EXT_extended_dynamic_state[]
+ifdef::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 include::{generated}/api/protos/vkCmdSetDepthWriteEnableEXT.adoc[]
-endif::VK_EXT_extended_dynamic_state[]
+endif::VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 
   * pname:commandBuffer is the command buffer into which the command will be
     recorded.
   * pname:depthWriteEnable specifies if depth writes are enabled.
 
 This command sets the depth write enable for subsequent drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
 when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
 Otherwise, this state is specified by the
 slink:VkPipelineDepthStencilStateCreateInfo::pname:depthWriteEnable value
 used to create the currently active pipeline.
 
-ifndef::VK_VERSION_1_3[]
+:refpage: vkCmdSetDepthWriteEnable
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetDepthWriteEnable-None-03354]]
-    The <<features-extendedDynamicState, pname:extendedDynamicState>>
-    feature must: be enabled
+include::{chapters}/commonvalidity/dynamic_state_feature_common.adoc[]
 ****
-endif::VK_VERSION_1_3[]
 
 include::{generated}/validity/protos/vkCmdSetDepthWriteEnable.adoc[]
 --
-endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state[]
+endif::VK_VERSION_1_3,VK_EXT_extended_dynamic_state,VK_EXT_shader_object[]
 
 
 ifdef::VK_NV_representative_fragment_test[]
@@ -1664,7 +2079,7 @@ defined as:
 
 include::{generated}/api/structs/VkPipelineRepresentativeFragmentTestStateCreateInfoNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:representativeFragmentTestEnable controls whether the
@@ -1681,7 +2096,7 @@ if enabled.
 include::{generated}/validity/structs/VkPipelineRepresentativeFragmentTestStateCreateInfoNV.adoc[]
 --
 
-ifdef::VK_EXT_extended_dynamic_state3[]
+ifdef::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 [open,refpage='vkCmdSetRepresentativeFragmentTestEnableNV',desc='Specify the representative fragment test enable dynamically for a command buffer',type='protos']
 --
@@ -1696,25 +2111,32 @@ include::{generated}/api/protos/vkCmdSetRepresentativeFragmentTestEnableNV.adoc[
     pname:representativeFragmentTestEnable state.
 
 This command sets the pname:representativeFragmentTestEnable state for
-subsequent drawing commands when the graphics pipeline is created with
+subsequent drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_REPRESENTATIVE_FRAGMENT_TEST_ENABLE_NV set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineRepresentativeFragmentTestStateCreateInfoNV::pname:representativeFragmentTestEnable
 value used to create the currently active pipeline.
 
+:refpage: vkCmdSetRepresentativeFragmentTestEnableNV
+:requiredfeature: extendedDynamicState3RepresentativeFragmentTestEnable
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetRepresentativeFragmentTestEnableNV-extendedDynamicState3RepresentativeFragmentTestEnable-07346]]
-    The <<features-extendedDynamicState3RepresentativeFragmentTestEnable,
-    pname:extendedDynamicState3RepresentativeFragmentTestEnable>> feature
-    must: be enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdSetRepresentativeFragmentTestEnableNV.adoc[]
 --
 
-endif::VK_EXT_extended_dynamic_state3[]
+endif::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 endif::VK_NV_representative_fragment_test[]
 
@@ -1738,7 +2160,7 @@ sample mask, alpha to coverage, stencil, and depth tests.
 
 ifdef::VK_NV_fragment_coverage_to_color[]
 [[fragops-coverage-to-color]]
-== Fragment Coverage To Color
+== Fragment Coverage to Color
 
 [open,refpage='VkPipelineCoverageToColorStateCreateInfoNV',desc='Structure specifying whether fragment coverage replaces a color',type='structs']
 --
@@ -1747,7 +2169,7 @@ as:
 
 include::{generated}/api/structs/VkPipelineCoverageToColorStateCreateInfoNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.
@@ -1801,7 +2223,7 @@ tname:VkPipelineCoverageToColorStateCreateFlagsNV is a bitmask type for
 setting a mask, but is currently reserved for future use.
 --
 
-ifdef::VK_EXT_extended_dynamic_state3[]
+ifdef::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 [open,refpage='vkCmdSetCoverageToColorEnableNV',desc='Specify the coverage to color enable state dynamically for a command buffer',type='protos']
 --
@@ -1816,19 +2238,26 @@ include::{generated}/api/protos/vkCmdSetCoverageToColorEnableNV.adoc[]
     state.
 
 This command sets the pname:coverageToColorEnable state for subsequent
-drawing commands when the graphics pipeline is created with
+drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_COVERAGE_TO_COLOR_ENABLE_NV set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineCoverageToColorStateCreateInfoNV::pname:coverageToColorEnable
 value used to create the currently active pipeline.
 
+:refpage: vkCmdSetCoverageToColorEnableNV
+:requiredfeature: extendedDynamicState3CoverageToColorEnable
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetCoverageToColorEnableNV-extendedDynamicState3CoverageToColorEnable-07347]]
-    The <<features-extendedDynamicState3CoverageToColorEnable,
-    pname:extendedDynamicState3CoverageToColorEnable>> feature must: be
-    enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdSetCoverageToColorEnableNV.adoc[]
@@ -1847,25 +2276,32 @@ include::{generated}/api/protos/vkCmdSetCoverageToColorLocationNV.adoc[]
     pname:coverageToColorLocation state.
 
 This command sets the pname:coverageToColorLocation state for subsequent
-drawing commands when the graphics pipeline is created with
+drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_COVERAGE_TO_COLOR_LOCATION_NV set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
-slink:VkPipelineSampleLocationsStateCreateInfoEXT::pname:coverageToColorLocation
+slink:VkPipelineCoverageToColorStateCreateInfoNV::pname:coverageToColorLocation
 value used to create the currently active pipeline.
+
+:refpage: vkCmdSetCoverageToColorLocationNV
+:requiredfeature: extendedDynamicState3CoverageToColorLocation
 
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetCoverageToColorLocationNV-extendedDynamicState3CoverageToColorLocation-07348]]
-    The <<features-extendedDynamicState3CoverageToColorLocation,
-    pname:extendedDynamicState3CoverageToColorLocation>> feature must: be
-    enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdSetCoverageToColorLocationNV.adoc[]
 --
 
-endif::VK_EXT_extended_dynamic_state3[]
+endif::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 endif::VK_NV_fragment_coverage_to_color[]
 
@@ -1973,7 +2409,7 @@ as:
 
 include::{generated}/api/structs/VkPipelineCoverageReductionStateCreateInfoNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.
@@ -2025,7 +2461,7 @@ include::{generated}/api/enums/VkCoverageReductionModeNV.adoc[]
     covered; other pixel coverage samples are discarded.
 --
 
-ifdef::VK_EXT_extended_dynamic_state3[]
+ifdef::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 [open,refpage='vkCmdSetCoverageReductionModeNV',desc='Specify the coverage reduction mode dynamically for a command buffer',type='protos']
 --
@@ -2040,25 +2476,32 @@ include::{generated}/api/protos/vkCmdSetCoverageReductionModeNV.adoc[]
     state.
 
 This command sets the pname:coverageReductionMode state for subsequent
-drawing commands when the graphics pipeline is created with
+drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_COVERAGE_REDUCTION_MODE_NV set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineCoverageReductionStateCreateInfoNV::pname:coverageReductionMode
 value used to create the currently active pipeline.
 
+:refpage: vkCmdSetCoverageReductionModeNV
+:requiredfeature: extendedDynamicState3CoverageReductionMode
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetCoverageReductionModeNV-extendedDynamicState3CoverageReductionMode-07349]]
-    The <<features-extendedDynamicState3CoverageReductionMode,
-    pname:extendedDynamicState3CoverageReductionMode>> feature must: be
-    enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdSetCoverageReductionModeNV.adoc[]
 --
 
-endif::VK_EXT_extended_dynamic_state3[]
+endif::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 [open,refpage='vkGetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV',desc='Query supported sample count combinations',type='protos']
 --
@@ -2098,7 +2541,7 @@ The sname:VkFramebufferMixedSamplesCombinationNV structure is defined as:
 
 include::{generated}/api/structs/VkFramebufferMixedSamplesCombinationNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:coverageReductionMode is a elink:VkCoverageReductionModeNV value
@@ -2136,7 +2579,7 @@ as:
 
 include::{generated}/api/structs/VkPipelineCoverageModulationStateCreateInfoNV.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.
@@ -2232,7 +2675,7 @@ include::{generated}/api/enums/VkCoverageModulationModeNV.adoc[]
     are multiplied by the modulation factor.
 --
 
-ifdef::VK_EXT_extended_dynamic_state3[]
+ifdef::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 [open,refpage='vkCmdSetCoverageModulationModeNV',desc='Specify the coverage modulation mode dynamically for a command buffer',type='protos']
 --
@@ -2247,19 +2690,26 @@ include::{generated}/api/protos/vkCmdSetCoverageModulationModeNV.adoc[]
     state.
 
 This command sets the pname:coverageModulationMode state for subsequent
-drawing commands when the graphics pipeline is created with
+drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_COVERAGE_MODULATION_MODE_NV set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineCoverageModulationStateCreateInfoNV::pname:coverageModulationMode
 value used to create the currently active pipeline.
 
+:refpage: vkCmdSetCoverageModulationModeNV
+:requiredfeature: extendedDynamicState3CoverageModulationMode
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetCoverageModulationModeNV-extendedDynamicState3CoverageModulationMode-07350]]
-    The <<features-extendedDynamicState3CoverageModulationMode,
-    pname:extendedDynamicState3CoverageModulationMode>> feature must: be
-    enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdSetCoverageModulationModeNV.adoc[]
@@ -2278,19 +2728,26 @@ include::{generated}/api/protos/vkCmdSetCoverageModulationTableEnableNV.adoc[]
     pname:coverageModulationTableEnable state.
 
 This command sets the pname:coverageModulationTableEnable state for
-subsequent drawing commands when the graphics pipeline is created with
+subsequent drawing commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_COVERAGE_MODULATION_TABLE_ENABLE_NV set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineCoverageModulationStateCreateInfoNV::pname:coverageModulationTableEnable
 value used to create the currently active pipeline.
 
+:refpage: vkCmdSetCoverageModulationTableEnableNV
+:requiredfeature: extendedDynamicState3CoverageModulationTableEnable
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetCoverageModulationTableEnableNV-extendedDynamicState3CoverageModulationTableEnable-07351]]
-    The <<features-extendedDynamicState3CoverageModulationTableEnable,
-    pname:extendedDynamicState3CoverageModulationTableEnable>> feature must:
-    be enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdSetCoverageModulationTableEnableNV.adoc[]
@@ -2311,26 +2768,33 @@ include::{generated}/api/protos/vkCmdSetCoverageModulationTableNV.adoc[]
     containing a value for each number of covered samples.
 
 This command sets the table of modulation factors for subsequent drawing
-commands when the graphics pipeline is created with
+commands
+ifdef::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>, or]
+ifndef::VK_EXT_extended_dynamic_state3[when drawing using <<shaders-objects, shader objects>>.]
+endif::VK_EXT_shader_object[]
+ifdef::VK_EXT_extended_dynamic_state3[]
+when the graphics pipeline is created with
 ename:VK_DYNAMIC_STATE_COVERAGE_MODULATION_TABLE_NV set in
 slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
+endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineCoverageModulationStateCreateInfoNV::pname:coverageModulationTableCount,
 and
 slink:VkPipelineCoverageModulationStateCreateInfoNV::pname:pCoverageModulationTable
 values used to create the currently active pipeline.
 
+:refpage: vkCmdSetCoverageModulationTableNV
+:requiredfeature: extendedDynamicState3CoverageModulationTable
+
 .Valid Usage
 ****
-  * [[VUID-vkCmdSetCoverageModulationTableNV-extendedDynamicState3CoverageModulationTable-07352]]
-    The <<features-extendedDynamicState3CoverageModulationTable,
-    pname:extendedDynamicState3CoverageModulationTable>> feature must: be
-    enabled
+include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
 ****
 
 include::{generated}/validity/protos/vkCmdSetCoverageModulationTableNV.adoc[]
 --
 
-endif::VK_EXT_extended_dynamic_state3[]
+endif::VK_EXT_extended_dynamic_state3,VK_EXT_shader_object[]
 
 endif::VK_NV_framebuffer_mixed_samples[]

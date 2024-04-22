@@ -1,4 +1,4 @@
-// Copyright 2015-2022 The Khronos Group Inc.
+// Copyright 2015-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -149,9 +149,11 @@ Binding (Memory)::
     These associations determine the memory locations affected by operations
     performed on elements of a resource object.
     Memory bindings are established using the flink:vkBindBufferMemory
-    command for non-sparse buffer objects, using the flink:vkBindImageMemory
-    command for non-sparse image objects, and using the
-    flink:vkQueueBindSparse command for sparse resources.
+    command for non-sparse buffer objects,
+ifdef::VKSC_VERSION_1_0[and]
+    using the flink:vkBindImageMemory command for non-sparse image objects
+ifndef::VKSC_VERSION_1_0[, and using the flink:vkQueueBindSparse command for sparse resources]
+    .
 
 Blend Constant::
     Four floating point (RGBA) values used as an input to blending.
@@ -231,6 +233,14 @@ Command Buffer::
     An object that records commands to be submitted to a queue.
     Represented by a slink:VkCommandBuffer object.
 
+ifdef::VK_EXT_nested_command_buffer[]
+Command Buffer Nesting Level::
+    The Command Buffer Nesting Level of a secondary command buffer is equal
+    to the maximum nesting level of all secondary command buffers executed
+    by that command buffer plus one, where a secondary command buffer that
+    executes no other secondary command buffers has a nesting level of zero.
+endif::VK_EXT_nested_command_buffer[]
+
 Command Pool::
     An object that command buffer memory is allocated from, and that owns
     that memory.
@@ -253,10 +263,10 @@ Compatible Queues::
     Compatible queues have identical properties.
 
 Complete Mipmap Chain::
-    The entire set of miplevels that can be provided for an image, from the
-    largest application specified miplevel size down to the _minimum
-    miplevel size_.
-    See <<resources-image-miplevel-sizing, Image Miplevel Sizing>>.
+    The entire set of mip levels that can be provided for an image, from the
+    largest application specified mip level size down to the _minimum mip
+    level size_.
+    See <<resources-image-mip-level-sizing, Image Mip Level Sizing>>.
 
 ifdef::VK_KHR_deferred_host_operations[]
 Completed Operation::
@@ -287,11 +297,11 @@ Constant Integral Expressions::
     See _Constant Instruction_ in section 2.2.1 "`Instructions`" of the
     <<spirv-spec,Khronos SPIR-V Specification>>.
 
-ifdef::VK_NV_cooperative_matrix[]
+ifdef::VK_NV_cooperative_matrix,VK_KHR_cooperative_matrix[]
 Cooperative Matrix::
     A SPIR-V type where the storage for and computations performed on the
     matrix are spread across a set of invocations such as a subgroup.
-endif::VK_NV_cooperative_matrix[]
+endif::VK_NV_cooperative_matrix,VK_KHR_cooperative_matrix[]
 
 ifdef::VK_NV_corner_sampled_image[]
 Corner-Sampled Image::
@@ -443,6 +453,9 @@ Device-Level Command::
 Device-Level Functionality::
     All device-level commands and objects, and their structures, enumerated
     types, and enumerants.
+    Additionally, physical-device-level functionality defined by a
+    <<extendingvulkan-device-extensions,device extension>> is also
+    considered device-level functionality.
 
 Device-Level Object::
     Logical device objects and their child objects.
@@ -678,6 +691,14 @@ Frame (Video)::
     multi-dimensional array of chroma samples.
 endif::VK_KHR_video_queue[]
 
+ifdef::VK_EXT_shader_tile_image[]
+[[glossary-fragment-tile-image-interface]]
+Fragment Tile Image Interface::
+    A fragment shader entry point's variables with code:TileImageEXT storage
+    class and a decoration of code:Location, which are used to read values
+    from color attachments.
+endif::VK_EXT_shader_tile_image[]
+
 Framebuffer::
     A collection of image views and a set of dimensions that, in conjunction
     with a render pass, define the inputs and outputs used by drawing
@@ -787,6 +808,7 @@ ICD::
     Installable Client Driver.
     An ICD is represented as a slink:VkPhysicalDevice.
 
+[[glossary-identically-defined]]
 Identically Defined Objects::
     Objects of the same type where all arguments to their creation or
     allocation functions, with the exception of pname:pAllocator, are +
@@ -985,7 +1007,7 @@ Invocation Group::
 
 ifdef::VK_KHR_ray_tracing_pipeline,VK_NV_ray_tracing[]
 Invocation Repack Instruction::
-    A ray tracing shader call <<ray-tracing-repack,instruction>> where the
+    A ray tracing <<ray-tracing-repack,instruction>> where the
     implementation may: change the set of invocations that are executing.
 endif::VK_KHR_ray_tracing_pipeline,VK_NV_ray_tracing[]
 
@@ -1125,13 +1147,13 @@ endif::VK_EXT_mesh_shader[]
     .
 endif::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
 
-Minimum Miplevel Size::
-    The smallest size that is permitted for a miplevel.
+Minimum Mip Level Size::
+    The smallest size that is permitted for a mip level.
     For conventional images this is 1x1x1.
 ifdef::VK_NV_corner_sampled_image[]
     For corner-sampled images, this is 2x2x2.
 endif::VK_NV_corner_sampled_image[]
-    See <<resources-image-miplevel-sizing, Image Miplevel Sizing>>.
+    See <<resources-image-mip-level-sizing, Image Mip Level Sizing>>.
 
 Mip Tail Region::
     The set of mipmap levels of a sparse residency texture that are too
@@ -1147,6 +1169,13 @@ Multi-planar::
     A _multi-planar image_ (or "`planar image`") is an image of a
     multi-planar format.
 endif::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
+
+ifdef::VK_EXT_nested_command_buffer[]
+Nested Command Buffers::
+    A nested command buffer is a secondary command buffer that is executed
+    by another secondary command buffer, which may itself execute other
+    secondary command buffers.
+endif::VK_EXT_nested_command_buffer[]
 
 Non-Dispatchable Handle::
     A handle of an integer handle type.
@@ -1266,6 +1295,14 @@ Pipeline Cache::
     retrieved information in order to accelerate pipeline creation.
     Represented by a slink:VkPipelineCache object.
 
+ifdef::VKSC_VERSION_1_0[]
+Pipeline JSON Schema::
+    A JSON-based representation for encapsulating all pipeline state which
+    is necessary for the offline pipeline cache compiler.
+    This includes the SPIR-V shader module, pipeline layout, render pass
+    information and pipeline state creation information.
+endif::VKSC_VERSION_1_0[]
+
 Pipeline Layout::
     An object defining the set of resources (via a collection of descriptor
     set layouts) and push constants used by pipelines that are created using
@@ -1285,15 +1322,38 @@ Pipeline Stage::
     A logically independent execution unit that performs some of the
     operations defined by an action command.
 
+ifdef::VKSC_VERSION_1_0[]
+Pipeline Identifier::
+    An identifier that can be used to identify a specific pipeline
+    independently from the pipeline description.
+endif::VKSC_VERSION_1_0[]
+
 ifdef::VK_KHR_ray_tracing_pipeline,VK_NV_ray_tracing[]
+[[glossary-pipeline-trace-ray]]
 Pipeline Trace Ray Instruction::
     A ray tracing instruction which traces a ray into an acceleration
     structure when using ray tracing pipelines.
-    One of
-ifdef::VK_NV_ray_tracing[code:OpTraceNV,]
-ifdef::VK_NV_ray_tracing_motion_blur[code:OpTraceRayMotionNV, code:OpTraceMotionNV,]
-ifdef::VK_KHR_ray_tracing_pipeline[code:OpTraceRayKHR]
-    .
+    One of:
+
+ifdef::VK_NV_ray_tracing[]
+  * code:OpTraceNV
+endif::VK_NV_ray_tracing[]
+ifdef::VK_KHR_ray_tracing_pipeline[]
+  * code:OpTraceRayKHR
+endif::VK_KHR_ray_tracing_pipeline[]
+ifdef::VK_NV_ray_tracing_motion_blur[]
+  * code:OpTraceRayMotionNV
+ifdef::VK_NV_ray_tracing[]
+  * code:OpTraceMotionNV
+endif::VK_NV_ray_tracing[]
+endif::VK_NV_ray_tracing_motion_blur[]
+ifdef::VK_NV_ray_tracing_invocation_reorder[]
+  * code:OpHitObjectTraceRayNV
+ifdef::VK_NV_ray_tracing_motion_blur[]
+  * code:OpHitObjectTraceRayMotionNV
+endif::VK_NV_ray_tracing_motion_blur[]
+endif::VK_NV_ray_tracing_invocation_reorder[]
+
 endif::VK_KHR_ray_tracing_pipeline,VK_NV_ray_tracing[]
 
 pname:pNext Chain::
@@ -1328,10 +1388,15 @@ Potential Format Features::
     supports for a specified elink:VkFormat, over all supported image
     tilings.
 ifdef::VK_ANDROID_external_memory_android_hardware_buffer[]
-    For <<memory-external-android-hardware-buffer-external-formats,external
-    formats>> the elink:VkFormatFeatureFlagBits is provided by the
+    For <<memory-external-android-hardware-buffer-external-formats,Android
+    external formats>> the elink:VkFormatFeatureFlagBits is provided by the
     implementation.
 endif::VK_ANDROID_external_memory_android_hardware_buffer[]
+ifdef::VK_QNX_external_memory_screen_buffer[]
+    For <<memory-external-screen-buffer-external-formats,QNX Screen external
+    formats>> the elink:VkFormatFeatureFlagBits is provided by the
+    implementation.
+endif::VK_QNX_external_memory_screen_buffer[]
 
 Pre-rasterization::
     Operations that execute before <<primsrast,rasterization>>, and any
@@ -1616,6 +1681,12 @@ Side Effect::
     A store to memory or atomic operation on memory from a shader
     invocation.
 
+ifdef::VKSC_VERSION_1_0[]
+Single Event Upset::
+    A change of physical device state, such as a register or memory bitflip,
+    e.g. caused by ionizing radiation.
+endif::VKSC_VERSION_1_0[]
+
 ifdef::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
 Single-plane format::
     A format that is not _multi-planar_.
@@ -1645,9 +1716,9 @@ Sparse Unbound Texel::
 
 ifdef::VK_NV_ray_tracing_motion_blur[]
 SRT::
-   A decomposition of a spatial transform separating out scale, rotation,
-   and translation which has better linear interpolation properties for
-   representing motion.
+    A decomposition of a spatial transform separating out scale, rotation,
+    and translation which has better linear interpolation properties for
+    representing motion.
 endif::VK_NV_ray_tracing_motion_blur[]
 
 Static Use::
@@ -1725,6 +1796,15 @@ Texel Coordinate System::
     One of three coordinate systems (normalized, unnormalized, integer)
     defining how texel coordinates are interpreted in an image or a specific
     mipmap level of an image.
+
+ifdef::VK_EXT_shader_tile_image[]
+[[glossary-tile-image]]
+Tile Image::
+    A per-tile view of a framebuffer attachment.
+    If the `apiext:VK_EXT_shader_tile_image` extension is enabled, the
+    framebuffer is considered to be divided into tiles.
+
+endif::VK_EXT_shader_tile_image[]
 
 ifdef::VK_VERSION_1_2,VK_KHR_timeline_semaphore[]
 Timeline Semaphore::
@@ -1967,6 +2047,9 @@ terms in their usual abbreviated form:
 AVC::
     Advanced Video Coding
 
+Bipred::
+    Bidirectional Prediction
+
 CABAC::
     Context-Adaptive Binary Arithmetic Coding
 
@@ -1994,6 +2077,9 @@ HDR::
 HEVC::
     High Efficiency Video Coding
 
+HRD::
+    Hypothetical Reference Decoder
+
 IDC::
     Indicator
 
@@ -2003,11 +2089,20 @@ IDR::
 MB::
     Macroblock
 
+MV::
+    Motion Vector
+
 NALU::
     Network Abstraction Layer Unit
 
+PCM::
+    Pulse-Code Modulation
+
+Pic::
+    Picture
+
 Pred::
-    Predicted
+    Prediction
 
 PPS::
     Picture Parameter Set

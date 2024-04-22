@@ -1,4 +1,4 @@
-// Copyright 2017-2022 The Khronos Group Inc.
+// Copyright 2017-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -6,6 +6,16 @@
 [[memory-model]]
 = Memory Model
 
+[NOTE]
+.Note
+====
+This memory model describes synchronizations provided by all
+implementations; however, some of the synchronizations defined require extra
+features to be supported by the implementation.
+ifdef::VK_VERSION_1_2,VK_KHR_vulkan_memory_model[]
+See slink:VkPhysicalDeviceVulkanMemoryModelFeatures.
+endif::VK_VERSION_1_2,VK_KHR_vulkan_memory_model[]
+====
 
 [[memory-model-agent]]
 == Agent
@@ -166,7 +176,7 @@ Shader-call-related is an equivalence relation on invocations defined as the
 symmetric and transitive closure of:
 
   * A is shader-call-related to B if A is created by an
-    <<ray-tracing-repack,invocation repack>> instruction executed by B.
+    <<ray-tracing-shader-call,shader call>> instruction executed by B.
 
 
 [[shader-call-order]]
@@ -178,11 +188,11 @@ executed by invocations that are shader-call-related:
   * (Program order): If dynamic instance A is program-ordered before B, then
     A is shader-call-ordered before B.
   * (Shader call entry): If A is a dynamic instance of an
-    <<ray-tracing-repack,invocation repack>> instruction and B is a dynamic
+    <<ray-tracing-shader-call,shader call>> instruction and B is a dynamic
     instance executed by an invocation that is created by A, then A is
     shader-call-ordered before B.
   * (Shader call exit): If A is a dynamic instance of an
-    <<ray-tracing-repack,invocation repack>> instruction, B is the next
+    <<ray-tracing-shader-call,shader call>> instruction, B is the next
     dynamic instance executed by the same invocation, and C is a dynamic
     instance executed by an invocation that is created by A, then C is
     shader-call-ordered before B.
@@ -581,7 +591,7 @@ More precisely, for private memory operations to be
 <<memory-model-location-ordered,Location-Ordered>> between distinct agents
 requires using system-synchronizes-with rather than shader-based
 synchronization.
-Non-private memory operations still obey program-order.
+Private memory operations still obey program-order.
 
 Atomic operations are always considered non-private.
 
@@ -1105,6 +1115,8 @@ execution, they only need to have generated the output that is being read.
 [[memory-model-deallocation]]
 == Deallocation
 
+ifndef::VKSC_VERSION_1_0[]
+
 A call to flink:vkFreeMemory must: happen-after all memory operations on all
 memory locations in that slink:VkDeviceMemory object.
 
@@ -1112,10 +1124,12 @@ memory locations in that slink:VkDeviceMemory object.
 .Note
 ====
 Normally, device memory operations in a given queue are synchronized with
-flink:vkFreeMemory by having a host thread wait on a fence signalled by that
+flink:vkFreeMemory by having a host thread wait on a fence signaled by that
 queue, and the wait happens-before the call to flink:vkFreeMemory on the
 host.
 ====
+
+endif::VKSC_VERSION_1_0[]
 
 The deallocation of SPIR-V variables is managed by the system and
 happens-after all operations on those variables.

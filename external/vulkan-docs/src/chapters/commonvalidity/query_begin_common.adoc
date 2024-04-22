@@ -1,11 +1,11 @@
-// Copyright 2019-2022 The Khronos Group Inc.
+// Copyright 2019-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
 // Common Valid Usage
 // Common to vkCmdBeginQuery* commands
   * [[VUID-{refpage}-None-00807]]
-    All queries used by the command must: be unavailable
+    All queries used by the command must: be _unavailable_
   * [[VUID-{refpage}-queryType-02804]]
     The pname:queryType used to create pname:queryPool must: not be
     ename:VK_QUERY_TYPE_TIMESTAMP
@@ -26,6 +26,12 @@ ifdef::VK_NV_ray_tracing[]
     The pname:queryType used to create pname:queryPool must: not be
     ename:VK_QUERY_TYPE_ACCELERATION_STRUCTURE_COMPACTED_SIZE_NV
 endif::VK_NV_ray_tracing[]
+ifdef::VK_KHR_VK_EXT_opacity_micromap[]
+  * [[VUID-{refpage}-queryType-08972]]
+    The pname:queryType used to create pname:queryPool must: not be
+    ename:VK_QUERY_TYPE_MICROMAP_SERIALIZATION_SIZE_EXT or
+    ename:VK_QUERY_TYPE_MICROMAP_COMPACTED_SIZE_EXT
+endif::VK_KHR_VK_EXT_opacity_micromap[]
   * [[VUID-{refpage}-queryType-00800]]
     If the <<features-occlusionQueryPrecise, pname:occlusionQueryPrecise>>
     feature is not enabled, or the pname:queryType used to create
@@ -70,6 +76,11 @@ ifdef::VK_KHR_video_queue[]
   * [[VUID-{refpage}-None-07127]]
     If there is a bound video session, then there must: be no
     <<queries-operation-active,active>> queries
+ifdef::VK_KHR_video_maintenance1[]
+  * [[VUID-{refpage}-None-08370]]
+    If there is a bound video session, then it must: not have been created
+    with ename:VK_VIDEO_SESSION_CREATE_INLINE_QUERIES_BIT_KHR
+endif::VK_KHR_video_maintenance1[]
   * [[VUID-{refpage}-queryType-07128]]
     If the pname:queryType used to create pname:queryPool was
     ename:VK_QUERY_TYPE_RESULT_STATUS_ONLY_KHR and there is a bound video
@@ -80,37 +91,26 @@ ifdef::VK_KHR_video_queue[]
     session was created with
 endif::VK_KHR_video_queue[]
 ifdef::VK_KHR_video_encode_queue[]
-  * [[VUID-{refpage}-queryType-04862]]
-    If the pname:queryType used to create pname:queryPool was
-    ename:VK_QUERY_TYPE_VIDEO_ENCODE_BITSTREAM_BUFFER_RANGE_KHR, then the
-    sname:VkCommandPool that pname:commandBuffer was allocated from must:
-    support <<video-encode-operations, video encode operations>>
   * [[VUID-{refpage}-queryType-07129]]
     If the pname:queryType used to create pname:queryPool was
-    ename:VK_QUERY_TYPE_VIDEO_ENCODE_BITSTREAM_BUFFER_RANGE_KHR, then there
-    must: be a bound video session
+    ename:VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR, then there must: be a
+    bound video session
   * [[VUID-{refpage}-queryType-07130]]
     If the pname:queryType used to create pname:queryPool was
-    ename:VK_QUERY_TYPE_VIDEO_ENCODE_BITSTREAM_BUFFER_RANGE_KHR and there is
-    a bound video session, then pname:queryPool must: have been created with
-    a slink:VkVideoProfileInfoKHR structure included in the pname:pNext
-    chain of slink:VkQueryPoolCreateInfo identical to the one specified in
+    ename:VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR and there is a bound video
+    session, then pname:queryPool must: have been created with a
+    slink:VkVideoProfileInfoKHR structure included in the pname:pNext chain
+    of slink:VkQueryPoolCreateInfo identical to the one specified in
     slink:VkVideoSessionCreateInfoKHR::pname:pVideoProfile the bound video
     session was created with
 endif::VK_KHR_video_encode_queue[]
 ifdef::VK_KHR_video_queue[]
-ifdef::VK_KHR_video_encode_queue[]
   * [[VUID-{refpage}-queryType-07131]]
     If the pname:queryType used to create pname:queryPool was not
-    ename:VK_QUERY_TYPE_RESULT_STATUS_ONLY_KHR or
-    ename:VK_QUERY_TYPE_VIDEO_ENCODE_BITSTREAM_BUFFER_RANGE_KHR, then there
-    must: be no bound video session
+    ename:VK_QUERY_TYPE_RESULT_STATUS_ONLY_KHR
+ifdef::VK_KHR_video_encode_queue[]
+    or ename:VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR,
 endif::VK_KHR_video_encode_queue[]
-ifndef::VK_KHR_video_encode_queue[]
-  * [[VUID-{refpage}-queryType-07132]]
-    If the pname:queryType used to create pname:queryPool was not
-    ename:VK_QUERY_TYPE_RESULT_STATUS_ONLY_KHR, then there must: be no bound
-    video session
-endif::VK_KHR_video_encode_queue[]
+    then there must: be no bound video session
 endif::VK_KHR_video_queue[]
 // Common Valid Usage

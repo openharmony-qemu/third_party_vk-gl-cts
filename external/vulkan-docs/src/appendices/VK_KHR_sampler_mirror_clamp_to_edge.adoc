@@ -1,4 +1,4 @@
-// Copyright 2014-2022 The Khronos Group Inc.
+// Copyright 2014-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -8,8 +8,6 @@ include::{generated}/meta/{refprefix}VK_KHR_sampler_mirror_clamp_to_edge.adoc[]
 
 *Last Modified Date*::
     2019-08-17
-*Interactions and External Dependencies*::
-  - Promoted to Vulkan 1.2 Core
 *Contributors*::
   - Tobias Hector, Imagination Technologies
   - Jon Leech, Khronos
@@ -43,12 +41,11 @@ include::{generated}/interfaces/VK_KHR_sampler_mirror_clamp_to_edge.adoc[]
 
 Creating a sampler with the new address mode in each dimension
 
-
 [source,c++]
-----------------------------------------
+----
     VkSamplerCreateInfo createInfo =
     {
-        VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO // sType
+        .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
         // Other members set to application-desired values
     };
 
@@ -61,7 +58,7 @@ Creating a sampler with the new address mode in each dimension
         device,
         &createInfo,
         &sampler);
-----------------------------------------
+----
 
 === Issues
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2022 Khronos Group.
+// Copyright 2016-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -6,11 +6,11 @@ include::{generated}/meta/{refprefix}VK_EXT_device_address_binding_report.adoc[]
 
 === Other Extension Metadata
 
-Last Modified Date::
+*Last Modified Date*::
     2020-11-23
 *Interactions and External Dependencies*::
   - This extension requires `VK_EXT_debug_utils`
-Contributors::
+*Contributors*::
   - Ralph Potter, Samsung
   - Spencer Fricke, Samsung
   - Jan-Harald Fredriksen, ARM
@@ -94,7 +94,7 @@ referenced by an executing command buffer?
 *RESOLVED*: Changes to the virtual address ranges associated with a Vulkan
 object should be reported as close as possible to where they occur within
 the implementation.
-If virtual address binding is deferred, then the the callback should also be
+If virtual address binding is deferred, then the callback should also be
 deferred to match.
 
 9.) Do bind/unbind callbacks have to form matched pairs? Can a large region

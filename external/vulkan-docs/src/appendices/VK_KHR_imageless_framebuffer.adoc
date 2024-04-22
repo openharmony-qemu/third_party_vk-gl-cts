@@ -1,4 +1,4 @@
-// Copyright 2016-2022 The Khronos Group Inc.
+// Copyright 2016-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -8,8 +8,6 @@ include::{generated}/meta/{refprefix}VK_KHR_imageless_framebuffer.adoc[]
 
 *Last Modified Date*::
     2018-12-14
-*Interactions and External Dependencies*::
-  - Promoted to Vulkan 1.2 Core
 *Contributors*::
   - Tobias Hector
   - Graham Wihlidal

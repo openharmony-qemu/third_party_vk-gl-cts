@@ -1,9 +1,9 @@
-// Copyright 2017-2022 The Khronos Group Inc.
+// Copyright 2017-2024 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
 [[headless]]
-=== Presenting to headless surfaces
+=== Presenting to Headless Surfaces
 
 Vulkan rendering can be presented to a headless surface, where the
 presentation operation is a no-op producing no externally-visible result.
@@ -25,6 +25,8 @@ restrictions and features of the implementation.
 
 [open,refpage='vkCreateHeadlessSurfaceEXT',desc='Create a headless slink:VkSurfaceKHR object',type='protos']
 --
+:refpage: vkCreateHeadlessSurfaceEXT
+
 To create a headless sname:VkSurfaceKHR object, call:
 
 include::{generated}/api/protos/vkCreateHeadlessSurfaceEXT.adoc[]
@@ -48,7 +50,7 @@ The sname:VkHeadlessSurfaceCreateInfoEXT structure is defined as:
 
 include::{generated}/api/structs/VkHeadlessSurfaceCreateInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is reserved for future use.
