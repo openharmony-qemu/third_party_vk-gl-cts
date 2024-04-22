@@ -18,7 +18,7 @@ deqp_common_cflags_cc = [
   "-Wextra",
   "-Wno-long-long",
   "-Wno-sign-conversion",
-  "-std=c++11",
+  "-std=c++17",
   "-Wno-delete-non-virtual-dtor",
   "-fwrapv",
   "-fexceptions",
