@@ -126,7 +126,7 @@ ohos_source_set("glcts-common_source") {
     "//third_party/libpng:libpng",
     "//third_party/spirv-tools:libdeqp_spirvtools",
     "//third_party/spirv-tools/source/link:libdeqp_spirvtools-link",
-    "//third_party/spirv-tools/source/lint:libdeqp_spirvtools-lint",
+    "//third_party/spirv-tools/source/val:libdeqp_spirvtools-val",
     "//third_party/spirv-tools/source/opt:libdeqp_spirvtools-opt",
     "//third_party/spirv-tools/source/reduce:libdeqp_spirvtools-reduce",
     "//third_party/vk-gl-cts/external/openglcts/modules/common/subgroups:libdeqp-gl-subgroups",
