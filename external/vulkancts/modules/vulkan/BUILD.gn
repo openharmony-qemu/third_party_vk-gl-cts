@@ -81,7 +81,6 @@ vk_common_include_dirs += [
   "//third_party/vk-gl-cts/build/include",
   "//third_party/glslang",
   "//third_party/spirv-tools/include",
-  "//third_party/spirv-tools/source",
   "//third_party/vk-gl-cts/external/amber/src/include",
 ]
 

@@ -136,8 +136,6 @@ ohos_shared_library("libdeqp_ohos_platform") {
     "//foundation/window/window_manager/wm:libwm",
     "//foundation/window/window_manager/wmserver:libwms",
     "//third_party/libpng:libpng",
-    "//third_party/spirv-tools:libdeqp_spirvtools",
-    "//third_party/spirv-tools/source/opt:libdeqp_spirvtools-opt",
     "//third_party/vk-gl-cts/external/openglcts/modules:libdeqp_glcts",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutilnoshader",
 
