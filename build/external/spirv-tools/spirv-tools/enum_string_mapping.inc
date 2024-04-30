@@ -198,6 +198,8 @@ const char* ExtensionToString(Extension extension) {
       return "SPV_NV_sample_mask_override_coverage";
     case Extension::kSPV_NV_shader_image_footprint:
       return "SPV_NV_shader_image_footprint";
+    case Extension::kSPV_NV_shader_invocation_reorder:
+      return "kSPV_NV_shader_invocation_reorder";
     case Extension::kSPV_NV_shader_sm_builtins:
       return "SPV_NV_shader_sm_builtins";
     case Extension::kSPV_NV_shader_subgroup_partitioned:
@@ -232,410 +234,464 @@ const char* ExtensionToString(Extension extension) {
     }
     
 
-const char* CapabilityToString(SpvCapability capability) {
+const char* CapabilityToString(spv::Capability capability) {
   switch (capability) {
-    case SpvCapabilityMatrix:
+    case spv::Capability::Matrix:
       return "Matrix";
-    case SpvCapabilityShader:
+    case spv::Capability::Shader:
       return "Shader";
-    case SpvCapabilityGeometry:
+    case spv::Capability::Geometry:
       return "Geometry";
-    case SpvCapabilityTessellation:
+    case spv::Capability::Tessellation:
       return "Tessellation";
-    case SpvCapabilityAddresses:
+    case spv::Capability::Addresses:
       return "Addresses";
-    case SpvCapabilityLinkage:
+    case spv::Capability::Linkage:
       return "Linkage";
-    case SpvCapabilityKernel:
+    case spv::Capability::Kernel:
       return "Kernel";
-    case SpvCapabilityVector16:
+    case spv::Capability::Vector16:
       return "Vector16";
-    case SpvCapabilityFloat16Buffer:
+    case spv::Capability::Float16Buffer:
       return "Float16Buffer";
-    case SpvCapabilityFloat16:
+    case spv::Capability::Float16:
       return "Float16";
-    case SpvCapabilityFloat64:
+    case spv::Capability::Float64:
       return "Float64";
-    case SpvCapabilityInt64:
+    case spv::Capability::Int64:
       return "Int64";
-    case SpvCapabilityInt64Atomics:
+    case spv::Capability::Int64Atomics:
       return "Int64Atomics";
-    case SpvCapabilityImageBasic:
+    case spv::Capability::ImageBasic:
       return "ImageBasic";
-    case SpvCapabilityImageReadWrite:
+    case spv::Capability::ImageReadWrite:
       return "ImageReadWrite";
-    case SpvCapabilityImageMipmap:
+    case spv::Capability::ImageMipmap:
       return "ImageMipmap";
-    case SpvCapabilityPipes:
+    case spv::Capability::Pipes:
       return "Pipes";
-    case SpvCapabilityGroups:
+    case spv::Capability::Groups:
       return "Groups";
-    case SpvCapabilityDeviceEnqueue:
+    case spv::Capability::DeviceEnqueue:
       return "DeviceEnqueue";
-    case SpvCapabilityLiteralSampler:
+    case spv::Capability::LiteralSampler:
       return "LiteralSampler";
-    case SpvCapabilityAtomicStorage:
+    case spv::Capability::AtomicStorage:
       return "AtomicStorage";
-    case SpvCapabilityInt16:
+    case spv::Capability::Int16:
       return "Int16";
-    case SpvCapabilityTessellationPointSize:
+    case spv::Capability::TessellationPointSize:
       return "TessellationPointSize";
-    case SpvCapabilityGeometryPointSize:
+    case spv::Capability::GeometryPointSize:
       return "GeometryPointSize";
-    case SpvCapabilityImageGatherExtended:
+    case spv::Capability::ImageGatherExtended:
       return "ImageGatherExtended";
-    case SpvCapabilityStorageImageMultisample:
+    case spv::Capability::StorageImageMultisample:
       return "StorageImageMultisample";
-    case SpvCapabilityUniformBufferArrayDynamicIndexing:
+    case spv::Capability::UniformBufferArrayDynamicIndexing:
       return "UniformBufferArrayDynamicIndexing";
-    case SpvCapabilitySampledImageArrayDynamicIndexing:
+    case spv::Capability::SampledImageArrayDynamicIndexing:
       return "SampledImageArrayDynamicIndexing";
-    case SpvCapabilityStorageBufferArrayDynamicIndexing:
+    case spv::Capability::StorageBufferArrayDynamicIndexing:
       return "StorageBufferArrayDynamicIndexing";
-    case SpvCapabilityStorageImageArrayDynamicIndexing:
+    case spv::Capability::StorageImageArrayDynamicIndexing:
       return "StorageImageArrayDynamicIndexing";
-    case SpvCapabilityClipDistance:
+    case spv::Capability::ClipDistance:
       return "ClipDistance";
-    case SpvCapabilityCullDistance:
+    case spv::Capability::CullDistance:
       return "CullDistance";
-    case SpvCapabilityImageCubeArray:
+    case spv::Capability::ImageCubeArray:
       return "ImageCubeArray";
-    case SpvCapabilitySampleRateShading:
+    case spv::Capability::SampleRateShading:
       return "SampleRateShading";
-    case SpvCapabilityImageRect:
+    case spv::Capability::ImageRect:
       return "ImageRect";
-    case SpvCapabilitySampledRect:
+    case spv::Capability::SampledRect:
       return "SampledRect";
-    case SpvCapabilityGenericPointer:
+    case spv::Capability::GenericPointer:
       return "GenericPointer";
-    case SpvCapabilityInt8:
+    case spv::Capability::Int8:
       return "Int8";
-    case SpvCapabilityInputAttachment:
+    case spv::Capability::InputAttachment:
       return "InputAttachment";
-    case SpvCapabilitySparseResidency:
+    case spv::Capability::SparseResidency:
       return "SparseResidency";
-    case SpvCapabilityMinLod:
+    case spv::Capability::MinLod:
       return "MinLod";
-    case SpvCapabilitySampled1D:
+    case spv::Capability::Sampled1D:
       return "Sampled1D";
-    case SpvCapabilityImage1D:
+    case spv::Capability::Image1D:
       return "Image1D";
-    case SpvCapabilitySampledCubeArray:
+    case spv::Capability::SampledCubeArray:
       return "SampledCubeArray";
-    case SpvCapabilitySampledBuffer:
+    case spv::Capability::SampledBuffer:
       return "SampledBuffer";
-    case SpvCapabilityImageBuffer:
+    case spv::Capability::ImageBuffer:
       return "ImageBuffer";
-    case SpvCapabilityImageMSArray:
+    case spv::Capability::ImageMSArray:
       return "ImageMSArray";
-    case SpvCapabilityStorageImageExtendedFormats:
+    case spv::Capability::StorageImageExtendedFormats:
       return "StorageImageExtendedFormats";
-    case SpvCapabilityImageQuery:
+    case spv::Capability::ImageQuery:
       return "ImageQuery";
-    case SpvCapabilityDerivativeControl:
+    case spv::Capability::DerivativeControl:
       return "DerivativeControl";
-    case SpvCapabilityInterpolationFunction:
+    case spv::Capability::InterpolationFunction:
       return "InterpolationFunction";
-    case SpvCapabilityTransformFeedback:
+    case spv::Capability::TransformFeedback:
       return "TransformFeedback";
-    case SpvCapabilityGeometryStreams:
+    case spv::Capability::GeometryStreams:
       return "GeometryStreams";
-    case SpvCapabilityStorageImageReadWithoutFormat:
+    case spv::Capability::StorageImageReadWithoutFormat:
       return "StorageImageReadWithoutFormat";
-    case SpvCapabilityStorageImageWriteWithoutFormat:
+    case spv::Capability::StorageImageWriteWithoutFormat:
       return "StorageImageWriteWithoutFormat";
-    case SpvCapabilityMultiViewport:
+    case spv::Capability::MultiViewport:
       return "MultiViewport";
-    case SpvCapabilitySubgroupDispatch:
+    case spv::Capability::SubgroupDispatch:
       return "SubgroupDispatch";
-    case SpvCapabilityNamedBarrier:
+    case spv::Capability::NamedBarrier:
       return "NamedBarrier";
-    case SpvCapabilityPipeStorage:
+    case spv::Capability::PipeStorage:
       return "PipeStorage";
-    case SpvCapabilityGroupNonUniform:
+    case spv::Capability::GroupNonUniform:
       return "GroupNonUniform";
-    case SpvCapabilityGroupNonUniformVote:
+    case spv::Capability::GroupNonUniformVote:
       return "GroupNonUniformVote";
-    case SpvCapabilityGroupNonUniformArithmetic:
+    case spv::Capability::GroupNonUniformArithmetic:
       return "GroupNonUniformArithmetic";
-    case SpvCapabilityGroupNonUniformBallot:
+    case spv::Capability::GroupNonUniformBallot:
       return "GroupNonUniformBallot";
-    case SpvCapabilityGroupNonUniformShuffle:
+    case spv::Capability::GroupNonUniformShuffle:
       return "GroupNonUniformShuffle";
-    case SpvCapabilityGroupNonUniformShuffleRelative:
+    case spv::Capability::GroupNonUniformShuffleRelative:
       return "GroupNonUniformShuffleRelative";
-    case SpvCapabilityGroupNonUniformClustered:
+    case spv::Capability::GroupNonUniformClustered:
       return "GroupNonUniformClustered";
-    case SpvCapabilityGroupNonUniformQuad:
+    case spv::Capability::GroupNonUniformQuad:
       return "GroupNonUniformQuad";
-    case SpvCapabilityShaderLayer:
+    case spv::Capability::ShaderLayer:
       return "ShaderLayer";
-    case SpvCapabilityShaderViewportIndex:
+    case spv::Capability::ShaderViewportIndex:
       return "ShaderViewportIndex";
-    case SpvCapabilityUniformDecoration:
+    case spv::Capability::UniformDecoration:
       return "UniformDecoration";
-    case SpvCapabilityFragmentShadingRateKHR:
+    case spv::Capability::CoreBuiltinsARM:
+      return "CoreBuiltinsARM";
+    case spv::Capability::TileImageColorReadAccessEXT:
+      return "TileImageColorReadAccessEXT";
+    case spv::Capability::TileImageDepthReadAccessEXT:
+      return "TileImageDepthReadAccessEXT";
+    case spv::Capability::TileImageStencilReadAccessEXT:
+      return "TileImageStencilReadAccessEXT";
+    case spv::Capability::FragmentShadingRateKHR:
       return "FragmentShadingRateKHR";
-    case SpvCapabilitySubgroupBallotKHR:
+    case spv::Capability::SubgroupBallotKHR:
       return "SubgroupBallotKHR";
-    case SpvCapabilityDrawParameters:
+    case spv::Capability::DrawParameters:
       return "DrawParameters";
-    case SpvCapabilityWorkgroupMemoryExplicitLayoutKHR:
+    case spv::Capability::WorkgroupMemoryExplicitLayoutKHR:
       return "WorkgroupMemoryExplicitLayoutKHR";
-    case SpvCapabilityWorkgroupMemoryExplicitLayout8BitAccessKHR:
+    case spv::Capability::WorkgroupMemoryExplicitLayout8BitAccessKHR:
       return "WorkgroupMemoryExplicitLayout8BitAccessKHR";
-    case SpvCapabilityWorkgroupMemoryExplicitLayout16BitAccessKHR:
+    case spv::Capability::WorkgroupMemoryExplicitLayout16BitAccessKHR:
       return "WorkgroupMemoryExplicitLayout16BitAccessKHR";
-    case SpvCapabilitySubgroupVoteKHR:
+    case spv::Capability::SubgroupVoteKHR:
       return "SubgroupVoteKHR";
-    case SpvCapabilityStorageBuffer16BitAccess:
+    case spv::Capability::StorageBuffer16BitAccess:
       return "StorageBuffer16BitAccess";
-    case SpvCapabilityUniformAndStorageBuffer16BitAccess:
+    case spv::Capability::UniformAndStorageBuffer16BitAccess:
       return "UniformAndStorageBuffer16BitAccess";
-    case SpvCapabilityStoragePushConstant16:
+    case spv::Capability::StoragePushConstant16:
       return "StoragePushConstant16";
-    case SpvCapabilityStorageInputOutput16:
+    case spv::Capability::StorageInputOutput16:
       return "StorageInputOutput16";
-    case SpvCapabilityDeviceGroup:
+    case spv::Capability::DeviceGroup:
       return "DeviceGroup";
-    case SpvCapabilityMultiView:
+    case spv::Capability::MultiView:
       return "MultiView";
-    case SpvCapabilityVariablePointersStorageBuffer:
+    case spv::Capability::VariablePointersStorageBuffer:
       return "VariablePointersStorageBuffer";
-    case SpvCapabilityVariablePointers:
+    case spv::Capability::VariablePointers:
       return "VariablePointers";
-    case SpvCapabilityAtomicStorageOps:
+    case spv::Capability::AtomicStorageOps:
       return "AtomicStorageOps";
-    case SpvCapabilitySampleMaskPostDepthCoverage:
+    case spv::Capability::SampleMaskPostDepthCoverage:
       return "SampleMaskPostDepthCoverage";
-    case SpvCapabilityStorageBuffer8BitAccess:
+    case spv::Capability::StorageBuffer8BitAccess:
       return "StorageBuffer8BitAccess";
-    case SpvCapabilityUniformAndStorageBuffer8BitAccess:
+    case spv::Capability::UniformAndStorageBuffer8BitAccess:
       return "UniformAndStorageBuffer8BitAccess";
-    case SpvCapabilityStoragePushConstant8:
+    case spv::Capability::StoragePushConstant8:
       return "StoragePushConstant8";
-    case SpvCapabilityDenormPreserve:
+    case spv::Capability::DenormPreserve:
       return "DenormPreserve";
-    case SpvCapabilityDenormFlushToZero:
+    case spv::Capability::DenormFlushToZero:
       return "DenormFlushToZero";
-    case SpvCapabilitySignedZeroInfNanPreserve:
+    case spv::Capability::SignedZeroInfNanPreserve:
       return "SignedZeroInfNanPreserve";
-    case SpvCapabilityRoundingModeRTE:
+    case spv::Capability::RoundingModeRTE:
       return "RoundingModeRTE";
-    case SpvCapabilityRoundingModeRTZ:
+    case spv::Capability::RoundingModeRTZ:
       return "RoundingModeRTZ";
-    case SpvCapabilityRayQueryProvisionalKHR:
+    case spv::Capability::RayQueryProvisionalKHR:
       return "RayQueryProvisionalKHR";
-    case SpvCapabilityRayQueryKHR:
+    case spv::Capability::RayQueryKHR:
       return "RayQueryKHR";
-    case SpvCapabilityRayTraversalPrimitiveCullingKHR:
+    case spv::Capability::RayTraversalPrimitiveCullingKHR:
       return "RayTraversalPrimitiveCullingKHR";
-    case SpvCapabilityRayTracingKHR:
+    case spv::Capability::RayTracingKHR:
       return "RayTracingKHR";
-    case SpvCapabilityFloat16ImageAMD:
+    case spv::Capability::TextureSampleWeightedQCOM:
+      return "TextureSampleWeightedQCOM";
+    case spv::Capability::TextureBoxFilterQCOM:
+      return "TextureBoxFilterQCOM";
+    case spv::Capability::TextureBlockMatchQCOM:
+      return "TextureBlockMatchQCOM";
+    case spv::Capability::Float16ImageAMD:
       return "Float16ImageAMD";
-    case SpvCapabilityImageGatherBiasLodAMD:
+    case spv::Capability::ImageGatherBiasLodAMD:
       return "ImageGatherBiasLodAMD";
-    case SpvCapabilityFragmentMaskAMD:
+    case spv::Capability::FragmentMaskAMD:
       return "FragmentMaskAMD";
-    case SpvCapabilityStencilExportEXT:
+    case spv::Capability::StencilExportEXT:
       return "StencilExportEXT";
-    case SpvCapabilityImageReadWriteLodAMD:
+    case spv::Capability::ImageReadWriteLodAMD:
       return "ImageReadWriteLodAMD";
-    case SpvCapabilityInt64ImageEXT:
+    case spv::Capability::Int64ImageEXT:
       return "Int64ImageEXT";
-    case SpvCapabilityShaderClockKHR:
+    case spv::Capability::ShaderClockKHR:
       return "ShaderClockKHR";
-    case SpvCapabilitySampleMaskOverrideCoverageNV:
+    case spv::Capability::ShaderEnqueueAMDX:
+      return "ShaderEnqueueAMDX";
+    case spv::Capability::SampleMaskOverrideCoverageNV:
       return "SampleMaskOverrideCoverageNV";
-    case SpvCapabilityGeometryShaderPassthroughNV:
+    case spv::Capability::GeometryShaderPassthroughNV:
       return "GeometryShaderPassthroughNV";
-    case SpvCapabilityShaderViewportIndexLayerEXT:
+    case spv::Capability::ShaderViewportIndexLayerEXT:
       return "ShaderViewportIndexLayerEXT";
-    case SpvCapabilityShaderViewportMaskNV:
+    case spv::Capability::ShaderViewportMaskNV:
       return "ShaderViewportMaskNV";
-    case SpvCapabilityShaderStereoViewNV:
+    case spv::Capability::ShaderStereoViewNV:
       return "ShaderStereoViewNV";
-    case SpvCapabilityPerViewAttributesNV:
+    case spv::Capability::PerViewAttributesNV:
       return "PerViewAttributesNV";
-    case SpvCapabilityFragmentFullyCoveredEXT:
+    case spv::Capability::FragmentFullyCoveredEXT:
       return "FragmentFullyCoveredEXT";
-    case SpvCapabilityMeshShadingNV:
+    case spv::Capability::MeshShadingNV:
       return "MeshShadingNV";
-    case SpvCapabilityImageFootprintNV:
+    case spv::Capability::ImageFootprintNV:
       return "ImageFootprintNV";
-    case SpvCapabilityMeshShadingEXT:
+    case spv::Capability::MeshShadingEXT:
       return "MeshShadingEXT";
-    case SpvCapabilityFragmentBarycentricKHR:
+    case spv::Capability::FragmentBarycentricKHR:
       return "FragmentBarycentricKHR";
-    case SpvCapabilityComputeDerivativeGroupQuadsNV:
+    case spv::Capability::ComputeDerivativeGroupQuadsNV:
       return "ComputeDerivativeGroupQuadsNV";
-    case SpvCapabilityFragmentDensityEXT:
+    case spv::Capability::FragmentDensityEXT:
       return "FragmentDensityEXT";
-    case SpvCapabilityGroupNonUniformPartitionedNV:
+    case spv::Capability::GroupNonUniformPartitionedNV:
       return "GroupNonUniformPartitionedNV";
-    case SpvCapabilityShaderNonUniform:
+    case spv::Capability::ShaderNonUniform:
       return "ShaderNonUniform";
-    case SpvCapabilityRuntimeDescriptorArray:
+    case spv::Capability::RuntimeDescriptorArray:
       return "RuntimeDescriptorArray";
-    case SpvCapabilityInputAttachmentArrayDynamicIndexing:
+    case spv::Capability::InputAttachmentArrayDynamicIndexing:
       return "InputAttachmentArrayDynamicIndexing";
-    case SpvCapabilityUniformTexelBufferArrayDynamicIndexing:
+    case spv::Capability::UniformTexelBufferArrayDynamicIndexing:
       return "UniformTexelBufferArrayDynamicIndexing";
-    case SpvCapabilityStorageTexelBufferArrayDynamicIndexing:
+    case spv::Capability::StorageTexelBufferArrayDynamicIndexing:
       return "StorageTexelBufferArrayDynamicIndexing";
-    case SpvCapabilityUniformBufferArrayNonUniformIndexing:
+    case spv::Capability::UniformBufferArrayNonUniformIndexing:
       return "UniformBufferArrayNonUniformIndexing";
-    case SpvCapabilitySampledImageArrayNonUniformIndexing:
+    case spv::Capability::SampledImageArrayNonUniformIndexing:
       return "SampledImageArrayNonUniformIndexing";
-    case SpvCapabilityStorageBufferArrayNonUniformIndexing:
+    case spv::Capability::StorageBufferArrayNonUniformIndexing:
       return "StorageBufferArrayNonUniformIndexing";
-    case SpvCapabilityStorageImageArrayNonUniformIndexing:
+    case spv::Capability::StorageImageArrayNonUniformIndexing:
       return "StorageImageArrayNonUniformIndexing";
-    case SpvCapabilityInputAttachmentArrayNonUniformIndexing:
+    case spv::Capability::InputAttachmentArrayNonUniformIndexing:
       return "InputAttachmentArrayNonUniformIndexing";
-    case SpvCapabilityUniformTexelBufferArrayNonUniformIndexing:
+    case spv::Capability::UniformTexelBufferArrayNonUniformIndexing:
       return "UniformTexelBufferArrayNonUniformIndexing";
-    case SpvCapabilityStorageTexelBufferArrayNonUniformIndexing:
+    case spv::Capability::StorageTexelBufferArrayNonUniformIndexing:
       return "StorageTexelBufferArrayNonUniformIndexing";
-    case SpvCapabilityRayTracingNV:
+    case spv::Capability::RayTracingPositionFetchKHR:
+      return "RayTracingPositionFetchKHR";
+    case spv::Capability::RayTracingNV:
       return "RayTracingNV";
-    case SpvCapabilityRayTracingMotionBlurNV:
+    case spv::Capability::RayTracingMotionBlurNV:
       return "RayTracingMotionBlurNV";
-    case SpvCapabilityVulkanMemoryModel:
+    case spv::Capability::VulkanMemoryModel:
       return "VulkanMemoryModel";
-    case SpvCapabilityVulkanMemoryModelDeviceScope:
+    case spv::Capability::VulkanMemoryModelDeviceScope:
       return "VulkanMemoryModelDeviceScope";
-    case SpvCapabilityPhysicalStorageBufferAddresses:
+    case spv::Capability::PhysicalStorageBufferAddresses:
       return "PhysicalStorageBufferAddresses";
-    case SpvCapabilityComputeDerivativeGroupLinearNV:
+    case spv::Capability::ComputeDerivativeGroupLinearNV:
       return "ComputeDerivativeGroupLinearNV";
-    case SpvCapabilityRayTracingProvisionalKHR:
+    case spv::Capability::RayTracingProvisionalKHR:
       return "RayTracingProvisionalKHR";
-    case SpvCapabilityCooperativeMatrixNV:
+    case spv::Capability::CooperativeMatrixNV:
       return "CooperativeMatrixNV";
-    case SpvCapabilityFragmentShaderSampleInterlockEXT:
+    case spv::Capability::FragmentShaderSampleInterlockEXT:
       return "FragmentShaderSampleInterlockEXT";
-    case SpvCapabilityFragmentShaderShadingRateInterlockEXT:
+    case spv::Capability::FragmentShaderShadingRateInterlockEXT:
       return "FragmentShaderShadingRateInterlockEXT";
-    case SpvCapabilityShaderSMBuiltinsNV:
+    case spv::Capability::ShaderSMBuiltinsNV:
       return "ShaderSMBuiltinsNV";
-    case SpvCapabilityFragmentShaderPixelInterlockEXT:
+    case spv::Capability::FragmentShaderPixelInterlockEXT:
       return "FragmentShaderPixelInterlockEXT";
-    case SpvCapabilityDemoteToHelperInvocation:
+    case spv::Capability::DemoteToHelperInvocation:
       return "DemoteToHelperInvocation";
-    case SpvCapabilityBindlessTextureNV:
+    case spv::Capability::DisplacementMicromapNV:
+      return "DisplacementMicromapNV";
+    case spv::Capability::RayTracingOpacityMicromapEXT:
+      return "RayTracingOpacityMicromapEXT";
+    case spv::Capability::ShaderInvocationReorderNV:
+      return "ShaderInvocationReorderNV";
+    case spv::Capability::BindlessTextureNV:
       return "BindlessTextureNV";
-    case SpvCapabilitySubgroupShuffleINTEL:
+    case spv::Capability::RayQueryPositionFetchKHR:
+      return "RayQueryPositionFetchKHR";
+    case spv::Capability::RayTracingDisplacementMicromapNV:
+      return "RayTracingDisplacementMicromapNV";
+    case spv::Capability::SubgroupShuffleINTEL:
       return "SubgroupShuffleINTEL";
-    case SpvCapabilitySubgroupBufferBlockIOINTEL:
+    case spv::Capability::SubgroupBufferBlockIOINTEL:
       return "SubgroupBufferBlockIOINTEL";
-    case SpvCapabilitySubgroupImageBlockIOINTEL:
+    case spv::Capability::SubgroupImageBlockIOINTEL:
       return "SubgroupImageBlockIOINTEL";
-    case SpvCapabilitySubgroupImageMediaBlockIOINTEL:
+    case spv::Capability::SubgroupImageMediaBlockIOINTEL:
       return "SubgroupImageMediaBlockIOINTEL";
-    case SpvCapabilityRoundToInfinityINTEL:
+    case spv::Capability::RoundToInfinityINTEL:
       return "RoundToInfinityINTEL";
-    case SpvCapabilityFloatingPointModeINTEL:
+    case spv::Capability::FloatingPointModeINTEL:
       return "FloatingPointModeINTEL";
-    case SpvCapabilityIntegerFunctions2INTEL:
+    case spv::Capability::IntegerFunctions2INTEL:
       return "IntegerFunctions2INTEL";
-    case SpvCapabilityFunctionPointersINTEL:
+    case spv::Capability::FunctionPointersINTEL:
       return "FunctionPointersINTEL";
-    case SpvCapabilityIndirectReferencesINTEL:
+    case spv::Capability::IndirectReferencesINTEL:
       return "IndirectReferencesINTEL";
-    case SpvCapabilityAsmINTEL:
+    case spv::Capability::AsmINTEL:
       return "AsmINTEL";
-    case SpvCapabilityAtomicFloat32MinMaxEXT:
+    case spv::Capability::AtomicFloat32MinMaxEXT:
       return "AtomicFloat32MinMaxEXT";
-    case SpvCapabilityAtomicFloat64MinMaxEXT:
+    case spv::Capability::AtomicFloat64MinMaxEXT:
       return "AtomicFloat64MinMaxEXT";
-    case SpvCapabilityAtomicFloat16MinMaxEXT:
+    case spv::Capability::AtomicFloat16MinMaxEXT:
       return "AtomicFloat16MinMaxEXT";
-    case SpvCapabilityVectorComputeINTEL:
+    case spv::Capability::VectorComputeINTEL:
       return "VectorComputeINTEL";
-    case SpvCapabilityVectorAnyINTEL:
+    case spv::Capability::VectorAnyINTEL:
       return "VectorAnyINTEL";
-    case SpvCapabilityExpectAssumeKHR:
+    case spv::Capability::ExpectAssumeKHR:
       return "ExpectAssumeKHR";
-    case SpvCapabilitySubgroupAvcMotionEstimationINTEL:
+    case spv::Capability::SubgroupAvcMotionEstimationINTEL:
       return "SubgroupAvcMotionEstimationINTEL";
-    case SpvCapabilitySubgroupAvcMotionEstimationIntraINTEL:
+    case spv::Capability::SubgroupAvcMotionEstimationIntraINTEL:
       return "SubgroupAvcMotionEstimationIntraINTEL";
-    case SpvCapabilitySubgroupAvcMotionEstimationChromaINTEL:
+    case spv::Capability::SubgroupAvcMotionEstimationChromaINTEL:
       return "SubgroupAvcMotionEstimationChromaINTEL";
-    case SpvCapabilityVariableLengthArrayINTEL:
+    case spv::Capability::VariableLengthArrayINTEL:
       return "VariableLengthArrayINTEL";
-    case SpvCapabilityFunctionFloatControlINTEL:
+    case spv::Capability::FunctionFloatControlINTEL:
       return "FunctionFloatControlINTEL";
-    case SpvCapabilityFPGAMemoryAttributesINTEL:
+    case spv::Capability::FPGAMemoryAttributesINTEL:
       return "FPGAMemoryAttributesINTEL";
-    case SpvCapabilityFPFastMathModeINTEL:
+    case spv::Capability::FPFastMathModeINTEL:
       return "FPFastMathModeINTEL";
-    case SpvCapabilityArbitraryPrecisionIntegersINTEL:
+    case spv::Capability::ArbitraryPrecisionIntegersINTEL:
       return "ArbitraryPrecisionIntegersINTEL";
-    case SpvCapabilityArbitraryPrecisionFloatingPointINTEL:
+    case spv::Capability::ArbitraryPrecisionFloatingPointINTEL:
       return "ArbitraryPrecisionFloatingPointINTEL";
-    case SpvCapabilityUnstructuredLoopControlsINTEL:
+    case spv::Capability::UnstructuredLoopControlsINTEL:
       return "UnstructuredLoopControlsINTEL";
-    case SpvCapabilityFPGALoopControlsINTEL:
+    case spv::Capability::FPGALoopControlsINTEL:
       return "FPGALoopControlsINTEL";
-    case SpvCapabilityKernelAttributesINTEL:
+    case spv::Capability::KernelAttributesINTEL:
       return "KernelAttributesINTEL";
-    case SpvCapabilityFPGAKernelAttributesINTEL:
+    case spv::Capability::FPGAKernelAttributesINTEL:
       return "FPGAKernelAttributesINTEL";
-    case SpvCapabilityFPGAMemoryAccessesINTEL:
+    case spv::Capability::FPGAMemoryAccessesINTEL:
       return "FPGAMemoryAccessesINTEL";
-    case SpvCapabilityFPGAClusterAttributesINTEL:
+    case spv::Capability::FPGAClusterAttributesINTEL:
       return "FPGAClusterAttributesINTEL";
-    case SpvCapabilityLoopFuseINTEL:
+    case spv::Capability::LoopFuseINTEL:
       return "LoopFuseINTEL";
-    case SpvCapabilityMemoryAccessAliasingINTEL:
+    case spv::Capability::FPGADSPControlINTEL:
+      return "FPGADSPControlINTEL";
+    case spv::Capability::MemoryAccessAliasingINTEL:
       return "MemoryAccessAliasingINTEL";
-    case SpvCapabilityFPGABufferLocationINTEL:
+    case spv::Capability::FPGAInvocationPipeliningAttributesINTEL:
+      return "FPGAInvocationPipeliningAttributesINTEL";
+    case spv::Capability::FPGABufferLocationINTEL:
       return "FPGABufferLocationINTEL";
-    case SpvCapabilityArbitraryPrecisionFixedPointINTEL:
+    case spv::Capability::ArbitraryPrecisionFixedPointINTEL:
       return "ArbitraryPrecisionFixedPointINTEL";
-    case SpvCapabilityUSMStorageClassesINTEL:
+    case spv::Capability::USMStorageClassesINTEL:
       return "USMStorageClassesINTEL";
-    case SpvCapabilityIOPipesINTEL:
+    case spv::Capability::RuntimeAlignedAttributeINTEL:
+      return "RuntimeAlignedAttributeINTEL";
+    case spv::Capability::IOPipesINTEL:
       return "IOPipesINTEL";
-    case SpvCapabilityBlockingPipesINTEL:
+    case spv::Capability::BlockingPipesINTEL:
       return "BlockingPipesINTEL";
-    case SpvCapabilityFPGARegINTEL:
+    case spv::Capability::FPGARegINTEL:
       return "FPGARegINTEL";
-    case SpvCapabilityDotProductInputAll:
+    case spv::Capability::DotProductInputAll:
       return "DotProductInputAll";
-    case SpvCapabilityDotProductInput4x8Bit:
+    case spv::Capability::DotProductInput4x8Bit:
       return "DotProductInput4x8Bit";
-    case SpvCapabilityDotProductInput4x8BitPacked:
+    case spv::Capability::DotProductInput4x8BitPacked:
       return "DotProductInput4x8BitPacked";
-    case SpvCapabilityDotProduct:
+    case spv::Capability::DotProduct:
       return "DotProduct";
-    case SpvCapabilityRayCullMaskKHR:
+    case spv::Capability::RayCullMaskKHR:
       return "RayCullMaskKHR";
-    case SpvCapabilityBitInstructions:
+    case spv::Capability::CooperativeMatrixKHR:
+      return "CooperativeMatrixKHR";
+    case spv::Capability::BitInstructions:
       return "BitInstructions";
-    case SpvCapabilityGroupNonUniformRotateKHR:
+    case spv::Capability::GroupNonUniformRotateKHR:
       return "GroupNonUniformRotateKHR";
-    case SpvCapabilityAtomicFloat32AddEXT:
+    case spv::Capability::AtomicFloat32AddEXT:
       return "AtomicFloat32AddEXT";
-    case SpvCapabilityAtomicFloat64AddEXT:
+    case spv::Capability::AtomicFloat64AddEXT:
       return "AtomicFloat64AddEXT";
-    case SpvCapabilityLongConstantCompositeINTEL:
-      return "LongConstantCompositeINTEL";
-    case SpvCapabilityOptNoneINTEL:
+    case spv::Capability::LongCompositesINTEL:
+      return "LongCompositesINTEL";
+    case spv::Capability::OptNoneINTEL:
       return "OptNoneINTEL";
-    case SpvCapabilityAtomicFloat16AddEXT:
+    case spv::Capability::AtomicFloat16AddEXT:
       return "AtomicFloat16AddEXT";
-    case SpvCapabilityDebugInfoModuleINTEL:
+    case spv::Capability::DebugInfoModuleINTEL:
       return "DebugInfoModuleINTEL";
-    case SpvCapabilitySplitBarrierINTEL:
+    case spv::Capability::BFloat16ConversionINTEL:
+      return "BFloat16ConversionINTEL";
+    case spv::Capability::SplitBarrierINTEL:
       return "SplitBarrierINTEL";
-    case SpvCapabilityGroupUniformArithmeticKHR:
+    case spv::Capability::FPGAClusterAttributesV2INTEL:
+      return "FPGAClusterAttributesV2INTEL";
+    case spv::Capability::FPGAKernelAttributesv2INTEL:
+      return "FPGAKernelAttributesv2INTEL";
+    case spv::Capability::FPMaxErrorINTEL:
+      return "FPMaxErrorINTEL";
+    case spv::Capability::FPGALatencyControlINTEL:
+      return "FPGALatencyControlINTEL";
+    case spv::Capability::FPGAArgumentInterfacesINTEL:
+      return "FPGAArgumentInterfacesINTEL";
+    case spv::Capability::GlobalVariableHostAccessINTEL:
+      return "GlobalVariableHostAccessINTEL";
+    case spv::Capability::GlobalVariableFPGADecorationsINTEL:
+      return "GlobalVariableFPGADecorationsINTEL";
+    case spv::Capability::GroupUniformArithmeticKHR:
       return "GroupUniformArithmeticKHR";
-    case SpvCapabilityMax:
-      assert(0 && "Attempting to convert SpvCapabilityMax to string");
+    case spv::Capability::CacheControlsINTEL:
+      return "CacheControlsINTEL";
+    case spv::Capability::Max:
+      assert(0 && "Attempting to convert spv::Capability::Max to string");
       return "";
   }
 
