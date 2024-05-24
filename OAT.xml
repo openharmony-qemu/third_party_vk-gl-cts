@@ -74,6 +74,8 @@ Note:If the text contains special characters, please escape them according to th
             </filefilter>
             <filefilter name="binaryFileTypePolicyFilter" desc="Filters for binary file policies">
                 <filteritem type="filename" name="*.bin|*.png|*.jpg|*.pkm|*.nspv|*.ttf|*.woff|*.woff2|*.jar|*.xcf|*.spv " desc="binary not used"/>
+                <filteritem type="filename" name="external/vulkancts/data/vulkan/video/.*.h265 " desc="filter binary files"/>
+                <filteritem type="filename" name="external/vulkancts/data/vulkan/video/.*.h264 " desc="filter binary files"/>
             </filefilter>
         </filefilterlist>
     </oatconfig>
