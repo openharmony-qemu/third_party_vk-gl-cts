@@ -556,7 +556,7 @@ void* RosenContextImpl::OH_createContext(void* dpy, void* config, void* share_co
 
 void* RosenContextImpl::OH_createImage(void* dpy, void* ctx, uint32_t target, void* buffer, const int *attrib_list)
 {
-    auto ret = eglCreateImage(dpy, ctx, target, buffer, attrib_list);
+    auto ret = eglCreateImage(dpy, ctx, target, buffer, reinterpret_cast<const EGLAttrib *>(attrib_list));
     // std::cout<<" ! createImage("<<"dpy="<<dpy<<", "<<"ctx="<<ctx<<", "<<"target="<<target<<", "<<"buffer="<<buffer<<", "<<"attrib_list="<<attrib_list<<")" << "=" << ret << std::endl;
     return ret;
 }
@@ -590,7 +590,7 @@ void* RosenContextImpl::OH_createPixmapSurface(void* dpy, void* config, void* pi
 
 void* RosenContextImpl::OH_createPlatformPixmapSurface(void* dpy, void* config, void *native_pixmap, const int *attrib_list)
 {
-    auto ret = eglCreatePlatformPixmapSurface(dpy, config, native_pixmap, attrib_list);
+    auto ret = eglCreatePlatformPixmapSurface(dpy, config, native_pixmap, reinterpret_cast<const EGLAttrib *>(attrib_list));
     // std::cout<<" ! createPlatformPixmapSurface("<<"dpy="<<dpy<<", "<<"config="<<config<<", "<<"native_pixmap="<<native_pixmap<<", "<<"attrib_list="<<attrib_list<<")" << "=" << ret << std::endl;
     return ret;
 }
@@ -603,7 +603,7 @@ void* RosenContextImpl::OH_createPlatformPixmapSurfaceEXT(void* dpy, void* confi
 
 void* RosenContextImpl::OH_createPlatformWindowSurface(void* dpy, void* config, void *native_window, const int *attrib_list)
 {
-    auto ret = eglCreatePlatformWindowSurface(dpy, config, native_window, attrib_list);
+    auto ret = eglCreatePlatformWindowSurface(dpy, config, native_window, reinterpret_cast<const EGLAttrib *>(attrib_list));
     // std::cout<<" ! createPlatformWindowSurface("<<"dpy="<<dpy<<", "<<"config="<<config<<", "<<"native_window="<<native_window<<", "<<"attrib_list="<<attrib_list<<")" << "=" << ret << std::endl;
     return ret;
 }
@@ -616,7 +616,7 @@ void* RosenContextImpl::OH_createPlatformWindowSurfaceEXT(void* dpy, void* confi
 
 void* RosenContextImpl::OH_createSync(void* dpy, uint32_t type, const int *attrib_list)
 {
-    auto ret = eglCreateSync(dpy, type, attrib_list);
+    auto ret = eglCreateSync(dpy, type, reinterpret_cast<const EGLAttrib *>(attrib_list));
     // std::cout<<" ! createSync("<<"dpy="<<dpy<<", "<<"type="<<type<<", "<<"attrib_list="<<attrib_list<<")" << "=" << ret << std::endl;
     return ret;
 }
@@ -761,7 +761,7 @@ int32_t RosenContextImpl::OH_getError()
 
 void* RosenContextImpl::OH_getPlatformDisplay(uint32_t platform, void *native_display, const int *attrib_list)
 {
-    auto ret = eglGetPlatformDisplay(platform, native_display, attrib_list);
+    auto ret = eglGetPlatformDisplay(platform, native_display, reinterpret_cast<const EGLAttrib *>(attrib_list));
     // std::cout<<" ! getPlatformDisplay("<<"platform="<<platform<<", "<<"native_display="<<native_display<<", "<<"attrib_list="<<attrib_list<<")" << "=" << ret << std::endl;
     return ret;
 }
@@ -781,7 +781,7 @@ FunctionPointer RosenContextImpl::OH_getProcAddress(const char *procname)
 
 uint32_t RosenContextImpl::OH_getSyncAttrib(void* dpy, void* sync, int32_t attribute, int *value)
 {
-    auto ret = eglGetSyncAttrib(dpy, sync, attribute, value);
+    auto ret = eglGetSyncAttrib(dpy, sync, attribute, reinterpret_cast<EGLAttrib *>(value));
     // std::cout<<" ! getSyncAttrib("<<"dpy="<<dpy<<", "<<"sync="<<sync<<", "<<"attribute="<<attribute<<", "<<"value="<<value<<")" << "=" << ret << std::endl;
     return ret;
 }

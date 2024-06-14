@@ -107,7 +107,7 @@ eglw::EGLContext OhosLibrary::createContext(eglw::EGLDisplay dpy, eglw::EGLConfi
 
 eglw::EGLImage OhosLibrary::createImage(eglw::EGLDisplay dpy, eglw::EGLContext ctx, eglw::EGLenum target, eglw::EGLClientBuffer buffer, const eglw::EGLAttrib *attrib_list) const
 {
-    return OHOS::OhosContextI::GetInstance().OH_createImage(dpy, ctx, target, buffer, attrib_list);
+    return OHOS::OhosContextI::GetInstance().OH_createImage(dpy, ctx, target, buffer, reinterpret_cast<const int *>(attrib_list));
 }
 
 eglw::EGLImageKHR OhosLibrary::createImageKHR(eglw::EGLDisplay dpy, eglw::EGLContext ctx, eglw::EGLenum target, eglw::EGLClientBuffer buffer, const eglw::EGLint *attrib_list) const
@@ -132,7 +132,7 @@ eglw::EGLSurface OhosLibrary::createPixmapSurface(eglw::EGLDisplay dpy, eglw::EG
 
 eglw::EGLSurface OhosLibrary::createPlatformPixmapSurface(eglw::EGLDisplay dpy, eglw::EGLConfig config, void *native_pixmap, const eglw::EGLAttrib *attrib_list) const
 {
-    return OHOS::OhosContextI::GetInstance().OH_createPlatformPixmapSurface(dpy, config, native_pixmap, attrib_list);
+    return OHOS::OhosContextI::GetInstance().OH_createPlatformPixmapSurface(dpy, config, native_pixmap, reinterpret_cast<const int *>(attrib_list));
 }
 
 eglw::EGLSurface OhosLibrary::createPlatformPixmapSurfaceEXT(eglw::EGLDisplay dpy, eglw::EGLConfig config, void *native_pixmap, const eglw::EGLint *attrib_list) const
@@ -142,7 +142,7 @@ eglw::EGLSurface OhosLibrary::createPlatformPixmapSurfaceEXT(eglw::EGLDisplay dp
 
 eglw::EGLSurface OhosLibrary::createPlatformWindowSurface(eglw::EGLDisplay dpy, eglw::EGLConfig config, void *native_window, const eglw::EGLAttrib *attrib_list) const
 {
-    return OHOS::OhosContextI::GetInstance().OH_createPlatformWindowSurface(dpy, config, native_window, attrib_list);
+    return OHOS::OhosContextI::GetInstance().OH_createPlatformWindowSurface(dpy, config, native_window, reinterpret_cast<const int *>(attrib_list));
 }
 
 eglw::EGLSurface OhosLibrary::createPlatformWindowSurfaceEXT(eglw::EGLDisplay dpy, eglw::EGLConfig config, void *native_window, const eglw::EGLint *attrib_list) const
@@ -152,7 +152,7 @@ eglw::EGLSurface OhosLibrary::createPlatformWindowSurfaceEXT(eglw::EGLDisplay dp
 
 eglw::EGLSync OhosLibrary::createSync(eglw::EGLDisplay dpy, eglw::EGLenum type, const eglw::EGLAttrib *attrib_list) const
 {
-    return OHOS::OhosContextI::GetInstance().OH_createSync(dpy, type, attrib_list);
+    return OHOS::OhosContextI::GetInstance().OH_createSync(dpy, type, reinterpret_cast<const int *>(attrib_list));
 }
 
 eglw::EGLSyncKHR OhosLibrary::createSyncKHR(eglw::EGLDisplay dpy, eglw::EGLenum type, const eglw::EGLint *attrib_list) const
@@ -232,7 +232,7 @@ eglw::EGLint OhosLibrary::getError() const
 
 eglw::EGLDisplay OhosLibrary::getPlatformDisplay(eglw::EGLenum platform, void *native_display, const eglw::EGLAttrib *attrib_list) const
 {
-    return OHOS::OhosContextI::GetInstance().OH_getPlatformDisplay(platform, native_display, attrib_list);
+    return OHOS::OhosContextI::GetInstance().OH_getPlatformDisplay(platform, native_display, reinterpret_cast<const int *>(attrib_list));
 }
 
 eglw::EGLDisplay OhosLibrary::getPlatformDisplayEXT(eglw::EGLenum platform, void *native_display, const eglw::EGLint *attrib_list) const
@@ -247,7 +247,7 @@ eglw::__eglMustCastToProperFunctionPointerType OhosLibrary::getProcAddress(const
 
 eglw::EGLBoolean OhosLibrary::getSyncAttrib(eglw::EGLDisplay dpy, eglw::EGLSync sync, eglw::EGLint attribute, eglw::EGLAttrib *value) const
 {
-    return OHOS::OhosContextI::GetInstance().OH_getSyncAttrib(dpy, sync, attribute, value);
+    return OHOS::OhosContextI::GetInstance().OH_getSyncAttrib(dpy, sync, attribute, reinterpret_cast<int *>(value));
 }
 
 eglw::EGLBoolean OhosLibrary::getSyncAttribKHR(eglw::EGLDisplay dpy, eglw::EGLSyncKHR sync, eglw::EGLint attribute, eglw::EGLint *value) const
