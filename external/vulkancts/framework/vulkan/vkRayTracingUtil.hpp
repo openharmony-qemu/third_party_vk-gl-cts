@@ -26,12 +26,16 @@
 #include "vkDefs.hpp"
 #include "vkRef.hpp"
 #include "vkMemUtil.hpp"
+#include "vkObjUtil.hpp"
 #include "vkBufferWithMemory.hpp"
+#include "vkBuilderUtil.hpp"
+#include "vkPrograms.hpp"
 
 #include "deFloat16.h"
 
 #include "tcuVector.hpp"
 #include "tcuVectorType.hpp"
+#include "qpWatchDog.h"
 
 #include <vector>
 #include <limits>
@@ -580,12 +584,14 @@ public:
 	virtual VkAccelerationStructureBuildTypeKHR			getBuildType							() const = 0;
 	virtual void										setCreateFlags							(const VkAccelerationStructureCreateFlagsKHR	createFlags) = DE_NULL;
 	virtual void										setCreateGeneric						(bool											createGeneric) = 0;
+	virtual void										setCreationBufferUnbounded				(bool											creationBufferUnbounded) = 0;
 	virtual void										setBuildFlags							(const VkBuildAccelerationStructureFlagsKHR		buildFlags) = DE_NULL;
 	virtual void										setBuildWithoutGeometries				(bool											buildWithoutGeometries) = 0;
 	virtual void										setBuildWithoutPrimitives				(bool											buildWithoutPrimitives) = 0;
 	virtual void										setDeferredOperation					(const bool										deferredOperation,
 																								 const deUint32									workerThreadCount		= 0u ) = DE_NULL;
 	virtual void										setUseArrayOfPointers					(const bool										useArrayOfPointers) = DE_NULL;
+	virtual void										setUseMaintenance5						(const bool										useMaintenance5) = DE_NULL;
 	virtual void										setIndirectBuildParameters				(const VkBuffer									indirectBuffer,
 																								 const VkDeviceSize								indirectBufferOffset,
 																								 const deUint32									indirectBufferStride) = DE_NULL;
@@ -599,10 +605,13 @@ public:
 																								 VkDeviceSize									structureSize,
 																								 VkDeviceAddress								deviceAddress			= 0u,
 																								 const void*									pNext					= DE_NULL,
-																								 const MemoryRequirement&						addMemoryRequirement	= MemoryRequirement::Any) = DE_NULL;
+																								 const MemoryRequirement&						addMemoryRequirement	= MemoryRequirement::Any,
+																								 const VkBuffer									creationBuffer			= VK_NULL_HANDLE,
+																								 const VkDeviceSize								creationBufferSize		= 0u) = DE_NULL;
 	virtual void										build									(const DeviceInterface&							vk,
 																								 const VkDevice									device,
-																								 const VkCommandBuffer							cmdBuffer) = DE_NULL;
+																								 const VkCommandBuffer							cmdBuffer,
+																								 BottomLevelAccelerationStructure*				srcAccelerationStructure = DE_NULL) = DE_NULL;
 	virtual void										copyFrom								(const DeviceInterface&							vk,
 																								 const VkDevice									device,
 																								 const VkCommandBuffer							cmdBuffer,
@@ -637,8 +646,10 @@ public:
 																								 Allocator&										allocator,
 																								 SerialStorage*									storage,
 																								 VkDeviceAddress								deviceAddress			= 0u);
-
 	virtual const VkAccelerationStructureKHR*			getPtr									(void) const = DE_NULL;
+	virtual void										updateGeometry							(size_t											geometryIndex,
+																								 de::SharedPtr<RaytracedGeometryBase>&			raytracedGeometry) = DE_NULL;
+
 protected:
 	std::vector<de::SharedPtr<RaytracedGeometryBase>>	m_geometriesData;
 	VkDeviceSize										m_structureSize;
@@ -698,7 +709,8 @@ public:
 	void		batchBuild			(const DeviceInterface&		vk,
 									 const VkDevice				device,
 									 VkCommandPool				cmdPool,
-									 VkQueue					queue);
+									 VkQueue					queue,
+									 qpWatchDog*				watchDog);
 	size_t		getAllocationCount	() const;
 	size_t		getAllocationCount	(const DeviceInterface&		vk,
 									 const VkDevice				device,
@@ -770,6 +782,7 @@ public:
 	virtual void													setBuildType						(const VkAccelerationStructureBuildTypeKHR			buildType) = DE_NULL;
 	virtual void													setCreateFlags						(const VkAccelerationStructureCreateFlagsKHR		createFlags) = DE_NULL;
 	virtual void													setCreateGeneric					(bool												createGeneric) = 0;
+	virtual void													setCreationBufferUnbounded			(bool												creationBufferUnbounded) = 0;
 	virtual void													setBuildFlags						(const VkBuildAccelerationStructureFlagsKHR			buildFlags) = DE_NULL;
 	virtual void													setBuildWithoutPrimitives			(bool												buildWithoutPrimitives) = 0;
 	virtual void													setInactiveInstances				(bool												inactiveInstances) = 0;
@@ -795,10 +808,13 @@ public:
 																										 VkDeviceSize								structureSize			= 0u,
 																										 VkDeviceAddress							deviceAddress			= 0u,
 																										 const void*								pNext					= DE_NULL,
-																										 const MemoryRequirement&					addMemoryRequirement	= MemoryRequirement::Any) = DE_NULL;
+																										 const MemoryRequirement&					addMemoryRequirement	= MemoryRequirement::Any,
+																										 const VkBuffer								creationBuffer			= VK_NULL_HANDLE,
+																										 const VkDeviceSize							creationBufferSize		= 0u) = DE_NULL;
 	virtual void													build								(const DeviceInterface&						vk,
 																										 const VkDevice								device,
-																										 const VkCommandBuffer						cmdBuffer) = DE_NULL;
+																										 const VkCommandBuffer						cmdBuffer,
+																										 TopLevelAccelerationStructure*				srcAccelerationStructure = DE_NULL) = DE_NULL;
 	virtual void													copyFrom							(const DeviceInterface&						vk,
 																										 const VkDevice								device,
 																										 const VkCommandBuffer						cmdBuffer,
@@ -906,12 +922,16 @@ public:
 																							 const VkPipelineShaderStageCreateFlags					pipelineShaderStageCreateFlags = static_cast<VkPipelineShaderStageCreateFlags>(0),
 																							 const void*											pipelineShaderStageCreateInfopNext = nullptr);
 	void														addShader					(VkShaderStageFlagBits									shaderStage,
-																							 VkShaderModule									        shaderModule,
+																							 VkShaderModule											shaderModule,
 																							 deUint32												group,
 																							 const VkSpecializationInfo*							specializationInfo = nullptr,
 																							 const VkPipelineShaderStageCreateFlags					pipelineShaderStageCreateFlags = static_cast<VkPipelineShaderStageCreateFlags>(0),
 																							 const void*											pipelineShaderStageCreateInfopNext = nullptr);
+	void														setGroupCaptureReplayHandle	(uint32_t												group,
+																							 const void*pShaderGroupCaptureReplayHandle);
 	void														addLibrary					(de::SharedPtr<de::MovePtr<RayTracingPipeline>>			pipelineLibrary);
+	uint32_t													getShaderGroupCount			(void); // This pipeline only.
+	uint32_t													getFullShaderGroupCount		(void); // This pipeline and its included pipeline libraries, recursively.
 	Move<VkPipeline>											createPipeline				(const DeviceInterface&									vk,
 																							 const VkDevice											device,
 																							 const VkPipelineLayout									pipelineLayout,
@@ -924,6 +944,18 @@ public:
 	std::vector<de::SharedPtr<Move<VkPipeline>>>				createPipelineWithLibraries	(const DeviceInterface&									vk,
 																							 const VkDevice											device,
 																							 const VkPipelineLayout									pipelineLayout);
+	std::vector<uint8_t>										getShaderGroupHandles		(const DeviceInterface&									vk,
+																							 const VkDevice											device,
+																							 const VkPipeline										pipeline,
+																							 const deUint32											shaderGroupHandleSize,
+																							 const deUint32											firstGroup,
+																							 const deUint32											groupCount) const;
+	std::vector<uint8_t>										getShaderGroupReplayHandles	(const DeviceInterface&									vk,
+																							 const VkDevice											device,
+																							 const VkPipeline										pipeline,
+																							 const deUint32											shaderGroupHandleReplaySize,
+																							 const deUint32											firstGroup,
+																							 const deUint32											groupCount) const;
 	de::MovePtr<BufferWithMemory>								createShaderBindingTable	(const DeviceInterface&									vk,
 																							 const VkDevice											device,
 																							 const VkPipeline										pipeline,
@@ -940,7 +972,22 @@ public:
 																							 const deUint32											shaderRecordSize			= 0u,
 																							 const void**											shaderGroupDataPtrPerGroup	= nullptr,
 																							 const bool												autoAlignRecords			= true);
+	de::MovePtr<BufferWithMemory>								createShaderBindingTable	(const DeviceInterface&									vk,
+																							 const VkDevice											device,
+																							 Allocator&												allocator,
+																							 const deUint32											shaderGroupHandleSize,
+																							 const deUint32											shaderGroupBaseAlignment,
+																							 const std::vector<uint8_t>&							shaderHandles,
+																							 const VkBufferCreateFlags								additionalBufferCreateFlags	= VkBufferCreateFlags(0u),
+																							 const VkBufferUsageFlags								additionalBufferUsageFlags	= VkBufferUsageFlags(0u),
+																							 const MemoryRequirement&								additionalMemoryRequirement	= MemoryRequirement::Any,
+																							 const VkDeviceAddress									opaqueCaptureAddress		= 0u,
+																							 const deUint32											shaderBindingTableOffset	= 0u,
+																							 const deUint32											shaderRecordSize			= 0u,
+																							 const void**											shaderGroupDataPtrPerGroup	= nullptr,
+																							 const bool												autoAlignRecords			= true);
 	void														setCreateFlags				(const VkPipelineCreateFlags&							pipelineCreateFlags);
+	void														setCreateFlags2				(const VkPipelineCreateFlags2KHR&						pipelineCreateFlags2);
 	void														setMaxRecursionDepth		(const deUint32&										maxRecursionDepth);
 	void														setMaxPayloadSize			(const deUint32&										maxPayloadSize);
 	void														setMaxAttributeSize			(const deUint32&										maxAttributeSize);
@@ -961,6 +1008,7 @@ protected:
 	std::vector<VkPipelineShaderStageCreateInfo>				m_shaderCreateInfos;
 	std::vector<VkRayTracingShaderGroupCreateInfoKHR>			m_shadersGroupCreateInfos;
 	VkPipelineCreateFlags										m_pipelineCreateFlags;
+	VkPipelineCreateFlags2KHR									m_pipelineCreateFlags2;
 	deUint32													m_maxRecursionDepth;
 	deUint32													m_maxPayloadSize;
 	deUint32													m_maxAttributeSize;
@@ -981,6 +1029,7 @@ public:
 
 	virtual uint32_t				getShaderGroupHandleSize					(void)	= 0;
 	virtual uint32_t				getShaderGroupHandleAlignment				(void)	= 0;
+	virtual uint32_t				getShaderGroupHandleCaptureReplaySize		(void)	= 0;
 	virtual uint32_t				getMaxRecursionDepth						(void)	= 0;
 	virtual uint32_t				getMaxShaderGroupStride						(void)	= 0;
 	virtual uint32_t				getShaderGroupBaseAlignment					(void)	= 0;
