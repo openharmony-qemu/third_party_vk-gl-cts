@@ -91,7 +91,8 @@ ohos_source_set("amberenginevulkan_source") {
     "//third_party/vk-gl-cts/external/amber/src",
     "//third_party/vk-gl-cts/build",
     "//third_party/vk-gl-cts/build/include",
-    "//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
+    #"//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
+    "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkan",
   ]
 
   # deps = []
