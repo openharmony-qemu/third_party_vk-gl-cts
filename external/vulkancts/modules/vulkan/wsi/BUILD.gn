@@ -41,6 +41,8 @@ ohos_source_set("deqp_vk_wsi_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/wsi/vktWsiFullScreenExclusiveTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/wsi/vktWsiIncrementalPresentTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/wsi/vktWsiIncrementalPresentTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/wsi/vktWsiMaintenance1Tests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/wsi/vktWsiMaintenance1Tests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/wsi/vktWsiPresentIdWaitTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/wsi/vktWsiPresentIdWaitTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/wsi/vktWsiSharedPresentableImageTests.cpp",

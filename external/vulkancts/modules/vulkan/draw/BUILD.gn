@@ -70,6 +70,8 @@ ohos_source_set("deqp_vk_draw_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/draw/vktDrawNegativeViewportHeightTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/draw/vktDrawOutputLocationTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/draw/vktDrawOutputLocationTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/draw/vktDrawSampleAttributeTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/draw/vktDrawSampleAttributeTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/draw/vktDrawScissorTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/draw/vktDrawScissorTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/draw/vktDrawShaderDrawParametersTests.cpp",

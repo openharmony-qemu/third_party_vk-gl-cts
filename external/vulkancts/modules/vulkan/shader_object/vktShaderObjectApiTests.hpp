@@ -1,8 +1,11 @@
+#ifndef _VKTSHADEROBJECTAPITESTS_HPP
+#define _VKTSHADEROBJECTAPITESTS_HPP
 /*------------------------------------------------------------------------
  * Vulkan Conformance Tests
  * ------------------------
  *
- * Copyright (c) 2021 The Khronos Group Inc.
+ * Copyright (c) 2023 LunarG, Inc.
+ * Copyright (c) 2023 Nintendo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,60 +21,18 @@
  *
  *//*!
  * \file
- * \brief Video Encoding and Decoding Utility Functions
+ * \brief Shader Object API Tests
  *//*--------------------------------------------------------------------*/
 
-#include "vktVideoPictureUtils.hpp"
-#include "deMemory.h"
-
-using namespace vk;
-using namespace std;
+#include "tcuDefs.hpp"
+#include "tcuTestCase.hpp"
 
 namespace vkt
 {
-namespace video
+namespace ShaderObject
 {
-VulkanPicture::VulkanPicture()
-	: m_refCount ()
-{
-	Clear();
-}
-
-VulkanPicture::~VulkanPicture ()
-{
-}
-
-void VulkanPicture::AddRef ()
-{
-	m_refCount++;
-}
-
-void VulkanPicture::Release ()
-{
-	int32_t ref = --m_refCount;
-
-	if (ref == 0)
-		Reset();
-	else
-		DE_ASSERT(ref > 0);
-}
-
-void VulkanPicture::Clear ()
-{
-	DE_ASSERT(m_refCount == 0);
-
-	decodeWidth = 0;
-	decodeHeight = 0;
-	decodeSuperResWidth = 0;
-	deMemset(&reserved, 0, sizeof(reserved));
-}
-
-void VulkanPicture::Reset()
-{
-	DE_ASSERT(m_refCount == 0);
-
-	delete this;
-}
-
-} // video
+tcu::TestCaseGroup* createShaderObjectApiTests (tcu::TestContext& testCtx);
+} // ShaderObject
 } // vkt
+
+#endif // _VKTSHADEROBJECTAPITESTS_HPP

@@ -46,6 +46,8 @@ ohos_source_set("deqp_vk_ray_tracing_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingPipelineFlagsTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingPipelineFlagsTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingPipelineLibraryTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingPositionFetchTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingPositionFetchTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingProceduralGeometryTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingShaderBindingTableTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_tracing/vktRayTracingTests.cpp",

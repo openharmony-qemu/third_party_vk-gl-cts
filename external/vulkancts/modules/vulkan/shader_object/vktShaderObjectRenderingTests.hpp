@@ -1,10 +1,11 @@
-#ifndef _VKTVIDEOPICTUREUTILS_HPP
-#define _VKTVIDEOPICTUREUTILS_HPP
+#ifndef _VKTSHADEROBJECTRENDERINGTESTS_HPP
+#define _VKTSHADEROBJECTRENDERINGTESTS_HPP
 /*------------------------------------------------------------------------
  * Vulkan Conformance Tests
  * ------------------------
  *
- * Copyright (c) 2021 The Khronos Group Inc.
+ * Copyright (c) 2023 LunarG, Inc.
+ * Copyright (c) 2023 Nintendo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,35 +21,18 @@
  *
  *//*!
  * \file
- * \brief Video Encoding and Decoding Picture Utility Functions
+ * \brief Shader Object Link Tests
  *//*--------------------------------------------------------------------*/
 
-#include "vkDefs.hpp"
-#include "extNvidiaVideoParserIf.hpp"
+#include "tcuDefs.hpp"
+#include "tcuTestCase.hpp"
 
 namespace vkt
 {
-namespace video
+namespace ShaderObject
 {
-
-class VulkanPicture: public INvidiaVulkanPicture
-{
-public:
-							VulkanPicture	();
-							~VulkanPicture	();
-
-	virtual void			AddRef			() override;
-	virtual void			Release			() override;
-	void					Reset			();
-
-protected:
-	void					Clear			();
-
-	std::atomic<int32_t>	m_refCount;
-};
-
-
-} // video
+tcu::TestCaseGroup* createShaderObjectRenderingTests (tcu::TestContext& testCtx);
+} // ShaderObject
 } // vkt
 
-#endif // _VKTVIDEOPICTUREUTILS_HPP
+#endif // _VKTSHADEROBJECTRENDERINGTESTS_HPP

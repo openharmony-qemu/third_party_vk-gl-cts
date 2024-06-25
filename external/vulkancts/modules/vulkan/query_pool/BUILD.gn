@@ -27,6 +27,8 @@ ohos_source_set("deqp_vk_query_pool_source") {
   sources = [
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/query_pool/vktQueryPoolConcurrentTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/query_pool/vktQueryPoolConcurrentTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/query_pool/vktQueryPoolFragInvocationTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/query_pool/vktQueryPoolFragInvocationTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/query_pool/vktQueryPoolOcclusionTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/query_pool/vktQueryPoolOcclusionTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/query_pool/vktQueryPoolPerformanceTests.cpp",

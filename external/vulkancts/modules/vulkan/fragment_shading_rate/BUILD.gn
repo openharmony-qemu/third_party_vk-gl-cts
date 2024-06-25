@@ -27,6 +27,7 @@ ohos_source_set("deqp_vk_fragment_shading_rate_source") {
   sources = [
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_shading_rate/vktAttachmentRateTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_shading_rate/vktFragmentShadingRateBasic.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_shading_rate/vktFragmentShadingRateMiscTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_shading_rate/vktFragmentShadingRatePixelConsistency.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_shading_rate/vktFragmentShadingRateTests.cpp",
   ]

@@ -131,6 +131,9 @@ tcu::TestStatus EnumerateAndValidateTest::iterate (void)
 
 		{
 			std::vector<VkPerformanceCounterKHR>	counters			(counterCount);
+			for (deUint32 i = 0; i < counterCount; ++i)
+				counters[i] = vk::initVulkanStructure();
+
 			deUint32								counterCountRead	= counterCount;
 			std::map<std::string, size_t>			uuidValidator;
 
@@ -171,6 +174,8 @@ tcu::TestStatus EnumerateAndValidateTest::iterate (void)
 		}
 		{
 			std::vector<VkPerformanceCounterDescriptionKHR>	counterDescriptors	(counterCount);
+			for (deUint32 i = 0; i < counterCount; ++i)
+				counterDescriptors[i] = vk::initVulkanStructure();
 			deUint32										counterCountRead	= counterCount;
 
 			VK_CHECK(vki.enumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR(physicalDevice, queueNdx, &counterCountRead, DE_NULL, &counterDescriptors[0]));
@@ -240,7 +245,7 @@ void QueryTestBase::setupCounters()
 		TCU_THROW(NotSupportedError, "QualityWarning: there are no performance counters");
 
 	// get supported counters
-	m_counters.resize(counterCount);
+	m_counters.resize(counterCount, vk::initVulkanStructure());
 	VK_CHECK(vki.enumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR(physicalDevice, queueFamilyIndex, &counterCount, &m_counters[0], DE_NULL));
 }
 
@@ -1187,7 +1192,7 @@ class QueryPoolPerformanceTest : public TestCase
 {
 public:
 	QueryPoolPerformanceTest (tcu::TestContext &context, TestType testType, VkQueueFlagBits queueFlagBits, const char *name)
-		: TestCase			(context, name, "")
+		: TestCase			(context, name)
 		, m_testType		(testType)
 		, m_queueFlagBits	(queueFlagBits)
 	{
@@ -1259,7 +1264,7 @@ private:
 } //anonymous
 
 QueryPoolPerformanceTests::QueryPoolPerformanceTests (tcu::TestContext &testCtx)
-	: TestCaseGroup(testCtx, "performance_query", "Tests for performance queries")
+	: TestCaseGroup(testCtx, "performance_query")
 {
 }
 
