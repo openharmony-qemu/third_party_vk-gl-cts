@@ -69,6 +69,7 @@ ohos_source_set("deqp_vkutilnoshader_source") {
   include_dirs = deqp_common_include_dirs
   include_dirs += [
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
+
     #"//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkan",
     "//third_party/glslang",
@@ -150,6 +151,7 @@ ohos_source_set("deqp_vkutil_source") {
   include_dirs = deqp_common_include_dirs
   include_dirs += [
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
+
     #"//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkan",
     "//third_party/glslang",

@@ -36,6 +36,7 @@ ohos_source_set("tcutil-platform_source") {
     "//third_party/amber",
     "//third_party/renderdoc/src",
     "//third_party/vulkancts/framework/vulkan",
+
     #"//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkan",
     "//third_party/glslang/glslang",
@@ -119,6 +120,7 @@ ohos_shared_library("libdeqp_ohos_platform") {
     "ohos/rosen_context",
 
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
+
     #"//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkan",
   ]
@@ -216,6 +218,7 @@ ohos_executable("glcts") {
     "ohos/rosen_context",
 
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
+
     #"//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkan",
   ]

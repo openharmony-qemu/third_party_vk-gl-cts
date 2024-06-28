@@ -32,7 +32,7 @@ ohos_source_set("deqp_vk_video_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/video/vktVideoBaseDecodeUtils.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/video/vktVideoCapabilitiesTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/video/vktVideoCapabilitiesTests.hpp",
-        "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/video/vktVideoClipInfo.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/video/vktVideoClipInfo.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/video/vktVideoClipInfo.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/video/vktVideoDecodeTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/video/vktVideoDecodeTests.hpp",

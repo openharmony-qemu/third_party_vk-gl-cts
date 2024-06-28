@@ -49,6 +49,7 @@ ohos_source_set("glcts-runner_source") {
     "//third_party/vk-gl-cts/modules/gles2",
     "//third_party/vk-gl-cts/modules/gles3",
     "//third_party/vk-gl-cts/modules/gles31",
+
     #"//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkan",
   ]
