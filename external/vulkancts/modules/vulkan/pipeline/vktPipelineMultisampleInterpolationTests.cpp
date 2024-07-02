@@ -3,6 +3,8 @@
 * ------------------------
 *
 * Copyright (c) 2016 The Khronos Group Inc.
+* Copyright (c) 2023 LunarG, Inc.
+* Copyright (c) 2023 Nintendo
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -245,7 +247,7 @@ template<> void MSCase<MSCaseSampleQualifierDistinctValues>::initPrograms (vk::S
 
 template<> void MSCase<MSCaseSampleQualifierDistinctValues>::checkSupport (Context& context) const
 {
-	checkPipelineLibraryRequirements(context.getInstanceInterface(), context.getPhysicalDevice(), m_imageMSParams.pipelineConstructionType);
+	checkPipelineConstructionRequirements(context.getInstanceInterface(), context.getPhysicalDevice(), m_imageMSParams.pipelineConstructionType);
 
 	context.requireDeviceCoreFeature(DEVICE_CORE_FEATURE_SAMPLE_RATE_SHADING);
 }
@@ -1010,7 +1012,7 @@ template<> void MSCase<MSCaseCentroidQualifierInsidePrimitive>::initPrograms (vk
 
 template<> void MSCase<MSCaseCentroidQualifierInsidePrimitive>::checkSupport (Context& context) const
 {
-	checkPipelineLibraryRequirements(context.getInstanceInterface(), context.getPhysicalDevice(), m_imageMSParams.pipelineConstructionType);
+	checkPipelineConstructionRequirements(context.getInstanceInterface(), context.getPhysicalDevice(), m_imageMSParams.pipelineConstructionType);
 }
 
 template<> TestInstance* MSCase<MSCaseCentroidQualifierInsidePrimitive>::createInstance (Context& context) const
@@ -1022,7 +1024,7 @@ template<> TestInstance* MSCase<MSCaseCentroidQualifierInsidePrimitive>::createI
 
 tcu::TestCaseGroup* createMultisampleInterpolationTests (tcu::TestContext& testCtx, vk::PipelineConstructionType pipelineConstructionType)
 {
-	de::MovePtr<tcu::TestCaseGroup> testGroup(new tcu::TestCaseGroup(testCtx, "multisample_interpolation", "Multisample Interpolation"));
+	de::MovePtr<tcu::TestCaseGroup> testGroup(new tcu::TestCaseGroup(testCtx, "multisample_interpolation"));
 
 	const tcu::UVec3 imageSizes[] =
 	{
@@ -1044,7 +1046,7 @@ tcu::TestCaseGroup* createMultisampleInterpolationTests (tcu::TestContext& testC
 
 	const deUint32 samplesElemCount = static_cast<deUint32>(sizeof(imageSamples) / sizeof(vk::VkSampleCountFlagBits));
 
-	de::MovePtr<tcu::TestCaseGroup> caseGroup(new tcu::TestCaseGroup(testCtx, "sample_interpolate_at_single_sample", ""));
+	de::MovePtr<tcu::TestCaseGroup> caseGroup(new tcu::TestCaseGroup(testCtx, "sample_interpolate_at_single_sample"));
 
 	for (deUint32 imageSizeNdx = 0u; imageSizeNdx < sizesElemCount; ++imageSizeNdx)
 	{
@@ -1053,14 +1055,15 @@ tcu::TestCaseGroup* createMultisampleInterpolationTests (tcu::TestContext& testC
 
 		imageSizeStream << imageSize.x() << "_" << imageSize.y() << "_" << imageSize.z();
 
-		de::MovePtr<tcu::TestCaseGroup> sizeGroup(new tcu::TestCaseGroup(testCtx, imageSizeStream.str().c_str(), ""));
+		de::MovePtr<tcu::TestCaseGroup> sizeGroup(new tcu::TestCaseGroup(testCtx, imageSizeStream.str().c_str()));
 
 		multisample::ImageMSParams imageParams
 		{
 			pipelineConstructionType,
 			vk::VK_SAMPLE_COUNT_1_BIT,
 			imageSize,
-			multisample::ComponentData{}
+			multisample::ComponentData{},
+			1.0f,
 		};
 		sizeGroup->addChild(multisample::MSCase<multisample::MSCaseInterpolateAtSampleSingleSample>::createCase(testCtx, "samples_" + de::toString(1), imageParams));
 
@@ -1072,7 +1075,8 @@ tcu::TestCaseGroup* createMultisampleInterpolationTests (tcu::TestContext& testC
 	testGroup->addChild(makeMSGroup<multisample::MSCase<multisample::MSCaseInterpolateAtSampleDistinctValues> >	(testCtx, "sample_interpolate_at_distinct_values", pipelineConstructionType, imageSizes, sizesElemCount, imageSamples, samplesElemCount));
 	testGroup->addChild(makeMSGroup<multisample::MSCase<multisample::MSCaseInterpolateAtSampleIgnoresCentroid> >(testCtx, "sample_interpolate_at_ignores_centroid", pipelineConstructionType, imageSizes, sizesElemCount, imageSamples, samplesElemCount));
 
-	de::MovePtr<tcu::TestCaseGroup> sampleGroup(new tcu::TestCaseGroup(testCtx, "sample_interpolation_consistency", "Test consistency in sample interpolation function"));
+	// Test consistency in sample interpolation function
+	de::MovePtr<tcu::TestCaseGroup> sampleGroup(new tcu::TestCaseGroup(testCtx, "sample_interpolation_consistency"));
 	sampleGroup->addChild(makeMSGroup<multisample::MSCase<multisample::MSCaseInterpolateAtSampleConsistency> >	(testCtx, "all_components",		pipelineConstructionType, imageSizes, sizesElemCount, imageSamples, samplesElemCount));
 	sampleGroup->addChild(makeMSGroup<multisample::MSCase<multisample::MSCaseInterpolateAtSampleConsistency> >	(testCtx, "component_0",		pipelineConstructionType, imageSizes, sizesElemCount, imageSamples, samplesElemCount, multisample::ComponentData{multisample::ComponentSource::CONSTANT, 0u}));
 	sampleGroup->addChild(makeMSGroup<multisample::MSCase<multisample::MSCaseInterpolateAtSampleConsistency> >	(testCtx, "component_1",		pipelineConstructionType, imageSizes, sizesElemCount, imageSamples, samplesElemCount, multisample::ComponentData{multisample::ComponentSource::CONSTANT, 1u}));
@@ -1104,9 +1108,9 @@ tcu::TestCaseGroup* createMultisampleInterpolationTests (tcu::TestContext& testC
 		de::MovePtr<tcu::TestCaseGroup> nonuniformInterpolantIndexingGroup(new tcu::TestCaseGroup(testCtx, "nonuniform_interpolant_indexing", "Test nonuniform interpolant indexing"));
 		std::vector<std::string> requirementsNonuniformIntepolantIndexing;
 		requirementsNonuniformIntepolantIndexing.push_back("Features.sampleRateShading");
-		nonuniformInterpolantIndexingGroup->addChild(cts_amber::createAmberTestCase(testCtx, "centroid", "", "pipeline/nonuniform_interpolant_indexing", "centroid.amber", requirementsNonuniformIntepolantIndexing));
-		nonuniformInterpolantIndexingGroup->addChild(cts_amber::createAmberTestCase(testCtx, "sample", "", "pipeline/nonuniform_interpolant_indexing", "sample.amber", requirementsNonuniformIntepolantIndexing));
-		nonuniformInterpolantIndexingGroup->addChild(cts_amber::createAmberTestCase(testCtx, "offset", "", "pipeline/nonuniform_interpolant_indexing", "offset.amber", requirementsNonuniformIntepolantIndexing));
+		nonuniformInterpolantIndexingGroup->addChild(cts_amber::createAmberTestCase(testCtx, "centroid",  "pipeline/nonuniform_interpolant_indexing", "centroid.amber", requirementsNonuniformIntepolantIndexing));
+		nonuniformInterpolantIndexingGroup->addChild(cts_amber::createAmberTestCase(testCtx, "sample",  "pipeline/nonuniform_interpolant_indexing", "sample.amber", requirementsNonuniformIntepolantIndexing));
+		nonuniformInterpolantIndexingGroup->addChild(cts_amber::createAmberTestCase(testCtx, "offset",  "pipeline/nonuniform_interpolant_indexing", "offset.amber", requirementsNonuniformIntepolantIndexing));
 		testGroup->addChild(nonuniformInterpolantIndexingGroup.release());
 	}
 

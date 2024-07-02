@@ -29,6 +29,8 @@ ohos_source_set("deqp_vk_renderpass_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktDynamicRenderingRandomTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktDynamicRenderingTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktDynamicRenderingTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktDynamicRenderingUnusedAttachmentsTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktDynamicRenderingUnusedAttachmentsTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassDepthStencilResolveTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassDepthStencilResolveTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/renderpass/vktRenderPassDepthStencilWriteConditionsTests.cpp",

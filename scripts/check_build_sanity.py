@@ -192,7 +192,7 @@ EARLY_SPECIAL_RECIPES	= [
 			RunScript(os.path.join("external", "vulkancts", "scripts", "gen_framework_c.py")),
 			RunScript(os.path.join("external", "vulkancts", "scripts", "gen_framework.py"), lambda env: ["--api", "SC"] ),
 			RunScript(os.path.join("external", "vulkancts", "scripts", "gen_framework_c.py"), lambda env: ["--api", "SC"] ),
-			RunScript(os.path.join("scripts", "gen_android_mk.py"))
+			RunScript(os.path.join("scripts", "gen_android_bp.py"))
 		]),
 ]
 
@@ -271,6 +271,10 @@ def parseArgs ():
 						dest="skipPrerequisites",
 						action="store_true",
 						help="Skip external dependency fetch")
+	parser.add_argument("--skip-post-checks",
+						dest="skipPostCheck",
+						action="store_true",
+						help="Skip post recipe checks")
 
 	return parser.parse_args()
 
@@ -290,7 +294,7 @@ if __name__ == "__main__":
 
 		print("Running %s" % name)
 
-		allSteps = (PREREQUISITES if (args.skipPrerequisites == False) else []) + steps + POST_CHECKS
+		allSteps = (PREREQUISITES if (args.skipPrerequisites == False) else []) + steps + (POST_CHECKS if (args.skipPostCheck == False) else [])
 		runSteps(allSteps)
 
 		print("All steps completed successfully")

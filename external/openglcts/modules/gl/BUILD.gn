@@ -112,7 +112,9 @@ ohos_source_set("glcts-gl_source") {
     "//third_party/vk-gl-cts/external/openglcts/modules/glesext",
     "//third_party/vk-gl-cts/external/openglcts/modules",
     "//third_party/vk-gl-cts/modules/glshared",
-    "//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
+
+    #"//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
+    "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkan",
     "//third_party/glslang/glslang",
     "//third_party/vk-gl-cts/build/include",
     "//third_party/glslang/SPIRV",

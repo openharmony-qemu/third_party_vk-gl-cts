@@ -30,12 +30,16 @@ import argparse
 import subprocess
 import ssl
 import stat
+import platform
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "scripts"))
+scriptPath = os.path.join(os.path.dirname(__file__), "..", "scripts")
+sys.path.insert(0, scriptPath)
 
 from ctsbuild.common import *
 
 EXTERNAL_DIR	= os.path.realpath(os.path.normpath(os.path.dirname(__file__)))
+
+SYSTEM_NAME		= platform.system()
 
 def computeChecksum (data):
 	return hashlib.sha256(data).hexdigest()
@@ -66,22 +70,19 @@ class SourcePackage (Source):
 		self.checksum		= checksum
 		self.archiveDir		= "packages"
 		self.postExtract	= postExtract
-		self.sysNdx			= {"Windows":0, "Linux":1, "Darwin":2}[platform.system()]
-		self.FFmpeg			= "FFmpeg" in url
 
 	def clean (self):
 		Source.clean(self)
 		self.removeArchives()
 
 	def update (self, cmdProtocol = None, force = False):
-		if self.sysNdx != 2:
-			if not self.isArchiveUpToDate():
-				self.fetchAndVerifyArchive()
+		if not self.isArchiveUpToDate():
+			self.fetchAndVerifyArchive()
 
-			if self.getExtractedChecksum() != self.checksum:
-				Source.clean(self)
-				self.extract()
-				self.storeExtractedChecksum(self.checksum)
+		if self.getExtractedChecksum() != self.checksum:
+			Source.clean(self)
+			self.extract()
+			self.storeExtractedChecksum(self.checksum)
 
 	def removeArchives (self):
 		archiveDir = os.path.join(EXTERNAL_DIR, pkg.baseDir, pkg.archiveDir)
@@ -139,7 +140,7 @@ class SourcePackage (Source):
 			raise Exception("Checksum mismatch for %s, expected %s, got %s" % (self.filename, self.checksum, checksum))
 
 		if not os.path.exists(os.path.dirname(dstPath)):
-			os.mkdir(os.path.dirname(dstPath))
+			os.makedirs(os.path.dirname(dstPath))
 
 		writeBinaryFile(dstPath, data)
 
@@ -288,60 +289,64 @@ def postExtractLibpng (path):
 				os.path.join(path, "pnglibconf.h"))
 
 PACKAGES = [
-	#SourcePackage(
-	#	"http://zlib.net/fossils/zlib-1.2.13.tar.gz",
-	#	"b3a24de97a8fdbc835b9833169501030b8977031bcb54b3b3ac13740f846ab30",
-	#	"zlib"),
-	#SourcePackage(
-	#	"http://prdownloads.sourceforge.net/libpng/libpng-1.6.27.tar.gz",
-	#	"c9d164ec247f426a525a7b89936694aefbc91fb7a50182b198898b8fc91174b4",
-	#	"libpng",
-	#	postExtract = postExtractLibpng),
 	SourcePackage(
-        {"Windows":"https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2022-05-31-12-34/ffmpeg-n4.4.2-1-g8e98dfc57f-win64-lgpl-shared-4.4.zip", "Linux": "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2022-05-31-12-34/ffmpeg-n4.4.2-1-g8e98dfc57f-linux64-gpl-shared-4.4.tar.xz", "Darwin":""}[platform.system()],
-        {"Windows":"670df8e9d2ddd5e761459b3538f64b8826566270ef1ed13bcbfc63e73aab3fd9","Linux":"817f8c93ff1ef7ede3dad15b20415d5e366bcd6848844d55046111fd3de827d0", "Darwin":""}[platform.system()],
-		"ffmpeg"),
-	#SourceFile(
-	#	"https://raw.githubusercontent.com/baldurk/renderdoc/v1.1/renderdoc/api/app/renderdoc_app.h",
-	#	"renderdoc_app.h",
-	#	"e7b5f0aa5b1b0eadc63a1c624c0ca7f5af133aa857d6a4271b0ef3d0bdb6868e",
-	#	"renderdoc"),
-	#GitRepo(
-	#	"https://github.com/KhronosGroup/SPIRV-Tools.git",
-	#	"git@github.com:KhronosGroup/SPIRV-Tools.git",
-	#	"f98473ceeb1d33700d01e20910433583e5256030",
-	#	"spirv-tools"),
-	#GitRepo(
-	#	"https://github.com/KhronosGroup/glslang.git",
-	#	"git@github.com:KhronosGroup/glslang.git",
-	#	"a0ad0d7067521fff880e36acfb8ce453421c3f25",
-	#	"glslang",
-	#	removeTags = ["master-tot"]),
-	#GitRepo(
-	#	"https://github.com/KhronosGroup/SPIRV-Headers.git",
-	#	"git@github.com:KhronosGroup/SPIRV-Headers.git",
-	#	"87d5b782bec60822aa878941e6b13c0a9a954c9b",
-	#	"spirv-headers"),
-	#GitRepo(
-	#	"https://github.com/KhronosGroup/Vulkan-Docs.git",
-	#	"git@github.com:KhronosGroup/Vulkan-Docs.git",
-	#	"9a2e576a052a1e65a5d41b593e693ff02745604b",
-	#	"vulkan-docs"),
-	#GitRepo(
-	#	"https://github.com/google/amber.git",
-	#	"git@github.com:google/amber.git",
-	#	"8b145a6c89dcdb4ec28173339dd176fb7b6f43ed",
-	#	"amber"),
-	#GitRepo(
-	#	"https://github.com/open-source-parsers/jsoncpp.git",
-	#	"git@github.com:open-source-parsers/jsoncpp.git",
-	#	"9059f5cad030ba11d37818847443a53918c327b1",
-	#	"jsoncpp"),
-	#GitRepo(
-	#	"https://github.com/nvpro-samples/vk_video_samples.git",
-	#	None,
-	#	"7d68747d3524842afaf050c5e00a10f5b8c07904",
-	#	"video-parser"),
+		"http://zlib.net/fossils/zlib-1.2.13.tar.gz",
+		"b3a24de97a8fdbc835b9833169501030b8977031bcb54b3b3ac13740f846ab30",
+		"zlib"),
+	SourcePackage(
+		"http://prdownloads.sourceforge.net/libpng/libpng-1.6.27.tar.gz",
+		"c9d164ec247f426a525a7b89936694aefbc91fb7a50182b198898b8fc91174b4",
+		"libpng",
+		postExtract = postExtractLibpng),
+	SourceFile(
+		"https://raw.githubusercontent.com/baldurk/renderdoc/v1.1/renderdoc/api/app/renderdoc_app.h",
+		"renderdoc_app.h",
+		"e7b5f0aa5b1b0eadc63a1c624c0ca7f5af133aa857d6a4271b0ef3d0bdb6868e",
+		"renderdoc"),
+	GitRepo(
+		"https://github.com/KhronosGroup/SPIRV-Tools.git",
+		"git@github.com:KhronosGroup/SPIRV-Tools.git",
+		"bfc94f63a7adbcf8ae166f5f108ac9f69079efc0",
+		"spirv-tools"),
+	GitRepo(
+		"https://github.com/KhronosGroup/glslang.git",
+		None,
+		"c5117b328afc86e16edff6ed6afe0fe7872a7cf3",
+		"glslang",
+		removeTags = ["main-tot"]),
+	GitRepo(
+		"https://github.com/KhronosGroup/SPIRV-Headers.git",
+		"git@github.com:KhronosGroup/SPIRV-Headers.git",
+		"b8b9eb8640c8c0107ba580fbcb10f969022ca32c",
+		"spirv-headers"),
+	GitRepo(
+		"https://github.com/KhronosGroup/Vulkan-Docs.git",
+		"git@github.com:KhronosGroup/Vulkan-Docs.git",
+		"b9aad705f0d9e5e6734ac2ad671d5d1de57b05e0",
+		"vulkan-docs"),
+	GitRepo(
+		"https://github.com/google/amber.git",
+		None,
+		"933ecb4d6288675a92eb1650e0f52b1d7afe8273",
+		"amber"),
+	GitRepo(
+		"https://github.com/open-source-parsers/jsoncpp.git",
+		"git@github.com:open-source-parsers/jsoncpp.git",
+		"9059f5cad030ba11d37818847443a53918c327b1",
+		"jsoncpp"),
+	# NOTE: The samples application is not well suited to external
+	# integration, this fork contains the small fixes needed for use
+	# by the CTS.
+	GitRepo(
+		"https://github.com/Igalia/vk_video_samples.git",
+		"git@github.com:Igalia/vk_video_samples.git",
+		"138bbe048221d315962ddf8413aa6a08cc62a381",
+		"nvidia-video-samples"),
+	GitRepo(
+		"https://github.com/Igalia/ESExtractor.git",
+		"git@github.com:Igalia/ESExtractor.git",
+		"v0.3.3",
+		"ESExtractor"),
 ]
 
 def parseArgs ():
@@ -389,16 +394,10 @@ def run(*popenargs, **kwargs):
 	return retcode, stdout, stderr
 
 if __name__ == "__main__":
-	# Rerun script with python3 as python2 does not have lzma (xz) decompression support
-	if sys.version_info < (3, 0):
-		cmd = {"Windows": ['py', '-3'], "Linux": ['python3'], "Darwin": ['python3']}[platform.system()]
-		cmd = cmd + sys.argv
-		run(cmd)
-	else:
-		args = parseArgs()
+	args = parseArgs()
 
-		for pkg in PACKAGES:
-			if args.clean:
-				pkg.clean()
-			else:
-				pkg.update(args.protocol, args.force)
+	for pkg in PACKAGES:
+		if args.clean:
+			pkg.clean()
+		else:
+			pkg.update(args.protocol, args.force)

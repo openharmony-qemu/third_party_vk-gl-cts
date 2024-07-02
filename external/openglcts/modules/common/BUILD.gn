@@ -108,7 +108,9 @@ ohos_source_set("glcts-common_source") {
     "//third_party/glslang",
     "//third_party/spirv-tools/include",
     "//third_party/spirv-tools/external/include",
-    "//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
+
+    #"//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
+    "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkan",
     "//third_party/glslang/glslang",
     "//third_party/vk-gl-cts/build/include",
     "//third_party/glslang/SPIRV",
@@ -171,7 +173,9 @@ ohos_source_set("glcts-common-nocontext-package_source") {
     "//third_party/glslang",
     "//third_party/spirv-tools/include",
     "//third_party/spirv-tools/external/include",
-    "//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
+
+    #"//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
+    "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkan",
   ]
   include_dirs += deqp_common_include_dirs
 

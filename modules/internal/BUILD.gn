@@ -40,7 +40,9 @@ ohos_source_set("de-internal-tests_source") {
   include_dirs = [
     "//third_party/vulkancts/framework/vulkan",
     "//third_party/vk-gl-cts/modules/internal",
-    "//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
+
+    #"//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
+    "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkan",
   ]
   include_dirs += deqp_common_include_dirs
   deps = [

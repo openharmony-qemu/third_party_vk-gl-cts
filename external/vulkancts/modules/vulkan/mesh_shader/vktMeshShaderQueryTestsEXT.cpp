@@ -326,8 +326,8 @@ public:
 class MeshQueryCase : public vkt::TestCase
 {
 public:
-					MeshQueryCase	(tcu::TestContext& testCtx, const std::string& name, const std::string& description, TestParams&& params)
-						: vkt::TestCase	(testCtx, name, description)
+					MeshQueryCase	(tcu::TestContext& testCtx, const std::string& name, TestParams&& params)
+						: vkt::TestCase	(testCtx, name)
 						, m_params		(std::move(params))
 						{}
 	virtual			~MeshQueryCase	(void) {}
@@ -589,8 +589,9 @@ void MeshQueryInstance::recordDraws (const VkCommandBuffer cmdBuffer, const VkPi
 
 		// Copy the array to a host-visible buffer.
 		// Note: We make sure all indirect buffers are allocated with a non-zero size by adding cmdSize to the expected size.
+		// Size of buffer must be greater than stride * (maxDrawCount - 1) + offset + sizeof(VkDrawMeshTasksIndirectCommandEXT) so we multiply by 2
 		const auto indirectBufferSize		= de::dataSize(indirectCommands);
-		const auto indirectBufferCreateInfo	= makeBufferCreateInfo(static_cast<VkDeviceSize>(indirectBufferSize + cmdSize), VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT);
+		const auto indirectBufferCreateInfo	= makeBufferCreateInfo(static_cast<VkDeviceSize>((indirectBufferSize + cmdSize) * 2), VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT);
 
 		m_indirectBuffer			= BufferWithMemoryPtr(new BufferWithMemory(vkd, device, alloc, indirectBufferCreateInfo, MemoryRequirement::HostVisible));
 		auto& indirectBufferAlloc	= m_indirectBuffer->getAllocation();
@@ -1235,7 +1236,7 @@ tcu::TestStatus MeshQueryInstance::iterate (void)
 			}
 
 			if (hasTaskInvStat)
-				verifyQueryCounter(totalTaskInvs, expectedTaskInv, expectedTaskInv, *m_params, "Task invocations");
+				verifyQueryCounter(totalTaskInvs, expectedTaskInv, expectedTaskInv * viewCount, *m_params, "Task invocations");
 
 			if (hasMeshInvStat)
 				verifyQueryCounter(totalMeshInvs, expectedMeshInv, expectedMeshInv * viewCount, *m_params, "Mesh invocations");
@@ -1324,7 +1325,7 @@ using GroupPtr = de::MovePtr<tcu::TestCaseGroup>;
 
 tcu::TestCaseGroup* createMeshShaderQueryTestsEXT (tcu::TestContext& testCtx)
 {
-	GroupPtr queryGroup (new tcu::TestCaseGroup(testCtx, "query", "Mesh Shader Query Tests"));
+	GroupPtr queryGroup (new tcu::TestCaseGroup(testCtx, "query"));
 
 	const struct
 	{
@@ -1468,7 +1469,7 @@ tcu::TestCaseGroup* createMeshShaderQueryTestsEXT (tcu::TestContext& testCtx)
 	{
 		const bool hasPrimitivesQuery = de::contains(queryCombination.queryTypes.begin(), queryCombination.queryTypes.end(), QueryType::PRIMITIVES);
 
-		GroupPtr queryCombinationGroup (new tcu::TestCaseGroup(testCtx, queryCombination.name, ""));
+		GroupPtr queryCombinationGroup (new tcu::TestCaseGroup(testCtx, queryCombination.name));
 
 		for (const auto& geometryCase : geometryCases)
 		{
@@ -1478,11 +1479,11 @@ tcu::TestCaseGroup* createMeshShaderQueryTestsEXT (tcu::TestContext& testCtx)
 			if (!hasPrimitivesQuery && nonTriangles)
 				continue;
 
-			GroupPtr geometryCaseGroup (new tcu::TestCaseGroup(testCtx, geometryCase.name, ""));
+			GroupPtr geometryCaseGroup (new tcu::TestCaseGroup(testCtx, geometryCase.name));
 
 			for (const auto& resetType : resetTypes)
 			{
-				GroupPtr resetTypeGroup (new tcu::TestCaseGroup(testCtx, resetType.name, ""));
+				GroupPtr resetTypeGroup (new tcu::TestCaseGroup(testCtx, resetType.name));
 
 				for (const auto& accessMethod : accessMethods)
 				{
@@ -1490,7 +1491,7 @@ tcu::TestCaseGroup* createMeshShaderQueryTestsEXT (tcu::TestContext& testCtx)
 					if (accessMethod.accessMethod == AccessMethod::GET && resetType.resetCase == ResetCase::AFTER_ACCESS)
 						continue;
 
-					GroupPtr accessMethodGroup (new tcu::TestCaseGroup(testCtx, accessMethod.name, ""));
+					GroupPtr accessMethodGroup (new tcu::TestCaseGroup(testCtx, accessMethod.name));
 
 					for (const auto& waitCase : waitCases)
 					{
@@ -1498,7 +1499,7 @@ tcu::TestCaseGroup* createMeshShaderQueryTestsEXT (tcu::TestContext& testCtx)
 						if (resetType.resetCase == ResetCase::BEFORE_ACCESS && waitCase.waitFlag)
 							continue;
 
-						GroupPtr waitCaseGroup (new tcu::TestCaseGroup(testCtx, waitCase.name, ""));
+						GroupPtr waitCaseGroup (new tcu::TestCaseGroup(testCtx, waitCase.name));
 
 						for (const auto& drawCall : drawCalls)
 						{
@@ -1506,7 +1507,7 @@ tcu::TestCaseGroup* createMeshShaderQueryTestsEXT (tcu::TestContext& testCtx)
 							if (drawCall.drawCallType != DrawCallType::DIRECT && nonTriangles)
 								continue;
 
-							GroupPtr drawCallGroup (new tcu::TestCaseGroup(testCtx, drawCall.name, ""));
+							GroupPtr drawCallGroup (new tcu::TestCaseGroup(testCtx, drawCall.name));
 
 							for (const auto& resultSize : resultSizes)
 							{
@@ -1514,7 +1515,7 @@ tcu::TestCaseGroup* createMeshShaderQueryTestsEXT (tcu::TestContext& testCtx)
 								if (resultSize.use64Bits && nonTriangles)
 									continue;
 
-								GroupPtr resultSizeGroup (new tcu::TestCaseGroup(testCtx, resultSize.name, ""));
+								GroupPtr resultSizeGroup (new tcu::TestCaseGroup(testCtx, resultSize.name));
 
 								for (const auto& availabilityCase : availabilityCases)
 								{
@@ -1522,7 +1523,7 @@ tcu::TestCaseGroup* createMeshShaderQueryTestsEXT (tcu::TestContext& testCtx)
 									if (availabilityCase.availabilityFlag && nonTriangles)
 										continue;
 
-									GroupPtr availabilityCaseGroup (new tcu::TestCaseGroup(testCtx, availabilityCase.name, ""));
+									GroupPtr availabilityCaseGroup (new tcu::TestCaseGroup(testCtx, availabilityCase.name));
 
 									for (const auto& blockCase : blockCases)
 									{
@@ -1530,22 +1531,22 @@ tcu::TestCaseGroup* createMeshShaderQueryTestsEXT (tcu::TestContext& testCtx)
 										if (blockCase.drawBlocks.size() <= 1 && nonTriangles)
 											continue;
 
-										GroupPtr blockCaseGroup (new tcu::TestCaseGroup(testCtx, blockCase.name, ""));
+										GroupPtr blockCaseGroup (new tcu::TestCaseGroup(testCtx, blockCase.name));
 
 										for (const auto& taskShaderCase : taskShaderCases)
 										{
-											GroupPtr taskShaderCaseGroup (new tcu::TestCaseGroup(testCtx, taskShaderCase.name, ""));
+											GroupPtr taskShaderCaseGroup (new tcu::TestCaseGroup(testCtx, taskShaderCase.name));
 
 											for (const auto& orderingCase : orderingCases)
 											{
-												GroupPtr orderingCaseGroup (new tcu::TestCaseGroup(testCtx, orderingCase.name, ""));
+												GroupPtr orderingCaseGroup (new tcu::TestCaseGroup(testCtx, orderingCase.name));
 
 												for (const auto& multiViewCase : multiViewCases)
 												{
 													if (multiViewCase.multiView && !orderingCase.insideRenderPass)
 														continue;
 
-													GroupPtr multiViewGroup (new tcu::TestCaseGroup(testCtx, multiViewCase.name, ""));
+													GroupPtr multiViewGroup (new tcu::TestCaseGroup(testCtx, multiViewCase.name));
 
 													for (const auto& cmdBufferType : cmdBufferTypes)
 													{
@@ -1564,7 +1565,11 @@ tcu::TestCaseGroup* createMeshShaderQueryTestsEXT (tcu::TestContext& testCtx)
 														params.useSecondary		= cmdBufferType.useSecondary;
 														params.multiView		= multiViewCase.multiView;
 
-														multiViewGroup->addChild(new MeshQueryCase(testCtx, cmdBufferType.name, "", std::move(params)));
+														// VUID-vkCmdExecuteCommands-commandBuffer-07594
+														if (params.areQueriesInherited() && params.hasPrimitivesQuery())
+															continue;
+
+														multiViewGroup->addChild(new MeshQueryCase(testCtx, cmdBufferType.name, std::move(params)));
 													}
 
 													orderingCaseGroup->addChild(multiViewGroup.release());

@@ -1,5 +1,5 @@
 # dethread cmake file
-add_definitions(-D_XOPEN_SOURCE=600)
+
 if (NOT DE_DEFS)
 	message(FATAL_ERROR "Include Defs.cmake")
 endif ()
