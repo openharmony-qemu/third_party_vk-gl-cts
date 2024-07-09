@@ -29,6 +29,7 @@ deqp_common_cflags_cc = [
   "-Wno-unused-command-line-argument",
   "-Wno-implicit-function-declaration",
   "-Wno-null-pointer-subtraction",
+  "-Wno-error=ignored-pragmas",
 ]
 
 deqp_common_cflags = [
