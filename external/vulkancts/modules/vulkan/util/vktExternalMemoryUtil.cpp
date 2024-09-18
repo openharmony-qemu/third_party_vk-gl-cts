@@ -688,7 +688,6 @@ void getMemoryNative (const vk::DeviceInterface&					vkd,
 		{
 			vk::VK_STRUCTURE_TYPE_MEMORY_GET_NATIVE_BUFFER_INFO_OHOS,
 			DE_NULL,
-
 			memory,
 		};
 		vk::pt::OHOSNativeBufferPtr						nativeBuffer(DE_NULL);
@@ -1976,15 +1975,6 @@ vk::VkPhysicalDeviceExternalMemoryHostPropertiesEXT getPhysicalDeviceExternalMem
 	return externalProps;
 }
 
-OHOSNativeBufferExternalApi::OHOSNativeBufferExternalApi()
-{
-	// if (!LoadOHDynamicApis())
-	// {
-	// 	DE_FATAL("Couldn't load OHOS system APIs");
-	// 	DE_TEST_ASSERT(false);
-	// }
-}
-
 OHOSNativeBufferExternalApi* OHOSNativeBufferExternalApi::getInstance()
 {
 	static OHOSNativeBufferExternalApi bufferExternalApi;
@@ -2027,53 +2017,6 @@ deUint64 OHOSNativeBufferExternalApi::VKCreateToOHOSUsage(vk::VkImageCreateFlagB
 		return 0u;
 	}
 }
-
-// using pfnOHNativeBufferAllocate = OH_NativeBuffer* (*)(const OH_NativeBuffer_Config* config);
-// using pfnOHNativeBufferDescribe = void (*)(OH_NativeBuffer* buffer, OH_NativeBuffer_Config* config);
-// using pfnOHNativeBufferRelease = int32_t (*)(OH_NativeBuffer* buffer);
-// using pfnOHNativeBufferAcquire = int32_t (*)(OH_NativeBuffer* buffer);
-
-// using OHFunctions = struct
-// {
-// 	pfnOHNativeBufferAllocate allocate;
-// 	pfnOHNativeBufferDescribe describe;
-// 	pfnOHNativeBufferRelease release;
-// 	pfnOHNativeBufferAcquire acquire;
-// };
-
-//OHFunctions ohFunctions;
-// static bool FunctionsLoaded(OHFunctions* ohFunctions)
-// {
-// 	static bool apiLoaded = false;
-// 	if (apiLoaded || (ohFunctions->allocate != DE_NULL) ||
-// 	   (ohFunctions->describe != DE_NULL) ||
-// 	   (ohFunctions->release != DE_NULL) ||
-// 	   (ohFunctions->acquire != DE_NULL))
-// 	{
-// 		apiLoaded = true;
-// 		return true;
-// 	}
-// 	return false;
-// }
-
-// bool OHOSNativeBufferExternalApi::LoadOHDynamicApis()
-// {
-// 	if (!FunctionsLoaded(&ohFunctions))
-// 	{
-// 		static de::DynamicLibrary libnativewindow("/system/lib64/chipset-pub-sdk/libsurface.z.so");
-// 		ohFunctions.allocate =
-// 			reinterpret_cast<pfnOHNativeBufferAllocate>(libnativewindow.getFunction("OH_NativeBuffer_Alloc"));
-// 		ohFunctions.describe =
-// 			reinterpret_cast<pfnOHNativeBufferDescribe>(libnativewindow.getFunction("OH_NativeBuffer_GetConfig"));
-// 		ohFunctions.release =
-// 			reinterpret_cast<pfnOHNativeBufferRelease>(libnativewindow.getFunction("OH_NativeBuffer_Unreference"));
-// 		ohFunctions.acquire  =
-// 			reinterpret_cast<pfnOHNativeBufferAcquire>(libnativewindow.getFunction("OH_NativeBuffer_Reference"));
-
-// 		return FunctionsLoaded(&ohFunctions);
-// 	}
-// 	return false;
-// }
 
 vk::pt::OHOSNativeBufferPtr OHOSNativeBufferExternalApi::Allocate(deUint32 width,
 																	   deUint32 height,

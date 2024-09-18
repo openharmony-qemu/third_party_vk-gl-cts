@@ -97,7 +97,7 @@ public:
 class OHOSNativeBufferExternalApi:public BufferExternalApi
 {
 public:
-	OHOSNativeBufferExternalApi();
+	OHOSNativeBufferExternalApi(){};
 
 	/**
 	 * getInstance obtains the object, that provides an interface to AHB system APIs .
