@@ -35,7 +35,7 @@ ohos_source_set("deqp_vk_util_source") {
     #"//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber",
   ]
   deps = []
-  external_deps = ["graphic_surface:surface"]
+  external_deps = [ "graphic_surface:surface" ]
   part_name = "acts"
   subsystem_name = "xts"
   configs = [ ":deqp_vk_util_config" ]
