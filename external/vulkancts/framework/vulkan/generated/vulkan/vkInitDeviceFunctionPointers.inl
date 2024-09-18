@@ -436,6 +436,8 @@ if (!m_vk.signalSemaphore)
     m_vk.signalSemaphore = (SignalSemaphoreFunc) GET_PROC_ADDR("vkSignalSemaphoreKHR");
 m_vk.getAndroidHardwareBufferPropertiesANDROID = (GetAndroidHardwareBufferPropertiesANDROIDFunc) GET_PROC_ADDR("vkGetAndroidHardwareBufferPropertiesANDROID");
 m_vk.getMemoryAndroidHardwareBufferANDROID = (GetMemoryAndroidHardwareBufferANDROIDFunc) GET_PROC_ADDR("vkGetMemoryAndroidHardwareBufferANDROID");
+m_vk.GetNativeBufferPropertiesOHOS = (GetNativeBufferPropertiesOHOSFunc) GET_PROC_ADDR("vkGetNativeBufferPropertiesOHOS");
+m_vk.GetMemoryNativeBufferOHOS = (GetMemoryNativeBufferOHOSFunc) GET_PROC_ADDR("vkGetMemoryNativeBufferOHOS");
 if (usedApiVersion >= VK_MAKE_API_VERSION(0, 1, 2, 0))
     m_vk.cmdDrawIndirectCount = (CmdDrawIndirectCountFunc) GET_PROC_ADDR("vkCmdDrawIndirectCount");
 if (!m_vk.cmdDrawIndirectCount)

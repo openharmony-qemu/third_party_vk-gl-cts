@@ -531,7 +531,7 @@ tcu::Format::Bitfield<32>	getImagePipeSurfaceCreateFlagsFUCHSIAStr					(VkImageP
 tcu::Format::Bitfield<32>	getStreamDescriptorSurfaceCreateFlagsGGPStr					(VkStreamDescriptorSurfaceCreateFlagsGGP value);
 tcu::Format::Bitfield<32>	getHeadlessSurfaceCreateFlagsEXTStr							(VkHeadlessSurfaceCreateFlagsEXT value);
 tcu::Format::Bitfield<32>	getScreenSurfaceCreateFlagsQNXStr							(VkScreenSurfaceCreateFlagsQNX value);
-tcu::Format::Bitfield<32>	getOHOSSurfaceCreateFlagsOpenHarmonyStr						(VkOHOSSurfaceCreateFlagsOpenHarmony value);
+tcu::Format::Bitfield<32>	getOHOSSurfaceCreateFlagsOpenHarmonyStr						(VkSurfaceCreateFlagsOHOS value);
 tcu::Format::Bitfield<32>	getPeerMemoryFeatureFlagsStr								(VkPeerMemoryFeatureFlags value);
 tcu::Format::Bitfield<32>	getMemoryAllocateFlagsStr									(VkMemoryAllocateFlags value);
 tcu::Format::Bitfield<32>	getDeviceGroupPresentModeFlagsKHRStr						(VkDeviceGroupPresentModeFlagsKHR value);
@@ -747,7 +747,7 @@ std::ostream&	operator<<	(std::ostream& s, const VkXcbSurfaceCreateInfoKHR& valu
 std::ostream&	operator<<	(std::ostream& s, const VkImagePipeSurfaceCreateInfoFUCHSIA& value);
 std::ostream&	operator<<	(std::ostream& s, const VkStreamDescriptorSurfaceCreateInfoGGP& value);
 std::ostream&	operator<<	(std::ostream& s, const VkScreenSurfaceCreateInfoQNX& value);
-std::ostream&	operator<<	(std::ostream& s, const VkOHOSNativeBufferPropertiesOpenHarmony& value);
+std::ostream&	operator<<	(std::ostream& s, const VkNativeBufferPropertiesOHOS& value);
 std::ostream&	operator<<	(std::ostream& s, const VkSurfaceFormatKHR& value);
 std::ostream&	operator<<	(std::ostream& s, const VkSwapchainCreateInfoKHR& value);
 std::ostream&	operator<<	(std::ostream& s, const VkPresentInfoKHR& value);

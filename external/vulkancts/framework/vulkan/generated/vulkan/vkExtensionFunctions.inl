@@ -1396,13 +1396,15 @@ void getInstanceExtensionFunctions (uint32_t apiVersion, ::std::string extName, 
 	{
 		return;
 	}
-		if (extName == "VK_OpenHarmony_OHOS_surface")
+		if (extName == "VK_OHOS_surface")
 	{
-		functions.push_back("vkCreateOHOSSurfaceOpenHarmony");
+		functions.push_back("vkCreateSurfaceOHOS");
 		return;
 	}
-	if (extName == "VK_OpenHarmony_external_memory_OHOS_native_buffer")
+	if (extName == "VK_OHOS_external_memory")
 	{
+		functions.push_back("vkGetNativeBufferPropertiesOHOS");
+		functions.push_back("vkGetMemoryNativeBufferOHOS");
 		return;
 	}
 	if (extName == "VK_EXT_pipeline_library_group_handles")

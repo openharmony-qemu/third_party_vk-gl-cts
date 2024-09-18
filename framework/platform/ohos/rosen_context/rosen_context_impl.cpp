@@ -467,6 +467,8 @@ uint64_t RosenContextImpl::CreateWindow(uint32_t x, uint32_t y, uint32_t width, 
     vulkanWindows_[wid].producer_ = rsSurfaceOhosGl->GetSurface();
 
     vulkanWindows_[wid].nativeWindow_ = CreateNativeWindowFromSurface(&vulkanWindows_[wid].producer_);
+    NativeWindowHandleOpt(vulkanWindows_[wid].nativeWindow_, SET_BUFFER_GEOMETRY, width, height);
+
     return wid;
 }
 

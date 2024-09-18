@@ -20,7 +20,7 @@
  *//*--------------------------------------------------------------------*/
 
 #include "vktExternalMemoryUtil.hpp"
-
+#include "deDynamicLibrary.hpp"
 #include "vkQueryUtil.hpp"
 
 #ifndef CTS_USES_VULKANSC
@@ -45,7 +45,7 @@
 
 #if (DE_OS == DE_OS_ANDROID) && defined(__ANDROID_API_O__) && (DE_ANDROID_API >= __ANDROID_API_O__)
 #	include <android/hardware_buffer.h>
-#	include "deDynamicLibrary.hpp"
+
 #	define BUILT_WITH_ANDROID_HARDWARE_BUFFER 1
 #endif
 
@@ -75,6 +75,7 @@ NativeHandle::NativeHandle (void)
 	, m_win32Handle				(DE_NULL)
 	, m_androidHardwareBuffer	(DE_NULL)
 	, m_hostPtr					(DE_NULL)
+	, m_ohosNativeBuffer		(DE_NULL)
 {
 }
 
@@ -85,10 +86,11 @@ NativeHandle::NativeHandle (const NativeHandle& other)
 	, m_win32Handle				(DE_NULL)
 	, m_androidHardwareBuffer	(DE_NULL)
 	, m_hostPtr					(DE_NULL)
+	, m_ohosNativeBuffer		(DE_NULL)
 {
 	if (other.m_fd >= 0)
 	{
-#if (DE_OS == DE_OS_ANDROID) || (DE_OS == DE_OS_UNIX) || (DE_OS == DE_OS_OSX)
+#if (DE_OS == DE_OS_ANDROID) || (DE_OS == DE_OS_UNIX) || (DE_OS == DE_OS_OSX) || (DE_OS == DE_OS_VANILLA)
 		DE_ASSERT(!other.m_win32Handle.internal);
 		DE_ASSERT(!other.m_androidHardwareBuffer.internal);
 		m_fd = dup(other.m_fd);
@@ -147,6 +149,14 @@ NativeHandle::NativeHandle (const NativeHandle& other)
 			ahbApi->acquire(m_androidHardwareBuffer);
 		else
 			DE_FATAL("Platform doesn't support Android Hardware Buffer handles");
+	} else if (other.m_ohosNativeBuffer.internal) {
+		DE_ASSERT(other.m_fd == kInvalidFd);
+		DE_ASSERT(!other.m_win32Handle.internal);
+		m_ohosNativeBuffer = other.m_ohosNativeBuffer;
+		if (OHOSNativeBufferExternalApi* api = OHOSNativeBufferExternalApi::getInstance())
+			api->Acquire(m_ohosNativeBuffer);
+		else
+			DE_FATAL("Platform doesn't support OHOS Native Buffer handles");
 	}
 	else
 		DE_FATAL("Native handle can't be duplicated");
@@ -159,6 +169,7 @@ NativeHandle::NativeHandle (int fd)
 	, m_win32Handle				(DE_NULL)
 	, m_androidHardwareBuffer	(DE_NULL)
 	, m_hostPtr					(DE_NULL)
+	, m_ohosNativeBuffer		(DE_NULL)
 {
 }
 
@@ -169,6 +180,7 @@ NativeHandle::NativeHandle (Win32HandleType handleType, vk::pt::Win32Handle hand
 	, m_win32Handle				(handle)
 	, m_androidHardwareBuffer	(DE_NULL)
 	, m_hostPtr					(DE_NULL)
+	, m_ohosNativeBuffer		(DE_NULL)
 {
 }
 
@@ -179,6 +191,18 @@ NativeHandle::NativeHandle (vk::pt::AndroidHardwareBufferPtr buffer)
 	, m_win32Handle				(DE_NULL)
 	, m_androidHardwareBuffer	(buffer)
 	, m_hostPtr					(DE_NULL)
+	, m_ohosNativeBuffer		(DE_NULL)
+{
+}
+
+NativeHandle::NativeHandle (vk::pt::OHOSNativeBufferPtr buffer)
+	: m_fd						(kInvalidFd)
+	, m_zirconHandle			(0)
+	, m_win32HandleType			(WIN32HANDLETYPE_LAST)
+	, m_win32Handle				(DE_NULL)
+	, m_androidHardwareBuffer	(DE_NULL)
+	, m_hostPtr					(DE_NULL)
+	, m_ohosNativeBuffer		(buffer)
 {
 }
 
@@ -191,7 +215,7 @@ void NativeHandle::reset (void)
 {
 	if (m_fd >= 0)
 	{
-#if (DE_OS == DE_OS_ANDROID) || (DE_OS == DE_OS_UNIX) || (DE_OS == DE_OS_OSX)
+#if (DE_OS == DE_OS_ANDROID) || (DE_OS == DE_OS_UNIX) || (DE_OS == DE_OS_OSX) || (DE_OS == DE_OS_VANILLA)
 		DE_ASSERT(!m_win32Handle.internal);
 		DE_ASSERT(!m_androidHardwareBuffer.internal);
 		::close(m_fd);
@@ -240,6 +264,11 @@ void NativeHandle::reset (void)
 			ahbApi->release(m_androidHardwareBuffer);
 		else
 			DE_FATAL("Platform doesn't support Android Hardware Buffer handles");
+	} else if (m_ohosNativeBuffer.internal) {
+		if (OHOSNativeBufferExternalApi* bufferApi = OHOSNativeBufferExternalApi::getInstance())
+			bufferApi->Release(m_ohosNativeBuffer);
+		else
+			DE_FATAL("Platform doesn't support OHOS Native Buffer handles");
 	}
 	m_fd					= kInvalidFd;
 	m_zirconHandle			= vk::pt::zx_handle_t(0);
@@ -247,6 +276,7 @@ void NativeHandle::reset (void)
 	m_win32HandleType		= WIN32HANDLETYPE_LAST;
 	m_androidHardwareBuffer	= vk::pt::AndroidHardwareBufferPtr(DE_NULL);
 	m_hostPtr				= DE_NULL;
+	m_ohosNativeBuffer		= vk::pt::OHOSNativeBufferPtr(DE_NULL);
 }
 
 NativeHandle& NativeHandle::operator= (int fd)
@@ -264,6 +294,13 @@ NativeHandle& NativeHandle::operator= (vk::pt::AndroidHardwareBufferPtr buffer)
 
 	m_androidHardwareBuffer = buffer;
 
+	return *this;
+}
+
+NativeHandle& NativeHandle::operator= (vk::pt::OHOSNativeBufferPtr buffer)
+{
+	reset();
+	m_ohosNativeBuffer = buffer;
 	return *this;
 }
 
@@ -296,6 +333,7 @@ void NativeHandle::disown (void)
 	m_win32Handle = vk::pt::Win32Handle(DE_NULL);
 	m_androidHardwareBuffer = vk::pt::AndroidHardwareBufferPtr(DE_NULL);
 	m_hostPtr = DE_NULL;
+	m_ohosNativeBuffer = vk::pt::OHOSNativeBufferPtr(DE_NULL);
 }
 
 vk::pt::Win32Handle NativeHandle::getWin32Handle (void) const
@@ -335,6 +373,14 @@ vk::pt::AndroidHardwareBufferPtr NativeHandle::getAndroidHardwareBuffer (void) c
 	DE_ASSERT(!m_win32Handle.internal);
 	DE_ASSERT(m_hostPtr == DE_NULL);
 	return m_androidHardwareBuffer;
+}
+
+vk::pt::OHOSNativeBufferPtr NativeHandle::GetOhosNativeBuffer (void) const
+{
+	DE_ASSERT(m_fd == kInvalidFd);
+	DE_ASSERT(!m_win32Handle.internal);
+	DE_ASSERT(m_hostPtr == DE_NULL);
+	return m_ohosNativeBuffer;
 }
 
 void* NativeHandle::getHostPtr(void) const
@@ -421,6 +467,9 @@ const char* externalMemoryTypeToName (vk::VkExternalMemoryHandleTypeFlagBits typ
 
 		case vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID:
 			return "android_hardware_buffer";
+
+		case vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS:
+			return "ohos_native_buffer";
 
 		case vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT:
 			return "dma_buf";
@@ -632,6 +681,21 @@ void getMemoryNative (const vk::DeviceInterface&					vkd,
 		VK_CHECK(vkd.getMemoryAndroidHardwareBufferANDROID(device, &info, &ahb));
 		TCU_CHECK(ahb.internal);
 		nativeHandle = ahb;
+	}
+	else if (externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS)
+	{
+		const vk::VkMemoryGetNativeBufferInfoOHOS	info	=
+		{
+			vk::VK_STRUCTURE_TYPE_MEMORY_GET_NATIVE_BUFFER_INFO_OHOS,
+			DE_NULL,
+
+			memory,
+		};
+		vk::pt::OHOSNativeBufferPtr						nativeBuffer(DE_NULL);
+
+		VK_CHECK(vkd.GetMemoryNativeBufferOHOS(device, &info, &nativeBuffer));
+		TCU_CHECK(nativeBuffer.internal);
+		nativeHandle = nativeBuffer;
 	}
 	else
 		DE_FATAL("Unknown external memory handle type");
@@ -1058,6 +1122,8 @@ vk::VkMemoryRequirements getImageMemoryRequirements (const vk::DeviceInterface& 
 	if (externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID)
 	{
 		return { 0u, 0u, 0u };
+	} else if (externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS) {
+		return { 0u, 0u, 0u };
 	}
 	else
 	{
@@ -1302,6 +1368,43 @@ static vk::Move<vk::VkDeviceMemory> importMemory (const vk::DeviceInterface&				
 			(isDedicated ? (const void*)&dedicatedInfo : (const void*)&importInfo),
 			requirements.size,
 			memoryTypeIndex
+		};
+		vk::Move<vk::VkDeviceMemory> memory (vk::allocateMemory(vkd, device, &info));
+
+		return memory;
+	}
+	else if (externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS)
+	{
+
+		vk::VkNativeBufferPropertiesOHOS ohosProperties =
+		{
+			vk::VK_STRUCTURE_TYPE_NATIVE_BUFFER_PROPERTIES_OHOS,
+			DE_NULL,
+			0u,
+			0u
+		};
+
+		VK_CHECK(vkd.GetNativeBufferPropertiesOHOS(device, handle.GetOhosNativeBuffer(), &ohosProperties));
+
+		vk::VkImportNativeBufferInfoOHOS	importInfo =
+		{
+			vk::VK_STRUCTURE_TYPE_IMPORT_NATIVE_BUFFER_INFO_OHOS,
+			DE_NULL,
+			handle.GetOhosNativeBuffer()
+		};
+		const vk::VkMemoryDedicatedAllocateInfo		dedicatedInfo =
+		{
+			vk::VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO_KHR,
+			&importInfo,
+			image,
+			buffer,
+		};
+		const vk::VkMemoryAllocateInfo					info =
+		{
+			vk::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+			(isDedicated ? (const void*)&dedicatedInfo : (const void*)&importInfo),
+			ohosProperties.allocationSize,
+			(memoryTypeIndex == ~0U) ? chooseMemoryType(ohosProperties.memoryTypeBits)  : memoryTypeIndex
 		};
 		vk::Move<vk::VkDeviceMemory> memory (vk::allocateMemory(vkd, device, &info));
 
@@ -1871,6 +1974,173 @@ vk::VkPhysicalDeviceExternalMemoryHostPropertiesEXT getPhysicalDeviceExternalMem
 	vki.getPhysicalDeviceProperties2(physicalDevice, &props2);
 
 	return externalProps;
+}
+
+OHOSNativeBufferExternalApi::OHOSNativeBufferExternalApi()
+{
+	// if (!LoadOHDynamicApis())
+	// {
+	// 	DE_FATAL("Couldn't load OHOS system APIs");
+	// 	DE_TEST_ASSERT(false);
+	// }
+}
+
+OHOSNativeBufferExternalApi* OHOSNativeBufferExternalApi::getInstance()
+{
+	static OHOSNativeBufferExternalApi bufferExternalApi;
+	return &bufferExternalApi;
+}
+
+deUint64 OHOSNativeBufferExternalApi::MustSupportOHOSUsageFlags()
+{
+	return NATIVEBUFFER_USAGE_HW_TEXTURE | NATIVEBUFFER_USAGE_HW_RENDER;
+}
+
+deUint64 OHOSNativeBufferExternalApi::VKUsageToOHOSUsage(vk::VkImageUsageFlagBits vkFlags)
+{
+	switch(vkFlags)
+	{
+	  case vk::VK_IMAGE_USAGE_TRANSFER_SRC_BIT:
+	  case vk::VK_IMAGE_USAGE_TRANSFER_DST_BIT:
+		return 0u;
+	  case vk::VK_IMAGE_USAGE_SAMPLED_BIT:
+	  case vk::VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT:
+		return NATIVEBUFFER_USAGE_HW_TEXTURE;
+	  case vk::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT:
+	  case vk::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT:
+		return NATIVEBUFFER_USAGE_HW_RENDER;
+	  default:
+		  return 0u;
+	}
+}
+
+deUint64 OHOSNativeBufferExternalApi::VKCreateToOHOSUsage(vk::VkImageCreateFlagBits vkFlags)
+{
+	switch(vkFlags)
+	{
+	  case vk::VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT:
+	  case vk::VK_IMAGE_CREATE_EXTENDED_USAGE_BIT:
+		return 0u;
+	  case vk::VK_IMAGE_CREATE_PROTECTED_BIT:
+		return OHOS::BUFFER_USAGE_PROTECTED;
+	  default:
+		return 0u;
+	}
+}
+
+// using pfnOHNativeBufferAllocate = OH_NativeBuffer* (*)(const OH_NativeBuffer_Config* config);
+// using pfnOHNativeBufferDescribe = void (*)(OH_NativeBuffer* buffer, OH_NativeBuffer_Config* config);
+// using pfnOHNativeBufferRelease = int32_t (*)(OH_NativeBuffer* buffer);
+// using pfnOHNativeBufferAcquire = int32_t (*)(OH_NativeBuffer* buffer);
+
+// using OHFunctions = struct
+// {
+// 	pfnOHNativeBufferAllocate allocate;
+// 	pfnOHNativeBufferDescribe describe;
+// 	pfnOHNativeBufferRelease release;
+// 	pfnOHNativeBufferAcquire acquire;
+// };
+
+//OHFunctions ohFunctions;
+// static bool FunctionsLoaded(OHFunctions* ohFunctions)
+// {
+// 	static bool apiLoaded = false;
+// 	if (apiLoaded || (ohFunctions->allocate != DE_NULL) ||
+// 	   (ohFunctions->describe != DE_NULL) ||
+// 	   (ohFunctions->release != DE_NULL) ||
+// 	   (ohFunctions->acquire != DE_NULL))
+// 	{
+// 		apiLoaded = true;
+// 		return true;
+// 	}
+// 	return false;
+// }
+
+// bool OHOSNativeBufferExternalApi::LoadOHDynamicApis()
+// {
+// 	if (!FunctionsLoaded(&ohFunctions))
+// 	{
+// 		static de::DynamicLibrary libnativewindow("/system/lib64/chipset-pub-sdk/libsurface.z.so");
+// 		ohFunctions.allocate =
+// 			reinterpret_cast<pfnOHNativeBufferAllocate>(libnativewindow.getFunction("OH_NativeBuffer_Alloc"));
+// 		ohFunctions.describe =
+// 			reinterpret_cast<pfnOHNativeBufferDescribe>(libnativewindow.getFunction("OH_NativeBuffer_GetConfig"));
+// 		ohFunctions.release =
+// 			reinterpret_cast<pfnOHNativeBufferRelease>(libnativewindow.getFunction("OH_NativeBuffer_Unreference"));
+// 		ohFunctions.acquire  =
+// 			reinterpret_cast<pfnOHNativeBufferAcquire>(libnativewindow.getFunction("OH_NativeBuffer_Reference"));
+
+// 		return FunctionsLoaded(&ohFunctions);
+// 	}
+// 	return false;
+// }
+
+vk::pt::OHOSNativeBufferPtr OHOSNativeBufferExternalApi::Allocate(deUint32 width,
+																	   deUint32 height,
+																	   deUint32 format,
+																	   deUint64 usage)
+{
+	OH_NativeBuffer_Config bufferdesc = {
+		width,
+		height,
+		format,
+		usage,
+		0u,
+	};
+
+	OH_NativeBuffer* buffer  = OH_NativeBuffer_Alloc(&bufferdesc);
+
+	return vk::pt::OHOSNativeBufferPtr(buffer);
+}
+
+void OHOSNativeBufferExternalApi::Describe(vk::pt::OHOSNativeBufferPtr buffer,
+															deUint32* width,
+															deUint32* height,
+															deUint32* format,
+															deUint64* usage,
+															deUint32* stride)
+{
+	OH_NativeBuffer_Config desc;
+	OH_NativeBuffer_GetConfig(static_cast<OH_NativeBuffer*>(buffer.internal), &desc);
+	if (width)
+		*width  = desc.width;
+	if (height)
+		*height = desc.height;
+	if (format)
+		*format = desc.format;
+	if (usage)
+		*usage  = desc.usage;
+	if (stride)
+		*stride = desc.stride;
+}
+
+int32_t OHOSNativeBufferExternalApi::Release(vk::pt::OHOSNativeBufferPtr buffer)
+{
+	return OH_NativeBuffer_Unreference(static_cast<OH_NativeBuffer*>(buffer.internal));
+}
+
+int32_t OHOSNativeBufferExternalApi::Acquire(vk::pt::OHOSNativeBufferPtr buffer)
+{
+	return OH_NativeBuffer_Reference(static_cast<OH_NativeBuffer*>(buffer.internal));
+}
+
+deUint32 OHOSNativeBufferExternalApi::VKFormatToOHOSFormat(vk::VkFormat vkFormat)
+{
+	switch(vkFormat)
+	{
+		case vk::VK_FORMAT_R8G8B8_UNORM:
+			return OHOS::GRAPHIC_PIXEL_FMT_RGBX_8888;
+		case vk::VK_FORMAT_R8G8B8A8_UNORM:
+			return OHOS::GRAPHIC_PIXEL_FMT_RGBA_8888;
+		case vk::VK_FORMAT_R5G6B5_UNORM_PACK16:
+			return OHOS::GRAPHIC_PIXEL_FMT_RGB_565;
+		case vk::VK_FORMAT_A2B10G10R10_UNORM_PACK32:
+			return OHOS::GRAPHIC_PIXEL_FMT_RGBA_1010102;
+		case vk::VK_FORMAT_R16G16B16A16_SFLOAT:
+			return OHOS::GRAPHIC_PIXEL_FMT_RGBA16_FLOAT;
+		default:
+			return 0u;
+	}
 }
 
 } // ExternalMemoryUtil

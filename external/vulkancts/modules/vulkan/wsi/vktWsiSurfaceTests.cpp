@@ -1529,7 +1529,7 @@ tcu::TestStatus queryDevGroupSurfacePresentModesTest (Context& context, Type wsi
 		}
 	}
 
-		return tcu::TestStatus(results.getResult(), results.getMessage());
+	return tcu::TestStatus(results.getResult(), results.getMessage());
 }
 
 tcu::TestStatus createSurfaceInitialSizeTest (Context& context, Type wsiType)

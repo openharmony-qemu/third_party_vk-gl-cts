@@ -281,7 +281,7 @@ public:
 										SurfaceKHR		(VkInstance, const VkImagePipeSurfaceCreateInfoFUCHSIA*)	{}
 										SurfaceKHR		(VkInstance, const VkStreamDescriptorSurfaceCreateInfoGGP*)	{}
 										SurfaceKHR		(VkInstance, const VkMetalSurfaceCreateInfoEXT*)	{}
-                                        SurfaceKHR		(VkInstance, const VkOHOSSurfaceCreateInfoOpenHarmony*)	{}
+                                        SurfaceKHR		(VkInstance, const VkSurfaceCreateInfoOHOS*)	{}
 										SurfaceKHR		(VkInstance, const VkScreenSurfaceCreateInfoQNX*)	{}
 #endif // CTS_USES_VULKANSC
 										SurfaceKHR		(VkInstance, const VkDisplaySurfaceCreateInfoKHR*)	{}

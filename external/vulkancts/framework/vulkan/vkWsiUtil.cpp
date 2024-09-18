@@ -73,8 +73,8 @@ const char* getName (Type wsiType)
 		"win32",
 		"macos",
 		"headless",
-		"ohos",
 		"direct_drm",
+		"ohos",
 	};
 	return de::getSizedArrayElement<TYPE_LAST>(s_names, wsiType);
 }
@@ -90,8 +90,8 @@ const char* getExtensionName (Type wsiType)
 		"VK_KHR_win32_surface",
 		"VK_MVK_macos_surface",
 		"VK_EXT_headless_surface",
-		"VK_OpenHarmony_OHOS_surface",
 		"VK_EXT_acquire_drm_display",
+		"VK_OHOS_surface",
 	};
 	return de::getSizedArrayElement<TYPE_LAST>(s_extNames, wsiType);
 }
@@ -157,19 +157,19 @@ const PlatformProperties& getPlatformProperties (Type wsiType)
 			noDisplayLimit,
 			noWindowLimit,
 		},
-		//VK_OpenHarmony_OHOS_surface
-		{
-			PlatformProperties::FEATURE_INITIAL_WINDOW_SIZE,
-			PlatformProperties::SWAPCHAIN_EXTENT_SCALED_TO_WINDOW_SIZE,
-			1u,
-			1u, // Only one window available
-		},
 		// VK_EXT_acquire_drm_display
 		{
 			0u,
 			PlatformProperties::SWAPCHAIN_EXTENT_MUST_MATCH_WINDOW_SIZE,
 			1u,
 			1u,
+		},
+		//VK_OHOS_surface
+		{
+			PlatformProperties::FEATURE_INITIAL_WINDOW_SIZE,
+			PlatformProperties::SWAPCHAIN_EXTENT_SCALED_TO_WINDOW_SIZE,
+			1u,
+			1u, // Only one window available
 		},
 	};
 
@@ -386,14 +386,14 @@ VkResult createSurface (const InstanceInterface&		vki,
 		case TYPE_OHOS:
 		{//cxunmz
 			const OhosWindowInterface&			ohosWindow		= dynamic_cast<const OhosWindowInterface&>(nativeWindow);
-			const VkOHOSSurfaceCreateInfoOpenHarmony createInfo =
+			const VkSurfaceCreateInfoOHOS createInfo =
 			{
-				VK_STRUCTURE_TYPE_OHOS_SURFACE_CREATE_INFO_OPENHARMONY,
+				VK_STRUCTURE_TYPE_SURFACE_CREATE_INFO_OHOS,
 				DE_NULL,
-				(VkOHOSSurfaceCreateFlagsOpenHarmony)0,
+				(VkSurfaceCreateFlagsOHOS)0,
 				ohosWindow.getNative()
 			};
-			return vki.createOHOSSurfaceOpenHarmony(instance, &createInfo, pAllocator, pSurface);
+			return vki.CreateSurfaceOHOS(instance, &createInfo, pAllocator, pSurface);
 		}
 
 		default:

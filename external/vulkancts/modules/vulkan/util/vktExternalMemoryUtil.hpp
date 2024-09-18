@@ -28,6 +28,8 @@
 
 #include "deMemory.h"
 #include "deInt32.h"
+#include "surface_type.h"
+#include "native_buffer.h"
 
 #ifndef CTS_USES_VULKANSC
 
@@ -54,10 +56,12 @@ public:
 										NativeHandle				(int fd);
 										NativeHandle				(Win32HandleType type, vk::pt::Win32Handle handle);
 										NativeHandle				(vk::pt::AndroidHardwareBufferPtr buffer);
+										NativeHandle				(vk::pt::OHOSNativeBufferPtr buffer);
 										~NativeHandle				(void);
 
 	NativeHandle&						operator=					(int fd);
 	NativeHandle&						operator=					(vk::pt::AndroidHardwareBufferPtr buffer);
+	NativeHandle&						operator=					(vk::pt::OHOSNativeBufferPtr buffer);
 
 	void								setZirconHandle				(vk::pt::zx_handle_t zirconHandle);
 	void								setWin32Handle				(Win32HandleType type, vk::pt::Win32Handle handle);
@@ -67,6 +71,7 @@ public:
 	bool								hasValidFd					(void) const;
 	int									getFd						(void) const;
 	vk::pt::AndroidHardwareBufferPtr	getAndroidHardwareBuffer	(void) const;
+	vk::pt::OHOSNativeBufferPtr			GetOhosNativeBuffer			(void) const;
 	vk::pt::zx_handle_t					getZirconHandle				(void) const;
 	void								disown						(void);
 	void								reset						(void);
@@ -78,12 +83,56 @@ private:
 	vk::pt::Win32Handle					m_win32Handle;
 	vk::pt::AndroidHardwareBufferPtr	m_androidHardwareBuffer;
 	void*								m_hostPtr;
-
+	vk::pt::OHOSNativeBufferPtr			m_ohosNativeBuffer;
 	// Disabled
 	NativeHandle&						operator=					(const NativeHandle&);
 };
 
-class AndroidHardwareBufferExternalApi
+class BufferExternalApi
+{
+public:
+	virtual ~BufferExternalApi(){};
+};
+
+class OHOSNativeBufferExternalApi:public BufferExternalApi
+{
+public:
+	OHOSNativeBufferExternalApi();
+
+	/**
+	 * getInstance obtains the object, that provides an interface to AHB system APIs .
+	 * If the AHB system API is not supported or if it is not built as supported with the CTS,
+	 * then this function would return a null object.
+	 */
+	static OHOSNativeBufferExternalApi* getInstance();
+
+	//static bool LoadOHDynamicApis();
+
+	deUint64 MustSupportOHOSUsageFlags();
+
+	deUint64 VKUsageToOHOSUsage(vk::VkImageUsageFlagBits vkFlag);
+
+	deUint64 VKCreateToOHOSUsage(vk::VkImageCreateFlagBits vkFlag);
+
+	vk::pt::OHOSNativeBufferPtr Allocate(deUint32 width, deUint32  height, deUint32  format, deUint64 usage);
+
+	deUint32 VKFormatToOHOSFormat(vk::VkFormat vkFormat);
+
+	int32_t Release(vk::pt::OHOSNativeBufferPtr buffer);
+
+	int32_t Acquire(vk::pt::OHOSNativeBufferPtr buffer);
+
+	void Describe(vk::pt::OHOSNativeBufferPtr buffer,
+									deUint32* width,
+									deUint32* height,
+									deUint32* format,
+									deUint64* usage,
+									deUint32* stride);
+
+	virtual ~OHOSNativeBufferExternalApi(){};
+};
+
+class AndroidHardwareBufferExternalApi:public BufferExternalApi
 {
 public:
 

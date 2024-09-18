@@ -236,6 +236,8 @@ virtual VkResult			waitSemaphores											(VkDevice device, const VkSemaphoreW
 virtual VkResult			signalSemaphore											(VkDevice device, const VkSemaphoreSignalInfo* pSignalInfo) const = 0;
 virtual VkResult			getAndroidHardwareBufferPropertiesANDROID				(VkDevice device, const struct pt::AndroidHardwareBufferPtr buffer, VkAndroidHardwareBufferPropertiesANDROID* pProperties) const = 0;
 virtual VkResult			getMemoryAndroidHardwareBufferANDROID					(VkDevice device, const VkMemoryGetAndroidHardwareBufferInfoANDROID* pInfo, struct pt::AndroidHardwareBufferPtr* pBuffer) const = 0;
+virtual VkResult			GetNativeBufferPropertiesOHOS				            (VkDevice device, const struct pt::OHOSNativeBufferPtr buffer, VkNativeBufferPropertiesOHOS* pProperties) const = 0;
+virtual VkResult			GetMemoryNativeBufferOHOS					            (VkDevice device, const VkMemoryGetNativeBufferInfoOHOS* pInfo, struct pt::OHOSNativeBufferPtr* pBuffer) const = 0;
 virtual void				cmdDrawIndirectCount									(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) const = 0;
 virtual void				cmdDrawIndexedIndirectCount								(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) const = 0;
 virtual void				cmdSetCheckpointNV										(VkCommandBuffer commandBuffer, const void* pCheckpointMarker) const = 0;

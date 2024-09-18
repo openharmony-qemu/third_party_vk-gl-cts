@@ -236,6 +236,8 @@ WaitSemaphoresFunc											waitSemaphores;
 SignalSemaphoreFunc											signalSemaphore;
 GetAndroidHardwareBufferPropertiesANDROIDFunc				getAndroidHardwareBufferPropertiesANDROID;
 GetMemoryAndroidHardwareBufferANDROIDFunc					getMemoryAndroidHardwareBufferANDROID;
+GetNativeBufferPropertiesOHOSFunc				            GetNativeBufferPropertiesOHOS;
+GetMemoryNativeBufferOHOSFunc					            GetMemoryNativeBufferOHOS;
 CmdDrawIndirectCountFunc									cmdDrawIndirectCount;
 CmdDrawIndexedIndirectCountFunc								cmdDrawIndexedIndirectCount;
 CmdSetCheckpointNVFunc										cmdSetCheckpointNV;

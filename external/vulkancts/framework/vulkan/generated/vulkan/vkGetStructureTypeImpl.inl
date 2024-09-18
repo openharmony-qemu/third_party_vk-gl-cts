@@ -313,9 +313,9 @@ template<> VkStructureType getStructureType<VkScreenSurfaceCreateInfoQNX> (void)
 	return VK_STRUCTURE_TYPE_SCREEN_SURFACE_CREATE_INFO_QNX;
 }
 
-template<> VkStructureType getStructureType<VkOHOSSurfaceCreateInfoOpenHarmony> (void)
+template<> VkStructureType getStructureType<VkSurfaceCreateInfoOHOS> (void)
 {
-	return VK_STRUCTURE_TYPE_OHOS_SURFACE_CREATE_INFO_OPENHARMONY;
+	return VK_STRUCTURE_TYPE_SURFACE_CREATE_INFO_OHOS;
 }
 
 template<> VkStructureType getStructureType<VkSwapchainCreateInfoKHR> (void)

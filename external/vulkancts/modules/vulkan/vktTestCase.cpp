@@ -75,6 +75,7 @@ vector<string> filterExtensions (const vector<VkExtensionProperties>& extensions
 		"VK_KHR_",
 		"VK_EXT_",
 		"VK_KHX_",
+		"VK_OHOS_",
 		"VK_NV_cooperative_matrix",
 		"VK_NV_ray_tracing",
 		"VK_NV_inherited_viewport_scissor",

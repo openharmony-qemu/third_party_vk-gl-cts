@@ -69,9 +69,9 @@ VkResult InstanceDriver::createAndroidSurfaceKHR (VkInstance instance, const VkA
 	return m_vk.createAndroidSurfaceKHR(instance, pCreateInfo, pAllocator, pSurface);
 }
 
-VkResult InstanceDriver::createOHOSSurfaceOpenHarmony (VkInstance instance, const VkOHOSSurfaceCreateInfoOpenHarmony* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) const
+VkResult InstanceDriver::CreateSurfaceOHOS (VkInstance instance, const VkSurfaceCreateInfoOHOS* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) const
 {
-	return m_vk.createOHOSSurfaceOpenHarmony(instance, pCreateInfo, pAllocator, pSurface);
+	return m_vk.CreateSurfaceOHOS(instance, pCreateInfo, pAllocator, pSurface);
 }
 
 VkResult InstanceDriver::getPhysicalDeviceDisplayPropertiesKHR (VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayPropertiesKHR* pProperties) const

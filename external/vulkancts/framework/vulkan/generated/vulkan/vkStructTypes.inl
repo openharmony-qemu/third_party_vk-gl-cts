@@ -1423,15 +1423,15 @@ struct VkScreenSurfaceCreateInfoQNX
 	pt::QNXScreenWindowPtr			window;
 };
 
-struct VkOHOSSurfaceCreateInfoOpenHarmony
+struct VkSurfaceCreateInfoOHOS
 {
 	VkStructureType						sType;
 	const void*							pNext;
-	VkOHOSSurfaceCreateFlagsOpenHarmony	flags;
+	VkSurfaceCreateFlagsOHOS	flags;
 	struct pt::OhosNativeWindowPtr		window;
 };
 
-struct VkOHOSNativeBufferPropertiesOpenHarmony
+struct VkNativeBufferPropertiesOHOS
 {
 	VkStructureType	sType;
 	const void*		pNext;
@@ -3740,6 +3740,43 @@ struct VkAndroidHardwareBufferFormatPropertiesANDROID
 	VkChromaLocation				suggestedXChromaOffset;
 	VkChromaLocation				suggestedYChromaOffset;
 };
+
+typedef struct VkNativeBufferUsageOHOS {
+    VkStructureType    sType;
+    void*              pNext;
+    deUint64           OHOSNativeBufferUsage;
+} VkNativeBufferUsageOHOS;
+
+typedef struct VkNativeBufferFormatPropertiesOHOS {
+    VkStructureType                  sType;
+    void*                            pNext;
+    VkFormat                         format;
+    deUint64                         externalFormat;
+    VkFormatFeatureFlags             formatFeatures;
+    VkComponentMapping               samplerYcbcrConversionComponents;
+    VkSamplerYcbcrModelConversion    suggestedYcbcrModel;
+    VkSamplerYcbcrRange              suggestedYcbcrRange;
+    VkChromaLocation                 suggestedXChromaOffset;
+    VkChromaLocation                 suggestedYChromaOffset;
+} VkNativeBufferFormatPropertiesOHOS;
+
+typedef struct VkImportNativeBufferInfoOHOS {
+    VkStructureType            		sType;
+    const void*                		pNext;
+    struct pt::OHOSNativeBufferPtr  buffer;
+} VkImportNativeBufferInfoOHOS;
+
+typedef struct VkMemoryGetNativeBufferInfoOHOS {
+    VkStructureType    sType;
+    const void*        pNext;
+    VkDeviceMemory     memory;
+} VkMemoryGetNativeBufferInfoOHOS;
+
+typedef struct VkExternalFormatOHOS {
+    VkStructureType    sType;
+    void*              pNext;
+    deUint64           externalFormat;
+} VkExternalFormatOHOS;
 
 struct VkCommandBufferInheritanceConditionalRenderingInfoEXT
 {
