@@ -97,6 +97,7 @@ ohos_source_set("deqp_vk_draw_source") {
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
   ]
+  external_deps = [ "graphic_surface:surface" ]
   part_name = "acts"
   subsystem_name = "xts"
   configs = [ ":deqp_vk_draw_config" ]

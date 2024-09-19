@@ -16,7 +16,7 @@ virtual VkResult	enumerateDeviceLayerProperties									(VkPhysicalDevice physic
 virtual VkResult	enumerateDeviceExtensionProperties								(VkPhysicalDevice physicalDevice, const char* pLayerName, uint32_t* pPropertyCount, VkExtensionProperties* pProperties) const = 0;
 virtual void		getPhysicalDeviceSparseImageFormatProperties					(VkPhysicalDevice physicalDevice, VkFormat format, VkImageType type, VkSampleCountFlagBits samples, VkImageUsageFlags usage, VkImageTiling tiling, uint32_t* pPropertyCount, VkSparseImageFormatProperties* pProperties) const = 0;
 virtual VkResult	createAndroidSurfaceKHR											(VkInstance instance, const VkAndroidSurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) const = 0;
-virtual VkResult	createOHOSSurfaceOpenHarmony									(VkInstance instance, const VkOHOSSurfaceCreateInfoOpenHarmony* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) const = 0;
+virtual VkResult	CreateSurfaceOHOS									            (VkInstance instance, const VkSurfaceCreateInfoOHOS* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) const = 0;
 virtual VkResult	getPhysicalDeviceDisplayPropertiesKHR							(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayPropertiesKHR* pProperties) const = 0;
 virtual VkResult	getPhysicalDeviceDisplayPlanePropertiesKHR						(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayPlanePropertiesKHR* pProperties) const = 0;
 virtual VkResult	getDisplayPlaneSupportedDisplaysKHR								(VkPhysicalDevice physicalDevice, uint32_t planeIndex, uint32_t* pDisplayCount, VkDisplayKHR* pDisplays) const = 0;

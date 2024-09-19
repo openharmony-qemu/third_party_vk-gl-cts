@@ -371,10 +371,10 @@ Move<VkSurfaceKHR> createAndroidSurfaceKHR (const InstanceInterface& vk, VkInsta
 	return Move<VkSurfaceKHR>(check<VkSurfaceKHR>(object), Deleter<VkSurfaceKHR>(vk, instance, pAllocator));
 }
 
-Move<VkSurfaceKHR> createOHOSSurfaceOpenHarmony (const InstanceInterface& vk, VkInstance instance, const VkOHOSSurfaceCreateInfoOpenHarmony* pCreateInfo, const VkAllocationCallbacks* pAllocator)
+Move<VkSurfaceKHR> CreateSurfaceOHOS (const InstanceInterface& vk, VkInstance instance, const VkSurfaceCreateInfoOHOS* pCreateInfo, const VkAllocationCallbacks* pAllocator)
 {
 	VkSurfaceKHR object = 0;
-	VK_CHECK(vk.createOHOSSurfaceOpenHarmony(instance, pCreateInfo, pAllocator, &object));
+	VK_CHECK(vk.CreateSurfaceOHOS(instance, pCreateInfo, pAllocator, &object));
 	return Move<VkSurfaceKHR>(check<VkSurfaceKHR>(object), Deleter<VkSurfaceKHR>(vk, instance, pAllocator));
 }
 

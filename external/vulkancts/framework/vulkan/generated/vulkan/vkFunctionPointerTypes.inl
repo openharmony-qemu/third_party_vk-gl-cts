@@ -157,8 +157,7 @@ typedef VKAPI_ATTR void					(VKAPI_CALL* CmdNextSubpassFunc)													(VkComm
 typedef VKAPI_ATTR void					(VKAPI_CALL* CmdEndRenderPassFunc)													(VkCommandBuffer commandBuffer);
 typedef VKAPI_ATTR void					(VKAPI_CALL* CmdExecuteCommandsFunc)												(VkCommandBuffer commandBuffer, uint32_t commandBufferCount, const VkCommandBuffer* pCommandBuffers);
 typedef VKAPI_ATTR VkResult				(VKAPI_CALL* CreateAndroidSurfaceKHRFunc)											(VkInstance instance, const VkAndroidSurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface);
-typedef VKAPI_ATTR VkResult				(VKAPI_CALL* CreateOHOSSurfaceOpenHarmonyFunc)										(VkInstance instance, const VkOHOSSurfaceCreateInfoOpenHarmony* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface);
-typedef VKAPI_ATTR VkResult				(VKAPI_CALL* GetOHOSNativeBufferPropertiesOpenHarmonyFunc)							(VkDevice device, const struct OH_NativeBuffer* buffer, VkOHOSNativeBufferPropertiesOpenHarmony* pProperties);
+typedef VKAPI_ATTR VkResult				(VKAPI_CALL* CreateSurfaceOHOSFunc)										            (VkInstance instance, const VkSurfaceCreateInfoOHOS* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface);
 typedef VKAPI_ATTR VkResult				(VKAPI_CALL* GetPhysicalDeviceDisplayPropertiesKHRFunc)								(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayPropertiesKHR* pProperties);
 typedef VKAPI_ATTR VkResult				(VKAPI_CALL* GetPhysicalDeviceDisplayPlanePropertiesKHRFunc)						(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayPlanePropertiesKHR* pProperties);
 typedef VKAPI_ATTR VkResult				(VKAPI_CALL* GetDisplayPlaneSupportedDisplaysKHRFunc)								(VkPhysicalDevice physicalDevice, uint32_t planeIndex, uint32_t* pDisplayCount, VkDisplayKHR* pDisplays);
@@ -354,6 +353,8 @@ typedef VKAPI_ATTR VkResult				(VKAPI_CALL* SignalSemaphoreFunc)													(Vk
 typedef VKAPI_ATTR VkResult				(VKAPI_CALL* SignalSemaphoreKHRFunc)												(VkDevice device, const VkSemaphoreSignalInfo* pSignalInfo);
 typedef VKAPI_ATTR VkResult				(VKAPI_CALL* GetAndroidHardwareBufferPropertiesANDROIDFunc)							(VkDevice device, const struct pt::AndroidHardwareBufferPtr buffer, VkAndroidHardwareBufferPropertiesANDROID* pProperties);
 typedef VKAPI_ATTR VkResult				(VKAPI_CALL* GetMemoryAndroidHardwareBufferANDROIDFunc)								(VkDevice device, const VkMemoryGetAndroidHardwareBufferInfoANDROID* pInfo, struct pt::AndroidHardwareBufferPtr* pBuffer);
+typedef VKAPI_ATTR VkResult				(VKAPI_CALL* GetMemoryNativeBufferOHOSFunc)								            (VkDevice device, const VkMemoryGetNativeBufferInfoOHOS* pInfo, struct pt::OHOSNativeBufferPtr* pBuffer);
+typedef VKAPI_ATTR VkResult				(VKAPI_CALL* GetNativeBufferPropertiesOHOSFunc)							            (VkDevice device, const struct pt::OHOSNativeBufferPtr buffer, VkNativeBufferPropertiesOHOS* pProperties);
 typedef VKAPI_ATTR void					(VKAPI_CALL* CmdDrawIndirectCountFunc)												(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride);
 typedef VKAPI_ATTR void					(VKAPI_CALL* CmdDrawIndirectCountKHRFunc)											(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride);
 typedef VKAPI_ATTR void					(VKAPI_CALL* CmdDrawIndirectCountAMDFunc)											(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride);

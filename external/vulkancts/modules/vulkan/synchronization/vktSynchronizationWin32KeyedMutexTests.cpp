@@ -257,6 +257,7 @@ bool isOpaqueHandleType (const vk::VkExternalMemoryHandleTypeFlagBits handleType
 	case vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_HOST_ALLOCATION_BIT_EXT:
 	case vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_HOST_MAPPED_FOREIGN_MEMORY_BIT_EXT:
 	case vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID:
+	case vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS:
 		return false;
 	default:
 		TCU_THROW(InternalError, "Unknown handle type or multiple bits set");

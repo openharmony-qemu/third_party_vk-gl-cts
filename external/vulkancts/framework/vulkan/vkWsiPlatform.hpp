@@ -199,7 +199,7 @@ struct TypeTraits<TYPE_MACOS>
 
 typedef WindowInterface<TYPE_MACOS>		MacOSWindowInterface;
 
-// VK_OpenHarmony_OHOS_surface
+// VK_OHOS_surface
 
 template<>
 struct TypeTraits<TYPE_OHOS>

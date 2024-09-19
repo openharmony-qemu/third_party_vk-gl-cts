@@ -1169,6 +1169,16 @@ VkResult DeviceDriver::getMemoryAndroidHardwareBufferANDROID (VkDevice device, c
 	return m_vk.getMemoryAndroidHardwareBufferANDROID(device, pInfo, pBuffer);
 }
 
+VkResult DeviceDriver::GetMemoryNativeBufferOHOS (VkDevice device, const VkMemoryGetNativeBufferInfoOHOS* pInfo, struct pt::OHOSNativeBufferPtr* pBuffer) const
+{
+	return m_vk.GetMemoryNativeBufferOHOS(device, pInfo, pBuffer);
+}
+
+VkResult DeviceDriver::GetNativeBufferPropertiesOHOS (VkDevice device, const struct pt::OHOSNativeBufferPtr buffer, VkNativeBufferPropertiesOHOS* pProperties) const
+{
+	return m_vk.GetNativeBufferPropertiesOHOS(device, buffer, pProperties);
+}
+
 void DeviceDriver::cmdDrawIndirectCount (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) const
 {
 	m_vk.cmdDrawIndirectCount(commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);

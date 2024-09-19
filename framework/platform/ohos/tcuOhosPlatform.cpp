@@ -115,6 +115,7 @@ vk::wsi::Display* OhosPlatform::createWsiDisplay(vk::wsi::Type wsiType) const
 {
     if(wsiType == vk::wsi::TYPE_OHOS){
         printf("ok\n");
+		return new VulkanDisplayOhos();
     }
     return NULL;
 }

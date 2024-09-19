@@ -113,7 +113,7 @@ PLATFORM_TYPES		= [
 	(["struct", "_screen_context", "*"],	["QNXScreenContextPtr"],		"void*"),
 	(["struct", "_screen_window", "*"],		["QNXScreenWindowPtr"],			"void*"),
 
-	# VK_OpenHarmony_OHOS_surface
+	# VK_OHOS_surface
 	(["NativeWindow", "*"],					["OhosNativeWindowPtr"],		"void*"),
 
 	# VK_EXT_metal_objects
@@ -779,20 +779,20 @@ class API:
 			enum.enumeratorList.extend(remainingEnumerators)
 
 def prefixName (prefix, name):
-	if name=="VkOHOSNativeBufferUsageOpenHarmony":
-		return "VK_STRUCTURE_TYPE_OHOS_NATIVE_BUFFER_USAGE_OPENHARMONY"
-	if name=="VkOHOSNativeBufferPropertiesOpenHarmony":
-		return "VK_STRUCTURE_TYPE_OHOS_NATIVE_BUFFER_PROPERTIES_OPENHARMONY"
-	if name=="VkOHOSNativeBufferFormatPropertiesOpenHarmony":
-		return "VK_STRUCTURE_TYPE_OHOS_NATIVE_BUFFER_FORMAT_PROPERTIES_OPENHARMONY"
-	if name=="VkImportOHOSNativeBufferInfoOpenHarmony":
-		return "VK_STRUCTURE_TYPE_IMPORT_OHOS_NATIVE_BUFFER_INFO_OPENHARMONY"
-	if name=="VkMemoryGetOHOSNativeBufferInfoOpenHarmony":
-		return "VK_STRUCTURE_TYPE_MEMORY_GET_OHOS_NATIVE_BUFFER_INFO_OPENHARMONY"
-	if name=="VkExternalFormatOpenHarmony":
-		return "VK_STRUCTURE_TYPE_EXTERNAL_FORMAT_OPENHARMONY"
-	if name=="VkOHOSSurfaceCreateInfoOpenHarmony":
-		return "VK_STRUCTURE_TYPE_OHOS_SURFACE_CREATE_INFO_OPENHARMONY"
+	if name=="VkNativeBufferUsageOHOS":
+		return "VK_STRUCTURE_TYPE_NATIVE_BUFFER_USAGE_OHOS"
+	if name=="VkNativeBufferPropertiesOHOS":
+		return "VK_STRUCTURE_TYPE_NATIVE_BUFFER_PROPERTIES_OHOS"
+	if name=="VkNativeBufferFormatPropertiesOHOS":
+		return "VK_STRUCTURE_TYPE_NATIVE_BUFFER_FORMAT_PROPERTIES_OHOS"
+	if name=="VkImportNativeBufferInfoOHOS":
+		return "VK_STRUCTURE_TYPE_IMPORT_NATIVE_BUFFER_INFO_OHOS"
+	if name=="VkMemoryGetNativeBufferInfoOHOS":
+		return "VK_STRUCTURE_TYPE_MEMORY_GET_NATIVE_BUFFER_INFO_OHOS"
+	if name=="VkExternalFormatOHOS":
+		return "VK_STRUCTURE_TYPE_EXTERNAL_FORMAT_OHOS"
+	if name=="VkSurfaceCreateInfoOHOS":
+		return "VK_STRUCTURE_TYPE_SURFACE_CREATE_INFO_OHOS"
 	name = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', name[2:])
 	name = re.sub(r'([a-zA-Z])([0-9])', r'\1_\2', name)
 	name = name.upper()

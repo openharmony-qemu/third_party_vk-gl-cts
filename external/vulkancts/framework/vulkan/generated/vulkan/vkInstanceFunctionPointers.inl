@@ -16,7 +16,7 @@ EnumerateDeviceLayerPropertiesFunc									enumerateDeviceLayerProperties;
 EnumerateDeviceExtensionPropertiesFunc								enumerateDeviceExtensionProperties;
 GetPhysicalDeviceSparseImageFormatPropertiesFunc					getPhysicalDeviceSparseImageFormatProperties;
 CreateAndroidSurfaceKHRFunc											createAndroidSurfaceKHR;
-CreateOHOSSurfaceOpenHarmonyFunc									createOHOSSurfaceOpenHarmony;
+CreateSurfaceOHOSFunc									            CreateSurfaceOHOS;
 GetPhysicalDeviceDisplayPropertiesKHRFunc							getPhysicalDeviceDisplayPropertiesKHR;
 GetPhysicalDeviceDisplayPlanePropertiesKHRFunc						getPhysicalDeviceDisplayPlanePropertiesKHR;
 GetDisplayPlaneSupportedDisplaysKHRFunc								getDisplayPlaneSupportedDisplaysKHR;

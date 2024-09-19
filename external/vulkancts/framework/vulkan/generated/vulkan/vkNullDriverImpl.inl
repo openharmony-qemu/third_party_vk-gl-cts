@@ -123,7 +123,7 @@ VKAPI_ATTR VkResult VKAPI_CALL createAndroidSurfaceKHR (VkInstance instance, con
 	VK_NULL_RETURN((*pSurface = allocateNonDispHandle<SurfaceKHR, VkSurfaceKHR>(instance, pCreateInfo, pAllocator)));
 }
 
-VKAPI_ATTR VkResult VKAPI_CALL createOHOSSurfaceOpenHarmony (VkInstance instance, const VkOHOSSurfaceCreateInfoOpenHarmony* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface)
+VKAPI_ATTR VkResult VKAPI_CALL CreateSurfaceOHOS (VkInstance instance, const VkSurfaceCreateInfoOHOS* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface)
 {
 	DE_UNREF(pAllocator);
 	VK_NULL_RETURN((*pSurface = allocateNonDispHandle<SurfaceKHR, VkSurfaceKHR>(instance, pCreateInfo, pAllocator)));
@@ -2303,6 +2303,22 @@ VKAPI_ATTR VkResult VKAPI_CALL getAndroidHardwareBufferPropertiesANDROID (VkDevi
 	return VK_SUCCESS;
 }
 
+VKAPI_ATTR VkResult VKAPI_CALL GetMemoryNativeBufferOHOS (VkDevice device, const VkMemoryGetNativeBufferInfoOHOS* pInfo, struct pt::OHOSNativeBufferPtr* pBuffer)
+{
+	DE_UNREF(device);
+	DE_UNREF(pInfo);
+	DE_UNREF(pBuffer);
+	return VK_SUCCESS;
+}
+
+VKAPI_ATTR VkResult VKAPI_CALL GetNativeBufferPropertiesOHOS (VkDevice device, const struct pt::OHOSNativeBufferPtr buffer, VkNativeBufferPropertiesOHOS* pProperties)
+{
+	DE_UNREF(device);
+	DE_UNREF(buffer);
+	DE_UNREF(pProperties);
+	return VK_SUCCESS;
+}
+
 VKAPI_ATTR void VKAPI_CALL cmdDrawIndirectCount (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride)
 {
 	DE_UNREF(commandBuffer);
@@ -4121,7 +4137,7 @@ static const tcu::StaticFunctionLibrary::Entry s_instanceFunctions[] =
 	VK_NULL_FUNC_ENTRY(vkEnumerateDeviceExtensionProperties,								enumerateDeviceExtensionProperties),
 	VK_NULL_FUNC_ENTRY(vkGetPhysicalDeviceSparseImageFormatProperties,						getPhysicalDeviceSparseImageFormatProperties),
 	VK_NULL_FUNC_ENTRY(vkCreateAndroidSurfaceKHR,											createAndroidSurfaceKHR),
-	VK_NULL_FUNC_ENTRY(vkCreateOHOSSurfaceOpenHarmony,										createOHOSSurfaceOpenHarmony),
+	VK_NULL_FUNC_ENTRY(vkCreateSurfaceOHOS,													CreateSurfaceOHOS),
 	VK_NULL_FUNC_ENTRY(vkGetPhysicalDeviceDisplayPropertiesKHR,								getPhysicalDeviceDisplayPropertiesKHR),
 	VK_NULL_FUNC_ENTRY(vkGetPhysicalDeviceDisplayPlanePropertiesKHR,						getPhysicalDeviceDisplayPlanePropertiesKHR),
 	VK_NULL_FUNC_ENTRY(vkGetDisplayPlaneSupportedDisplaysKHR,								getDisplayPlaneSupportedDisplaysKHR),
@@ -4435,6 +4451,8 @@ static const tcu::StaticFunctionLibrary::Entry s_deviceFunctions[] =
 	VK_NULL_FUNC_ENTRY(vkSignalSemaphore,											signalSemaphore),
 	VK_NULL_FUNC_ENTRY(vkGetAndroidHardwareBufferPropertiesANDROID,					getAndroidHardwareBufferPropertiesANDROID),
 	VK_NULL_FUNC_ENTRY(vkGetMemoryAndroidHardwareBufferANDROID,						getMemoryAndroidHardwareBufferANDROID),
+	VK_NULL_FUNC_ENTRY(vkGetNativeBufferPropertiesOHOS,								GetNativeBufferPropertiesOHOS),
+	VK_NULL_FUNC_ENTRY(vkGetMemoryNativeBufferOHOS,									GetMemoryNativeBufferOHOS),
 	VK_NULL_FUNC_ENTRY(vkCmdDrawIndirectCount,										cmdDrawIndirectCount),
 	VK_NULL_FUNC_ENTRY(vkCmdDrawIndexedIndirectCount,								cmdDrawIndexedIndirectCount),
 	VK_NULL_FUNC_ENTRY(vkCmdSetCheckpointNV,										cmdSetCheckpointNV),
