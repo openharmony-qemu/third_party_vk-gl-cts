@@ -23460,6 +23460,7 @@ dEQP-VK.wsi.xlib.swapchain.simulate_oom.image_usage
 dEQP-VK.wsi.xlib.swapchain.simulate_oom.min_image_count
 dEQP-VK.wsi.xlib.swapchain.simulate_oom.pre_transform
 dEQP-VK.wsi.xlib.swapchain.simulate_oom.present_mode
+dEQP-VK.wsi.ohos.colorspace.basic
 dEQP-VK.wsi.ohos.colorspace.extensions
 dEQP-VK.wsi.ohos.colorspace.hdr
 dEQP-VK.wsi.ohos.colorspace_compare.a2b10g10r10_unorm_pack32
@@ -26749,13 +26750,13 @@ dEQP-VK.wsi.ohos.surface.query_capabilities2
 dEQP-VK.wsi.ohos.surface.query_devgroup_present_capabilities
 dEQP-VK.wsi.ohos.surface.query_devgroup_present_modes
 dEQP-VK.wsi.ohos.surface.query_formats
+dEQP-VK.wsi.ohos.surface.query_formats_surfaceless
 dEQP-VK.wsi.ohos.surface.query_formats2
 dEQP-VK.wsi.ohos.surface.query_formats2_surfaceless
-dEQP-VK.wsi.ohos.surface.query_formats_surfaceless
 dEQP-VK.wsi.ohos.surface.query_present_modes
+dEQP-VK.wsi.ohos.surface.query_present_modes_surfaceless
 dEQP-VK.wsi.ohos.surface.query_present_modes2
 dEQP-VK.wsi.ohos.surface.query_present_modes2_surfaceless
-dEQP-VK.wsi.ohos.surface.query_present_modes_surfaceless
 dEQP-VK.wsi.ohos.surface.query_presentation_support
 dEQP-VK.wsi.ohos.surface.query_protected_capabilities
 dEQP-VK.wsi.ohos.surface.query_support
