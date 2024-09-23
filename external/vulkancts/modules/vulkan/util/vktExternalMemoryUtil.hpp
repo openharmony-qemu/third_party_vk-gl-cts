@@ -106,8 +106,6 @@ public:
 	 */
 	static OHOSNativeBufferExternalApi* getInstance();
 
-	//static bool LoadOHDynamicApis();
-
 	deUint64 MustSupportOHOSUsageFlags();
 
 	deUint64 VKUsageToOHOSUsage(vk::VkImageUsageFlagBits vkFlag);
@@ -129,7 +127,7 @@ public:
 									deUint64* usage,
 									deUint32* stride);
 
-	virtual ~OHOSNativeBufferExternalApi(){};
+	virtual ~OHOSNativeBufferExternalApi() override {};
 };
 
 class AndroidHardwareBufferExternalApi:public BufferExternalApi
@@ -198,7 +196,7 @@ public:
 	virtual deUint64 mustSupportAhbUsageFlags() = 0;
 	virtual bool     ahbFormatIsBlob(deUint32 format) = 0;
 
-	virtual ~AndroidHardwareBufferExternalApi();
+	virtual ~AndroidHardwareBufferExternalApi() override;
 
 protected:
 	// Protected Constructor
