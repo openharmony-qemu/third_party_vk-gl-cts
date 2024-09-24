@@ -4822,8 +4822,7 @@ tcu::TestStatus testAndroidHardwareBufferImageFormat (Context& context, vk::VkFo
 			continue;
 
 		// Only test a combination if AHardwareBuffer can be successfully allocated for it.
-		if (!ValidateAHardwareBuffer(log, format, requiredAhbUsage, vkd, *device, usage, createFlag, ahbApi,
-									 limits.maxImageArrayLayers, enableMaxLayerTest))
+		if (!ValidateAHardwareBuffer(log, format, requiredAhbUsage, vkd, *device, usage, createFlag, limits.maxImageArrayLayers, enableMaxLayerTest))
 			continue;
 
 		bool foundAnyUsableTiling = false;
