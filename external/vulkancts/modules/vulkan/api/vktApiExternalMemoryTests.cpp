@@ -4573,50 +4573,44 @@ void generateFailureText (TestLog& log, vk::VkFormat format, vk::VkImageUsageFla
 	log << TestLog::Message << combination.str() << TestLog::EndMessage;
 }
 
-bool ValidateAHardwareBuffer (TestLog& log, vk::VkFormat format, deUint64 requiredUsage, const vk::DeviceDriver& vkd,
-							  const vk::VkDevice& device, vk::VkImageUsageFlags usageFlag,
-							  vk::VkImageCreateFlags createFlag, BufferExternalApi* api, deUint32 layerCount,
-							  bool& enableMaxLayerTest)
+bool ValidateAHardwareBuffer (TestLog& log, vk::VkFormat format, deUint64 requiredAhbUsage, const vk::DeviceDriver& vkd, const vk::VkDevice& device, vk::VkImageUsageFlags usageFlag, vk::VkImageCreateFlags createFlag, deUint32 layerCount, bool& enableMaxLayerTest)
 {
 	DE_UNREF(createFlag);
+
+	AndroidHardwareBufferExternalApi* ahbApi = AndroidHardwareBufferExternalApi::getInstance();
+
+	if (!ahbApi)
+	{
+		TCU_THROW(NotSupportedError, "Platform doesn't support Android Hardware Buffer handles");
+	}
 
 #if (DE_OS == DE_OS_ANDROID)
 	// If CubeMap create flag is used and AHB doesn't support CubeMap return false.
 	if(!AndroidHardwareBufferExternalApi::supportsCubeMap() && (createFlag & vk::VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT))
 		return false;
+#endif
 
-	vk::pt::AndroidHardwareBufferPtr ptr = dynamic_cast<AndroidHardwareBufferExternalApi*>(api)->allocate(64u, 64u,
-		layerCount, dynamic_cast<AndroidHardwareBufferExternalApi*>(api)->vkFormatToAhbFormat(format), requiredUsage);
-	if (ptr.internal == DE_NULL)
+	vk::pt::AndroidHardwareBufferPtr ahb = ahbApi->allocate(64u, 64u, layerCount, ahbApi->vkFormatToAhbFormat(format), requiredAhbUsage);
+	if (ahb.internal == DE_NULL)
 	{
 		enableMaxLayerTest = false;
 		// try again with layerCount '1'
-		ptr = dynamic_cast<AndroidHardwareBufferExternalApi*>(api)->allocate(64u, 64u, 1u,
-			dynamic_cast<AndroidHardwareBufferExternalApi*>(api)->vkFormatToAhbFormat(format), requiredUsage);
+		ahb = ahbApi->allocate(64u, 64u, 1u, ahbApi->vkFormatToAhbFormat(format), requiredAhbUsage);
+		if (ahb.internal == DE_NULL)
+		{
+			return false;
+		}
 	}
+	NativeHandle nativeHandle(ahb);
 
-#else
-	if(createFlag & vk::VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT) {
-		return false;
-	}
-	(void)layerCount;
-	enableMaxLayerTest = false;
-	vk::pt::OHOSNativeBufferPtr ptr = dynamic_cast<OHOSNativeBufferExternalApi*>(api)->Allocate(64u, 64u,
-		dynamic_cast<OHOSNativeBufferExternalApi*>(api)->VKFormatToOHOSFormat(format), requiredUsage);
-#endif
-	if (ptr.internal == DE_NULL)
-	{
-		return false;
-	}
-	NativeHandle nativeHandle(ptr);
 	const vk::VkComponentMapping mappingA = { vk::VK_COMPONENT_SWIZZLE_IDENTITY, vk::VK_COMPONENT_SWIZZLE_IDENTITY, vk::VK_COMPONENT_SWIZZLE_IDENTITY, vk::VK_COMPONENT_SWIZZLE_IDENTITY };
 	const vk::VkComponentMapping mappingB = { vk::VK_COMPONENT_SWIZZLE_R, vk::VK_COMPONENT_SWIZZLE_G, vk::VK_COMPONENT_SWIZZLE_B, vk::VK_COMPONENT_SWIZZLE_A };
 
 	for (int variantIdx = 0; variantIdx < 2; ++variantIdx)
 	{
-		// Both mappings should be equivalent and work. 
+		// Both mappings should be equivalent and work.
 		const vk::VkComponentMapping& mapping = ((variantIdx == 0) ? mappingA : mappingB);
-#if (DE_OS == DE_OS_ANDROID)
+
 		vk::VkAndroidHardwareBufferFormatPropertiesANDROID formatProperties =
 		{
 			vk::VK_STRUCTURE_TYPE_ANDROID_HARDWARE_BUFFER_FORMAT_PROPERTIES_ANDROID,
@@ -4641,7 +4635,7 @@ bool ValidateAHardwareBuffer (TestLog& log, vk::VkFormat format, deUint64 requir
 
 		try
 		{
-			VK_CHECK(vkd.getAndroidHardwareBufferPropertiesANDROID(device, ptr, &bufferProperties));
+			VK_CHECK(vkd.getAndroidHardwareBufferPropertiesANDROID(device, ahb, &bufferProperties));
 			TCU_CHECK(formatProperties.format != vk::VK_FORMAT_UNDEFINED);
 			TCU_CHECK(formatProperties.format == format);
 			TCU_CHECK(formatProperties.externalFormat != 0u);
@@ -4654,7 +4648,41 @@ bool ValidateAHardwareBuffer (TestLog& log, vk::VkFormat format, deUint64 requir
 			generateFailureText(log, format, usageFlag, createFlag, static_cast<vk::VkImageTiling>(0), 0, 0, exception.getMessage());
 			return false;
 		}
-#else
+	}
+
+	return true;
+}
+
+bool ValidateOHOSNativeBuffer (TestLog& log, vk::VkFormat format, deUint64 requiredUsage, const vk::DeviceDriver& vkd,
+							  const vk::VkDevice& device, vk::VkImageUsageFlags usageFlag,
+							  vk::VkImageCreateFlags createFlag, BufferExternalApi* api, deUint32 layerCount,
+							  bool& enableMaxLayerTest)
+{
+	DE_UNREF(createFlag);
+
+	if (createFlag & vk::VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT) {
+		return false;
+	}
+	(void)layerCount;
+	enableMaxLayerTest = false;
+	vk::pt::OHOSNativeBufferPtr ptr = dynamic_cast<OHOSNativeBufferExternalApi*>(api)->Allocate(64u, 64u,
+		dynamic_cast<OHOSNativeBufferExternalApi*>(api)->VKFormatToOHOSFormat(format), requiredUsage);
+
+	if (ptr.internal == DE_NULL)
+	{
+		return false;
+	}
+	NativeHandle nativeHandle(ptr);
+	const vk::VkComponentMapping mappingA = { vk::VK_COMPONENT_SWIZZLE_IDENTITY, vk::VK_COMPONENT_SWIZZLE_IDENTITY,
+											  vk::VK_COMPONENT_SWIZZLE_IDENTITY, vk::VK_COMPONENT_SWIZZLE_IDENTITY };
+	const vk::VkComponentMapping mappingB = { vk::VK_COMPONENT_SWIZZLE_R, vk::VK_COMPONENT_SWIZZLE_G,
+											  vk::VK_COMPONENT_SWIZZLE_B, vk::VK_COMPONENT_SWIZZLE_A };
+
+	for (int variantIdx = 0; variantIdx < 2; ++variantIdx)
+	{
+		// Both mappings should be equivalent and work. 
+		const vk::VkComponentMapping& mapping = ((variantIdx == 0) ? mappingA : mappingB);
+
 		vk::VkNativeBufferFormatPropertiesOHOS formatProperties =
 		{
 			vk::VK_STRUCTURE_TYPE_NATIVE_BUFFER_FORMAT_PROPERTIES_OHOS,
@@ -4684,15 +4712,17 @@ bool ValidateAHardwareBuffer (TestLog& log, vk::VkFormat format, deUint64 requir
 			TCU_CHECK(formatProperties.format == format);
 			TCU_CHECK(formatProperties.externalFormat != 0u);
 			TCU_CHECK((formatProperties.formatFeatures & vk::VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) != 0u);
-			TCU_CHECK((formatProperties.formatFeatures & (vk::VK_FORMAT_FEATURE_MIDPOINT_CHROMA_SAMPLES_BIT | vk::VK_FORMAT_FEATURE_COSITED_CHROMA_SAMPLES_BIT)) != 0u);
+			TCU_CHECK((formatProperties.formatFeatures & (vk::VK_FORMAT_FEATURE_MIDPOINT_CHROMA_SAMPLES_BIT |
+														  vk::VK_FORMAT_FEATURE_COSITED_CHROMA_SAMPLES_BIT)) != 0u);
 		}
 		catch (const tcu::Exception& exception)
 		{
-			log << TestLog::Message << "Failure validating OHOS Native Buffer. See error message and combination: " << TestLog::EndMessage;
-			generateFailureText(log, format, usageFlag, createFlag, static_cast<vk::VkImageTiling>(0), 0, 0, exception.getMessage());
+			log << TestLog::Message << "Failure validating OHOS Native Buffer. See error message and combination: "
+				<< TestLog::EndMessage;
+			generateFailureText(log, format, usageFlag, createFlag, static_cast<vk::VkImageTiling>(0),
+								0, 0, exception.getMessage());
 			return false;
 		}
-#endif
 	}
 
 	return true;
@@ -5019,29 +5049,26 @@ tcu::TestStatus testOHOSNativeBufferImageFormat (Context& context, vk::VkFormat 
 	const vk::VkPhysicalDevice					  physicalDevice		(vk::chooseDevice(vki, instance,
 																		 context.getTestContext().getCommandLine()));
 
-	vk::VkPhysicalDeviceProtectedMemoryFeatures		protectedFeatures;
+	vk::VkPhysicalDeviceProtectedMemoryFeatures	  protectedFeatures;
 	protectedFeatures.sType				= vk::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROTECTED_MEMORY_FEATURES;
 	protectedFeatures.pNext				= DE_NULL;
 	protectedFeatures.protectedMemory	= VK_FALSE;
 
-	vk::VkPhysicalDeviceFeatures2					deviceFeatures;
+	vk::VkPhysicalDeviceFeatures2				  deviceFeatures;
 	deviceFeatures.sType		= vk::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 	deviceFeatures.pNext		= &protectedFeatures;
 
 	vki.getPhysicalDeviceFeatures2(physicalDevice, &deviceFeatures);
 
-	const deUint32								  queueFamilyIndex		(chooseQueueFamilyIndex(vki, physicalDevice, 0u));
-	const vk::Unique<vk::VkDevice>				  device				(createTestDevice(context, vkp, instance,
-																		 vki, physicalDevice, 0u, externalMemoryType,
-																		 0u, queueFamilyIndex, false,
-																		 &protectedFeatures));
-	const vk::DeviceDriver						  vkd					(vkp, instance, *device,
-																		 context.getUsedApiVersion());
-	TestLog&									  log				  = context.getTestContext().getLog();
-	const vk::VkPhysicalDeviceLimits			  limits			  = getPhysicalDeviceProperties(vki,physicalDevice
-																								   ).limits;
+	const deUint32								  queueFamilyIndex	(chooseQueueFamilyIndex(vki, physicalDevice, 0u));
+	const vk::Unique<vk::VkDevice>				  device			(createTestDevice(context, vkp, instance,
+																	 vki, physicalDevice, 0u, externalMemoryType,
+																	 0u, queueFamilyIndex, false, &protectedFeatures));
+	const vk::DeviceDriver						  vkd		   (vkp, instance, *device,context.getUsedApiVersion());
+	TestLog&									  log		   = context.getTestContext().getLog();
+	const vk::VkPhysicalDeviceLimits			  limits	   = getPhysicalDeviceProperties(vki,physicalDevice).limits;
 
-	const vk::VkImageUsageFlagBits framebufferUsageFlag 
+	const vk::VkImageUsageFlagBits 				  framebufferUsageFlag 
 									= vk::isDepthStencilFormat(format) ? vk::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
 																	   : vk::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
@@ -5105,7 +5132,7 @@ tcu::TestStatus testOHOSNativeBufferImageFormat (Context& context, vk::VkFormat 
 			continue;
 
 		// Only test a combination if Buffer can be successfully allocated for it.
-		if (!ValidateAHardwareBuffer(log, format, requiredUsage, vkd, *device, usage, createFlag, api,
+		if (!ValidateOHOSNativeBuffer(log, format, requiredUsage, vkd, *device, usage, createFlag, api,
 									 limits.maxImageArrayLayers, enableMaxLayerTest))
 			continue;
 
@@ -5611,8 +5638,7 @@ de::MovePtr<tcu::TestCaseGroup> createMemoryTests (tcu::TestContext& testCtx)
 	group->addChild(createMemoryTests(testCtx, vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID).release());
 	group->addChild(createMemoryTests(testCtx, vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT).release());
 	group->addChild(createMemoryTests(testCtx, vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_ZIRCON_VMO_BIT_FUCHSIA).release());
-	group->addChild(createMemoryTests(testCtx,
-									  vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS).release());
+	group->addChild(createMemoryTests(testCtx, vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS).release());
 	return group;
 }
 

@@ -69,6 +69,8 @@ namespace vkt
 namespace api
 {
 
+constexpr uint32_t DE_OS_ADR = 5;
+
 struct TestParams
 {
 	VkFormat					 format;
@@ -965,7 +967,7 @@ tcu::TestCaseGroup* createImageCompressionControlTests(tcu::TestContext& testCtx
 	}
 	group->addChild(subgroup);
 
-#if (DE_OS == DE_OS_ANDROID)
+#if (DE_OS == DE_OS_ADR)
 	// Test creating Android Hardware buffer with compression control struct
 	subgroup = new tcu::TestCaseGroup(testCtx, "android_hardware_buffer");
 #else
@@ -975,7 +977,7 @@ tcu::TestCaseGroup* createImageCompressionControlTests(tcu::TestContext& testCtx
 	{
 		testParams.control.flags = flag.flag;
 		// Queries images created with compression control struct.
-#if (DE_OS == DE_OS_ANDROID)
+#if (DE_OS == DE_OS_ADR)
 		subgroup->addChild(createTestGroup(testCtx, flag.name, addAhbCompressionControlTests, testParams));
 #else
 		subgroup->addChild(createTestGroup(testCtx, flag.name, AddOHOSCompressionControlTests, testParams));
