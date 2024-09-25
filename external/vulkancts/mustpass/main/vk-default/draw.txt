@@ -16850,3 +16850,7 @@ dEQP-VK.draw.renderpass.zero_viewport_height.front_cw_cull_back
 dEQP-VK.draw.renderpass.zero_viewport_height.front_cw_cull_both
 dEQP-VK.draw.renderpass.zero_viewport_height.front_cw_cull_front
 dEQP-VK.draw.renderpass.zero_viewport_height.front_cw_cull_none
+dEQP-VK.draw.renderpass.ohos_native_buffer.triangle_list
+dEQP-VK.draw.renderpass.ohos_native_buffer.triangle_list_layers_3
+dEQP-VK.draw.renderpass.ohos_native_buffer.triangle_list_layers_5
+dEQP-VK.draw.renderpass.ohos_native_buffer.triangle_list_layers_8
