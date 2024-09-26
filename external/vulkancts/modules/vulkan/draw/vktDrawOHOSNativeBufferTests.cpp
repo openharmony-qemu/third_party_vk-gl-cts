@@ -3,8 +3,6 @@
  * ------------------------
  *
  * Copyright (c) 2020 The Khronos Group Inc.
- * Copyright (c) 2020 Google LLC
- * Copyright (c) 2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -319,14 +317,6 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
                                                                          VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
                                                                          VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
-	// Enable this to use non images for color output.
-#if 0
-	const Unique<VkImage>	colorTargetImage(createImage(vk, device, &targetImageCreateInfo, DE_NULL));
-	de::MovePtr<Allocation>	m_colorImageAllocation	= m_context.getDefaultAllocator().allocate(
-            getImageMemoryRequirements(vk, device, *colorTargetImage), MemoryRequirement::Any);
-	VK_CHECK(vk.bindImageMemory(device, *colorTargetImage, m_colorImageAllocation->getMemory(),
-                                m_colorImageAllocation->getOffset()));
-#else
 	OHOSNativeBufferExternalApi* api = OHOSNativeBufferExternalApi::getInstance();
 
 	if (!api)
@@ -391,7 +381,7 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 
 	const Unique<VkDeviceMemory>				colorImageMemory	(allocateMemory(vk, device, &allocateInfo));
 	VK_CHECK(vk.bindImageMemory(device, *colorTargetImage, *colorImageMemory, 0u));
-#endif
+
 
 	vector<Move<VkImageView>>					imageViews;
 	vector<VkImageView>							colorAttachments;
