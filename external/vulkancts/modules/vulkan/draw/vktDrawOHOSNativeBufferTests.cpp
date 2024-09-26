@@ -382,7 +382,6 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 	const Unique<VkDeviceMemory>				colorImageMemory	(allocateMemory(vk, device, &allocateInfo));
 	VK_CHECK(vk.bindImageMemory(device, *colorTargetImage, *colorImageMemory, 0u));
 
-
 	vector<Move<VkImageView>>					imageViews;
 	vector<VkImageView>							colorAttachments;
 	RenderPassCreateInfo						renderPassCreateInfo;
