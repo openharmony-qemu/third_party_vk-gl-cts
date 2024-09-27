@@ -965,21 +965,26 @@ tcu::TestCaseGroup* createImageCompressionControlTests(tcu::TestContext& testCtx
 	}
 	group->addChild(subgroup);
 
-#if (DE_OS == 5)
+
 	// Test creating Android Hardware buffer with compression control struct
 	subgroup = new tcu::TestCaseGroup(testCtx, "android_hardware_buffer");
-#else
-	subgroup = new tcu::TestCaseGroup(testCtx, "ohos_native_buffer");
-#endif
+
 	for (auto& flag : compression_flags)
 	{
 		testParams.control.flags = flag.flag;
 		// Queries images created with compression control struct.
-#if (DE_OS == 5)
 		subgroup->addChild(createTestGroup(testCtx, flag.name, addAhbCompressionControlTests, testParams));
-#else
+	}
+
+	group->addChild(subgroup);
+
+	subgroup = new tcu::TestCaseGroup(testCtx, "ohos_native_buffer");
+
+	for (auto& flag : compression_flags)
+	{
+		testParams.control.flags = flag.flag;
+		// Queries images created with compression control struct.
 		subgroup->addChild(createTestGroup(testCtx, flag.name, AddOHOSCompressionControlTests, testParams));
-#endif
 	}
 
 	group->addChild(subgroup);

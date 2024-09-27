@@ -101,11 +101,8 @@ void createChildren (tcu::TestContext& testCtx, tcu::TestCaseGroup* group, const
 		group->addChild(createShaderInvocationTests			(testCtx));
 
 		// subpasses can't be translated to dynamic rendering
-#if (DE_OS == DE_OS_ANDROID)
 		group->addChild(createAhbTests						(testCtx));
-#else
 		group->addChild(CreateOHOSNativeBufferTests			(testCtx));
-#endif
 	}
 #endif // CTS_USES_VULKANSC
 }
