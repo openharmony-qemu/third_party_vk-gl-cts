@@ -47,11 +47,11 @@
 #include "vktDrawDepthClampTests.hpp"
 #include "vktDrawMultipleClearsWithinRenderPass.hpp"
 #include "vktDrawSampleAttributeTests.hpp"
-#include "vktDrawOHOSNativeBufferTests.hpp"
-#include "vktDrawAhbTests.hpp"
 #ifndef CTS_USES_VULKANSC
 #include "vktDrawOutputLocationTests.hpp"
 #include "vktDrawDepthBiasTests.hpp"
+#include "vktDrawAhbTests.hpp"
+#include "vktDrawOHOSNativeBufferTests.hpp"
 #include "vktDrawMultiExtTests.hpp"
 
 #endif // CTS_USES_VULKANSC
