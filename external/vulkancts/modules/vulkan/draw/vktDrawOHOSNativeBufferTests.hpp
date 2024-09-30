@@ -1,12 +1,10 @@
-#ifndef _VKTDRAWAHBTESTS_HPP
-#define _VKTDRAWAHBTESTS_HPP
+#ifndef _VKTDRAWOHOSTESTS_HPP
+#define _VKTDRAWOHOSTESTS_HPP
 /*------------------------------------------------------------------------
  * Vulkan Conformance Tests
  * ------------------------
  *
  * Copyright (c) 2020 The Khronos Group Inc.
- * Copyright (c) 2020 Google LLC
- * Copyright (c) 2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,4 +36,4 @@ tcu::TestCaseGroup*	CreateOHOSNativeBufferTests(tcu::TestContext& testCtx);
 } // Draw
 } // vkt
 
-#endif // _VKTDRAWAHBTESTS_HPP
+#endif // _VKTDRAWOHOSTESTS_HPP
