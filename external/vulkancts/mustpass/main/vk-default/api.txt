@@ -244869,7 +244869,6 @@ dEQP-VK.api.device_init.create_instance_null_appinfo.basic
 dEQP-VK.api.device_init.create_instance_unsupported_extensions.basic
 dEQP-VK.api.device_init.create_multiple_devices.basic
 dEQP-VK.api.device_init.enumerate_devices_alloc_leak.basic
-dEQP-VK.api.driver_properties.conformance_version
 dEQP-VK.api.driver_properties.driver_id_match
 dEQP-VK.api.driver_properties.info_zero_terminated
 dEQP-VK.api.driver_properties.name_is_not_empty
