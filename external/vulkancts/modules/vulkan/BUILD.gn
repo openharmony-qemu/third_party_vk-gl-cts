@@ -160,7 +160,6 @@ vk_common_deps = [
   "//third_party/vk-gl-cts/framework/qphelper:libdeqp_qphelper",
   "//third_party/vk-gl-cts/framework/referencerenderer:libdeqp_referencerenderer",
   "//third_party/vk-gl-cts/framework/xexml:libdeqp_xexml",
-  "//third_party/zlib:libz",
 ]
 
 ohos_source_set("deqp_vk_package_source") {
