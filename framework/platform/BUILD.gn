@@ -165,7 +165,6 @@ ohos_shared_library("libdeqp_ohos_platform") {
     "//third_party/vk-gl-cts/modules/gles3:libdeqp-gles3",
     "//third_party/vk-gl-cts/modules/gles31:libdeqp-gles31",
     "//third_party/vk-gl-cts/modules/glshared:libdeqp-gl-shared",
-    "//third_party/zlib:libz",
   ]
   external_deps = [
     #  "hilog_native:libhilog",
