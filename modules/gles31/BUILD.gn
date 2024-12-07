@@ -43,7 +43,6 @@ ohos_source_set("deqp-gles31_source") {
     "//third_party/vk-gl-cts/framework/opengl/wrapper:libdeqp_glwrapper",
     "//third_party/vk-gl-cts/modules/gles31/functional:libdeqp-gles31-functional",
     "//third_party/vk-gl-cts/modules/gles31/stress:libdeqp-gles31-stress",
-    "//third_party/zlib:libz",
   ]
 
   configs = [ ":deqp-gles31_config" ]

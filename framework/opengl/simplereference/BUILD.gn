@@ -40,7 +40,6 @@ ohos_source_set("deqp_opengl_simplereference_source") {
     "//third_party/vk-gl-cts/framework/delibs/decpp:libdeqp_decpp",
     "//third_party/vk-gl-cts/framework/delibs/deutil:libdeqp_deutil",
     "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
-    "//third_party/zlib:libz",
   ]
 
   configs = [ ":deqp_opengl_simplereference_config" ]
