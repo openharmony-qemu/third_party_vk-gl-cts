@@ -48,7 +48,6 @@ ohos_source_set("eglutil_source") {
     "//third_party/vk-gl-cts/framework/egl/wrapper:libdeqp_eglwrapper",
     "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
     "//third_party/vk-gl-cts/framework/opengl/wrapper:libdeqp_glwrapper",
-    "//third_party/zlib:libz",
   ]
 
   configs = [ ":eglutil_config" ]

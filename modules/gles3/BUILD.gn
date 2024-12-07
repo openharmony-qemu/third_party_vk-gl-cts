@@ -47,7 +47,6 @@ ohos_source_set("deqp-gles3_source") {
     "//third_party/vk-gl-cts/modules/gles3/functional:libdeqp-gles3-functional",
     "//third_party/vk-gl-cts/modules/gles3/performance:libdeqp-gles3-performance",
     "//third_party/vk-gl-cts/modules/gles3/stress:libdeqp-gles3-stress",
-    "//third_party/zlib:libz",
   ]
 
   configs = [ ":deqp-gles3_config" ]
