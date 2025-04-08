@@ -30,11 +30,27 @@
 #include "external/openglcts/modules/gles3/es3cTestPackage.hpp"
 #include "external/openglcts/modules/gles32/es32cTestPackage.hpp"
 #include "external/openglcts/modules/gles31/es31cTestPackage.hpp"
+#include "external/openglcts/modules/gl/gl3cTestPackages.hpp"
+#include "external/openglcts/modules/gl/gl4cTestPackages.hpp"
 
 #include "modules/egl/teglTestPackage.hpp"
 #include "modules/gles2/tes2TestPackage.hpp"
 #include "modules/gles3/tes3TestPackage.hpp"
 #include "modules/gles31/tes31TestPackage.hpp"
+
+#if defined(DEQP_GTF_AVAILABLE)
+#include "gtfGL30TestPackage.hpp"
+#include "gtfGL31TestPackage.hpp"
+#include "gtfGL32TestPackage.hpp"
+#include "gtfGL33TestPackage.hpp"
+#include "gtfGL40TestPackage.hpp"
+#include "gtfGL41TestPackage.hpp"
+#include "gtfGL42TestPackage.hpp"
+#include "gtfGL43TestPackage.hpp"
+#include "gtfGL44TestPackage.hpp"
+#include "gtfGL45TestPackage.hpp"
+#include "gtfGL46TestPackage.hpp"
+#endif
 
 #include "ohos_context_i.h"
 
@@ -76,6 +92,15 @@ static tcu::TestPackage* createdEQPEGLPackage(tcu::TestContext& testCtx)
        return new deqp::egl::TestPackage(testCtx);
 }
 
+static tcu::TestPackage* createGL30Package(tcu::TestContext& testCtx)
+{
+	return new gl3cts::GL30TestPackage(testCtx, "KHR-GL30");
+}
+static tcu::TestPackage* createGL31Package(tcu::TestContext& testCtx)
+{
+	return new gl3cts::GL31TestPackage(testCtx, "KHR-GL31");
+}
+
 // Implement this in your platform port.
 
 void RegistPackage()
@@ -101,6 +126,8 @@ KHR-GLES32
     registry->registerPackage("dEQP-GLES3", createdEQPES30Package);
     registry->registerPackage("dEQP-GLES31", createdEQPES31Package);
     registry->registerPackage("dEQP-EGL", createdEQPEGLPackage);
+    registry->registerPackage("dEQP-GL30", createGL30Package);
+    registry->registerPackage("dEQP-GL31", createGL31Package);
 }
 
 bool GetCasePath(tcu::TestNode *node, std::vector<tcu::TestNode *> &casePath, std::vector<std::string> &namePath, uint32_t deep = 0)
