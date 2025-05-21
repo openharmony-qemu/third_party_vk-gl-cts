@@ -37,7 +37,9 @@
 #include "modules/egl/teglTestPackage.hpp"
 #include "modules/gles2/tes2TestPackage.hpp"
 #include "modules/gles3/tes3TestPackage.hpp"
+#include "modules/gles3/tgl45es3TestPackage.hpp"
 #include "modules/gles31/tes31TestPackage.hpp"
+#include "modules/gles31/tgl45es31TestPackage.hpp"
 
 #if defined(DEQP_GTF_AVAILABLE)
 #include "gtfGL30TestPackage.hpp"
