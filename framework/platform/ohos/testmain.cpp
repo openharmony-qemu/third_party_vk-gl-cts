@@ -352,6 +352,8 @@ bool GetCasePath(tcu::TestNode *node, std::vector<tcu::TestNode *> &casePath, st
 int main(int argc, char **argv)
 {
     printf("testmain start --- \n");
+    setenv("NEED_OPENG" , "1", 1);
+    setenv("LD_LIBRARY_PATH", "/system/lib64/:/system/lib64/ndk", 1);
     int exitStatus = EXIT_SUCCESS;
 
 #if (DE_OS != DE_OS_WIN32)

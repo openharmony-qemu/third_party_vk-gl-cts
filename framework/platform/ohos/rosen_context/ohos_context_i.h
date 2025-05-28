@@ -24,7 +24,8 @@ enum class RCI_GLES_VERSION {
     V20 = 20,
     V30 = 30,
     V31 = 31,
-    V32 = 32
+    V32 = 32,
+    V42 = 42
 };
 
 enum class RCI_PROFILE {
