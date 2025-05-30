@@ -111,6 +111,15 @@ bool RosenContextImpl::InitEgl()
         return false;
     }
 
+    if (CheckIfNeedOpengl())
+    {
+        if (eglBindAPI(EGL_OPENGL_API) == EGL_FALSE)
+        {
+            printf("Failed to eglBindAPI(EGL_OPENGL_API)");
+            return false;
+        }
+    }
+
     glDepthMask(GL_TRUE);
 
     eglGetConfigs(eglDisplay_, NULL, 0, &configCount_);
@@ -125,6 +134,17 @@ bool RosenContextImpl::InitEgl()
     }
     eglInited_ = true;
     return true;
+}
+
+bool RosenContextImpl::CheckIfNeedOpengl()
+{
+    const char* needOpenglEnv = "NEED_OPENGL";
+    const char* needOpenglEnvValue = getenv(needOpenglEnv);
+    if (needOpenglEnvValue && std::string(needOpenglEnvValue) ==  "1")
+    {
+        return true;
+    }
+    return false;
 }
 
 bool RosenContextImpl::SetConfig(int32_t w, int32_t h, RCI_GLES_VERSION ver, RCI_PIXEL_FORMAT pf, RCI_SURFACE_TYPE st, RCI_PROFILE tp, RCI_CONTEXT_FLAG flags)
@@ -152,24 +172,29 @@ bool RosenContextImpl::SetConfig(int32_t w, int32_t h, RCI_GLES_VERSION ver, RCI
     default:
         return false;
     }
-    if (eglBindAPI(EGL_OPENGL_ES_API) == EGL_FALSE)
+    if (eglBindAPI(eglApi) == EGL_FALSE)
     {
-        printf("Failed to bind OpenGL ES API");
+        printf("Failed to bind OpenGL (ES) API");
         return false;
     }
 
     std::vector<EGLint> frameBufferAttribs;
     frameBufferAttribs.push_back(EGL_RENDERABLE_TYPE);
-    switch (static_cast<int>(glesVersion_) / 10)
+    if (eglApi == EGL_OPENGL_API)
     {
-    case 3:
-        frameBufferAttribs.push_back(EGL_OPENGL_ES3_BIT);
-        break;
-    case 2:
-        frameBufferAttribs.push_back(EGL_OPENGL_ES2_BIT);
-        break;
-    default:
-        frameBufferAttribs.push_back(EGL_OPENGL_ES_BIT);
+        frameBufferAttribs.push_back(EGL_OPENGL_BIT);
+    } else {
+        switch (static_cast<int>(glesVersion_) / 10)
+        {
+        case 3:
+            frameBufferAttribs.push_back(EGL_OPENGL_ES3_BIT);
+            break;
+        case 2:
+            frameBufferAttribs.push_back(EGL_OPENGL_ES2_BIT);
+            break;
+        default:
+            frameBufferAttribs.push_back(EGL_OPENGL_ES_BIT);
+        }
     }
 
     frameBufferAttribs.push_back(EGL_SURFACE_TYPE);

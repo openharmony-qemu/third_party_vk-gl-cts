@@ -112,6 +112,7 @@ public:
     uint32_t OH_waitNative(int32_t engine) override;
     uint32_t OH_waitSync(void* dpy, void* sync, int32_t flags) override;
     int32_t OH_waitSyncKHR(void* dpy, void* sync, int32_t flags) override;
+    static bool CheckIfNeedOpengl();
 // implemented1_END
 
 private:

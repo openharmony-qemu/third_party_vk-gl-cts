@@ -43,10 +43,11 @@ deDynamicLibrary* deDynamicLibrary_open (const char* fileName)
 		return DE_NULL;
 
 	if (getenv("LD_LIBRARY_PATH"))
-		library->libHandle = dlopen(basename((char*)fileName), RTLD_LAZY);
-	else
-		library->libHandle = dlopen(fileName, RTLD_LAZY);
-
+		library->libHandle = dlopen(basename((char*)fileName), RTLD_NOW);
+	else {
+		library->libHandle = dlopen(fileName, RTLD_NOW);
+	}
+		
 	if (!library->libHandle)
 	{
 		deFree(library);

@@ -24,7 +24,8 @@ enum class RCI_GLES_VERSION {
     V20 = 20,
     V30 = 30,
     V31 = 31,
-    V32 = 32
+    V32 = 32,
+    V42 = 42
 };
 
 enum class RCI_PROFILE {
@@ -64,6 +65,7 @@ typedef void (*FunctionPointer)();
 
 class OhosContextI {
 public:
+    static void SetInstance(void *instance);    
     static OhosContextI &GetInstance();
 
     virtual bool SetConfig(int32_t w,int32_t h,RCI_GLES_VERSION ver,RCI_PIXEL_FORMAT pf,RCI_SURFACE_TYPE st,RCI_PROFILE tp,RCI_CONTEXT_FLAG flags) = 0;
