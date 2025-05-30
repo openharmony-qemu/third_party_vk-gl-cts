@@ -111,6 +111,15 @@ bool RosenContextImpl::InitEgl()
         return false;
     }
 
+    if (CheckIfNeedOpengl())
+    {
+        if (eglBindAPI(EGL_OPENGL_API) == EGL_FALSE)
+        {
+            printf("Failed to eglBindAPI(EGL_OPENGL_API)");
+            return false;
+        }
+    }
+
     glDepthMask(GL_TRUE);
 
     eglGetConfigs(eglDisplay_, NULL, 0, &configCount_);
@@ -125,6 +134,17 @@ bool RosenContextImpl::InitEgl()
     }
     eglInited_ = true;
     return true;
+}
+
+bool RosenContextImpl::CheckIfNeedOpengl()
+{
+    const char* needOpenglEnv = "NEED_OPENGL";
+    const char* needOpenglEnvValue = getenv(needOpenglEnv);
+    if (needOpenglEnvValue && std::string(needOpenglEnvValue) ==  "1")
+    {
+        return true;
+    }
+    return false;
 }
 
 bool RosenContextImpl::SetConfig(int32_t w, int32_t h, RCI_GLES_VERSION ver, RCI_PIXEL_FORMAT pf, RCI_SURFACE_TYPE st, RCI_PROFILE tp, RCI_CONTEXT_FLAG flags)
