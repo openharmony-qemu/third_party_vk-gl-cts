@@ -535,7 +535,6 @@ void *RosenContextImpl::GetNativeWindowEx()
 // implemented2_BEGIN
 uint32_t RosenContextImpl::OH_bindAPI(uint32_t api)
 {
-    api = CheckIfNeedOpengl() ? EGL_OPENGL_API : api;
     auto ret = eglBindAPI(api);
     // std::cout<<" ! bindAPI("<<"api="<<api<<")" << "=" << ret << std::endl;
     return ret;

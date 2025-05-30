@@ -3,7 +3,6 @@ import("//build/ohos.gni")
 ohos_shared_library("rosen_context") {
   sources = [
     "ohos_context_i.cpp",
-    "raw_context.cpp",
     "rosen_context_impl.cpp",
   ]
   include_dirs = [
