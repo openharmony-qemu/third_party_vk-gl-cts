@@ -65,6 +65,7 @@ typedef void (*FunctionPointer)();
 
 class OhosContextI {
 public:
+    static void SetInstance(void *instance);    
     static OhosContextI &GetInstance();
 
     virtual bool SetConfig(int32_t w,int32_t h,RCI_GLES_VERSION ver,RCI_PIXEL_FORMAT pf,RCI_SURFACE_TYPE st,RCI_PROFILE tp,RCI_CONTEXT_FLAG flags) = 0;

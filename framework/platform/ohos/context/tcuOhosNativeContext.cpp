@@ -61,31 +61,6 @@ private:
     de::DynamicLibrary m_library;
 };
 
-static int OpenGLv4()
-{
-    typedef int (*GLGETERROR)();
-
-    void* handle = dlopen("/system/lib64/ndk/libGLv4.so", RTLD_LAZY);
-    if (!handle) {
-        std::cerr << "cannot open libGLv4.so: " << dlerror() << std::endl;
-        return -1;
-    }
-
-    dlerror();
-
-    GLGETERROR glGetError = (GLGETERROR)dlsym(handle, "glGetError");
-    char* error = dlerror();
-    if (error != nullptr) {
-        std::cerr << "cannot load glGetError: " << error << std::endl;
-        dlclose(handle);
-        return 1;
-    }
-
-    std::cout << "glGetError addr: " << std::hex << (void *)glGetError << std::endl;
-    std::cout << "OpenGL errorcode: 0x" << std::hex << glGetError() << std::endl;
-    return 0;
-}
-
 OhosRendContext::OhosRendContext(const glu::RenderConfig &config, const tcu::CommandLine &cmdLine)
     : m_contextType(config.type)
 {
@@ -103,8 +78,13 @@ OhosRendContext::OhosRendContext(const glu::RenderConfig &config, const tcu::Com
     printf("config.numSamples = %d\n", config.numSamples);
     printf("config.type.getMajorVersion() = %d\n", config.type.getMajorVersion());
     printf("config.type.getMinorVersion() = %d\n", config.type.getMinorVersion());
-    printf("config.Profile = %d (0:ES , 1:CORE, 2:COMPATIBILITY)\n", config.type.getProfile());
-
+    printf("config.profile = %d (0:ES , 1:CORE, 2:COMPATIBILITY)\n", config.type.getProfile());
+#ifdef GL_ES
+    printf("GL_ES defined\n");
+#else
+    printf("GL_ES not defined\n");
+#endif
+    printf("~~~~~~~~~~~~~~~\n");
     // TODO:
     int32_t w = config.width;
     int32_t h = config.height;
@@ -244,9 +224,9 @@ OhosRendContext::OhosRendContext(const glu::RenderConfig &config, const tcu::Com
         delete loader;
         loader = nullptr;
     }
-    if (config.type.getMajorVersion() == 4)
+    if (config.type.getProfile() != glu::PROFILE_ES)
     {
-        loader = new GLFunctionLoader("libGLv4.so");
+        loader = new GLFunctionLoader("libGL.so");
         glu::initFunctions(&m_glFunctions, loader, config.type.getAPI());
     } else if (config.type.getMajorVersion() == 2 || config.type.getMajorVersion() == 3)
     {
