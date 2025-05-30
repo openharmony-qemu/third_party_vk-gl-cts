@@ -172,8 +172,7 @@ bool RosenContextImpl::SetConfig(int32_t w, int32_t h, RCI_GLES_VERSION ver, RCI
     default:
         return false;
     }
-    eglApi = EGL_OPENGL_API;
-    if (eglBindAPI(typeProfile_) == EGL_FALSE)
+    if (eglBindAPI(eglApi) == EGL_FALSE)
     {
         printf("Failed to bind OpenGL (ES) API");
         return false;
