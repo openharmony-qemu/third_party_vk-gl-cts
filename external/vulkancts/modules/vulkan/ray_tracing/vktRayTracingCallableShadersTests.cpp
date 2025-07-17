@@ -1619,7 +1619,10 @@ tcu::TestStatus InvokeCallableShaderTestInstance::iterate()
 	VkStridedDeviceAddressRegionKHR raygenShaderBindingTableRegion		= makeStridedDeviceAddressRegionKHR(getBufferDeviceAddress(vk, device, raygenShaderBindingTable->get(), 0), shaderGroupHandleSize, shaderGroupHandleSize);
 	VkStridedDeviceAddressRegionKHR missShaderBindingTableRegion		= makeStridedDeviceAddressRegionKHR(getBufferDeviceAddress(vk, device, missShaderBindingTable->get(), 0), shaderGroupHandleSize, shaderGroupHandleSize);
 	VkStridedDeviceAddressRegionKHR hitShaderBindingTableRegion			= makeStridedDeviceAddressRegionKHR(getBufferDeviceAddress(vk, device, hitShaderBindingTable->get(), 0), shaderGroupHandleSize, shaderGroupHandleSize);
-	VkStridedDeviceAddressRegionKHR callableShaderBindingTableRegion	= makeStridedDeviceAddressRegionKHR(getBufferDeviceAddress(vk, device, callableShaderBindingTable->get(), 0), shaderStride, shaderGroupHandleSize);
+	VkStridedDeviceAddressRegionKHR callableShaderBindingTableRegion =
+        makeStridedDeviceAddressRegionKHR(getBufferDeviceAddress(vk, device, callableShaderBindingTable->get(), 0),
+                                          shaderStride, shaderStride * callableIds.size());
+
 
 	size_t callableCount = 0;
 
