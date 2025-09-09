@@ -169,7 +169,6 @@ void PositionFetchCase::initPrograms (vk::SourceCollections& programCollection) 
 		<< "\n"
 		<< layoutDeclsStr
 		<< "\n"
-		<< "layout(location=0) rayPayloadEXT int value;\n"
 		<< "\n"
 		<< "void main()\n"
 		<< "{\n"
