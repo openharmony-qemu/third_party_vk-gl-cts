@@ -468,7 +468,7 @@ const char* externalMemoryTypeToName (vk::VkExternalMemoryHandleTypeFlagBits typ
 		case vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID:
 			return "android_hardware_buffer";
 
-		case vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS:
+		case vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS:
 			return "ohos_native_buffer";
 
 		case vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT:
@@ -682,7 +682,7 @@ void getMemoryNative (const vk::DeviceInterface&					vkd,
 		TCU_CHECK(ahb.internal);
 		nativeHandle = ahb;
 	}
-	else if (externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS)
+	else if (externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS)
 	{
 		const vk::VkMemoryGetNativeBufferInfoOHOS	info	=
 		{
@@ -1121,7 +1121,7 @@ vk::VkMemoryRequirements getImageMemoryRequirements (const vk::DeviceInterface& 
 	if (externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID)
 	{
 		return { 0u, 0u, 0u };
-	} else if (externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS) {
+	} else if (externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS) {
 		return { 0u, 0u, 0u };
 	}
 	else
@@ -1372,7 +1372,7 @@ static vk::Move<vk::VkDeviceMemory> importMemory (const vk::DeviceInterface&				
 
 		return memory;
 	}
-	else if (externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS)
+	else if (externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS)
 	{
 
 		vk::VkNativeBufferPropertiesOHOS ohosProperties =

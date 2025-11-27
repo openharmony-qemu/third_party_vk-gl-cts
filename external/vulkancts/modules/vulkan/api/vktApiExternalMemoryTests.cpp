@@ -355,7 +355,7 @@ vk::Move<vk::VkDevice> createTestDevice (const Context&									context,
 	}
 
 	if ((externalMemoryTypes
-		& vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS) != 0)
+		& vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS) != 0)
 	{
 		deviceExtensions.push_back("VK_OHOS_external_memory");
 		useExternalMemory = true;
@@ -3413,7 +3413,7 @@ tcu::TestStatus testMemoryImportTwice (Context& context, MemoryTestConfig config
 		vkd.getAndroidHardwareBufferPropertiesANDROID(device.get(), handleA.getAndroidHardwareBuffer(), &ahbProperties);
 
 		exportedMemoryTypeIndex	= getExportedMemoryTypeIndex(vki, physicalDevice, config.hostVisible, ahbProperties.memoryTypeBits);
-	} else if (config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS) {
+	} else if (config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS) {
 		vk::VkNativeBufferPropertiesOHOS	ohosProperties	=
 		{
 			vk::VK_STRUCTURE_TYPE_NATIVE_BUFFER_PROPERTIES_OHOS,				// VkStructureType	sType
@@ -3494,7 +3494,7 @@ tcu::TestStatus testMemoryMultipleImports (Context& context, MemoryTestConfig co
 		vkd.getAndroidHardwareBufferPropertiesANDROID(device.get(), handleA.getAndroidHardwareBuffer(), &ahbProperties);
 
 		exportedMemoryTypeIndex	= getExportedMemoryTypeIndex(vki, physicalDevice, config.hostVisible, ahbProperties.memoryTypeBits);
-	} else if (config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS) {
+	} else if (config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS) {
 		vk::VkNativeBufferPropertiesOHOS	ohosProperties	=
 		{
 			vk::VK_STRUCTURE_TYPE_NATIVE_BUFFER_PROPERTIES_OHOS,	// VkStructureType	sType
@@ -3982,7 +3982,7 @@ tcu::TestStatus testBufferBindExportImportBind (Context&				context,
 		vkd.getAndroidHardwareBufferPropertiesANDROID(device.get(), handle.getAndroidHardwareBuffer(), &ahbProperties);
 
 		exportedMemoryTypeIndex	= chooseMemoryType(ahbProperties.memoryTypeBits);
-	} else if (config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS) {
+	} else if (config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS) {
 		vk::VkNativeBufferPropertiesOHOS	ohosProperties	=
 		{
 			vk::VK_STRUCTURE_TYPE_NATIVE_BUFFER_PROPERTIES_OHOS,				// VkStructureType	sType
@@ -4046,7 +4046,7 @@ tcu::TestStatus testBufferExportBindImportBind (Context&				context,
 		vkd.getAndroidHardwareBufferPropertiesANDROID(device.get(), handle.getAndroidHardwareBuffer(), &ahbProperties);
 
 		exportedMemoryTypeIndex	= chooseMemoryType(ahbProperties.memoryTypeBits);
-	} else if (config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS) {
+	} else if (config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS) {
 		vk::VkNativeBufferPropertiesOHOS	ohosProperties	=
 		{
 			vk::VK_STRUCTURE_TYPE_NATIVE_BUFFER_PROPERTIES_OHOS,				// VkStructureType	sType
@@ -4109,7 +4109,7 @@ tcu::TestStatus testBufferExportImportBindBind (Context&				context,
 		vkd.getAndroidHardwareBufferPropertiesANDROID(device.get(), handle.getAndroidHardwareBuffer(), &ahbProperties);
 
 		exportedMemoryTypeIndex	= chooseMemoryType(ahbProperties.memoryTypeBits);
-	} else if (config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS) {
+	} else if (config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS) {
 		vk::VkNativeBufferPropertiesOHOS	ohosProperties	=
 		{
 			vk::VK_STRUCTURE_TYPE_NATIVE_BUFFER_PROPERTIES_OHOS,				// VkStructureType	sType
@@ -4269,7 +4269,7 @@ tcu::TestStatus testImageQueries (Context& context, vk::VkExternalMemoryHandleTy
 			{
 				// Memory requirements cannot be queried without binding the image.
 				if (externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID ||
-					externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS)
+					externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS)
 					continue;
 
 				const vk::Unique<vk::VkImage>				image						(createExternalImage(*vkd, *device, queueFamilyIndex, externalType, format, 16u, 16u, tiling, createFlag, usageFlag));
@@ -4339,7 +4339,7 @@ tcu::TestStatus testImageBindExportImportBind (Context&					context,
 		const vk::Unique<vk::VkImage>			imageB	(createExternalImage(vkd, *device, queueFamilyIndex, config.externalType, format, width, height, tiling, 0u, usage));
 		deUint32								index	= exportedMemoryTypeIndex;
 		if (config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID ||
-			config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS) {
+			config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS) {
 				index = ~0u;
 		}
 		const deUint32							idx		= index;
@@ -4376,7 +4376,7 @@ tcu::TestStatus testImageExportBindImportBind (Context&					context,
 	const vk::Unique<vk::VkDeviceMemory>	memoryA					(allocateExportableMemory(vkd, *device, requirements.size, exportedMemoryTypeIndex, config.externalType, config.dedicated ? *imageA : (vk::VkImage)0));
 	NativeHandle							handle;
 	if ((config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID ||
-		config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS) &&
+		config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS) &&
 		config.dedicated)
 	{
 		// AHB required the image memory to be bound first.
@@ -4393,7 +4393,7 @@ tcu::TestStatus testImageExportBindImportBind (Context&					context,
 		const vk::Unique<vk::VkImage>			imageB	(createExternalImage(vkd, *device, queueFamilyIndex, config.externalType, format, width, height, tiling, 0u, usage));
 		deUint32								index	= exportedMemoryTypeIndex;
 		if (config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID ||
-			config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS) {
+			config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS) {
 				index = ~0u;
 		}
 		const deUint32							idx		= index;
@@ -4444,7 +4444,7 @@ tcu::TestStatus testImageExportImportBindBind (Context&					context,
 		const vk::Unique<vk::VkImage>			imageB	(createExternalImage(vkd, *device, queueFamilyIndex, config.externalType, format, width, height, tiling, 0u, usage));
 		deUint32								index	= exportedMemoryTypeIndex;
 		if (config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID ||
-			config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS) {
+			config.externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS) {
 				index = ~0u;
 		}
 		const deUint32							idx		= index;
@@ -5040,7 +5040,7 @@ tcu::TestStatus testOHOSNativeBufferImageFormat (Context& context, vk::VkFormat 
 
 	bool testsFailed = false;
 	const vk::VkExternalMemoryHandleTypeFlagBits  externalMemoryType
-													= vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS;
+													= vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS;
 	const vk::PlatformInterface&				  vkp					(context.getPlatformInterface());
 	const CustomInstance						  instance				(createTestInstance(context, 0u,
 																		 externalMemoryType, 0u));
@@ -5144,7 +5144,7 @@ tcu::TestStatus testOHOSNativeBufferImageFormat (Context& context, vk::VkFormat 
 			{
 				vk::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_IMAGE_FORMAT_INFO,
 				DE_NULL,
-				vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS
+				vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS
 			};
 			const vk::VkPhysicalDeviceImageFormatInfo2			info				=
 			{
@@ -5586,7 +5586,7 @@ de::MovePtr<tcu::TestCaseGroup> createMemoryTests (tcu::TestContext& testCtx, vk
 	}
 
 	if (externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID ||
-		externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS)
+		externalType == vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS)
 	{
 		de::MovePtr<tcu::TestCaseGroup>	formatGroup	(new tcu::TestCaseGroup(testCtx, "image_formats", "Test minimum image format support"));
 
@@ -5637,7 +5637,7 @@ de::MovePtr<tcu::TestCaseGroup> createMemoryTests (tcu::TestContext& testCtx)
 	group->addChild(createMemoryTests(testCtx, vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID).release());
 	group->addChild(createMemoryTests(testCtx, vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT).release());
 	group->addChild(createMemoryTests(testCtx, vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_ZIRCON_VMO_BIT_FUCHSIA).release());
-	group->addChild(createMemoryTests(testCtx, vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS).release());
+	group->addChild(createMemoryTests(testCtx, vk::VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS).release());
 	return group;
 }
 
