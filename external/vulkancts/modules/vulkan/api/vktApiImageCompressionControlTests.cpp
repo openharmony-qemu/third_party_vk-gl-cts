@@ -338,7 +338,7 @@ static void CheckOHOSImageSupport (const Context& context, const TestParams test
 	{
 		VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_IMAGE_FORMAT_INFO,
 		&testParams.control,
-		VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS
+		VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS
 	};
 
 	const VkPhysicalDeviceImageFormatInfo2			info				=
@@ -522,7 +522,7 @@ static tcu::TestStatus OHOSImageCreateTest(Context& context, TestParams testPara
 
 		const vk::VkExternalMemoryImageCreateInfo externalCreateInfo = {
 			vk::VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO, &testParams.control,
-			VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS
+			VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS
 		};
 		const vk::VkImageCreateInfo createInfo = { vk::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 												   &externalCreateInfo,
@@ -548,11 +548,11 @@ static tcu::TestStatus OHOSImageCreateTest(Context& context, TestParams testPara
 
 		Move<VkImage>			   image		= vk::createImage(vkd, device, &createInfo);
 		const VkMemoryRequirements requirements = ExternalMemoryUtil::getImageMemoryRequirements(
-			vkd, device, image.get(), VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS);
+			vkd, device, image.get(), VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS);
 		const deUint32		 exportedMemoryTypeIndex(ExternalMemoryUtil::chooseMemoryType(requirements.memoryTypeBits));
 		Move<VkDeviceMemory> memory = ExternalMemoryUtil::allocateExportableMemory(
 			vkd, device, requirements.size, exportedMemoryTypeIndex,
-			VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS, image.get());
+			VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS, image.get());
 
 		VK_CHECK(vkd.bindImageMemory(device, image.get(), memory.get(), 0u));
 		validate(context.getInstanceInterface(), context.getDeviceInterface(), results, context.getPhysicalDevice(),

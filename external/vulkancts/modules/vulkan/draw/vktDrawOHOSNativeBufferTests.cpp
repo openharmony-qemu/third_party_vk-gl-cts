@@ -338,7 +338,7 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 
 	NativeHandle			nativeHandle(bufferPtr);
 	const Unique<VkImage>	colorTargetImage (createExternalImage(vk, device, queueFamilyIndex,
-											  VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS,
+											  VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS,
                                               colorAttachmentFormat, WIDTH, HEIGHT, VK_IMAGE_TILING_OPTIMAL, 0u,
 											  targetImageCreateInfo.usage, targetImageCreateInfo.mipLevels,
                                               targetImageCreateInfo.arrayLayers));
