@@ -306,6 +306,11 @@ KHR-GLES32
 	registry->registerPackage("KHR-Single-GL46", createSingleConfigGL46TestPackage);
 	registry->registerPackage("KHR-Single-GLES32", createSingleConfigES32TestPackage);
 }
+void RegistOptionalPackage()
+{
+    tcu::TestPackageRegistry *registry = tcu::TestPackageRegistry::getSingleton();
+    registry->registerPackage("KHR-GL42", createGL42Package);
+}
 
 bool GetCasePath(tcu::TestNode *node, std::vector<tcu::TestNode *> &casePath, std::vector<std::string> &namePath, uint32_t deep = 0)
 {
@@ -355,6 +360,10 @@ int main(int argc, char **argv)
     setenv("NEED_OPENG" , "1", 1);
     setenv("LD_LIBRARY_PATH", "/system/lib64/:/system/lib64/ndk", 1);
     int exitStatus = EXIT_SUCCESS;
+    tcu::CommandLine cmdLine(argc, argv);
+    if (!cmdLine.isGLV4Enabled()) {
+        setenv("MESA_GL_VERSION_OVERRIDE", "3.0", 1);
+    }
 
 #if (DE_OS != DE_OS_WIN32)
     // Set stdout to line-buffered mode (will be fully buffered by default if stdout is pipe).
@@ -364,7 +373,9 @@ int main(int argc, char **argv)
     try
     {
         RegistPackage();
-
+        if (cmdLine.isGLV4Enabled()) {
+            RegistOptionalPackage();
+        }
         tcu::CommandLine cmdLine(argc, argv);
         tcu::DirArchive archive(cmdLine.getArchiveDir());
         tcu::TestLog log(cmdLine.getLogFileName(), cmdLine.getLogFlags());

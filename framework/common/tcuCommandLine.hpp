@@ -325,6 +325,8 @@ public:
 	//! File that provides a default set of application parameters
 	const char*						getAppParamsInputFilePath(void) const;
 
+	//! Enable glv4 context
+	bool							isGLV4Enabled				(void) const;
 	/*--------------------------------------------------------------------*//*!
 	 * \brief Creates case list filter
 	 * \param archive Resources

@@ -124,6 +124,7 @@ DE_DECLARE_COMMAND_LINE_OPT(PipelineCompilerLogFile,	std::string);
 DE_DECLARE_COMMAND_LINE_OPT(PipelineCompilerFilePrefix,	std::string);
 DE_DECLARE_COMMAND_LINE_OPT(VkLibraryPath,				std::string);
 DE_DECLARE_COMMAND_LINE_OPT(ApplicationParametersInputFile,	std::string);
+DE_DECLARE_COMMAND_LINE_OPT(GLV4,                       bool);
 
 
 static void parseIntList (const char* src, std::vector<int>* dst)
@@ -253,7 +254,8 @@ void registerOptions (de::cmdline::Parser& parser)
 		<< Option<PipelineCompilerLogFile>		(DE_NULL,	"deqp-pipeline-logfile",					"Log file for pipeline compiler (Vulkan SC only, do not use manually)", "")
 		<< Option<PipelineCompilerFilePrefix>	(DE_NULL,	"deqp-pipeline-prefix",						"Prefix for input pipeline compiler files (Vulkan SC only, do not use manually)", "")
 		<< Option<VkLibraryPath>				(DE_NULL,	"deqp-vk-library-path",						"Path to Vulkan library (e.g. loader library vulkan-1.dll)", "")
-		<< Option<ApplicationParametersInputFile>    (DE_NULL,       "deqp-app-params-input-file",				"File that provides a default set of application parameters");
+		<< Option<ApplicationParametersInputFile>    (DE_NULL,       "deqp-app-params-input-file",				"File that provides a default set of application parameters")
+		<< Option<GLV4>							(DE_NULL,   "deqp-glv4",               "Enable or disable glv4 context",                   s_enableNames,      "disable");  
 }
 
 void registerLegacyOptions (de::cmdline::Parser& parser)
@@ -1091,6 +1093,7 @@ int						CommandLine::getCommandPoolMinSize			(void) const	{ return m_cmdLine.ge
 int						CommandLine::getCommandBufferMinSize		(void) const	{ return m_cmdLine.getOption<opt::CommandBufferMinSize>();					}
 int						CommandLine::getCommandDefaultSize			(void) const	{ return m_cmdLine.getOption<opt::CommandDefaultSize>();					}
 int						CommandLine::getPipelineDefaultSize			(void) const	{ return m_cmdLine.getOption<opt::PipelineDefaultSize>();					}
+bool					CommandLine::isGLV4Enabled					(void) const	{ return m_cmdLine.getOption<opt::GLV4>();									}
 
 const char* CommandLine::getGLContextType (void) const
 {
