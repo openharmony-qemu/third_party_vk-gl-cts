@@ -172,9 +172,12 @@ bool RosenContextImpl::SetConfig(int32_t w, int32_t h, RCI_GLES_VERSION ver, RCI
     default:
         return false;
     }
+    if (CheckIfNeedOpengl()) {
+        eglApi = EGL_OPENGL_API;
+    }
     if (eglBindAPI(eglApi) == EGL_FALSE)
     {
-        printf("Failed to bind OpenGL (ES) API");
+        printf("Failed to bind OpenGL (ES) API with api: %x", eglApi);
         return false;
     }
 
@@ -535,6 +538,7 @@ void *RosenContextImpl::GetNativeWindowEx()
 // implemented2_BEGIN
 uint32_t RosenContextImpl::OH_bindAPI(uint32_t api)
 {
+    api = CheckIfNeedOpengl() ? EGL_OPENGL_API : api;
     auto ret = eglBindAPI(api);
     // std::cout<<" ! bindAPI("<<"api="<<api<<")" << "=" << ret << std::endl;
     return ret;
