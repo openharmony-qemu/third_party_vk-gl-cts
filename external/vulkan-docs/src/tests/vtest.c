@@ -1,4 +1,4 @@
-// Copyright 2021-2024 The Khronos Group Inc.
+// Copyright 2021-2025 The Khronos Group Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 // Simple compilation test for external codec headers accompanying the
@@ -22,6 +22,11 @@ typedef unsigned int uint32_t;
 #include "vk_video/vulkan_video_codec_h265std.h"
 #include "vk_video/vulkan_video_codec_h265std_decode.h"
 #include "vk_video/vulkan_video_codec_h265std_encode.h"
+#include "vk_video/vulkan_video_codec_vp9std.h"
+#include "vk_video/vulkan_video_codec_vp9std_decode.h"
+#include "vk_video/vulkan_video_codec_av1std.h"
+#include "vk_video/vulkan_video_codec_av1std_decode.h"
+#include "vk_video/vulkan_video_codec_av1std_encode.h"
 #endif
 #ifdef VULKAN_VIDEO_CODECS_COMMON
 #include "vk_video/vulkan_video_codecs_common.h"
@@ -43,6 +48,21 @@ typedef unsigned int uint32_t;
 #endif
 #ifdef VULKAN_VIDEO_CODEC_H265STD_ENCODE
 #include "vk_video/vulkan_video_codec_h265std_encode.h"
+#endif
+#ifdef VULKAN_VIDEO_CODEC_VP9STD
+#include "vk_video/vulkan_video_codec_vp9std.h"
+#endif
+#ifdef VULKAN_VIDEO_CODEC_VP9STD_DECODE
+#include "vk_video/vulkan_video_codec_vp9std_decode.h"
+#endif
+#ifdef VULKAN_VIDEO_CODEC_AV1STD
+#include "vk_video/vulkan_video_codec_av1std.h"
+#endif
+#ifdef VULKAN_VIDEO_CODEC_AV1STD_DECODE
+#include "vk_video/vulkan_video_codec_av1std_decode.h"
+#endif
+#ifdef VULKAN_VIDEO_CODEC_AV1STD_ENCODE
+#include "vk_video/vulkan_video_codec_av1std_encode.h"
 #endif
 
 int main(void) {

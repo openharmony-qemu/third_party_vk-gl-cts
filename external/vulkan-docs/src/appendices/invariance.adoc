@@ -1,4 +1,4 @@
-// Copyright 2015-2024 The Khronos Group Inc.
+// Copyright 2015-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -13,6 +13,7 @@ However, the specification does specify exact matches, in some cases, for
 images produced by the same implementation.
 The purpose of this appendix is to identify and provide justification for
 those cases that require exact matches.
+
 
 == Repeatability
 
@@ -47,7 +48,7 @@ within its spirit.
 Additional invariance rules are desirable to ensure useful operation.
 
 
-== Multi-pass Algorithms
+== Multi-Pass Algorithms
 
 Invariance is necessary for a whole set of useful multi-pass algorithms.
 Such algorithms render multiple times, each time with a different Vulkan
@@ -134,7 +135,6 @@ times with the same input as long as:_
 
 
 [NOTE]
-.Note
 ====
 The OpenGL specification has the following invariance rule: Consider a
 primitive p' obtained by translating a primitive p through an offset (x, y)

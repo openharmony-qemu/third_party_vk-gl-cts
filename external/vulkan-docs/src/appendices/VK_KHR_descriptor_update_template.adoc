@@ -1,4 +1,4 @@
-// Copyright 2016-2024 The Khronos Group Inc.
+// Copyright 2016-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -24,8 +24,8 @@ it is required to rebuild descriptor sets for each frame.
 For those cases it is also not unlikely that all information required to
 update a single descriptor set is stored in a single struct.
 This extension provides a way to update a fixed set of descriptors in a
-single slink:VkDescriptorSet with a pointer to a user defined data structure
-describing the new descriptors.
+single slink:VkDescriptorSet with a pointer to an application-defined data
+structure describing the new descriptors.
 
 === Promotion to Vulkan 1.1
 
@@ -38,7 +38,7 @@ endif::VK_KHR_push_descriptor[]
 
 The base functionality in this extension is included in core Vulkan 1.1,
 with the KHR suffix omitted.
-The original type, enum and command names are still available as aliases of
+The original type, enum, and command names are still available as aliases of
 the core functionality.
 
 include::{generated}/interfaces/VK_KHR_descriptor_update_template.adoc[]

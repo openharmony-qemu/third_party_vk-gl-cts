@@ -4,7 +4,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# Author(s):    Ryan Pavlik <ryan.pavlik@collabora.com>
+# Author(s):    Rylie Pavlik <rylie.pavlik@collabora.com>
 
 from abc import ABC, abstractmethod
 
@@ -182,7 +182,7 @@ class EntityDatabase(ABC):
             self.addEntity(name, 'code', elem=info.elem, generates=False)
 
         else:
-            raise RuntimeError('unrecognized category {}'.format(cat))
+            raise RuntimeError(f'unrecognized category {cat}')
 
     def handleCommand(self, name, info):
         """Add entities, if appropriate, for an item in registry.cmddict.
@@ -249,7 +249,7 @@ class EntityDatabase(ABC):
                 if alias in self._byEntity:
                     return self.findEntity(alias)
 
-            assert(not "Alias without main entry!")
+            assert not "Alias without main entry!"
 
         return None
 
@@ -274,7 +274,7 @@ class EntityDatabase(ABC):
             tag = 'member'
         else:
             tag = 'param'
-        return data.elem.findall('.//{}'.format(tag))
+        return data.elem.findall(f'.//{tag}')
 
     def getMemberNames(self, commandOrStruct):
         """Given a command or struct name, retrieve the names of each member/param.
@@ -400,7 +400,7 @@ class EntityDatabase(ABC):
         alias_set = self._aliasSetsByEntity.get(first_entity_name)
         if not alias_set:
             # If this assert fails, we have goofed in addAlias
-            assert(second_entity_name not in self._aliasSetsByEntity)
+            assert second_entity_name not in self._aliasSetsByEntity
 
             return False
 
@@ -452,7 +452,7 @@ class EntityDatabase(ABC):
         other_alias_set = self._aliasSetsByEntity.get(entityName)
         if alias_set and other_alias_set:
             # If this fails, we need to merge sets and update.
-            assert(alias_set is other_alias_set)
+            assert alias_set is other_alias_set
 
         if not alias_set:
             # Try looking by the other name.
@@ -578,7 +578,7 @@ class EntityDatabase(ABC):
         ) + self.name_prefix[1:]
         # Regex string for the name prefix that is case-insensitive.
         self.case_insensitive_name_prefix_pattern = ''.join(
-            ('[{}{}]'.format(c.upper(), c) for c in self.name_prefix))
+            (f'[{c.upper()}{c}]' for c in self.name_prefix))
 
         self.platform_requires = self.getPlatformRequires()
 

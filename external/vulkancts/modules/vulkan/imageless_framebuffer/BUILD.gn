@@ -24,7 +24,10 @@ config("deqp_vk_imageless_framebuffer_config") {
 }
 
 ohos_source_set("deqp_vk_imageless_framebuffer_source") {
-  sources = [ "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/imageless_framebuffer/vktImagelessFramebufferTests.cpp" ]
+  sources = [
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/imageless_framebuffer/vktImagelessFramebufferTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/imageless_framebuffer/vktImagelessFramebufferTests.hpp",
+  ]
 
   include_dirs = deqp_vk_common_include_dirs
   include_dirs += [ "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/imageless_framebuffer" ]

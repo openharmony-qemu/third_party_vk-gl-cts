@@ -1,12 +1,12 @@
-// Copyright 2015-2024 The Khronos Group Inc.
+// Copyright 2015-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
 [[dispatch]]
 = Dispatching Commands
 
-_Dispatching commands_ (commands with ftext:Dispatch in the name) provoke
-work in a compute pipeline.
+The _dispatching commands_ described in this chapter provoke work in a
+compute pipeline.
 Dispatching commands are recorded into a command buffer and when executed by
 a queue, will produce work which executes according to the bound compute
 pipeline.
@@ -36,7 +36,7 @@ local workgroups is assembled.
 
 .Valid Usage
 ****
-include::{chapters}/commonvalidity/draw_dispatch_common.adoc[]
+include::{chapters}/commonvalidity/dispatch_common.adoc[]
 include::{chapters}/commonvalidity/draw_dispatch_nonindirect_common.adoc[]
   * [[VUID-vkCmdDispatch-groupCountX-00386]]
     pname:groupCountX must: be less than or equal to
@@ -74,7 +74,7 @@ at pname:offset.
 
 .Valid Usage
 ****
-include::{chapters}/commonvalidity/draw_dispatch_common.adoc[]
+include::{chapters}/commonvalidity/dispatch_common.adoc[]
 include::{chapters}/commonvalidity/draw_dispatch_indirect_common.adoc[]
   * [[VUID-vkCmdDispatchIndirect-offset-00407]]
     The sum of pname:offset and the size of sname:VkDispatchIndirectCommand
@@ -84,7 +84,7 @@ include::{chapters}/commonvalidity/draw_dispatch_indirect_common.adoc[]
 include::{generated}/validity/protos/vkCmdDispatchIndirect.adoc[]
 --
 
-[open,refpage='VkDispatchIndirectCommand',desc='Structure specifying a indirect dispatching command',type='structs',xrefs='vkCmdDispatchIndirect']
+[open,refpage='VkDispatchIndirectCommand',desc='Structure specifying an indirect dispatching command',type='structs',xrefs='vkCmdDispatchIndirect']
 --
 The sname:VkDispatchIndirectCommand structure is defined as:
 
@@ -159,7 +159,7 @@ flink:vkCmdDispatch is equivalent to
 
 .Valid Usage
 ****
-include::{chapters}/commonvalidity/draw_dispatch_common.adoc[]
+include::{chapters}/commonvalidity/dispatch_common.adoc[]
 include::{chapters}/commonvalidity/draw_dispatch_nonindirect_common.adoc[]
   * [[VUID-vkCmdDispatchBase-baseGroupX-00421]]
     pname:baseGroupX must: be less than
@@ -185,12 +185,20 @@ include::{chapters}/commonvalidity/draw_dispatch_nonindirect_common.adoc[]
   * [[VUID-vkCmdDispatchBase-baseGroupX-00427]]
     If any of pname:baseGroupX, pname:baseGroupY, or pname:baseGroupZ are
     not zero, then the bound compute pipeline must: have been created with
-    the ename:VK_PIPELINE_CREATE_DISPATCH_BASE flag
+    the ename:VK_PIPELINE_CREATE_DISPATCH_BASE_BIT flag
+ifdef::VK_EXT_shader_object[]
+    or the bound compute shader object must: have been created with the
+    ename:VK_SHADER_CREATE_DISPATCH_BASE_BIT_EXT flag
+endif::VK_EXT_shader_object[]
 ****
 
 include::{generated}/validity/protos/vkCmdDispatchBase.adoc[]
 --
 endif::VK_VERSION_1_1,VK_KHR_device_group[]
+
+ifdef::VK_QCOM_tile_shading[]
+include::{chapters}/VK_QCOM_tile_shading/vkcmddispatchtile.adoc[]
+endif::VK_QCOM_tile_shading[]
 
 ifdef::VK_HUAWEI_subpass_shading[]
 [open,refpage='vkCmdSubpassShadingHUAWEI',desc='Dispatch compute work items',type='protos']
@@ -200,8 +208,7 @@ ifdef::VK_HUAWEI_subpass_shading[]
 A subpass shading dispatches a compute pipeline work with the work dimension
 of render area of the calling subpass and work groups are partitioned by
 specified work group size.
-Subpass operations like subpassLoad and subpassLoadMS are allowed to be
-used.
+Subpass operations like code:subpassLoad are allowed to be used.
 
 To record a subpass shading, call:
 
@@ -217,7 +224,7 @@ area size / local workgroup size) local workgroups is assembled.
 ****
 include::{chapters}/commonvalidity/draw_dispatch_common.adoc[]
   * [[VUID-vkCmdSubpassShadingHUAWEI-None-04931]]
-    This command must be called in a subpass with bind point
+    This command must: be called in a subpass with bind point
     ename:VK_PIPELINE_BIND_POINT_SUBPASS_SHADING_HUAWEI.
     No draw commands can be called in the same subpass.
     Only one flink:vkCmdSubpassShadingHUAWEI command can be called in a

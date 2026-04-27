@@ -40,6 +40,21 @@ ohos_source_set("deqp_vk_ray_query_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryTraversalControlTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryWatertightnessTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryAccelerationStructuresTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryBarycentricCoordinatesTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryBuiltinTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryCullRayFlagsTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryDirectionTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryMiscTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryMultipleRayQueries.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryMultipleRayQueries.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryNonUniformArgsTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryProceduralGeometryTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryStressTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryStressTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryTraversalControlTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ray_query/vktRayQueryWatertightnessTests.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs

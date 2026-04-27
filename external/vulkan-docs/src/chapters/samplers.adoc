@@ -1,4 +1,4 @@
-// Copyright 2015-2024 The Khronos Group Inc.
+// Copyright 2015-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -21,6 +21,7 @@ include::{generated}/api/handles/VkSampler.adoc[]
 :refpage: vkCreateSampler
 :objectnameplural: samplers
 :objectnamecamelcase: sampler
+:objectnamestruct: VkDeviceObjectReservationCreateInfo
 :objectcount: 1
 
 To create a sampler object, call:
@@ -39,6 +40,9 @@ include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
 
 .Valid Usage
 ****
+  * [[VUID-vkCreateSampler-device-09668]]
+    pname:device must: support at least one queue family with one of the
+    ename:VK_QUEUE_COMPUTE_BIT or ename:VK_QUEUE_GRAPHICS_BIT capabilities
   * [[VUID-vkCreateSampler-maxSamplerAllocationCount-04110]]
     There must: be less than
     slink:VkPhysicalDeviceLimits::pname:maxSamplerAllocationCount
@@ -102,11 +106,11 @@ include::{generated}/api/structs/VkSamplerCreateInfo.adoc[]
   * [[samplers-unnormalizedCoordinates]] pname:unnormalizedCoordinates
     controls whether to use unnormalized or normalized texel coordinates to
     address texels of the image.
-    When set to ename:VK_TRUE, the range of the image coordinates used to
-    lookup the texel is in the range of zero to the image size in each
-    dimension.
-    When set to ename:VK_FALSE the range of image coordinates is zero to
-    one.
+    When pname:unnormalizedCoordinates is ename:VK_TRUE, the range of the
+    image coordinates used to lookup the texel is in the range of zero to
+    the image size in each dimension.
+    When pname:unnormalizedCoordinates is ename:VK_FALSE, the range of image
+    coordinates is zero to one.
 +
 When pname:unnormalizedCoordinates is ename:VK_TRUE, images the sampler is
 used with in the shader have the following requirements:
@@ -123,7 +127,7 @@ requirements:
   ** The functions must: not use offsets.
 
 [NOTE]
-.Mapping of OpenGL to Vulkan filter modes
+.Mapping of OpenGL to Vulkan Filter Modes
 ====
 pname:magFilter values of ename:VK_FILTER_NEAREST and ename:VK_FILTER_LINEAR
 directly correspond to code:GL_NEAREST and code:GL_LINEAR magnification
@@ -157,7 +161,6 @@ on a device is implementation-dependent and specified by the
 of the slink:VkPhysicalDeviceLimits structure.
 
 [NOTE]
-.Note
 ====
 For historical reasons, if pname:maxSamplerAllocationCount is exceeded, some
 implementations may return ename:VK_ERROR_TOO_MANY_OBJECTS.
@@ -236,24 +239,22 @@ ifdef::VK_VERSION_1_2,VK_EXT_sampler_filter_minmax[]
     If <<samplers-YCbCr-conversion,sampler {YCbCr} conversion>> is enabled
     and the pname:pNext chain includes a
     slink:VkSamplerReductionModeCreateInfo structure, then the sampler
-    reduction mode must: be set to
-    ename:VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE
+    reduction mode must: be ename:VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE
 endif::VK_VERSION_1_2,VK_EXT_sampler_filter_minmax[]
 endif::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
 ifdef::VK_VERSION_1_2[]
   * [[VUID-VkSamplerCreateInfo-pNext-06726]]
-    If <<features-samplerFilterMinmax, pname:samplerFilterMinmax>> is not
-    enabled and the pname:pNext chain includes a
+    If the <<features-samplerFilterMinmax, pname:samplerFilterMinmax>>
+    feature is not enabled and the pname:pNext chain includes a
     slink:VkSamplerReductionModeCreateInfo structure, then the sampler
-    reduction mode must: be set to
-    ename:VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE
+    reduction mode must: be ename:VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE
 endif::VK_VERSION_1_2[]
   * [[VUID-VkSamplerCreateInfo-addressModeU-01079]]
-    If <<features-samplerMirrorClampToEdge, pname:samplerMirrorClampToEdge>>
-    is not enabled, and if the `apiext:VK_KHR_sampler_mirror_clamp_to_edge`
-    extension is not enabled, pname:addressModeU, pname:addressModeV and
-    pname:addressModeW must: not be
-    ename:VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE
+    If the <<features-samplerMirrorClampToEdge,
+    pname:samplerMirrorClampToEdge>> feature is not enabled, and if the
+    `apiext:VK_KHR_sampler_mirror_clamp_to_edge` extension is not enabled,
+    pname:addressModeU, pname:addressModeV and pname:addressModeW must: not
+    be ename:VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE
   * [[VUID-VkSamplerCreateInfo-compareEnable-01080]]
     If pname:compareEnable is ename:VK_TRUE, pname:compareOp must: be a
     valid elink:VkCompareOp value
@@ -269,7 +270,7 @@ ifdef::VK_IMG_filter_cubic+VK_EXT_sampler_filter_minmax[]
 ifdef::VK_EXT_filter_cubic[]
     the apiext:VK_EXT_filter_cubic extension is not enabled and
 endif::VK_EXT_filter_cubic[]
-    either pname:magFilter or pname:minFilter is ename:VK_FILTER_CUBIC_EXT,
+    either pname:magFilter or pname:minFilter is ename:VK_FILTER_CUBIC_IMG,
     the pname:reductionMode member of slink:VkSamplerReductionModeCreateInfo
     must: be ename:VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE
 endif::VK_IMG_filter_cubic+VK_EXT_sampler_filter_minmax[]
@@ -431,7 +432,6 @@ endif::VK_QCOM_image_processing[]
 
 ifdef::VK_EXT_fragment_density_map[]
 [NOTE]
-.Note
 ====
 The approximations used when
 ename:VK_SAMPLER_CREATE_SUBSAMPLED_COARSE_RECONSTRUCTION_BIT_EXT is
@@ -615,7 +615,7 @@ ifdef::VK_VERSION_1_2,VK_KHR_sampler_mirror_clamp_to_edge[]
   * ename:VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE specifies that the
     mirror clamp to edge wrap mode will be used.
     This is only valid if
-ifdef::VK_VERSION_1_2[<<features-samplerMirrorClampToEdge, pname:samplerMirrorClampToEdge>> is enabled, or if]
+ifdef::VK_VERSION_1_2[the <<features-samplerMirrorClampToEdge, pname:samplerMirrorClampToEdge>> feature is enabled, or if]
     the `apiext:VK_KHR_sampler_mirror_clamp_to_edge` extension is enabled.
 endif::VK_VERSION_1_2,VK_KHR_sampler_mirror_clamp_to_edge[]
 --
@@ -688,11 +688,11 @@ include::{generated}/api/enums/VkBorderColor.adoc[]
   * ename:VK_BORDER_COLOR_INT_OPAQUE_WHITE specifies an opaque, integer
     format, white color.
 ifdef::VK_EXT_custom_border_color[]
-  * ename:VK_BORDER_COLOR_FLOAT_CUSTOM_EXT indicates that a
+  * ename:VK_BORDER_COLOR_FLOAT_CUSTOM_EXT specifies that a
     slink:VkSamplerCustomBorderColorCreateInfoEXT structure is included in
     the slink:VkSamplerCreateInfo::pname:pNext chain containing the color
     data in floating-point format.
-  * ename:VK_BORDER_COLOR_INT_CUSTOM_EXT indicates that a
+  * ename:VK_BORDER_COLOR_INT_CUSTOM_EXT specifies that a
     slink:VkSamplerCustomBorderColorCreateInfoEXT structure is included in
     the slink:VkSamplerCreateInfo::pname:pNext chain containing the color
     data in integer format.
@@ -797,6 +797,7 @@ endif::VK_KHR_sampler_ycbcr_conversion[]
 :refpage: vkCreateSamplerYcbcrConversion
 :objectnameplural: sampler conversions
 :objectnamecamelcase: samplerYcbcrConversion
+:objectnamestruct: VkDeviceObjectReservationCreateInfo
 :objectcount: 1
 
 To create a slink:VkSamplerYcbcrConversion, call:
@@ -876,7 +877,6 @@ endif::VK_KHR_sampler_ycbcr_conversion[]
     reconstruction is done explicitly, if supported.
 
 [NOTE]
-.Note
 ====
 Setting pname:forceExplicitReconstruction to ename:VK_TRUE may: have a
 performance penalty on implementations where explicit reconstruction is not
@@ -884,7 +884,7 @@ the default mode of operation.
 
 If pname:format supports
 ename:VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT
-the pname:forceExplicitReconstruction value behaves as if it was set to
+the pname:forceExplicitReconstruction value behaves as if it were
 ename:VK_TRUE.
 ====
 
@@ -987,21 +987,21 @@ ifdef::VK_QCOM_ycbcr_degamma[]
   * [[VUID-VkSamplerYcbcrConversionCreateInfo-pNext-09207]]
     If the pname:pNext chain includes a
     slink:VkSamplerYcbcrConversionYcbcrDegammaCreateInfoQCOM structure, and
-    if the <<features-ycbcr-degamma,pname:ycbcrDegamma>> feature is not
+    if the <<features-ycbcrDegamma,pname:ycbcrDegamma>> feature is not
     enabled, then
     slink:VkSamplerYcbcrConversionYcbcrDegammaCreateInfoQCOM::pname:enableYDegamma
     must: be ename:VK_FALSE
   * [[VUID-VkSamplerYcbcrConversionCreateInfo-pNext-09208]]
     If the pname:pNext chain includes a
     slink:VkSamplerYcbcrConversionYcbcrDegammaCreateInfoQCOM structure, and
-    if the <<features-ycbcr-degamma,pname:ycbcrDegamma>> feature is not
+    if the <<features-ycbcrDegamma,pname:ycbcrDegamma>> feature is not
     enabled, then
     slink:VkSamplerYcbcrConversionYcbcrDegammaCreateInfoQCOM::pname:enableCbCrDegamma
     must: be ename:VK_FALSE
   * [[VUID-VkSamplerYcbcrConversionCreateInfo-pNext-09209]]
     If the pname:pNext chain includes a
     slink:VkSamplerYcbcrConversionYcbcrDegammaCreateInfoQCOM structure,
-    pname:format must: be a format with 8-bit R, G, and B components.
+    pname:format must: be a format with 8-bit R, G, and B components
 endif::VK_QCOM_ycbcr_degamma[]
 ****
 
@@ -1063,7 +1063,6 @@ operation (controlled by
 slink:VkSamplerYcbcrConversionCreateInfo::pname:components).
 
 [NOTE]
-.Note
 ====
 For example, an "`YUVA`" 32-bit format comprising four 8-bit components can
 be implemented as ename:VK_FORMAT_R8G8B8A8_UNORM with a component mapping:
@@ -1200,7 +1199,6 @@ include::{generated}/api/structs/VkSamplerCustomBorderColorCreateInfoEXT.adoc[]
     pname:customBorderColorWithoutFormat>> feature is enabled.
 
 [NOTE]
-.Note
 ====
 If pname:format is a depth/stencil format, the aspect is determined by the
 value of slink:VkSamplerCreateInfo::pname:borderColor.
@@ -1214,8 +1212,8 @@ slink:VkSamplerCreateInfo::pname:borderColor is
 ename:VK_BORDER_COLOR_INT_CUSTOM_EXT, and the sampler is used with an image
 with a stencil format, then the implementation must: source the custom
 border color from either the first or second components of
-slink:VkSamplerCreateInfo::pname:customBorderColor and should: source it
-from the first component.
+slink:VkSamplerCreateInfo::pname:borderColor and should: source it from the
+first component.
 ====
 
 .Valid Usage
@@ -1234,9 +1232,9 @@ from the first component.
     If the sampler is used to sample an image view of
     ename:VK_FORMAT_B4G4R4A4_UNORM_PACK16,
     ename:VK_FORMAT_B5G6R5_UNORM_PACK16,
-ifdef::VK_KHR_maintenance5[]
-    ename:VK_FORMAT_A1B5G5R5_UNORM_PACK16_KHR,
-endif::VK_KHR_maintenance5[]
+ifdef::VK_VERSION_1_4,VK_KHR_maintenance5[]
+    ename:VK_FORMAT_A1B5G5R5_UNORM_PACK16,
+endif::VK_VERSION_1_4,VK_KHR_maintenance5[]
     or ename:VK_FORMAT_B5G5R5A1_UNORM_PACK16 format then pname:format must:
     not be ename:VK_FORMAT_UNDEFINED
 ****
@@ -1308,7 +1306,7 @@ include::{generated}/api/structs/VkSamplerBlockMatchWindowCreateInfoQCOM.adoc[]
 ****
   * [[VUID-VkSamplerBlockMatchWindowCreateInfoQCOM-WindowExtent-09210]]
     pname:WindowExtent must: not be larger than
-    slink:VkPhysicalDeviceImageProcessing2PropertiesQCOM::pname:maxBlockMatchWindow.
+    slink:VkPhysicalDeviceImageProcessing2PropertiesQCOM::pname:maxBlockMatchWindow
 ****
 
 include::{generated}/validity/structs/VkSamplerBlockMatchWindowCreateInfoQCOM.adoc[]

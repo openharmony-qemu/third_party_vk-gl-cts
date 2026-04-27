@@ -76,7 +76,7 @@ ohos_executable("deqp_glcts") {
   ]
   include_dirs = [
     "//third_party/zlib/src",
-    "//third_party/spirv-headers/include",
+    "//third_party/vk-gl-cts/external/spirv-headers/src/include",
     "//third_party/amber",
     "//third_party/renderdoc/src",
     "//third_party/vulkancts/framework/vulkan",
@@ -96,11 +96,11 @@ ohos_executable("deqp_glcts") {
     "//third_party/vk-gl-cts/modules/gles3",
     "//third_party/vk-gl-cts/modules/gles31",
     "//third_party/vk-gl-cts/external/openglcts/modules/runner",
-    "//third_party/glslang/glslang",
+    "//third_party/vk-gl-cts/external/glslang/src/glslang",
     "//third_party/vk-gl-cts/build/include",
-    "//third_party/glslang/SPIRV",
-    "//third_party/spirv-tools/include",
-    "//third_party/spirv-headers/include",
+    "//third_party/vk-gl-cts/external/glslang/src/SPIRV",
+    "//third_party/vk-gl-cts/external/spirv-tools/src/include",
+    "//third_party/vk-gl-cts/external/spirv-headers/src/include",
   ]
   include_dirs += deqp_common_include_dirs
   deps = [
@@ -121,7 +121,7 @@ ohos_executable("deqp_cts-runner") {
   ]
   include_dirs = [
     "//third_party/zlib/src",
-    "//third_party/spirv-headers/include",
+    "//third_party/vk-gl-cts/external/spirv-headers/src/include",
     "//third_party/amber",
     "//third_party/renderdoc/src",
     "//third_party/vulkancts/framework/vulkan",
@@ -141,11 +141,11 @@ ohos_executable("deqp_cts-runner") {
     "//third_party/vk-gl-cts/modules/gles3",
     "//third_party/vk-gl-cts/modules/gles31",
     "//third_party/vk-gl-cts/external/openglcts/modules/runner",
-    "//third_party/glslang/glslang",
+    "//third_party/vk-gl-cts/external/glslang/src/glslang",
     "//third_party/vk-gl-cts/build/include",
-    "//third_party/glslang/SPIRV",
-    "//third_party/spirv-tools/include",
-    "//third_party/spirv-headers/include",
+    "//third_party/vk-gl-cts/external/glslang/src/SPIRV",
+    "//third_party/vk-gl-cts/external/spirv-tools/src/include",
+    "//third_party/vk-gl-cts/external/spirv-headers/src/include",
   ]
   include_dirs += deqp_common_include_dirs
 

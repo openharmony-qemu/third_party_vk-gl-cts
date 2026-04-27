@@ -1,4 +1,4 @@
-// Copyright 2015-2024 The Khronos Group Inc.
+// Copyright 2015-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -60,6 +60,7 @@ Shader objects are represented by sname:VkShaderEXT handles:
 include::{generated}/api/handles/VkShaderEXT.adoc[]
 --
 
+
 [[shaders-objects-creation]]
 === Shader Object Creation
 
@@ -96,6 +97,21 @@ is not dlink:VK_NULL_HANDLE.
 
 .Valid Usage
 ****
+  * [[VUID-vkCreateShadersEXT-stage-09670]]
+    If the pname:stage member of any element of pname:pCreateInfos is
+    ename:VK_SHADER_STAGE_COMPUTE_BIT, pname:device must: support at least
+    one queue family with the ename:VK_QUEUE_COMPUTE_BIT capability
+  * [[VUID-vkCreateShadersEXT-stage-09671]]
+    If the pname:stage member of any element of pname:pCreateInfos is
+ifdef::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
+    ename:VK_SHADER_STAGE_TASK_BIT_EXT, ename:VK_SHADER_STAGE_MESH_BIT_EXT,
+endif::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
+    ename:VK_SHADER_STAGE_VERTEX_BIT,
+    ename:VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT,
+    ename:VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT,
+    ename:VK_SHADER_STAGE_GEOMETRY_BIT, or
+    ename:VK_SHADER_STAGE_FRAGMENT_BIT, pname:device must: support at least
+    one queue family with the ename:VK_QUEUE_GRAPHICS_BIT capability
   * [[VUID-vkCreateShadersEXT-None-08400]]
     The <<features-shaderObject, pname:shaderObject>> feature must: be
     enabled
@@ -202,6 +218,14 @@ endif::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
     contains an code:OpExecutionMode instruction specifying the output patch
     size, it must: match the output patch size specified in the
     ename:VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT stage
+ifdef::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
+  * [[VUID-vkCreateShadersEXT-pCreateInfos-09632]]
+    If pname:pCreateInfos contains a ename:VK_SHADER_STAGE_MESH_BIT_EXT with
+    pname:codeType of ename:VK_SHADER_CODE_TYPE_SPIRV_EXT and
+    ename:VK_SHADER_CREATE_NO_TASK_SHADER_BIT_EXT is not set, then the mesh
+    shader's entry point must: not declare a variable with a code:DrawIndex
+    code:BuiltIn decoration
+endif::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
 ****
 
 include::{generated}/validity/protos/vkCreateShadersEXT.adoc[]
@@ -223,8 +247,9 @@ include::{generated}/api/structs/VkShaderCreateInfoEXT.adoc[]
   * pname:stage is a elink:VkShaderStageFlagBits value specifying a single
     shader stage.
   * pname:nextStage is a bitmask of elink:VkShaderStageFlagBits specifying
-    zero or stages which may: be used as a logically next bound stage when
-    drawing with the shader bound.
+    which stages may: be used as a logically next bound stage when drawing
+    with the shader bound.
+    A value of zero indicates this shader stage must: be the last one.
   * pname:codeType is a elink:VkShaderCodeTypeEXT value specifying the type
     of the shader code pointed to be pname:pCode.
   * pname:codeSize is the size in bytes of the shader code pointed to be
@@ -236,6 +261,8 @@ include::{generated}/api/structs/VkShaderCreateInfoEXT.adoc[]
     by pname:pSetLayouts.
   * pname:pSetLayouts is a pointer to an array of
     slink:VkDescriptorSetLayout objects used by the shader stage.
+    The implementation must: not access these objects outside of the
+    duration of the command this structure is passed to.
   * pname:pushConstantRangeCount is the number of push constant ranges
     pointed to by pname:pPushConstantRanges.
   * pname:pPushConstantRanges is a pointer to an array of
@@ -289,6 +316,18 @@ ifdef::VK_VERSION_1_1,VK_EXT_subgroup_size_control[]
     ename:VK_SHADER_CREATE_REQUIRE_FULL_SUBGROUPS_BIT_EXT, the
     <<features-computeFullSubgroups, pname:computeFullSubgroups>> feature
     must: be enabled
+ifdef::VK_EXT_device_generated_commands[]
+  * [[VUID-VkShaderCreateInfoEXT-flags-11005]]
+    If pname:flags includes
+    ename:VK_SHADER_CREATE_INDIRECT_BINDABLE_BIT_EXT, then the
+    <<features-deviceGeneratedCommands,
+    sname:VkPhysicalDeviceDeviceGeneratedCommandsFeaturesEXT::pname:deviceGeneratedCommands>>
+    feature must: be enabled
+  * [[VUID-VkShaderCreateInfoEXT-flags-11006]]
+    If pname:flags includes
+    ename:VK_SHADER_CREATE_INDIRECT_BINDABLE_BIT_EXT, then the identified
+    entry point must: not specify code:Xfb execution mode
+endif::VK_EXT_device_generated_commands[]
   * [[VUID-VkShaderCreateInfoEXT-flags-08992]]
     If pname:flags includes
     ename:VK_SHADER_CREATE_REQUIRE_FULL_SUBGROUPS_BIT_EXT, pname:stage must:
@@ -323,7 +362,7 @@ ifdef::VK_VERSION_1_1,VK_EXT_subgroup_size_control[]
     slink:VkShaderRequiredSubgroupSizeCreateInfoEXT structure is included in
     the pname:pNext chain, the local workgroup size in the X dimension of
     the shader must: be a multiple of
-    <<limits-subgroup-size,pname:subgroupSize>>
+    <<limits-subgroupSize,pname:subgroupSize>>
 endif::VK_VERSION_1_1,VK_EXT_subgroup_size_control[]
   * [[VUID-VkShaderCreateInfoEXT-stage-08418]]
     pname:stage must: not be ename:VK_SHADER_STAGE_ALL_GRAPHICS or
@@ -416,21 +455,18 @@ endif::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
     sname:VkPhysicalDeviceLimits::pname:maxCullDistances
   * [[VUID-VkShaderCreateInfoEXT-pCode-08450]]
     If pname:codeType is ename:VK_SHADER_CODE_TYPE_SPIRV_EXT, and the
-    identified entry point includes any variables in its interface that are
-    declared with the code:ClipDistance or code:CullDistance code:BuiltIn
-    decoration, those variables must: not have array sizes which sum to more
-    than sname:VkPhysicalDeviceLimits::pname:maxCombinedClipAndCullDistances
+    identified entry point includes variables in its interface that are
+    declared with the code:ClipDistance code:BuiltIn decoration and
+    variables in its interface that are declared with the code:CullDistance
+    code:BuiltIn decoration, those variables must: not have array sizes
+    which sum to more than
+    sname:VkPhysicalDeviceLimits::pname:maxCombinedClipAndCullDistances
   * [[VUID-VkShaderCreateInfoEXT-pCode-08451]]
     If pname:codeType is ename:VK_SHADER_CODE_TYPE_SPIRV_EXT, and the
     identified entry point includes any variable in its interface that is
     declared with the code:SampleMask code:BuiltIn decoration, that variable
     must: not have an array size greater than
     sname:VkPhysicalDeviceLimits::pname:maxSampleMaskWords
-  * [[VUID-VkShaderCreateInfoEXT-pCode-08452]]
-    If pname:codeType is ename:VK_SHADER_CODE_TYPE_SPIRV_EXT, and
-    pname:stage is ename:VK_SHADER_STAGE_VERTEX_BIT, the identified entry
-    point must: not include any input variable in its interface that is
-    decorated with code:CullDistance
   * [[VUID-VkShaderCreateInfoEXT-pCode-08453]]
     If pname:codeType is ename:VK_SHADER_CODE_TYPE_SPIRV_EXT, and
     pname:stage is ename:VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT or
@@ -465,11 +501,6 @@ endif::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
     stage>>, and the identified entry point writes to code:ViewportIndex for
     any primitive, it must: write the same value to code:ViewportIndex for
     all vertices of a given primitive
-  * [[VUID-VkShaderCreateInfoEXT-pCode-08458]]
-    If pname:codeType is ename:VK_SHADER_CODE_TYPE_SPIRV_EXT, and
-    pname:stage is ename:VK_SHADER_STAGE_FRAGMENT_BIT, the identified entry
-    point must: not include any output variables in its interface decorated
-    with code:CullDistance
   * [[VUID-VkShaderCreateInfoEXT-pCode-08459]]
     If pname:codeType is ename:VK_SHADER_CODE_TYPE_SPIRV_EXT, and
     pname:stage is ename:VK_SHADER_STAGE_FRAGMENT_BIT, and the identified
@@ -503,6 +534,43 @@ endif::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
     pname:stage is ename:VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT,
     pname:pCode must: contain an code:OpExecutionMode instruction specifying
     the output patch size
+  * [[VUID-VkShaderCreateInfoEXT-pPushConstantRanges-10063]]
+    Any two elements of pname:pPushConstantRanges must: not include the same
+    stage in pname:stageFlags
+  * [[VUID-VkShaderCreateInfoEXT-codeType-10064]]
+    If pname:codeType is ename:VK_SHADER_CODE_TYPE_SPIRV_EXT, and if a push
+    constant block is declared in a shader, then an element of
+    pname:pPushConstantRanges->stageFlags must: match pname:stage
+  * [[VUID-VkShaderCreateInfoEXT-codeType-10065]]
+    If pname:codeType is ename:VK_SHADER_CODE_TYPE_SPIRV_EXT, and if a push
+    constant block is declared in a shader, the block must be contained
+    inside the element of pname:pPushConstantRanges that matches the stage
+  * [[VUID-VkShaderCreateInfoEXT-codeType-10383]]
+    If pname:codeType is ename:VK_SHADER_CODE_TYPE_SPIRV_EXT, and a
+    <<interfaces-resources,resource variable>> is declared in a shader, the
+    corresponding descriptor set in pname:pSetLayouts must: match the shader
+    stage
+  * [[VUID-VkShaderCreateInfoEXT-codeType-10384]]
+    If pname:codeType is ename:VK_SHADER_CODE_TYPE_SPIRV_EXT, and a
+    <<interfaces-resources,resource variable>> is declared in a shader,
+ifdef::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
+    and the descriptor type is not ename:VK_DESCRIPTOR_TYPE_MUTABLE_EXT,
+endif::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
+    the corresponding descriptor set in pname:pSetLayouts must: match the
+    descriptor type
+  * [[VUID-VkShaderCreateInfoEXT-codeType-10385]]
+    If pname:codeType is ename:VK_SHADER_CODE_TYPE_SPIRV_EXT, and a
+    <<interfaces-resources,resource variable>> is declared in a shader as an
+    array, the corresponding descriptor set in pname:pSetLayouts must: match
+    the descriptor count
+ifdef::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
+  * [[VUID-VkShaderCreateInfoEXT-codeType-10386]]
+    If pname:codeType is ename:VK_SHADER_CODE_TYPE_SPIRV_EXT, and a
+    <<interfaces-resources,resource variable>> is declared in a shader as an
+    array of descriptors, then the descriptor type of that variable must:
+    not be ename:VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK
+endif::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
+
 ****
 
 include::{generated}/validity/structs/VkShaderCreateInfoEXT.adoc[]
@@ -558,11 +626,14 @@ ifdef::VK_EXT_fragment_density_map[]
     that a fragment shader can: be used with a fragment density map
     attachment.
 endif::VK_EXT_fragment_density_map[]
+ifdef::VK_EXT_device_generated_commands[]
+  * ename:VK_SHADER_CREATE_INDIRECT_BINDABLE_BIT_EXT specifies that the
+    shader can: be used in combination with <<device-generated-commands>>.
+endif::VK_EXT_device_generated_commands[]
 --
 
 ifdef::VK_KHR_fragment_shading_rate,VK_EXT_fragment_density_map[]
 [NOTE]
-.Note
 ====
 The behavior of
 ifdef::VK_KHR_fragment_shading_rate[]
@@ -573,10 +644,10 @@ ifdef::VK_EXT_fragment_density_map[]
 ename:VK_SHADER_CREATE_FRAGMENT_DENSITY_MAP_ATTACHMENT_BIT_EXT
 endif::VK_EXT_fragment_density_map[]
 differs subtly from the behavior of
-ifdef::VK_KHR_fragment_shading_rate[]
+ifdef::VK_KHR_dynamic_rendering+VK_KHR_fragment_shading_rate[]
 ename:VK_PIPELINE_CREATE_RENDERING_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR
-endif::VK_KHR_fragment_shading_rate[]
-ifdef::VK_KHR_fragment_shading_rate+VK_EXT_fragment_density_map[and]
+ifdef::VK_EXT_fragment_density_map[and]
+endif::VK_KHR_dynamic_rendering+VK_KHR_fragment_shading_rate[]
 ifdef::VK_EXT_fragment_density_map[]
 ename:VK_PIPELINE_CREATE_RENDERING_FRAGMENT_DENSITY_MAP_ATTACHMENT_BIT_EXT
 endif::VK_EXT_fragment_density_map[]
@@ -604,6 +675,7 @@ include::{generated}/api/enums/VkShaderCodeTypeEXT.adoc[]
     format.
 --
 
+
 [[shaders-objects-binary-code]]
 === Binary Shader Code
 
@@ -621,23 +693,30 @@ include::{generated}/api/protos/vkGetShaderBinaryDataEXT.adoc[]
 
 If pname:pData is `NULL`, then the size of the binary shader code of the
 shader object, in bytes, is returned in pname:pDataSize.
-Otherwise, pname:pDataSize must: point to a variable set by the user to the
-size of the buffer, in bytes, pointed to by pname:pData, and on return the
-variable is overwritten with the amount of data actually written to
-pname:pData.
+Otherwise, pname:pDataSize must: point to a variable set by the application
+to the size of the buffer, in bytes, pointed to by pname:pData, and on
+return the variable is overwritten with the amount of data actually written
+to pname:pData.
 If pname:pDataSize is less than the size of the binary shader code, nothing
 is written to pname:pData, and ename:VK_INCOMPLETE will be returned instead
 of ename:VK_SUCCESS.
 
 [NOTE]
-.Note
 ====
 The behavior of this command when pname:pDataSize is too small differs from
 how some other getter-type commands work in Vulkan.
 Because shader binary data is only usable in its entirety, it would never be
 useful for the implementation to return partial data.
 Because of this, nothing is written to pname:pData unless pname:pDataSize is
-large enough to fit the data it its entirety.
+large enough to fit the data in its entirety.
+
+This behavior is not consistent with the behavior described in
+<<fundamentals-binaryresults, Opaque Binary Data Results>>, for historical
+reasons.
+
+If the amount of data available is larger than the passed pname:pDataSize,
+the query returns a ename:VK_INCOMPLETE success status instead of a
+ename:VK_ERROR_NOT_ENOUGH_SPACE_KHR error status.
 ====
 
 Binary shader code retrieved using fname:vkGetShaderBinaryDataEXT can: be
@@ -700,7 +779,6 @@ is still guaranteed to be usable to successfully create the shader
 object(s).
 
 [NOTE]
-.Note
 ====
 Implementations are encouraged to share pname:shaderBinaryUUID between
 devices and driver versions to the maximum extent their hardware naturally
@@ -715,11 +793,12 @@ code created on a device with a different or unknown pname:shaderBinaryUUID
 and/or higher pname:shaderBinaryVersion.
 In this case, the implementation may: use any unspecified means of its
 choosing to determine whether the provided binary shader code is usable.
-If it is, the flink:vkCreateShadersEXT call must: return ename:VK_SUCCESS,
-and the created shader object is guaranteed to be valid.
-Otherwise, in the absence of some other error, the flink:vkCreateShadersEXT
-call must: return ename:VK_ERROR_INCOMPATIBLE_SHADER_BINARY_EXT to indicate
-that the provided binary shader code is not compatible with the device.
+If it is, flink:vkCreateShadersEXT must: return ename:VK_SUCCESS, and the
+created shader object is guaranteed to be valid.
+Otherwise, in the absence of some error, flink:vkCreateShadersEXT must:
+return ename:VK_INCOMPATIBLE_SHADER_BINARY_EXT to indicate that the provided
+binary shader code is not compatible with the device.
+
 
 [[shaders-objects-binding]]
 === Binding Shader Objects
@@ -804,30 +883,6 @@ ifdef::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
     pname:pShaders as ename:VK_SHADER_STAGE_VERTEX_BIT in pname:pStages
     must: be dlink:VK_NULL_HANDLE
 endif::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
-  * [[VUID-vkCmdBindShadersEXT-pShaders-08474]]
-    If the <<features-tessellationShader, pname:tessellationShader>> feature
-    is not enabled, and pname:pStages contains
-    ename:VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT or
-    ename:VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT, and pname:pShaders is
-    not `NULL`, the same index or indices in pname:pShaders must: be
-    dlink:VK_NULL_HANDLE
-  * [[VUID-vkCmdBindShadersEXT-pShaders-08475]]
-    If the <<features-geometryShader, pname:geometryShader>> feature is not
-    enabled, and pname:pStages contains ename:VK_SHADER_STAGE_GEOMETRY_BIT,
-    and pname:pShaders is not `NULL`, the same index in pname:pShaders must:
-    be dlink:VK_NULL_HANDLE
-ifdef::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
-  * [[VUID-vkCmdBindShadersEXT-pShaders-08490]]
-    If the <<features-taskShader, pname:taskShader>> feature is not enabled,
-    and pname:pStages contains ename:VK_SHADER_STAGE_TASK_BIT_EXT, and
-    pname:pShaders is not `NULL`, the same index in pname:pShaders must: be
-    dlink:VK_NULL_HANDLE
-  * [[VUID-vkCmdBindShadersEXT-pShaders-08491]]
-    If the <<features-meshShader, pname:meshShader>> feature is not enabled,
-    and pname:pStages contains ename:VK_SHADER_STAGE_MESH_BIT_EXT, and
-    pname:pShaders is not `NULL`, the same index in pname:pShaders must: be
-    dlink:VK_NULL_HANDLE
-endif::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
   * [[VUID-vkCmdBindShadersEXT-pShaders-08476]]
     If pname:pStages contains ename:VK_SHADER_STAGE_COMPUTE_BIT, the
     sname:VkCommandPool that pname:commandBuffer was allocated from must:
@@ -850,6 +905,7 @@ endif::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
 include::{generated}/validity/protos/vkCmdBindShadersEXT.adoc[]
 --
 
+
 [[shaders-objects-state]]
 === Setting State
 
@@ -869,9 +925,14 @@ endif::VK_EXT_mesh_shader,VK_NV_mesh_shader[]
 
   * flink:vkCmdSetVertexInputEXT
   * flink:vkCmdSetPrimitiveTopology
+  * flink:vkCmdSetPrimitiveRestartEnable
+
+If a shader is bound to the ename:VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT
+stage, the following command must: have been called in the command buffer
+prior to drawing:
+
   * flink:vkCmdSetPatchControlPointsEXT, if pname:primitiveTopology is
     ename:VK_PRIMITIVE_TOPOLOGY_PATCH_LIST
-  * flink:vkCmdSetPrimitiveRestartEnable
 
 If a shader is bound to the
 ename:VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT stage, the following
@@ -886,24 +947,19 @@ must: have been called in the command buffer prior to drawing:
   * flink:vkCmdSetSampleMaskEXT
   * flink:vkCmdSetAlphaToCoverageEnableEXT
   * flink:vkCmdSetAlphaToOneEnableEXT, if the <<features-alphaToOne,
-    alphaToOne>> feature is enabled on the device
+    alphaToOne>> feature is enabled
   * flink:vkCmdSetPolygonModeEXT
-  * flink:vkCmdSetLineWidth, if pname:polygonMode is
-    ename:VK_POLYGON_MODE_LINE, or if
-ifdef::VK_EXT_mesh_shader,VK_NV_mesh_shader[]
-    a shader is bound to the ename:VK_SHADER_STAGE_VERTEX_BIT stage and
-endif::VK_EXT_mesh_shader,VK_NV_mesh_shader[]
-    pname:primitiveTopology is a line topology, or if a shader which outputs
-    line primitives is bound to the
-    ename:VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT or
-    ename:VK_SHADER_STAGE_GEOMETRY_BIT stage
+  * flink:vkCmdSetLineWidth, if the <<drawing-rasterization-input-topology,
+    effective rasterization input topology>> is in line
+    <<drawing-primitive-topology-class,topology class>>
   * flink:vkCmdSetCullMode
   * flink:vkCmdSetFrontFace
   * flink:vkCmdSetDepthTestEnable
-  * flink:vkCmdSetDepthWriteEnable
+  * flink:vkCmdSetDepthWriteEnable, if pname:depthTestEnable is
+    ename:VK_TRUE
   * flink:vkCmdSetDepthCompareOp, if pname:depthTestEnable is ename:VK_TRUE
   * flink:vkCmdSetDepthBoundsTestEnable, if the <<features-depthBounds,
-    depthBounds>> feature is enabled on the device
+    depthBounds>> feature is enabled
   * flink:vkCmdSetDepthBounds, if pname:depthBoundsTestEnable is
     ename:VK_TRUE
   * flink:vkCmdSetDepthBiasEnable
@@ -915,7 +971,7 @@ ifndef::VK_EXT_depth_bias_control[]
 endif::VK_EXT_depth_bias_control[]
     if pname:depthBiasEnable is ename:VK_TRUE
   * flink:vkCmdSetDepthClampEnableEXT, if the <<features-depthClamp,
-    depthClamp>> feature is enabled on the device
+    depthClamp>> feature is enabled
   * flink:vkCmdSetStencilTestEnable
   * flink:vkCmdSetStencilOp, if pname:stencilTestEnable is ename:VK_TRUE
   * flink:vkCmdSetStencilCompareMask, if pname:stencilTestEnable is
@@ -930,9 +986,10 @@ pname:rasterizerDiscardEnable is ename:VK_FALSE, the following commands
 must: have been called in the command buffer prior to drawing:
 
   * flink:vkCmdSetLogicOpEnableEXT, if the <<features-logicOp,
-    pname:logicOp>> feature is enabled on the device
+    pname:logicOp>> feature is enabled
   * flink:vkCmdSetLogicOpEXT, if pname:logicOpEnable is ename:VK_TRUE
-  * flink:vkCmdSetColorBlendEnableEXT, with values set for every color
+  * flink:vkCmdSetColorBlendEnableEXT and flink:vkCmdSetColorWriteMaskEXT,
+    if color attachments are bound, with values set for every color
     attachment in the render pass instance active at draw time
 ifdef::VK_EXT_blend_operation_advanced[]
   * flink:vkCmdSetColorBlendEquationEXT or
@@ -941,8 +998,8 @@ endif::VK_EXT_blend_operation_advanced[]
 ifndef::VK_EXT_blend_operation_advanced[]
   * flink:vkCmdSetColorBlendEquationEXT,
 endif::VK_EXT_blend_operation_advanced[]
-    for every attachment whose index in pname:pColorBlendEnables is a
-    pointer to a value of ename:VK_TRUE
+    if color attachments are bound, for every attachment whose index in
+    pname:pColorBlendEnables is a pointer to a value of ename:VK_TRUE
   * flink:vkCmdSetBlendConstants, if any index in pname:pColorBlendEnables
     is ename:VK_TRUE, and the same index in pname:pColorBlendEquations is a
     sname:VkColorBlendEquationEXT structure with any elink:VkBlendFactor
@@ -950,12 +1007,11 @@ endif::VK_EXT_blend_operation_advanced[]
     ename:VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR,
     ename:VK_BLEND_FACTOR_CONSTANT_ALPHA, or
     ename:VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA
-  * flink:vkCmdSetColorWriteMaskEXT
 
 ifdef::VK_KHR_fragment_shading_rate[]
 If the <<features-pipelineFragmentShadingRate,
-pname:pipelineFragmentShadingRate>> feature is enabled on the device, and a
-shader is bound to the ename:VK_SHADER_STAGE_FRAGMENT_BIT stage, and
+pname:pipelineFragmentShadingRate>> feature is enabled, and a shader is
+bound to the ename:VK_SHADER_STAGE_FRAGMENT_BIT stage, and
 pname:rasterizerDiscardEnable is ename:VK_FALSE, the following command must:
 have been called in the command buffer prior to drawing:
 
@@ -964,17 +1020,17 @@ endif::VK_KHR_fragment_shading_rate[]
 
 ifdef::VK_EXT_transform_feedback[]
 If the <<features-geometryStreams, pname:geometryStreams>> feature is
-enabled on the device, and a shader is bound to the
-ename:VK_SHADER_STAGE_GEOMETRY_BIT stage, the following command must: have
-been called in the command buffer prior to drawing:
+enabled, and a shader is bound to the ename:VK_SHADER_STAGE_GEOMETRY_BIT
+stage, the following command must: have been called in the command buffer
+prior to drawing:
 
   * flink:vkCmdSetRasterizationStreamEXT
 endif::VK_EXT_transform_feedback[]
 
 ifdef::VK_EXT_discard_rectangles[]
-If the `apiext:VK_EXT_discard_rectangles` extension is enabled on the
-device, and pname:rasterizerDiscardEnable is ename:VK_FALSE, the following
-commands must: have been called in the command buffer prior to drawing:
+If the `apiext:VK_EXT_discard_rectangles` extension is enabled, and
+pname:rasterizerDiscardEnable is ename:VK_FALSE, the following commands
+must: have been called in the command buffer prior to drawing:
 
   * flink:vkCmdSetDiscardRectangleEnableEXT
   * flink:vkCmdSetDiscardRectangleModeEXT, if `discardRectangleEnable` is
@@ -984,9 +1040,9 @@ commands must: have been called in the command buffer prior to drawing:
 endif::VK_EXT_discard_rectangles[]
 
 ifdef::VK_EXT_conservative_rasterization[]
-If `apiext:VK_EXT_conservative_rasterization` extension is enabled on the
-device, and pname:rasterizerDiscardEnable is ename:VK_FALSE, the following
-commands must: have been called in the command buffer prior to drawing:
+If the `apiext:VK_EXT_conservative_rasterization` extension is enabled, and
+pname:rasterizerDiscardEnable is ename:VK_FALSE, the following commands
+must: have been called in the command buffer prior to drawing:
 
   * flink:vkCmdSetConservativeRasterizationModeEXT
   * flink:vkCmdSetExtraPrimitiveOverestimationSizeEXT, if
@@ -996,15 +1052,15 @@ endif::VK_EXT_conservative_rasterization[]
 
 ifdef::VK_EXT_depth_clip_enable[]
 If the <<features-depthClipEnable, pname:depthClipEnable>> feature is
-enabled on the device, the following command must: have been called in the
-command buffer prior to drawing:
+enabled, the following command must: have been called in the command buffer
+prior to drawing:
 
   * flink:vkCmdSetDepthClipEnableEXT
 endif::VK_EXT_depth_clip_enable[]
 
 ifdef::VK_EXT_sample_locations[]
-If the `apiext:VK_EXT_sample_locations` extension is enabled on the device,
-and pname:rasterizerDiscardEnable is ename:VK_FALSE, the following commands
+If the `apiext:VK_EXT_sample_locations` extension is enabled, and
+pname:rasterizerDiscardEnable is ename:VK_FALSE, the following commands
 must: have been called in the command buffer prior to drawing:
 
   * flink:vkCmdSetSampleLocationsEnableEXT
@@ -1013,44 +1069,43 @@ must: have been called in the command buffer prior to drawing:
 endif::VK_EXT_sample_locations[]
 
 ifdef::VK_EXT_provoking_vertex[]
-If the `apiext:VK_EXT_provoking_vertex` extension is enabled on the device,
-and pname:rasterizerDiscardEnable is ename:VK_FALSE, and a shader is bound
-to the ename:VK_SHADER_STAGE_VERTEX_BIT stage, the following command must:
-have been called in the command buffer prior to drawing:
+If the `apiext:VK_EXT_provoking_vertex` extension is enabled, and
+pname:rasterizerDiscardEnable is ename:VK_FALSE, and a shader is bound to
+the ename:VK_SHADER_STAGE_VERTEX_BIT stage, the following command must: have
+been called in the command buffer prior to drawing:
 
   * flink:vkCmdSetProvokingVertexModeEXT
 endif::VK_EXT_provoking_vertex[]
 
-ifdef::VK_EXT_line_rasterization[]
-If the `apiext:VK_EXT_line_rasterization` extension is enabled on the
-device, and pname:rasterizerDiscardEnable is ename:VK_FALSE, and if
-pname:polygonMode is ename:VK_POLYGON_MODE_LINE or a shader is bound to the
-ename:VK_SHADER_STAGE_VERTEX_BIT stage and pname:primitiveTopology is a line
-topology or a shader which outputs line primitives is bound to the
-ename:VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT or
-ename:VK_SHADER_STAGE_GEOMETRY_BIT stage, the following commands must: have
-been called in the command buffer prior to drawing:
+ifdef::VK_VERSION_1_4,VK_KHR_line_rasterization,VK_EXT_line_rasterization[]
+If any of the <<features-stippledRectangularLines,
+pname:stippledRectangularLines>>, <<features-stippledBresenhamLines,
+pname:stippledBresenhamLines>>, or <<features-stippledSmoothLines,
+pname:stippledSmoothLines>> features are enabled, and
+pname:rasterizerDiscardEnable is ename:VK_FALSE, and if the
+<<drawing-rasterization-input-topology, effective rasterization input
+topology>> is in line <<drawing-primitive-topology-class,topology class>>,
+the following commands must: have been called in the command buffer prior to
+drawing:
 
   * flink:vkCmdSetLineRasterizationModeEXT
   * flink:vkCmdSetLineStippleEnableEXT
-  * flink:vkCmdSetLineStippleEXT, if pname:stippledLineEnable is
-    ename:VK_TRUE
-endif::VK_EXT_line_rasterization[]
+  * flink:vkCmdSetLineStipple, if pname:stippledLineEnable is ename:VK_TRUE
+endif::VK_VERSION_1_4,VK_KHR_line_rasterization,VK_EXT_line_rasterization[]
 
 ifdef::VK_EXT_depth_clip_control[]
 If the <<features-depthClipControl, pname:depthClipControl>> feature is
-enabled on the device, the following command must: have been called in the
-command buffer prior to drawing:
+enabled, the following command must: have been called in the command buffer
+prior to drawing:
 
   * flink:vkCmdSetDepthClipNegativeOneToOneEXT
 endif::VK_EXT_depth_clip_control[]
 
 ifdef::VK_EXT_color_write_enable[]
 If the <<features-colorWriteEnable, pname:colorWriteEnable>> feature is
-enabled on the device, and a shader is bound to the
-ename:VK_SHADER_STAGE_FRAGMENT_BIT stage, and pname:rasterizerDiscardEnable
-is ename:VK_FALSE, the following command must: have been called in the
-command buffer prior to drawing:
+enabled, and a shader is bound to the ename:VK_SHADER_STAGE_FRAGMENT_BIT
+stage, and pname:rasterizerDiscardEnable is ename:VK_FALSE, the following
+command must: have been called in the command buffer prior to drawing:
 
   * flink:vkCmdSetColorWriteEnableEXT, with values set for every color
     attachment in the render pass instance active at draw time
@@ -1058,8 +1113,8 @@ endif::VK_EXT_color_write_enable[]
 
 ifdef::VK_EXT_attachment_feedback_loop_dynamic_state[]
 If the <<features-attachmentFeedbackLoopDynamicState,
-attachmentFeedbackLoopDynamicState>> feature is enabled on the device, and a
-shader is bound to the ename:VK_SHADER_STAGE_FRAGMENT_BIT stage, and
+attachmentFeedbackLoopDynamicState>> feature is enabled, and a shader is
+bound to the ename:VK_SHADER_STAGE_FRAGMENT_BIT stage, and
 pname:rasterizerDiscardEnable is ename:VK_FALSE, the following command must:
 have been called in the command buffer prior to drawing:
 
@@ -1067,28 +1122,36 @@ have been called in the command buffer prior to drawing:
 endif::VK_EXT_attachment_feedback_loop_dynamic_state[]
 
 ifdef::VK_NV_clip_space_w_scaling[]
-If the `apiext:VK_NV_clip_space_w_scaling` extension is enabled on the
-device, the following commands must: have been called in the command buffer
-prior to drawing:
+If the `apiext:VK_NV_clip_space_w_scaling` extension is enabled, the
+following commands must: have been called in the command buffer prior to
+drawing:
 
   * flink:vkCmdSetViewportWScalingEnableNV
   * flink:vkCmdSetViewportWScalingNV, if pname:viewportWScalingEnable is
     ename:VK_TRUE
 endif::VK_NV_clip_space_w_scaling[]
 
+ifdef::VK_EXT_depth_clamp_control[]
+If the <<features-depthClamp, depthClamp>> and <<features-depthClampControl,
+pname:depthClampControl>> features are enabled, and pname:depthClampEnable
+is ename:VK_TRUE, the following command must: have been called in the
+command buffer prior to drawing:
+
+  * flink:vkCmdSetDepthClampRangeEXT
+endif::VK_EXT_depth_clamp_control[]
+
 ifdef::VK_NV_viewport_swizzle[]
-If the `apiext:VK_NV_viewport_swizzle` extension is enabled on the device,
-the following command must: have been called in the command buffer prior to
-drawing:
+If the `apiext:VK_NV_viewport_swizzle` extension is enabled, the following
+command must: have been called in the command buffer prior to drawing:
 
   * flink:vkCmdSetViewportSwizzleNV
 endif::VK_NV_viewport_swizzle[]
 
 ifdef::VK_NV_fragment_coverage_to_color[]
-If the `apiext:VK_NV_fragment_coverage_to_color` extension is enabled on the
-device, and a shader is bound to the ename:VK_SHADER_STAGE_FRAGMENT_BIT
-stage, and pname:rasterizerDiscardEnable is ename:VK_FALSE, the following
-commands must: have been called in the command buffer prior to drawing:
+If the `apiext:VK_NV_fragment_coverage_to_color` extension is enabled, and a
+shader is bound to the ename:VK_SHADER_STAGE_FRAGMENT_BIT stage, and
+pname:rasterizerDiscardEnable is ename:VK_FALSE, the following commands
+must: have been called in the command buffer prior to drawing:
 
   * flink:vkCmdSetCoverageToColorEnableNV
   * flink:vkCmdSetCoverageToColorLocationNV, if pname:coverageToColorEnable
@@ -1096,9 +1159,9 @@ commands must: have been called in the command buffer prior to drawing:
 endif::VK_NV_fragment_coverage_to_color[]
 
 ifdef::VK_NV_framebuffer_mixed_samples[]
-If the `apiext:VK_NV_framebuffer_mixed_samples` extension is enabled on the
-device, and pname:rasterizerDiscardEnable is ename:VK_FALSE, the following
-commands must: have been called in the command buffer prior to drawing:
+If the `apiext:VK_NV_framebuffer_mixed_samples` extension is enabled, and
+pname:rasterizerDiscardEnable is ename:VK_FALSE, the following commands
+must: have been called in the command buffer prior to drawing:
 
   * flink:vkCmdSetCoverageModulationModeNV
   * flink:vkCmdSetCoverageModulationTableEnableNV, if
@@ -1110,16 +1173,16 @@ endif::VK_NV_framebuffer_mixed_samples[]
 
 ifdef::VK_NV_coverage_reduction_mode[]
 If the <<features-coverageReductionMode, pname:coverageReductionMode>>
-feature is enabled on the device, and pname:rasterizerDiscardEnable is
-ename:VK_FALSE, the following command must: have been called in the command
-buffer prior to drawing:
+feature is enabled, and pname:rasterizerDiscardEnable is ename:VK_FALSE, the
+following command must: have been called in the command buffer prior to
+drawing:
 
   * flink:vkCmdSetCoverageReductionModeNV
 endif::VK_NV_coverage_reduction_mode[]
 
 ifdef::VK_NV_representative_fragment_test[]
 If the <<features-representativeFragmentTest,
-pname:representativeFragmentTest>> feature is enabled on the device, and
+pname:representativeFragmentTest>> feature is enabled, and
 pname:rasterizerDiscardEnable is ename:VK_FALSE, the following command must:
 have been called in the command buffer prior to drawing:
 
@@ -1128,9 +1191,8 @@ endif::VK_NV_representative_fragment_test[]
 
 ifdef::VK_NV_shading_rate_image[]
 If the <<features-shadingRateImage, pname:shadingRateImage>> feature is
-enabled on the device, and pname:rasterizerDiscardEnable is ename:VK_FALSE,
-the following commands must: have been called in the command buffer prior to
-drawing:
+enabled, and pname:rasterizerDiscardEnable is ename:VK_FALSE, the following
+commands must: have been called in the command buffer prior to drawing:
 
   * flink:vkCmdSetCoarseSampleOrderNV
   * flink:vkCmdSetShadingRateImageEnableNV
@@ -1140,8 +1202,8 @@ endif::VK_NV_shading_rate_image[]
 
 ifdef::VK_NV_scissor_exclusive[]
 If the <<features-exclusiveScissor, pname:exclusiveScissor>> feature is
-enabled on the device, the following commands must: have been called in the
-command buffer prior to drawing:
+enabled, the following commands must: have been called in the command buffer
+prior to drawing:
 
   * flink:vkCmdSetExclusiveScissorEnableNV
   * flink:vkCmdSetExclusiveScissorNV, if any value in
@@ -1151,6 +1213,14 @@ endif::VK_NV_scissor_exclusive[]
 State can: be set either at any time before or after shader objects are
 bound, but all required state must: be set prior to issuing drawing
 commands.
+
+ifdef::VK_NV_command_buffer_inheritance[]
+If the <<features-commandBufferInheritance,pname:commandBufferInheritance>>
+feature is enabled, graphics and compute state is inherited from the
+previously executed command buffer in the queue.
+Any valid state inherited in this way does not need to be set again in the
+current command buffer.
+endif::VK_NV_command_buffer_inheritance[]
 
 [[shaders-objects-pipeline-interaction]]
 === Interaction With Pipelines
@@ -1170,6 +1240,7 @@ Calls to flink:vkCmdBindPipeline likewise disturb the shader stage(s)
 corresponding to pname:pipelineBindPoint, meaning that any shaders that had
 previously been bound to any of those stages are no longer bound, even if
 the pipeline was created without shaders for some of those stages.
+
 
 [[shaders-objects-destruction]]
 === Shader Object Destruction
@@ -1207,8 +1278,8 @@ command buffers to move into the _invalid state_.
 
 include::{generated}/validity/protos/vkDestroyShaderEXT.adoc[]
 --
-
 endif::VK_EXT_shader_object[]
+
 
 [[shader-modules]]
 == Shader Modules
@@ -1233,6 +1304,36 @@ compatibility <<SCID-8>>.
 In Vulkan SC, the shader modules and pipeline state are supplied to an
 offline compiler which creates a pipeline cache entry which is loaded at
 <<pipelines,pipeline>> creation time.
+
+Accordingly, SPIR-V module validation rules defined in the <<spirvenv>>
+section are only indirectly applied in Vulkan SC, as the SPIR-V modules that
+must: adhere to these validation rules are the inputs of the
+<<pipelines-offline-compilation, offline pipeline cache compilation>>
+process, while the Vulkan SC API only consumes the implementation-specific
+pipeline caches resulting from this process.
+However, violations of SPIR-V module validation rules may: be detected and
+reported by validation layers when the corresponding pipeline cache entry
+contains <<pipelines-cache-stage-validation-index,stage validation index>>
+entries with SPIR-V module data.
+
+For completeness, this specification also includes the following shader
+module creation valid usage clauses that are expected to be referred to by
+validation layers to report SPIR-V module validation errors:
+
+  * Let pname:pCode be a pointer to the SPIR-V module data of the
+    <<pipelines-cache-stage-validation-index,pipeline cache stage validation
+    index entry>>.
+  * Let pname:codeSize be the corresponding member of the
+    slink:VkPipelineCacheStageValidationIndexEntry structure describing the
+    <<pipelines-cache-stage-validation-index,pipeline cache stage validation
+    index entry>>.
+
+.Valid Usage
+****
+:refpage: VkShaderModuleCreateInfo
+:prefixCondition: If pname:pCode is a pointer to SPIR-V code,
+include::{chapters}/commonvalidity/shader_create_spv_common.adoc[]
+****
 
 ifdef::hidden[]
 // tag::scremoved[]
@@ -1268,36 +1369,36 @@ Once a shader module has been created, any entry points it contains can: be
 used in pipeline shader stages as described in <<pipelines-compute,Compute
 Pipelines>> and <<pipelines-graphics,Graphics Pipelines>>.
 
-ifdef::VK_EXT_graphics_pipeline_libraries,VK_KHR_maintenance5[]
+ifdef::VK_VERSION_1_4,VK_KHR_maintenance5,VK_EXT_graphics_pipeline_libraries[]
 [NOTE]
-.Note
 ====
 If
 ifdef::VK_EXT_graphics_pipeline_libraries[]
 the <<features-graphicsPipelineLibrary, pname:graphicsPipelineLibrary>>
 feature
+ifdef::VK_VERSION_1_4,VK_KHR_maintenance5[or]
 endif::VK_EXT_graphics_pipeline_libraries[]
-ifdef::VK_EXT_graphics_pipeline_libraries+VK_KHR_maintenance5[or]
-ifdef::VK_KHR_maintenance5[]
+ifdef::VK_VERSION_1_4,VK_KHR_maintenance5[]
 the <<features-maintenance5,pname:maintenance5>> feature
-endif::VK_KHR_maintenance5[]
+endif::VK_VERSION_1_4,VK_KHR_maintenance5[]
 is enabled, shader module creation can be omitted entirely.
 Instead, applications should provide the slink:VkShaderModuleCreateInfo
 structure directly in to pipeline creation by chaining it to
 slink:VkPipelineShaderStageCreateInfo.
 This avoids the overhead of creating and managing an additional object.
 ====
-endif::VK_EXT_graphics_pipeline_libraries,VK_KHR_maintenance5[]
+endif::VK_VERSION_1_4,VK_KHR_maintenance5,VK_EXT_graphics_pipeline_libraries[]
 
 .Valid Usage
 ****
   * [[VUID-vkCreateShaderModule-pCreateInfo-06904]]
     If pname:pCreateInfo is not `NULL`, pname:pCreateInfo->pNext must: be
     `NULL`
-ifdef::VK_EXT_validation_cache[]
-    or a pointer to a slink:VkShaderModuleValidationCacheCreateInfoEXT
-    structure
-endif::VK_EXT_validation_cache[]
+ifdef::VK_EXT_validation_cache,VK_EXT_validation_features[]
+    or a pointer to a valid instance of
+ifdef::VK_EXT_validation_cache[  ** slink:VkShaderModuleValidationCacheCreateInfoEXT]
+ifdef::VK_EXT_validation_features[  ** slink:VkValidationFeaturesEXT]
+endif::VK_EXT_validation_cache,VK_EXT_validation_features[]
 ****
 
 include::{generated}/validity/protos/vkCreateShaderModule.adoc[]
@@ -1510,6 +1611,7 @@ include::{generated}/api/enums/VK_MAX_SHADER_MODULE_IDENTIFIER_SIZE_EXT.adoc[]
 --
 endif::VK_EXT_shader_module_identifier[]
 
+
 [[shaders-binding]]
 == Binding Shaders
 
@@ -1558,7 +1660,9 @@ a| * ename:VK_SHADER_STAGE_ANY_HIT_BIT_KHR
   * ename:VK_SHADER_STAGE_MISS_BIT_KHR
   * ename:VK_SHADER_STAGE_RAYGEN_BIT_KHR
 | ename:VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR
-| flink:vkCmdTraceRaysKHR and flink:vkCmdTraceRaysIndirectKHR
+|
+ifdef::VK_NV_ray_tracing[flink:vkCmdTraceRaysNV]
+ifdef::VK_KHR_ray_tracing_pipeline[flink:vkCmdTraceRaysKHR and flink:vkCmdTraceRaysIndirectKHR]
 endif::VK_NV_ray_tracing,VK_KHR_ray_tracing_pipeline[]
 
 ifdef::VK_HUAWEI_subpass_shading[]
@@ -1574,6 +1678,7 @@ a| * ename:VK_SHADER_STAGE_COMPUTE_BIT
 | all <<executiongraphs, execution graph commands>>
 endif::VK_AMDX_shader_enqueue[]
 |====
+
 
 [[shaders-execution]]
 == Shader Execution
@@ -1610,16 +1715,389 @@ executed in any function; otherwise it becomes a
 <<shaders-helper-invocations, helper invocation>>.
 
 In addition to the above conditions, <<shaders-helper-invocations,helper
-invocations>> are terminated when all non-helper invocations in the same
+invocations>> may: be terminated when all non-helper invocations in the same
 <<shaders-derivative-operations,derivative group>> either terminate or
-become <<shaders-helper-invocations,helper invocations>> via
-ifdef::VK_EXT_shader_demote_to_helper_invocation[]
-code:OpDemoteToHelperInvocationEXT or
-endif::VK_EXT_shader_demote_to_helper_invocation[]
-code:OpKill.
+become <<shaders-helper-invocations,helper invocations>>.
 
 A shader stage for a given command completes execution when all invocations
 for that stage have terminated.
+
+[NOTE]
+====
+Depending on the implementation, code:OpKill will be functionally equivalent
+to either code:OpTerminateInvocation or code:OpDemoteToHelperInvocation.
+To obtain the most predictable behavior, shader authors should use
+code:OpTerminateInvocation or code:OpDemoteToHelperInvocation rather than
+code:OpKill wherever possible.
+====
+
+
+[[shaders-execution-memory-access-bounds]]
+== Shader Out-of-Bounds Memory Access
+
+Shader accesses to memory are not automatically bounds checked by the
+implementation.
+Applications must: not execute operations that would access out of bounds
+memory locations unless some form of bounds checking is enabled.
+An access is considered out of bounds if any part of the access is outside
+of any specified memory range, whether that is the array length specified in
+a shader or a range specified in the API (e.g. descriptor size).
+
+[NOTE]
+====
+External tooling such as the Vulkan Validation Layers can be used to help
+validate that accesses are not out of bounds.
+====
+
+An access can: be independently out of bounds for each range that applies;
+if one is bounds checked and the others are not, behavior is still
+undefined:.
+
+[NOTE]
+====
+For example, given the following shader declaration
+
+[source,c]
+----
+// Buffer type
+struct MySSBO {
+    uint32_t data[2];
+};
+----
+
+accessing `data` at an index greater than 1 is undefined: behavior, whether
+the underlying buffer is bigger than that or not.
+====
+
+Vulkan provides functionality that enables automatic bounds checking in some
+cases, as outlined below.
+
+[NOTE]
+====
+Automatic bounds checking can be used to ensure that accesses outside of
+certain bounds have predictable results, acting as a safety net for
+untrusted code, or simply as a way for applications to avoid their own
+bounds checks.
+While there may be a performance cost for enabling these features, they
+should not be slower than an application performing equivalent checks.
+Automatic checks do not necessarily account for all possible bounds - e.g.
+<<shaders-robust-buffer-access>> will not prevent undefined: behavior in the
+buffer access example in the prior note.
+====
+
+
+[[shaders-robust-buffer-access]]
+=== Robust Buffer Access
+
+Robust buffer access can: be enabled by
+ifdef::VK_VERSION_1_4,VK_EXT_pipeline_robustness[]
+specifying ename:VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_ROBUST_BUFFER_ACCESS
+in slink:VkPipelineRobustnessCreateInfo, or specifying
+ename:VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_DEVICE_DEFAULT and enabling the
+endif::VK_VERSION_1_4,VK_EXT_pipeline_robustness[]
+the <<features-robustBufferAccess,pname:robustBufferAccess>> feature.
+
+When robust buffer access is enabled, access to a buffer via a descriptor is
+bounds checked against the range specified for the descriptor, and access to
+vertex input data is bounds checked against the bound vertex buffer range.
+Reads from a vertex input may: instead be bounds checked against a range
+rounded down to the nearest multiple of the stride of its binding.
+
+[NOTE]
+====
+The range of a descriptor is not necessarily equivalent to the size of the
+underlying resource; applications may suballocate descriptors from larger
+buffers, for instance.
+The APIs specifying the descriptor range vary between resource types and
+descriptor interfaces, but for example include the ranges specified by
+slink:VkDescriptorBufferInfo or slink:VkBufferViewCreateInfo.
+====
+
+If any vertex input read is outside of the checked range, all other vertex
+input reads through the same binding in the same shader invocation may:
+behave as if they were outside of the checked range.
+
+If any access to a uniform, storage, uniform texel, or storage texel buffer
+is outside of the checked range, any access of the same type (write,
+read-modify-write, or read) to the same buffer that is less than 16 bytes
+away from the first access may: behave as if it is also outside of the
+checked range.
+
+Any non-atomic access to a uniform, storage, uniform texel, or storage texel
+buffer wider than 32-bits may: be treated as multiple 32-bit accesses that
+are separately bounds checked.
+
+Writes to a storage or storage texel buffer outside of the checked range
+will either be discarded, or modify values within the memory range(s) bound
+to the underlying buffer (including outside of the checked range).
+They will not modify any other memory.
+
+[NOTE]
+====
+Non-atomic writes outside of the checked range can: lead to data races, as
+the application has no control over where the data will be written.
+====
+
+Atomic read-modify-write operations to a storage or storage texel buffer
+outside of the checked range will behave the same as a write outside of the
+checked range, but will return an undefined: value.
+
+Reading a uniform, storage, uniform texel, or storage texel buffer outside
+of the checked range will return one of the following values:
+
+  * Values from anywhere within the memory range(s) bound to the underlying
+    buffer object, which may: include bytes beyond the size of the buffer
+    itself.
+  * Zero values
+  * For 4-component vectors, a value of [eq]#(0,0,0,x)#, where [eq]#x# is
+    any of
+  ** 0, 1, or the maximum positive integer value for integer components
+  ** 0.0 or 1.0 for floating-point components
+  * The value of the last store to the same out-of-bounds location in the
+    same shader invocation.
+  ** Using
+ifdef::VK_VERSION_1_2,VK_KHR_vulkan_memory_model[]
+    the code:Volatile/code:VolatileTexel memory/image operand, the
+    code:Volatile memory semantic, or
+endif::VK_VERSION_1_2,VK_KHR_vulkan_memory_model[]
+    the code:Volatile decoration to load the value will prevent prior stored
+    values from being returned.
+
+[NOTE]
+====
+Getting the value of the previous store is possible as implementations are
+free to optimize multiple accesses in the general case.
+There are several ways this can: be prevented, but using volatile loads is
+by far the simplest.
+====
+
+Reads from a vertex input outside of the checked range will produce one of
+the following values:
+
+  * Values from anywhere within the memory range(s) bound to the underlying
+    buffer object, which may: include bytes beyond the size of the buffer
+    itself, converted via <<fxvertex-input-extraction,input extraction>>.
+  * Zero values, converted via <<fxvertex-input-extraction,input
+    extraction>>.
+  * Zero values
+  * For 4-component vectors, a value of [eq]#(0,0,0,x)#, where [eq]#x# is
+    any of
+  ** 0, 1, or the maximum positive integer value for integer components
+  ** 0.0 or 1.0 for floating-point components
+
+ifdef::VK_NV_cooperative_matrix[]
+Accesses via code:OpCooperativeMatrixLoadNV and
+code:OpCooperativeMatrixStoreNV are only bounds checked in the above manner
+if the <<features-cooperativeMatrixRobustBufferAccessNV,
+sname:VkPhysicalDeviceCooperativeMatrixFeaturesNV::pname:cooperativeMatrixRobustBufferAccess>>
+feature is enabled.
+endif::VK_NV_cooperative_matrix[]
+
+ifdef::VK_KHR_cooperative_matrix[]
+Accesses via code:OpCooperativeMatrixLoadKHR and
+code:OpCooperativeMatrixStoreKHR are only bounds checked in the above manner
+if the <<features-cooperativeMatrixRobustBufferAccess,
+sname:VkPhysicalDeviceCooperativeMatrixFeaturesKHR::pname:cooperativeMatrixRobustBufferAccess>>
+feature is enabled.
+endif::VK_KHR_cooperative_matrix[]
+
+ifdef::VK_NV_cooperative_vector[]
+Accesses using code:OpCooperativeVector* instructions are not
+bounds-checked.
+endif::VK_NV_cooperative_vector[]
+
+
+ifdef::VK_KHR_robustness2,VK_EXT_robustness2[]
+
+[[shaders-robust-buffer-access2]]
+=== Robust Buffer Access 2
+
+Robust buffer access 2 can: be enabled by
+ifdef::VK_VERSION_1_4,VK_EXT_pipeline_robustness[]
+specifying
+ename:VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_ROBUST_BUFFER_ACCESS_2 in
+slink:VkPipelineRobustnessCreateInfo, or specifying
+ename:VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_DEVICE_DEFAULT and enabling the
+endif::VK_VERSION_1_4,VK_EXT_pipeline_robustness[]
+the <<features-robustBufferAccess,pname:robustBufferAccess2>> feature.
+
+When robust buffer access 2 is enabled, access to a buffer via a descriptor
+is bounds checked against the range specified for the descriptor, and access
+to vertex input data is bounds checked against the bound vertex buffer
+range, similarly to <<shaders-robust-buffer-access>>, but with tighter
+bounds on the results.
+
+Accesses to a uniform buffer may: instead be bounds checked against a range
+rounded up to <<limits-robustUniformBufferAccessSizeAlignment,
+pname:robustUniformBufferAccessSizeAlignment>>.
+Accesses inside the aligned range may: behave as if they are in bounds, even
+if they are outside of the unaligned descriptor range, and access memory
+accordingly.
+The same is true for accesses to a storage buffer, using the
+<<limits-robustStorageBufferAccessSizeAlignment,
+pname:robustStorageBufferAccessSizeAlignment>> limit instead.
+
+[NOTE]
+====
+To avoid unexpected data races between neighboring descriptor ranges,
+applications may wish to ensure suballocated ranges of buffers are aligned
+to these limits.
+====
+
+Any access to a uniform, storage, uniform texel, or storage texel buffer
+wider than 32-bits may: be treated as multiple 32-bit accesses that are
+separately bounds checked.
+
+[NOTE]
+====
+Accesses to null descriptors are not considered out-of-bounds and have
+separate behavior controlled by the <<features-nullDescriptor,
+pname:nullDescriptor>> feature.
+====
+
+Writes to a storage or storage texel buffer outside of the checked range
+will not modify any memory.
+
+Atomic read-modify-write operations to a storage or storage texel buffer
+outside of the checked range will behave the same as a write outside of the
+checked range, but will return an undefined: value.
+
+Reads from a uniform or storage buffer outside of the checked range will
+return zero values.
+If a value was previously written to the same out of bounds location in the
+same shader invocation, that value may: be returned instead; using
+ifdef::VK_VERSION_1_2,VK_KHR_vulkan_memory_model[]
+the code:Volatile/code:VolatileTexel memory/image operand, the code:Volatile
+memory semantic, or
+endif::VK_VERSION_1_2,VK_KHR_vulkan_memory_model[]
+the code:Volatile decoration to load the value will prevent prior stored
+values from being returned.
+
+Reading a uniform texel or storage texel buffer outside of the checked range
+will produce zero values, but <<textures-conversion-to-rgba,conversion to
+RGBA>> will still be applied based on the buffer view's format, with the
+resulting value returned to the shader.
+If a value was previously written to the same out of bounds location in the
+same shader invocation, that value may: be returned instead; using
+ifdef::VK_VERSION_1_2,VK_KHR_vulkan_memory_model[]
+the code:Volatile/code:VolatileTexel memory/image operand, the code:Volatile
+memory semantic, or
+endif::VK_VERSION_1_2,VK_KHR_vulkan_memory_model[]
+the code:Volatile decoration to load the value will prevent prior stored
+values from being returned.
+
+Reads from a vertex input outside of the checked range will produce zero
+values, but <<fxvertex-input-extraction,input extraction>> will still be
+applied, filling missing G, B, or A components with [eq]#(0,0,1)#.
+
+
+ifdef::VK_NV_cooperative_matrix[]
+Accesses via code:OpCooperativeMatrixLoadNV and
+code:OpCooperativeMatrixStoreNV are only bounds checked in the above manner
+if the <<features-cooperativeMatrixRobustBufferAccessNV,
+sname:VkPhysicalDeviceCooperativeMatrixFeaturesNV::pname:cooperativeMatrixRobustBufferAccess>>
+feature is enabled.
+endif::VK_NV_cooperative_matrix[]
+
+ifdef::VK_KHR_cooperative_matrix[]
+Accesses via code:OpCooperativeMatrixLoadKHR and
+code:OpCooperativeMatrixStoreKHR are only bounds checked in the above manner
+if the <<features-cooperativeMatrixRobustBufferAccess,
+sname:VkPhysicalDeviceCooperativeMatrixFeaturesKHR::pname:cooperativeMatrixRobustBufferAccess>>
+feature is enabled.
+endif::VK_KHR_cooperative_matrix[]
+
+ifdef::VK_NV_cooperative_vector[]
+Accesses using code:OpCooperativeVector* instructions are not
+bounds-checked.
+endif::VK_NV_cooperative_vector[]
+
+endif::VK_KHR_robustness2,VK_EXT_robustness2[]
+
+
+=== Image Sampling
+
+Sampling operations on an image descriptor are always well-defined when
+coordinates exceeding the dimensions specified for the descriptor are
+accessed, as described in the <<textures-wrapping-operation>> section.
+
+
+ifdef::VK_VERSION_1_3,VK_EXT_image_robustness[]
+
+[[shaders-robust-image-access]]
+=== Robust Image Access
+
+Robust image access can: be enabled by
+ifdef::VK_VERSION_1_4,VK_EXT_pipeline_robustness[]
+specifying ename:VK_PIPELINE_ROBUSTNESS_IMAGE_BEHAVIOR_ROBUST_IMAGE_ACCESS
+in slink:VkPipelineRobustnessCreateInfo, or specifying
+ename:VK_PIPELINE_ROBUSTNESS_IMAGE_BEHAVIOR_DEVICE_DEFAULT and enabling the
+endif::VK_VERSION_1_4,VK_EXT_pipeline_robustness[]
+the <<features-robustImageAccess,pname:robustImageAccess>> feature.
+
+If robust image access is enabled, accesses to image descriptors are bounds
+checked against the image view dimensions specified for the descriptor.
+
+Writes or atomic read-modify-write operations to a storage image outside of
+the checked dimensions will not modify any memory.
+
+Reads, atomic read-modify-write operations, or fetches from images outside
+of the checked dimensions will return zero values, with [eq]#(0,0,1)# or
+[eq]#(0,0,0) values <<textures-conversion-to-rgba,inserted for missing G, B,
+or A components>> based on the format.
+
+If a value was previously written to the same out of bounds location in the
+same shader invocation, that value may: be returned instead; using
+ifdef::VK_VERSION_1_2,VK_KHR_vulkan_memory_model[]
+the code:VolatileTexel image operand, the code:Volatile memory semantic, or
+endif::VK_VERSION_1_2,VK_KHR_vulkan_memory_model[]
+the code:Volatile decoration to load the value will prevent prior stored
+values from being returned.
+endif::VK_VERSION_1_3,VK_EXT_image_robustness[]
+
+
+ifdef::VK_KHR_robustness2,VK_EXT_robustness2[]
+
+[[shaders-robust-image-access2]]
+=== Robust Image Access 2
+
+ifdef::VK_VERSION_1_3,VK_EXT_image_robustness[]
+[NOTE]
+====
+This is largely identical to <<shaders-robust-image-access>>; the only
+difference being that the alpha channel must be replaced with 1, rather than
+1 or 0, for out of bounds texel access.
+====
+endif::VK_VERSION_1_3,VK_EXT_image_robustness[]
+
+Robust image access 2 can: be enabled by
+ifdef::VK_VERSION_1_4,VK_EXT_pipeline_robustness[]
+specifying ename:VK_PIPELINE_ROBUSTNESS_IMAGE_BEHAVIOR_ROBUST_IMAGE_ACCESS_2
+in slink:VkPipelineRobustnessCreateInfo, or specifying
+ename:VK_PIPELINE_ROBUSTNESS_IMAGE_BEHAVIOR_DEVICE_DEFAULT and enabling the
+endif::VK_VERSION_1_4,VK_EXT_pipeline_robustness[]
+the <<features-robustImageAccess2,pname:robustImageAccess2>> feature.
+
+If robust image access 2 is enabled, accesses to image descriptors are
+bounds checked against the image view dimensions specified for the
+descriptor.
+
+Writes or atomic read-modify-write operations to a storage image outside of
+the checked dimensions will not modify any memory.
+
+Reads, atomic read-modify-write operations, or fetches from images outside
+of the checked dimensions will return zero values, with [eq]#(0,0,1)# values
+<<textures-conversion-to-rgba,inserted for missing G, B, or A components>>
+based on the format.
+
+If a value was previously written to the same out of bounds location in the
+same shader invocation, that value may: be returned instead; using
+ifdef::VK_VERSION_1_2,VK_KHR_vulkan_memory_model[]
+the code:VolatileTexel image operand, the code:Volatile memory semantic, or
+endif::VK_VERSION_1_2,VK_KHR_vulkan_memory_model[]
+the code:Volatile decoration to load the value will prevent prior stored
+values from being returned.
+endif::VK_KHR_robustness2,VK_EXT_robustness2[]
 
 
 [[shaders-execution-memory-ordering]]
@@ -1651,7 +2129,6 @@ In particular, the following rules apply:
     largely undefined:.
 
 [NOTE]
-.Note
 ====
 The above limitations on shader invocation order make some forms of
 synchronization between shader invocations within a single set of primitives
@@ -1667,7 +2144,6 @@ The <<memory-model,Memory Model>> appendix defines the terminology and rules
 for how to correctly communicate between shader invocations, such as when a
 write is <<memory-model-visible-to,Visible-To>> a read, and what constitutes
 a <<memory-model-access-data-race,Data Race>>.
-
 Applications must: not cause a data race.
 
 endif::VK_VERSION_1_2,VK_KHR_vulkan_memory_model[]
@@ -1709,7 +2185,6 @@ undefined:, unless enforced by a memory barrier instruction or other memory
 dependency.
 
 [NOTE]
-.Note
 ====
 Explicit memory dependencies must: still be used to guarantee availability
 and visibility for access via other buffers, buffer views, or image views.
@@ -1726,7 +2201,6 @@ Atomic operations ensure automatic availability and visibility for writes
 and reads in the same way as those to code:Coherent variables.
 
 [NOTE]
-.Note
 ====
 Memory accesses performed on different resource descriptors with the same
 memory backing may: not be well-defined even with the code:Coherent
@@ -1736,19 +2210,12 @@ Cache Control>> chapter.
 ====
 
 [NOTE]
-.Note
 ====
 Atomics allow shaders to use shared global addresses for mutual exclusion or
 as counters, among other uses.
 ====
 
 endif::VK_VERSION_1_2,VK_KHR_vulkan_memory_model[]
-
-The SPIR-V *SubgroupMemory*, *CrossWorkgroupMemory*, and
-*AtomicCounterMemory* memory semantics are ignored.
-Sequentially consistent atomics and barriers are not supported and
-*SequentiallyConsistent* is treated as *AcquireRelease*.
-*SequentiallyConsistent* should: not be used.
 
 
 [[shaders-inputs]]
@@ -1765,6 +2232,7 @@ In many cases, the same code:BuiltIn decoration can: be used in multiple
 shader stages with similar meaning.
 The specific behavior of variables decorated as code:BuiltIn is documented
 in the following sections.
+
 
 ifdef::VK_NV_mesh_shader,VK_EXT_mesh_shader[]
 [[shaders-task]]
@@ -1868,10 +2336,11 @@ code:MeshEXT {ExecutionModel} may: be invoked separately for each view.
 endif::VK_VERSION_1_1,VK_KHR_multiview[]
 endif::VK_EXT_mesh_shader[]
 
+
 ifdef::VK_HUAWEI_cluster_culling_shader[]
 [[shaders-cluster-culling]]
-
 == Cluster Culling Shaders
+
 Cluster Culling shaders are invoked via the execution of the
 <<drawing-cluster-culling-shading,Programmable Cluster Culling Shading>>
 pipeline.
@@ -1886,6 +2355,7 @@ processed by subsequent stages of the graphics pipeline.
 The Cluster Drawing Command(CDC) is very similar to the MDI command,
 invocations in workgroup can emit zero of more CDC to draw zero or more
 visible cluster.
+
 
 === Cluster Culling Shader Execution
 
@@ -1904,6 +2374,7 @@ An invocation within a local workgroup can: share data with other members of
 the local workgroup through shared variables and issue memory and control
 flow barriers to synchronize with other members of the local workgroup.
 endif::VK_HUAWEI_cluster_culling_shader[]
+
 
 [[shaders-vertex]]
 == Vertex Shaders
@@ -1943,7 +2414,6 @@ implementation may: reuse the results of vertex shading if it can statically
 determine that the vertex shader invocations will produce identical results.
 
 [NOTE]
-.Note
 ====
 It is implementation-dependent when and if results of vertex shading are
 reused, and thus how many times the vertex shader will be executed.
@@ -2104,8 +2574,7 @@ of fragment shader invocations associated with other fragments.
 [[shaders-compute]]
 == Compute Shaders
 
-Compute shaders are invoked via flink:vkCmdDispatch and
-flink:vkCmdDispatchIndirect commands.
+Compute shaders are invoked via <<dispatch, dispatching commands>>.
 In general, they have access to similar resources as shader stages executing
 as part of a graphics pipeline.
 
@@ -2263,7 +2732,6 @@ are interpolated from the values specified by the primitive being
 rasterized.
 
 [NOTE]
-.Note
 ====
 Interpolation decorations can be present on input and output variables in
 pre-rasterization shaders but have no effect on the interpolation performed.
@@ -2308,15 +2776,14 @@ The position is further constrained as follows:
     the center of the fragment area.
 
 [NOTE]
-.Note
 ====
-As code:Centroid restricts the possible interpolation position to the
-covered area of the primitive, the position can be forced to vary between
-neighboring fragments when it otherwise would not.
+As code:Centroid constrains the interpolation position to lie within the
+covered area of the primitive, using it may cause the position to differ
+between neighboring fragments when it otherwise would not.
 Derivatives calculated based on these differing locations can produce
 inconsistent results compared to undecorated inputs.
-It is recommended that input variables used in derivative calculations are
-not decorated with code:Centroid.
+Thus using code:Centroid with input variables used in derivative
+calculations is not recommended.
 ====
 
 ifdef::VK_NV_fragment_shader_barycentric,VK_KHR_fragment_shader_barycentric[]
@@ -2340,6 +2807,9 @@ endif::VK_AMD_shader_explicit_vertex_parameter[]
 == Static Use
 
 A SPIR-V module declares a global object in memory using the code:OpVariable
+ifdef::VK_KHR_shader_untyped_pointers[]
+or code:OpUntypedVariableKHR
+endif::VK_KHR_shader_untyped_pointers[]
 instruction, which results in a pointer code:x to that object.
 A specific entry point in a SPIR-V module is said to _statically use_ that
 object if that entry point's call tree contains a function containing a
@@ -2577,95 +3047,39 @@ local workgroup>>.
 In other shader stages, each invocation in a subgroup must: be in the same
 <<shaders-scope-device, device scope instance>>.
 
-Only <<limits-subgroup-supportedStages, shader stages that support subgroup
+Only <<limits-subgroupSupportedStages, shader stages that support subgroup
 operations>> have defined subgroups.
 
 [NOTE]
-.Note
 ====
-In shaders, there are two kinds of uniformity that are of primary interest
-to applications: uniform within an invocation group (a.k.a.
-dynamically uniform), and uniform within a subgroup scope.
+Subgroups are not guaranteed to be a subset of a single command in
+<<shaders-scope-workgroup, shaders that do not have defined workgroups>>.
+Values that are guaranteed to be uniform for a given command or sub command
+may then not be uniform for the subgroup, and vice versa.
+As such, applications must take care when dealing with mixed uniformity.
 
-While one could make the assumption that being uniform in invocation group
-implies being uniform in subgroup scope, it is not necessarily the case for
-shader stages without defined workgroups.
-
-For shader stages with defined workgroups however, the relationship between
-invocation group and subgroup scope is well defined as a subgroup is a
-subset of the workgroup, and the workgroup is the invocation group.
-If a value is uniform in invocation group, it is by definition also uniform
-in subgroup scope.
-This is important if writing code like:
+A somewhat common example of this would something like trying to optimize
+access to per-draw data using subgroup operations:
 
 [source,glsl]
 ----
-uniform texture2D Textures[];
-uint dynamicallyUniformValue = gl_WorkGroupID.x;
-vec4 value = texelFetch(Textures[dynamicallyUniformValue], coord, 0);
+buffer { uint draw_data[]; };
 
-// subgroupUniformValue is guaranteed to be uniform within the subgroup.
-// This value also happens to be dynamically uniform.
-vec4 subgroupUniformValue = subgroupBroadcastFirst(dynamicallyUniformValue);
+flat in int vDrawID; // Passed through from vertex shader
+
+void main()
+{
+    uint local_draw_data = subgroupBroadcastFirst(draw_data[local_draw_data]);
+}
 ----
 
-In shader stages without defined workgroups, this gets complicated.
-Due to scoping rules, there is no guarantee that a subgroup is a subset of
-the invocation group, which in turn defines the scope for dynamically
-uniform.
-In graphics, the invocation group is a single draw command, except for
-multi-draw situations, and indirect draws with drawCount > 1, where there
-are multiple invocation groups, one per code:DrawIndex.
-
-[source,glsl]
-----
-// Assume SubgroupSize = 8, where 3 draws are packed together.
-// Two subgroups were generated.
-uniform texture2D Textures[];
-
-// DrawIndex builtin is dynamically uniform
-uint dynamicallyUniformValue = gl_DrawID;
-//              | gl_DrawID = 0 | gl_DrawID = 1 | }
-// Subgroup 0: { 0, 0, 0, 0,      1, 1, 1, 1 }
-//              | DrawID = 2 | DrawID = 1 | }
-// Subgroup 1: { 2, 2, 2, 2,      1, 1, 1, 1 }
-
-uint notActuallyDynamicallyUniformAnymore =
-    subgroupBroadcastFirst(dynamicallyUniformValue);
-//              | gl_DrawID = 0 | gl_DrawID = 1 | }
-// Subgroup 0: { 0, 0, 0, 0,      0, 0, 0, 0 }
-//              | gl_DrawID = 2 | gl_DrawID = 1 | }
-// Subgroup 1: { 2, 2, 2, 2,      2, 2, 2, 2 }
-
-// Bug. gl_DrawID = 1's invocation group observes both index 0 and 2.
-vec4 value = texelFetch(Textures[notActuallyDynamicallyUniformAnymore],
-                        coord, 0);
-----
-
-Another problematic scenario is when a shader attempts to help the compiler
-notice that a value is uniform in subgroup scope to potentially improve
-performance.
-
-[source,c]
-----
-layout(location = 0) flat in dynamicallyUniformIndex;
-// Vertex shader might have emitted a value that depends only on gl_DrawID,
-// making it dynamically uniform.
-// Give knowledge to compiler that the flat input is dynamically uniform,
-// as this is not a guarantee otherwise.
-
-uint uniformIndex = subgroupBroadcastFirst(dynamicallyUniformIndex);
-// Hazard: If different draw commands are packed into one subgroup, the uniformIndex is wrong.
-
-DrawData d = UBO.perDrawData[uniformIndex];
-----
-
-For implementations where subgroups are packed across draws, the
-implementation must make sure to handle descriptor indexing correctly.
-From the specification's point of view, a dynamically uniform index does not
-require code:NonUniform decoration, and such an implementation will likely
-either promote descriptor indexing into code:NonUniform on its own, or
-handle non-uniformity implicitly.
+This can be done in an attempt to optimize the shader to only perform the
+loads once per subgroup.
+However, if the implementation packs multiple draws into a single subgroup,
+invocations from draws with a different drawID are now receiving data from
+the wrong invocation.
+Applications should rely on implementations to do this kind of optimization
+automatically where the implementation can, rather than trying to force it.
 ====
 endif::VK_VERSION_1_1[]
 
@@ -2686,8 +3100,10 @@ invocations in neighboring framebuffer locations [eq]#(x~i~, y~i~)#, where:
   * [eq]#(y~0~) = (y~1~) = (y~2~ - h) = (y~3~ - h)#
   * Each invocation has the same layer and sample indices.
 
-ifdef::VK_NV_compute_shader_derivatives[]
-In a compute shader, if the code:DerivativeGroupQuadsNV execution mode is
+ifdef::VK_KHR_compute_shader_derivatives,VK_NV_compute_shader_derivatives[]
+In a
+ifdef::VK_KHR_compute_shader_derivatives[mesh, task, or]
+compute shader, if the code:DerivativeGroupQuadsKHR execution mode is
 specified, each invocation in a quad scope instance is formed of invocations
 with adjacent local invocation IDs [eq]#(x~i~, y~i~)#, where:
 
@@ -2697,7 +3113,9 @@ with adjacent local invocation IDs [eq]#(x~i~, y~i~)#, where:
   * [eq]#x~0~# and [eq]#y~0~# are integer multiples of 2.
   * Each invocation has the same [eq]#z# coordinate.
 
-In a compute shader, if the code:DerivativeGroupLinearNV execution mode is
+In a
+ifdef::VK_KHR_compute_shader_derivatives[mesh, task, or]
+compute shader, if the code:DerivativeGroupLinearKHR execution mode is
 specified, each invocation in a quad scope instance is formed of invocations
 with adjacent local invocation indices [eq]#(l~i~)#, where:
 
@@ -2705,7 +3123,7 @@ with adjacent local invocation indices [eq]#(l~i~)#, where:
   * [eq]#(l~0~) = (l~1~ - 1) = (l~2~ - 2) = (l~3~ - 3)#
   * [eq]#l~0~# is an integer multiple of 4.
 
-endif::VK_NV_compute_shader_derivatives[]
+endif::VK_KHR_compute_shader_derivatives,VK_NV_compute_shader_derivatives[]
 
 ifdef::VK_VERSION_1_1[]
 In all shaders, each invocation in a quad scope instance is formed of
@@ -2737,14 +3155,15 @@ the same <<shaders-scope-device, device scope instance>>.
 endif::VK_VERSION_1_1[]
 
 Fragment
-ifdef::VK_NV_compute_shader_derivatives,VK_VERSION_1_1[]
+ifdef::VK_KHR_compute_shader_derivatives,VK_NV_compute_shader_derivatives,VK_VERSION_1_1[]
+ifdef::VK_KHR_compute_shader_derivatives[, mesh, task,]
 and compute
-endif::VK_NV_compute_shader_derivatives,VK_VERSION_1_1[]
+endif::VK_KHR_compute_shader_derivatives,VK_NV_compute_shader_derivatives,VK_VERSION_1_1[]
 shaders have defined quad scope instances.
 ifdef::VK_VERSION_1_1[]
-If the <<limits-subgroup-quadOperationsInAllStages,
+If the <<limits-subgroupQuadOperationsInAllStages,
 pname:quadOperationsInAllStages>> limit is supported, any
-<<limits-subgroup-supportedStages, shader stages that support subgroup
+<<limits-subgroupSupportedStages, shader stages that support subgroup
 operations>> also have defined quad scope instances.
 endif::VK_VERSION_1_1[]
 
@@ -2770,7 +3189,7 @@ as follows:
 ifdef::VK_NV_shading_rate_image,VK_KHR_fragment_shading_rate[]
   * If the code:ShadingRateInterlockOrderedEXT or
     code:ShadingRateInterlockUnorderedEXT execution modes are used,
-    fragments from neighbouring framebuffer locations are also included.
+    fragments from neighboring framebuffer locations are also included.
     The
 ifdef::VK_NV_shading_rate_image[<<primsrast-shading-rate-image, shading rate image>>]
 ifdef::VK_KHR_fragment_shading_rate+VK_NV_shading_rate_image[or]
@@ -2864,7 +3283,6 @@ The types of votes enabled are:
   * Do all active group invocations have the same value of an expression?
 
 [NOTE]
-.Note
 ====
 These operations are useful in combination with control flow in that they
 allow for developers to check whether conditions match across the group and
@@ -2931,6 +3349,23 @@ creation time.
 The operations supported are add, mul, min, max, and, or, xor.
 
 
+ifdef::VK_VERSION_1_4,VK_KHR_shader_subgroup_rotate[]
+[[shaders-group-operations-rotate]]
+=== Rotate Group Operations
+
+The rotate group operations allow invocations to read values from other
+invocations within the group relative to the current invocation and modulo
+the size of the group.
+Clustered rotate group operations perform the same operation within
+individual partitions of a group.
+
+The partitions for clustered rotate group operations are consecutive
+power-of-two size groups of invocations and the cluster size must: be known
+at pipeline creation time.
+endif::VK_VERSION_1_4,VK_KHR_shader_subgroup_rotate[]
+
+
+
 [[shaders-quad-operations]]
 == Quad Group Operations
 
@@ -2941,8 +3376,9 @@ Whilst these instructions do include a code:Scope parameter, this scope is
 always overridden; only the <<shaders-scope-quad, quad scope instance>> is
 included in its execution scope.
 
-Fragment shaders that statically execute quad group operations must: launch
-sufficient invocations to ensure their correct operation; additional
+Fragment shaders that statically execute either
+code:OpGroupNonUniformQuadBroadcast or code:OpGroupNonUniformQuadSwap must:
+launch sufficient invocations to ensure their correct operation; additional
 <<shaders-helper-invocations, helper invocations>> are launched for
 framebuffer locations not covered by rasterized fragments if necessary.
 
@@ -2964,36 +3400,53 @@ Derivative operations calculate the partial derivative for an expression
 
 Derivative operations operate on a set of invocations known as a _derivative
 group_ as defined in the <<spirv-spec,SPIR-V specification>>.
-A derivative group is equivalent to
-ifdef::VK_NV_compute_shader_derivatives[]
-the <<shaders-scope-quad, quad scope instance>> for a compute shader
-invocation, or
-endif::VK_NV_compute_shader_derivatives[]
-the <<shaders-scope-primitive, primitive scope instance>> for a fragment
-shader invocation.
+
+A derivative group in a fragment shader is equivalent to the
+ifdef::VK_KHR_shader_quad_control[]
+<<shaders-scope-quad, quad scope instance>> if the code:QuadDerivativesKHR
+execution mode is specified, otherwise it is equivalent to the
+endif::VK_KHR_shader_quad_control[]
+<<shaders-scope-primitive, primitive scope instance>>.
+ifdef::VK_KHR_compute_shader_derivatives,VK_NV_compute_shader_derivatives[]
+A derivative group in a
+ifdef::VK_KHR_compute_shader_derivatives[mesh, task, or]
+compute shader is equivalent to the <<shaders-scope-quad, quad scope
+instance>>.
+endif::VK_KHR_compute_shader_derivatives,VK_NV_compute_shader_derivatives[]
 
 Derivatives are calculated assuming that [eq]#P# is piecewise linear and
 continuous within the derivative group.
-All dynamic instances of explicit derivative instructions (code:OpDPdx*,
-code:OpDPdy*, and code:OpFwidth*) must: be executed in control flow that is
-uniform within a derivative group.
-For other derivative operations, results are undefined: if a dynamic
-instance is executed in control flow that is not uniform within the
-derivative group.
+
+The following control-flow restrictions apply to derivative operations:
+
+ifdef::VK_KHR_shader_quad_control[]
+  * If the code:QuadDerivativesKHR execution mode is specified, dynamic
+    instances of any derivative operations must: be executed in control flow
+    that is uniform within the current <<shaders-scope-quad, quad scope
+    instance>>.
+  * If the code:QuadDerivativesKHR execution mode is not specified:
+endif::VK_KHR_shader_quad_control[]
+  ** dynamic instances of explicit derivative instructions (code:OpDPdx*,
+     code:OpDPdy*, and code:OpFwidth*) must: be executed in control flow
+     that is uniform within a derivative group.
+  ** dynamic instances of implicit derivative operations can: be executed in
+     control flow that is not uniform within the derivative group, but
+     results are undefined:.
 
 Fragment shaders that statically execute derivative operations must: launch
 sufficient invocations to ensure their correct operation; additional
 <<shaders-helper-invocations, helper invocations>> are launched for
 framebuffer locations not covered by rasterized fragments if necessary.
 
-ifdef::VK_NV_compute_shader_derivatives[]
+ifdef::VK_KHR_compute_shader_derivatives,VK_NV_compute_shader_derivatives[]
 [NOTE]
-.Note
 ====
-In a compute shader, it is the application's responsibility to ensure that
+In a
+ifdef::VK_KHR_compute_shader_derivatives[mesh, task, or]
+compute shader, it is the application's responsibility to ensure that
 sufficient invocations are launched.
 ====
-endif::VK_NV_compute_shader_derivatives[]
+endif::VK_KHR_compute_shader_derivatives,VK_NV_compute_shader_derivatives[]
 
 Derivative operations calculate their results as the difference between the
 result of [eq]#P# across invocations in the quad.
@@ -3019,7 +3472,6 @@ If an implementation does this, it should: use the fine derivative
 calculations described for [eq]#P~0~#.
 
 [NOTE]
-.Note
 ====
 Derivative values are calculated between fragments rather than pixels.
 If the fragment shader invocations involved in the calculation cover
@@ -3041,8 +3493,8 @@ where [eq]#w# and [eq]#h# are the size of the fragments in the quad, and
 ====
 
 The results for code:OpDPdx and code:OpDPdy may: be calculated as either
-fine or coarse derivatives, with implementations favouring the most
-efficient approach.
+fine or coarse derivatives, with implementations favoring the most efficient
+approach.
 Implementations must: choose coarse or fine consistently between the two.
 
 Executing code:OpFwidthFine, code:OpFwidthCoarse, or code:OpFwidth is
@@ -3054,7 +3506,6 @@ executing code:OpDPdx(code:Coordinate) and code:OpDPdy(code:Coordinate), and
 passing the results as the code:Grad operands code:dx and code:dy.
 
 [NOTE]
-.Note
 ====
 It is expected that using the code:ImplicitLod variants of sampling
 functions will be substantially more efficient than using the
@@ -3079,7 +3530,6 @@ classes, and values returned by atomic instructions in helper invocations
 are undefined:.
 
 [NOTE]
-.Note
 ====
 While storage to code:Output storage class has an effect even in helper
 invocations, it does not mean that helper invocations have an effect on the
@@ -3089,21 +3539,28 @@ behave more like code:Private variables for the duration of the shader
 invocation.
 ====
 
-For <<shaders-group-operations, group operations>> other than
-<<shaders-derivative-operations, derivative>>
 ifdef::VK_VERSION_1_1[]
-and <<shaders-quad-operations, quad group>>
+ifdef::VK_KHR_shader_maximal_reconvergence[]
+If the code:MaximallyReconvergesKHR execution mode is applied to the entry
+point, helper invocations must: remain active for all instructions for the
+lifetime of the quad scope instance they are a part of.
+If the code:MaximallyReconvergesKHR execution mode is not applied to the
+entry point, helper
+endif::VK_KHR_shader_maximal_reconvergence[]
+ifndef::VK_KHR_shader_maximal_reconvergence[]
+Helper
+endif::VK_KHR_shader_maximal_reconvergence[]
+invocations may: be considered inactive for <<shaders-group-operations,
+group operations>> other than <<shaders-derivative-operations, derivative>>
+and <<shaders-quad-operations, quad group>> operations.
+All invocations in a quad scope instance may: become permanently inactive at
+any point once the only remaining invocations in that quad scope instance
+are helper invocations.
 endif::VK_VERSION_1_1[]
-operations, helper invocations may: be treated as inactive even if they
-would be considered otherwise active.
-
-ifdef::VK_VERSION_1_3,VK_EXT_shader_demote_to_helper_invocation[]
-Helper invocations may: become permanently inactive if all invocations in a
-quad scope instance become helper invocations.
-endif::VK_VERSION_1_3,VK_EXT_shader_demote_to_helper_invocation[]
 
 
 ifdef::VK_NV_cooperative_matrix,VK_KHR_cooperative_matrix[]
+[[cooperative-matrices]]
 == Cooperative Matrices
 
 A _cooperative matrix_ type is a SPIR-V type where the storage for and
@@ -3131,10 +3588,10 @@ include::{generated}/api/protos/vkGetPhysicalDeviceCooperativeMatrixPropertiesKH
 
 If pname:pProperties is `NULL`, then the number of cooperative matrix
 properties available is returned in pname:pPropertyCount.
-Otherwise, pname:pPropertyCount must: point to a variable set by the user to
-the number of elements in the pname:pProperties array, and on return the
-variable is overwritten with the number of structures actually written to
-pname:pProperties.
+Otherwise, pname:pPropertyCount must: point to a variable set by the
+application to the number of elements in the pname:pProperties array, and on
+return the variable is overwritten with the number of structures actually
+written to pname:pProperties.
 If pname:pPropertyCount is less than the number of cooperative matrix
 properties available, at most pname:pPropertyCount structures will be
 written, and ename:VK_INCOMPLETE will be returned instead of
@@ -3144,6 +3601,41 @@ properties were returned.
 include::{generated}/validity/protos/vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR.adoc[]
 --
 endif::VK_KHR_cooperative_matrix[]
+
+ifdef::VK_NV_cooperative_matrix2[]
+[open,refpage='vkGetPhysicalDeviceCooperativeMatrixFlexibleDimensionsPropertiesNV',desc='Returns properties describing what cooperative matrix types are supported',type='protos']
+--
+To enumerate additional supported cooperative matrix types and operations,
+call:
+
+include::{generated}/api/protos/vkGetPhysicalDeviceCooperativeMatrixFlexibleDimensionsPropertiesNV.adoc[]
+
+  * pname:physicalDevice is the physical device.
+  * pname:pPropertyCount is a pointer to an integer related to the number of
+    cooperative matrix properties available or queried.
+  * pname:pProperties is either `NULL` or a pointer to an array of
+    slink:VkCooperativeMatrixFlexibleDimensionsPropertiesNV structures.
+
+If pname:pProperties is `NULL`, then the number of flexible dimensions
+properties available is returned in pname:pPropertyCount.
+Otherwise, pname:pPropertyCount must: point to a variable set by the
+application to the number of elements in the pname:pProperties array, and on
+return the variable is overwritten with the number of structures actually
+written to pname:pProperties.
+If pname:pPropertyCount is less than the number flexible dimensions
+properties available, at most pname:pPropertyCount structures will be
+written, and ename:VK_INCOMPLETE will be returned instead of
+ename:VK_SUCCESS, to indicate that not all the available flexible dimensions
+properties were returned.
+
+If the
+<<features-cooperativeMatrixFlexibleDimensions,pname:cooperativeMatrixFlexibleDimensions>>
+feature is not supported, the implementation must: advertise zero
+properties.
+
+include::{generated}/validity/protos/vkGetPhysicalDeviceCooperativeMatrixFlexibleDimensionsPropertiesNV.adoc[]
+--
+endif::VK_NV_cooperative_matrix2[]
 
 ifdef::VK_NV_cooperative_matrix[]
 [open,refpage='vkGetPhysicalDeviceCooperativeMatrixPropertiesNV',desc='Returns properties describing what cooperative matrix types are supported',type='protos']
@@ -3160,10 +3652,10 @@ include::{generated}/api/protos/vkGetPhysicalDeviceCooperativeMatrixPropertiesNV
 
 If pname:pProperties is `NULL`, then the number of cooperative matrix
 properties available is returned in pname:pPropertyCount.
-Otherwise, pname:pPropertyCount must: point to a variable set by the user to
-the number of elements in the pname:pProperties array, and on return the
-variable is overwritten with the number of structures actually written to
-pname:pProperties.
+Otherwise, pname:pPropertyCount must: point to a variable set by the
+application to the number of elements in the pname:pProperties array, and on
+return the variable is overwritten with the number of structures actually
+written to pname:pProperties.
 If pname:pPropertyCount is less than the number of cooperative matrix
 properties available, at most pname:pPropertyCount structures will be
 written, and ename:VK_INCOMPLETE will be returned instead of
@@ -3240,7 +3732,11 @@ include::{generated}/api/structs/VkCooperativeMatrixPropertiesKHR.adoc[]
     elink:VkComponentTypeKHR.
   * pname:saturatingAccumulation indicates whether the
     code:SaturatingAccumulation operand to code:OpCooperativeMatrixMulAddKHR
-    must: be present.
+    must: be present or not.
+    If it is ename:VK_TRUE, the code:SaturatingAccumulation operand must: be
+    present.
+    If it is ename:VK_FALSE, the code:SaturatingAccumulation operand must:
+    not be present.
   * pname:scope is the scope of all the matrix types, of type
     elink:VkScopeKHR.
 
@@ -3251,11 +3747,83 @@ flink:vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR.
 At least one entry in the list must: have power of two values for all of
 pname:MSize, pname:KSize, and pname:NSize.
 
+ifdef::VK_NV_cooperative_matrix2[]
+If the
+<<features-cooperativeMatrixWorkgroupScope,pname:cooperativeMatrixWorkgroupScope>>
+feature is not supported,
+endif::VK_NV_cooperative_matrix2[]
 pname:scope must: be ename:VK_SCOPE_SUBGROUP_KHR.
 
 include::{generated}/validity/structs/VkCooperativeMatrixPropertiesKHR.adoc[]
 --
 endif::VK_KHR_cooperative_matrix[]
+
+ifdef::VK_NV_cooperative_matrix2[]
+[open,refpage='VkCooperativeMatrixFlexibleDimensionsPropertiesNV',desc='Structure specifying cooperative matrix properties',type='structs']
+--
+The sname:VkCooperativeMatrixFlexibleDimensionsPropertiesNV structure is
+defined as:
+
+include::{generated}/api/structs/VkCooperativeMatrixFlexibleDimensionsPropertiesNV.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:MGranularity is the granularity of the number of rows in matrices
+    code:A, code:C, and code:Result.
+    The rows must: be an integer multiple of this value.
+  * pname:KGranularity is the granularity of columns in matrix code:A and
+    rows in matrix code:B.
+    The columns/rows must: be an integer multiple of this value.
+  * pname:NGranularity is the granularity of columns in matrices code:B,
+    code:C, code:Result.
+    The columns must: be an integer multiple of this value.
+  * pname:AType is the component type of matrix code:A, of type
+    elink:VkComponentTypeKHR.
+  * pname:BType is the component type of matrix code:B, of type
+    elink:VkComponentTypeKHR.
+  * pname:CType is the component type of matrix code:C, of type
+    elink:VkComponentTypeKHR.
+  * pname:ResultType is the component type of matrix code:Result, of type
+    elink:VkComponentTypeKHR.
+  * pname:saturatingAccumulation indicates whether the
+    code:SaturatingAccumulation operand to code:OpCooperativeMatrixMulAddKHR
+    must: be present or not.
+    If it is ename:VK_TRUE, the code:SaturatingAccumulation operand must: be
+    present.
+    If it is ename:VK_FALSE, the code:SaturatingAccumulation operand must:
+    not be present.
+  * pname:scope is the scope of all the matrix types, of type
+    elink:VkScopeKHR.
+  * pname:workgroupInvocations is the number of invocations in the local
+    workgroup when this combination of values is supported.
+
+Rather than explicitly enumerating a list of supported sizes,
+sname:VkCooperativeMatrixFlexibleDimensionsPropertiesNV advertises size
+granularities, where the matrix must: be a multiple of the advertised size.
+The M and K granularities apply to rows and columns of matrices with
+code:Use of code:MatrixA, K, and N apply to rows and columns of matrices
+with code:Use of code:MatrixB, M, and N apply to rows and columns of
+matrices with code:Use of code:MatrixAccumulator.
+
+For a given type combination, if multiple workgroup sizes are supported
+there may: be multiple
+sname:VkCooperativeMatrixFlexibleDimensionsPropertiesNV structures with
+different granularities.
+
+All granularity values must: be powers of two.
+
+[NOTE]
+====
+Different A/B types may require different granularities but share the same
+accumulator type.
+In such a case, the supported granularity for a matrix with the accumulator
+type would be the smallest advertised granularity.
+====
+
+include::{generated}/validity/structs/VkCooperativeMatrixFlexibleDimensionsPropertiesNV.adoc[]
+--
+endif::VK_NV_cooperative_matrix2[]
 
 ifdef::VK_NV_cooperative_matrix[]
 [open,refpage='VkCooperativeMatrixPropertiesNV',desc='Structure specifying cooperative matrix properties',type='structs']
@@ -3313,6 +3881,10 @@ endif::VK_NV_cooperative_matrix[]
 All enum values match the corresponding SPIR-V value.
 --
 
+endif::VK_NV_cooperative_matrix,VK_KHR_cooperative_matrix[]
+
+ifdef::VK_NV_cooperative_matrix,VK_KHR_cooperative_matrix,VK_NV_cooperative_vector[]
+
 [open,refpage='VkComponentTypeKHR',desc='Specify SPIR-V cooperative matrix component type',type='enums']
 --
 Possible values for elink:VkComponentTypeKHR include:
@@ -3331,22 +3903,383 @@ endif::VK_NV_cooperative_matrix[]
     code:OpTypeFloat 32.
   * ename:VK_COMPONENT_TYPE_FLOAT64_KHR corresponds to SPIR-V
     code:OpTypeFloat 64.
-  * ename:VK_COMPONENT_TYPE_SINT8_KHR corresponds to SPIR-V code:OpTypeInt 8 1.
+  * ename:VK_COMPONENT_TYPE_SINT8_KHR corresponds to SPIR-V code:OpTypeInt 8
+    0/1.
   * ename:VK_COMPONENT_TYPE_SINT16_KHR corresponds to SPIR-V code:OpTypeInt
-    16 1.
+    16 0/1.
   * ename:VK_COMPONENT_TYPE_SINT32_KHR corresponds to SPIR-V code:OpTypeInt
-    32 1.
+    32 0/1.
   * ename:VK_COMPONENT_TYPE_SINT64_KHR corresponds to SPIR-V code:OpTypeInt
-    64 1.
-  * ename:VK_COMPONENT_TYPE_UINT8_KHR corresponds to SPIR-V code:OpTypeInt 8 0.
+    64 0/1.
+  * ename:VK_COMPONENT_TYPE_UINT8_KHR corresponds to SPIR-V code:OpTypeInt 8
+    0/1.
   * ename:VK_COMPONENT_TYPE_UINT16_KHR corresponds to SPIR-V code:OpTypeInt
-    16 0.
+    16 0/1.
   * ename:VK_COMPONENT_TYPE_UINT32_KHR corresponds to SPIR-V code:OpTypeInt
-    32 0.
+    32 0/1.
   * ename:VK_COMPONENT_TYPE_UINT64_KHR corresponds to SPIR-V code:OpTypeInt
-    64 0.
+    64 0/1.
+ifdef::VK_KHR_shader_bfloat16[]
+  * ename:VK_COMPONENT_TYPE_BFLOAT16_KHR corresponds to SPIR-V
+    code:OpTypeFloat 16 BFloat16KHR.
+endif::VK_KHR_shader_bfloat16[]
+  * ename:VK_COMPONENT_TYPE_SINT8_PACKED_NV corresponds to four 8-bit signed
+    integers packed in a 32-bit unsigned integer.
+  * ename:VK_COMPONENT_TYPE_UINT8_PACKED_NV corresponds to four 8-bit
+    unsigned integers packed in a 32-bit unsigned integer.
+ifdef::VK_NV_cooperative_vector[]
+  * ename:VK_COMPONENT_TYPE_FLOAT_E4M3_NV corresponds to a floating-point
+    type with a sign bit in the most significant bit, followed by four
+    exponent bits, followed by three mantissa bits.
+  * ename:VK_COMPONENT_TYPE_FLOAT_E5M2_NV corresponds to a floating-point
+    type with a sign bit in the most significant bit, followed by five
+    exponent bits, followed by two mantissa bits.
+endif::VK_NV_cooperative_vector[]
+ifdef::VK_EXT_shader_float8[]
+  * ename:VK_COMPONENT_TYPE_FLOAT8_E4M3_EXT corresponds to SPIR-V
+    code:OpTypeFloat 8 Float8E4M3EXT.
+  * ename:VK_COMPONENT_TYPE_FLOAT8_E5M2_EXT corresponds to SPIR-V
+    code:OpTypeFloat 8 Float8E5M2EXT.
+endif::VK_EXT_shader_float8[]
 --
-endif::VK_NV_cooperative_matrix,VK_KHR_cooperative_matrix[]
+endif::VK_NV_cooperative_matrix,VK_KHR_cooperative_matrix,VK_NV_cooperative_vector[]
+
+ifdef::VK_NV_cooperative_vector[]
+== Cooperative Vectors
+
+A _cooperative vector_ type is a SPIR-V vector type optimized for the
+evaluation of small neural networks.
+
+SPIR-V defines the types and instructions, but does not specify rules about
+what combinations of types are valid, and it is expected that different
+implementations may: support different combinations.
+
+[open,refpage='vkGetPhysicalDeviceCooperativeVectorPropertiesNV',desc='Returns properties describing what cooperative vector types are supported',type='protos']
+--
+To enumerate the supported cooperative vector type combinations, call:
+
+include::{generated}/api/protos/vkGetPhysicalDeviceCooperativeVectorPropertiesNV.adoc[]
+
+  * pname:physicalDevice is the physical device.
+  * pname:pPropertyCount is a pointer to an integer related to the number of
+    cooperative vector properties available or queried.
+  * pname:pProperties is either `NULL` or a pointer to an array of
+    slink:VkCooperativeVectorPropertiesNV structures.
+
+If pname:pProperties is `NULL`, then the number of cooperative vector
+properties available is returned in pname:pPropertyCount.
+Otherwise, pname:pPropertyCount must: point to a variable set by the user to
+the number of elements in the pname:pProperties array, and on return the
+variable is overwritten with the number of structures actually written to
+pname:pProperties.
+If pname:pPropertyCount is less than the number of cooperative vector
+properties available, at most pname:pPropertyCount structures will be
+written, and ename:VK_INCOMPLETE will be returned instead of
+ename:VK_SUCCESS, to indicate that not all the available cooperative vector
+properties were returned.
+
+include::{generated}/validity/protos/vkGetPhysicalDeviceCooperativeVectorPropertiesNV.adoc[]
+--
+
+[open,refpage='VkCooperativeVectorPropertiesNV',desc='Structure specifying cooperative vector properties',type='structs']
+--
+Each sname:VkCooperativeVectorPropertiesNV structure describes a single
+supported combination of types for a matrix-vector multiply (or
+multiply-add) operation (code:OpCooperativeVectorMatrixMulNV or
+code:OpCooperativeVectorMatrixMulAddNV).
+
+The sname:VkCooperativeVectorPropertiesNV structure is defined as:
+
+include::{generated}/api/structs/VkCooperativeVectorPropertiesNV.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:inputType is the component type of vector code:Input, of type
+    elink:VkComponentTypeKHR.
+  * pname:inputInterpretation is the value of code:InputInterpretation, of
+    type elink:VkComponentTypeKHR.
+  * pname:matrixInterpretation is the value of code:MatrixInterpretation, of
+    type elink:VkComponentTypeKHR.
+  * pname:biasInterpretation is the value of code:BiasInterpretation, of
+    type elink:VkComponentTypeKHR.
+  * pname:resultType is the component type of code:Result code:Type, of type
+    elink:VkComponentTypeKHR.
+  * pname:transpose is a boolean indicating whether opaque layout matrices
+    with this combination of input and output types supports transposition.
+
+ename:VK_COMPONENT_TYPE_SINT8_PACKED_NV and
+ename:VK_COMPONENT_TYPE_UINT8_PACKED_NV must: not be used for members other
+than pname:inputInterpretation.
+
+The following combinations must: be supported (each row is a required
+combination):
+
+[frame=all]
+|===
+|inputType |inputInterpretation |matrixInterpretation |biasInterpretation |resultType
+
+|FLOAT16
+|FLOAT16
+|FLOAT16
+|FLOAT16
+|FLOAT16
+
+|UINT32
+|SINT8_PACKED
+|SINT8
+|SINT32
+|SINT32
+
+|SINT8
+|SINT8
+|SINT8
+|SINT32
+|SINT32
+
+|FLOAT32
+|SINT8
+|SINT8
+|SINT32
+|SINT32
+
+|FLOAT16
+|FLOAT_E4M3
+|FLOAT_E4M3
+|FLOAT16
+|FLOAT16
+
+|FLOAT16
+|FLOAT_E5M2
+|FLOAT_E5M2
+|FLOAT16
+|FLOAT16
+|===
+
+include::{generated}/validity/structs/VkCooperativeVectorPropertiesNV.adoc[]
+--
+
+[open,refpage='vkConvertCooperativeVectorMatrixNV',desc='Convert a cooperative vector matrix from one layout and type to another',type='protos']
+--
+To query the size of a cooperative vector matrix, or to convert a matrix to
+another layout and type, call:
+
+include::{generated}/api/protos/vkConvertCooperativeVectorMatrixNV.adoc[]
+
+  * pname:device is the device.
+  * pname:pInfo is a pointer to a
+    slink:VkConvertCooperativeVectorMatrixInfoNV structure containing
+    information about the layout conversion.
+
+If pname:pInfo->dstData is `NULL`, then the number of bytes required to
+store the converted matrix is returned in pname:pDstSize.
+Otherwise, pname:pInfo->pDstSize must: point to a variable set by the user
+to the number of bytes in pname:pInfo->dstData, and on return the variable
+is overwritten with the number of bytes actually written to
+pname:pInfo->dstData.
+pname:pInfo->srcData can: be `NULL` when pname:pInfo->dstData is `NULL`.
+If pname:pInfo->pDstSize is less than the number of bytes required to store
+the converted matrix, no bytes will be written, and ename:VK_INCOMPLETE will
+be returned instead of ename:VK_SUCCESS, to indicate that not enough space
+was provided.
+
+.Valid Usage
+****
+  * [[VUID-vkConvertCooperativeVectorMatrixNV-pInfo-10073]]
+    If pname:pInfo->srcData.hostAddress is `NULL`, then
+    pname:pInfo->dstData.hostAddress must: be `NULL`
+  * [[VUID-vkConvertCooperativeVectorMatrixNV-pInfo-10074]]
+    If pname:pInfo->srcData.hostAddress is not `NULL`, then
+    pname:pInfo->srcSize must: be large enough to contain the source matrix,
+    based either on the standard matrix layout or based on the size filled
+    out by this command
+  * [[VUID-vkConvertCooperativeVectorMatrixNV-pInfo-10075]]
+    If pname:pInfo->dstData.hostAddress is not `NULL`, then the value
+    pointed to by pname:pInfo->pDstSize must: be large enough to contain the
+    destination matrix, based either on the standard matrix layout or based
+    on the size filled out by this command
+  * [[VUID-vkConvertCooperativeVectorMatrixNV-pInfo-10076]]
+    If pname:pInfo->dstData.hostAddress is not `NULL`, the source and
+    destination memory ranges must: not overlap
+****
+
+include::{generated}/validity/protos/vkConvertCooperativeVectorMatrixNV.adoc[]
+--
+
+[open,refpage='VkConvertCooperativeVectorMatrixInfoNV',desc='Structure specifying a request to convert the layout and type of a cooperative vector matrix',type='structs']
+--
+Each sname:VkConvertCooperativeVectorMatrixInfoNV structure describes a
+request to convert the layout and type of a cooperative vector matrix.
+
+The sname:VkConvertCooperativeVectorMatrixInfoNV structure is defined as:
+
+include::{generated}/api/structs/VkConvertCooperativeVectorMatrixInfoNV.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:srcSize is the length in bytes of pname:srcData.
+  * pname:srcData is either `NULL` or a pointer to the source data in the
+    source layout.
+  * pname:pDstSize is a pointer to an integer related to the number of bytes
+    required or requested to convert.
+  * pname:dstData is either `NULL` or a pointer to the destination data in
+    the destination layout.
+  * pname:srcComponentType is the type of a source matrix element.
+  * pname:dstComponentType is the type of a destination matrix element.
+  * pname:numRows is the number of rows in the matrix.
+  * pname:numColumns is the number of columns in the matrix.
+  * pname:srcLayout is the layout of the source matrix.
+  * pname:srcStride is the number of bytes between a consecutive row or
+    column (depending on pname:srcLayout) of the source matrix, if it is
+    row-major or column-major.
+  * pname:dstLayout is the layout the matrix is converted to.
+  * pname:dstStride is the number of bytes between a consecutive row or
+    column (depending on pname:dstLayout) of destination matrix, if it is
+    row-major or column-major.
+
+When called from flink:vkCmdConvertCooperativeVectorMatrixNV, the
+pname:deviceAddress members of pname:srcData and pname:dstData are used.
+When called from flink:vkConvertCooperativeVectorMatrixNV, the
+pname:hostAddress members of pname:srcData and pname:dstData are used.
+
+For each of the source and destination matrix, if the layout is not either
+ename:VK_COOPERATIVE_VECTOR_MATRIX_LAYOUT_ROW_MAJOR_NV or
+ename:VK_COOPERATIVE_VECTOR_MATRIX_LAYOUT_COLUMN_MAJOR_NV, then the
+corresponding stride parameter is ignored.
+
+The size of the destination is only a function of the destination layout
+information, and does not depend on the source layout information.
+
+Conversion can: be used to convert between
+ename:VK_COMPONENT_TYPE_FLOAT32_KHR or ename:VK_COMPONENT_TYPE_FLOAT16_KHR
+and any supported lower-precision floating-point type.
+In this case, the conversion uses round-to-nearest-even rounding.
+
+.Valid Usage
+****
+  * [[VUID-VkConvertCooperativeVectorMatrixInfoNV-srcLayout-10077]]
+    If pname:srcLayout is row-major or column-major, then pname:srcStride
+    must: be greater than the length of a row/column, and a multiple of the
+    element size
+  * [[VUID-VkConvertCooperativeVectorMatrixInfoNV-dstLayout-10078]]
+    If pname:dstLayout is row-major or column-major, then pname:dstStride
+    must: be greater than the length of a row/column, and a multiple of the
+    element size
+  * [[VUID-VkConvertCooperativeVectorMatrixInfoNV-srcComponentType-10079]]
+    If pname:srcComponentType is not a supported
+    slink:VkCooperativeVectorPropertiesNV::pname:matrixInterpretation value
+    as reported by flink:vkGetPhysicalDeviceCooperativeVectorPropertiesNV,
+    then pname:srcComponentType must: be ename:VK_COMPONENT_TYPE_FLOAT32_KHR
+  * [[VUID-VkConvertCooperativeVectorMatrixInfoNV-dstComponentType-10080]]
+    If pname:dstComponentType is not a supported
+    slink:VkCooperativeVectorPropertiesNV::pname:matrixInterpretation value
+    as reported by flink:vkGetPhysicalDeviceCooperativeVectorPropertiesNV,
+    then pname:dstComponentType must: be ename:VK_COMPONENT_TYPE_FLOAT32_KHR
+  * [[VUID-VkConvertCooperativeVectorMatrixInfoNV-srcComponentType-10081]]
+    If pname:srcComponentType and pname:dstComponentType are not equal, then
+    one must: be ename:VK_COMPONENT_TYPE_FLOAT32_KHR or
+    ename:VK_COMPONENT_TYPE_FLOAT16_KHR and the other must: be a
+    lower-precision floating-point type
+  * [[VUID-VkConvertCooperativeVectorMatrixInfoNV-dstComponentType-10082]]
+    If pname:dstComponentType is ename:VK_COMPONENT_TYPE_FLOAT_E4M3_NV or
+    ename:VK_COMPONENT_TYPE_FLOAT_E5M2_NV, then pname:dstLayout must: be
+    ename:VK_COOPERATIVE_VECTOR_MATRIX_LAYOUT_INFERENCING_OPTIMAL_NV or
+    ename:VK_COOPERATIVE_VECTOR_MATRIX_LAYOUT_TRAINING_OPTIMAL_NV
+****
+
+include::{generated}/validity/structs/VkConvertCooperativeVectorMatrixInfoNV.adoc[]
+--
+
+[open,refpage='VkCooperativeVectorMatrixLayoutNV',desc='Specify cooperative vector matrix layout',type='enums']
+--
+Possible values for elink:VkCooperativeVectorMatrixLayoutNV include:
+
+include::{generated}/api/enums/VkCooperativeVectorMatrixLayoutNV.adoc[]
+
+  * ename:VK_COOPERATIVE_VECTOR_MATRIX_LAYOUT_ROW_MAJOR_NV corresponds to
+    SPIR-V code:RowMajorNV layout.
+  * ename:VK_COOPERATIVE_VECTOR_MATRIX_LAYOUT_COLUMN_MAJOR_NV corresponds to
+    SPIR-V code:ColumnMajorNV layout.
+  * ename:VK_COOPERATIVE_VECTOR_MATRIX_LAYOUT_INFERENCING_OPTIMAL_NV
+    corresponds to SPIR-V code:InferencingOptimalNV layout.
+  * ename:VK_COOPERATIVE_VECTOR_MATRIX_LAYOUT_TRAINING_OPTIMAL_NV
+    corresponds to SPIR-V code:TrainingOptimalNV layout.
+
+All enum values match the corresponding SPIR-V value.
+
+Row-major layout has elements of each row stored consecutively in memory,
+with a controllable stride from the start of one row to the start of the
+next row.
+Column-major layout has elements of each column stored consecutively in
+memory, with a controllable stride from the start of one column to the start
+of the next column.
+Inferencing-optimal and Training-optimal layouts are
+implementation-dependent, and the application can: convert a matrix to those
+layouts using flink:vkConvertCooperativeVectorMatrixNV or
+flink:vkCmdConvertCooperativeVectorMatrixNV.
+Training-optimal layout with ename:VK_COMPONENT_TYPE_FLOAT16_KHR or
+ename:VK_COMPONENT_TYPE_FLOAT32_KHR type has the additional guarantee that
+the application can: reinterpret the data as an array of elements and
+perform element-wise operations on the data, and finite values in any
+padding elements do not affect the result of a matrix-vector multiply
+(inf/NaN values may: still cause NaN values in the result).
+
+--
+
+[open,refpage='vkCmdConvertCooperativeVectorMatrixNV',desc='Convert a cooperative vector matrix from one layout and type to another',type='protos']
+--
+To convert a matrix to another layout and type, call:
+
+include::{generated}/api/protos/vkCmdConvertCooperativeVectorMatrixNV.adoc[]
+
+  * pname:commandBuffer is the command buffer into which the command will be
+    recorded.
+  * pname:infoCount is the number of layout conversions to perform.
+  * pname:pInfos is a pointer to an array of
+    slink:VkConvertCooperativeVectorMatrixInfoNV structures containing
+    information about the layout conversion.
+
+This command does the same conversions as
+flink:vkConvertCooperativeVectorMatrixNV, but executes on the device.
+One conversion is performed for each of the pname:infoCount elements of
+pname:pInfos.
+
+This command's execution is synchronized using
+ename:VK_PIPELINE_STAGE_2_CONVERT_COOPERATIVE_VECTOR_MATRIX_BIT_NV.
+
+.Valid Usage
+****
+  * [[VUID-vkCmdConvertCooperativeVectorMatrixNV-pInfo-10083]]
+    For each element of pname:pInfo, pname:srcData.deviceAddress must: be a
+    valid basetype:VkDeviceAddress
+  * [[VUID-vkCmdConvertCooperativeVectorMatrixNV-pInfo-10895]]
+    For each element of pname:pInfo, pname:dstData.deviceAddress must: be a
+    valid basetype:VkDeviceAddress
+  * [[VUID-vkCmdConvertCooperativeVectorMatrixNV-pInfo-10084]]
+    For each element of pname:pInfo, pname:srcData.deviceAddress must: be 64
+    byte aligned
+  * [[VUID-vkCmdConvertCooperativeVectorMatrixNV-pInfo-10085]]
+    For each element of pname:pInfo, pname:dstData.deviceAddress must: be 64
+    byte aligned
+  * [[VUID-vkCmdConvertCooperativeVectorMatrixNV-pInfo-10086]]
+    For each element of pname:pInfo, pname:srcSize must: be large enough to
+    contain the source matrix, based either on the standard matrix layout or
+    based on the size filled out by flink:vkConvertCooperativeVectorMatrixNV
+  * [[VUID-vkCmdConvertCooperativeVectorMatrixNV-pInfo-10087]]
+    For each element of pname:pInfo, the value pointed to by pname:pDstSize
+    must: be large enough to contain the destination matrix, based either on
+    the standard matrix layout or based on the size filled out by
+    flink:vkConvertCooperativeVectorMatrixNV
+  * [[VUID-vkCmdConvertCooperativeVectorMatrixNV-None-10088]]
+    Memory accessed by the sources and destinations of all of the
+    conversions must: not overlap
+****
+
+include::{generated}/validity/protos/vkCmdConvertCooperativeVectorMatrixNV.adoc[]
+--
+
+endif::VK_NV_cooperative_vector[]
 
 ifdef::VK_EXT_validation_cache[]
 [[shaders-validation-cache]]
@@ -3390,7 +4323,6 @@ include::{generated}/api/protos/vkCreateValidationCacheEXT.adoc[]
     handle in which the resulting validation cache object is returned.
 
 [NOTE]
-.Note
 ====
 Applications can: track and manage the total host memory size of a
 validation cache object using the pname:pAllocator.
@@ -3413,7 +4345,6 @@ synchronized, and the same validation cache object can: be used in multiple
 threads simultaneously.
 
 [NOTE]
-.Note
 ====
 Implementations should: make every effort to limit any critical sections to
 the actual accesses to the cache, which is expected to be significantly
@@ -3480,7 +4411,6 @@ include::{generated}/api/protos/vkMergeValidationCachesEXT.adoc[]
     The previous contents of pname:dstCache are included after the merge.
 
 [NOTE]
-.Note
 ====
 The details of the merge operation are implementation-dependent, but
 implementations should: merge the contents of the specified validation
@@ -3511,10 +4441,10 @@ include::{generated}/api/protos/vkGetValidationCacheDataEXT.adoc[]
 If pname:pData is `NULL`, then the maximum size of the data that can: be
 retrieved from the validation cache, in bytes, is returned in
 pname:pDataSize.
-Otherwise, pname:pDataSize must: point to a variable set by the user to the
-size of the buffer, in bytes, pointed to by pname:pData, and on return the
-variable is overwritten with the amount of data actually written to
-pname:pData.
+Otherwise, pname:pDataSize must: point to a variable set by the application
+to the size of the buffer, in bytes, pointed to by pname:pData, and on
+return the variable is overwritten with the amount of data actually written
+to pname:pData.
 If pname:pDataSize is less than the maximum size that can: be retrieved by
 the validation cache, at most pname:pDataSize bytes will be written to
 pname:pData, and fname:vkGetValidationCacheDataEXT will return
@@ -3539,7 +4469,7 @@ To enable applications to detect when previously retrieved data is
 incompatible with the device, the initial bytes written to pname:pData must:
 be a header consisting of the following members:
 
-.Layout for validation cache header version ename:VK_VALIDATION_CACHE_HEADER_VERSION_ONE_EXT
+.Layout for Validation Cache Header Version ename:VK_VALIDATION_CACHE_HEADER_VERSION_ONE_EXT
 [width="85%",cols="8%,21%,71%",options="header"]
 |====
 | Offset | Size | Meaning
@@ -3567,6 +4497,18 @@ interpret the remainder of the cache header.
 If pname:pDataSize is less than what is necessary to store this header,
 nothing will be written to pname:pData and zero will be written to
 pname:pDataSize.
+
+[NOTE]
+====
+This query does not behave consistently with the behavior described in
+<<fundamentals-binaryresults, Opaque Binary Data Results>>, for historical
+reasons.
+
+If the amount of data available is larger than the passed pname:pDataSize,
+the query returns up to the size of the passed buffer, and signals overflow
+with a ename:VK_INCOMPLETE success status instead of returning a
+ename:VK_ERROR_NOT_ENOUGH_SPACE_KHR error status.
+====
 
 include::{generated}/validity/protos/vkGetValidationCacheDataEXT.adoc[]
 --

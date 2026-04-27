@@ -45,6 +45,15 @@ ohos_source_set("deqp_vk_shaderexecutor_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/shaderexecutor/vktShaderIntegerFunctionTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/shaderexecutor/vktShaderPackingFunctionTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/shaderexecutor/vktShaderPackingFunctionTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/shaderexecutor/vktShaderBFloat16ComboTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/shaderexecutor/vktShaderBFloat16ConstantTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/shaderexecutor/vktShaderBFloat16DotTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/shaderexecutor/vktShaderBFloat16Tests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/shaderexecutor/vktShaderBFloat16Tests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/shaderexecutor/vktShaderExpectAssumeTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/shaderexecutor/vktShaderExpectAssumeTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/shaderexecutor/vktShaderHelperInvocationsTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/shaderexecutor/vktShaderHelperInvocationsTests.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs

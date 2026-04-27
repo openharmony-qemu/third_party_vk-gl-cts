@@ -39,9 +39,7 @@ ohos_source_set("glcts-es31_source") {
     "//third_party/vk-gl-cts/external/openglcts/modules/gles31/es31cSeparateShaderObjsTests.cpp",
     "//third_party/vk-gl-cts/external/openglcts/modules/gles31/es31cShaderAtomicCountersTests.cpp",
     "//third_party/vk-gl-cts/external/openglcts/modules/gles31/es31cShaderBitfieldOperationTests.cpp",
-    "//third_party/vk-gl-cts/external/openglcts/modules/gles31/es31cShaderImageLoadStoreTests.cpp",
     "//third_party/vk-gl-cts/external/openglcts/modules/gles31/es31cShaderImageSizeTests.cpp",
-    "//third_party/vk-gl-cts/external/openglcts/modules/gles31/es31cShaderStorageBufferObjectTests.cpp",
     "//third_party/vk-gl-cts/external/openglcts/modules/gles31/es31cTestPackage.cpp",
     "//third_party/vk-gl-cts/external/openglcts/modules/gles31/es31cTextureGatherTests.cpp",
     "//third_party/vk-gl-cts/external/openglcts/modules/gles31/es31cTextureStorageMultisampleDependenciesTests.cpp",
@@ -58,7 +56,7 @@ ohos_source_set("glcts-es31_source") {
   ]
   include_dirs = [
     "//third_party/zlib/src",
-    "//third_party/spirv-headers/include",
+    "//third_party/vk-gl-cts/external/spirv-headers/src/include",
     "//third_party/vk-gl-cts/external/amber",
     "//third_party/vk-gl-cts/external/renderdoc/src",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
@@ -73,10 +71,10 @@ ohos_source_set("glcts-es31_source") {
     "//third_party/vk-gl-cts/external/openglcts/modules/glesext",
     "//third_party/vk-gl-cts/external/openglcts/modules",
     "//third_party/vk-gl-cts/modules/glshared",
-    "//third_party/glslang/glslang",
+    "//third_party/vk-gl-cts/external/glslang/src/glslang",
     "//third_party/vk-gl-cts/build/include",
-    "//third_party/glslang/SPIRV",
-    "//third_party/spirv-tools/include",
+    "//third_party/vk-gl-cts/external/glslang/src/SPIRV",
+    "//third_party/vk-gl-cts/external/spirv-tools/src/include",
   ]
   include_dirs += deqp_common_include_dirs
 

@@ -62,6 +62,10 @@ ohos_source_set("deqp_vk_synchronization_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/synchronization/vktSynchronizationUtil.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/synchronization/vktSynchronizationWin32KeyedMutexTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/synchronization/vktSynchronizationWin32KeyedMutexTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/synchronization/vktSynchronizationDefs.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/synchronization/vktSynchronizationImplicitTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/synchronization/vktSynchronizationImplicitTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/synchronization/vktSynchronizationOperationResources.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs

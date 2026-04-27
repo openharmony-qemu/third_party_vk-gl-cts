@@ -1,10 +1,43 @@
-// Copyright 2014-2024 The Khronos Group Inc.
+// Copyright 2014-2025 The Khronos Group Inc.
 // SPDX-License-Identifier: CC-BY-4.0
 
 [appendix]
 [[revisions]]
 = Revision History
 
+* 2025-05-27 - Add a new <<naming-enums-bitflags, Bitflag Names>> section
+  (internal issue 4276).
+* 2024-11-13 - Add a new <<write-active, Use the Active Voice>> section
+  (internal issue 4085).
+* 2024-10-28 - Add preferred phrasing for describing links to feature
+  descriptions in the <<markup-word-choices, Word Choices>> section
+  (internal issue 4056).
+* 2024-10-14 - Add <<writing-mustbe, Avoid Use of "`set to`" Where
+  Possible>> section (internal issue 3966).
+* 2024-07-03 - remove `\begin{align*}` from the list of
+  <<writing-math-latexmath, LaTeX markup that is not supported, after
+  updating to KaTeX 0.16.10.
+* 2024-07-02 - Remove redundant <<naming-abbreviations, Common
+  Abbreviations>> and <<naming-prefixes, Standard Prefixes>> content from
+  this document, since it is now in an appendix of the API Specification.
+* 2024-06-19 - Add the <<markup-filenames, Directory Structure and File
+  Names>> section.
+  Use `asciidoc` consistently when referring to the markup language, and
+  `asciidoctor` when referring to the asciidoc processing tool.
+* 2024-06-12 - Specify where "`client`" and "`user`" terminology is allowed
+  in the <<markup-word-choices, Word Choices>> section (internal issue
+  3898).
+* 2024-06-04 - Add <<markup-word-choices, preferred way to write>>
+  "`command`" instead of "`entry point`" (except for shaders).
+* 2024-04-10 - Update the <<writing-conventions, Use American Spelling
+  Conventions>> section to describe how the `codespell` tool is used to
+  enforce these guidelines (internal issue 3848).
+* 2024-03-28 - Move the <<sample-writing-common-vu, Writing Common Explicit
+  Valid Usage Statements>> language into its own subsection, rather than as
+  a NOTE.
+* 2024-02-27 - Add a NOTE to the introduction to clarify that the custom
+  asciidoctor macros are only available in the Specification, not related
+  documentation (internal issue 3808).
 * 2023-11-30 - Update introduction of the <<writing, Writing Style>> chapter
   to recommend following existing language and API design patterms when
   creating new specification language (internal issue 3707).
@@ -39,8 +72,8 @@
   reference the normative references section for the registry schema
   document (public issue 2069).
 * 2022-11-29 - Add a NOTE to the <<writing-conventions, Use American
-  Spelling Conventions>> section explain why there are a few uses of
-  "`colour`" in the Vulkan Video extensions (internal issue 3254).
+  Spelling Conventions>> section to explain why there are a few uses of
+  British spelling in the Vulkan Video extensions (internal issue 3254).
 * 2022-11-16 - Update `basetype` <<markup-macros-api, markup macro>>
   description to exclude types without definitions in the Vulkan
   Specification, such as the Video `Std*` types (internal issue 2703).
@@ -140,8 +173,8 @@
   to match the current scripts.
   Use the term "`asciidoctor`" instead of "`asciidoc`" everywhere.
   Note in the <<introduction-asciidoc, Asciidoctor Markup>> section that the
-  Specification can only be built using the command-line asciidoctor client,
-  not by asciidoctor web clients.
+  Specification can only be built using the command-line asciidoctor
+  application.
 * 2020-02-22 - Document that it is no longer needed to escape C arrows in
   macros.
 * 2019-12-15 - Add a markup section on <<markup-macros-prime-symbols, Prime
@@ -226,7 +259,7 @@
   recommendations.
   Simplify some tables of preferred terms.
   Add sections on block and table markup.
-* 2016-09-12 - Describe writing and markup style for labelled lists.
+* 2016-09-12 - Describe writing and markup style for labeled lists.
   Require use of the ISO 8601 date format except in rare legacy cases.
   Expand the description of <<markup-layout,Line Lengths>> and add a
   description of markup for <<markup-footnotes,Footnotes>>.

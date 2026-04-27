@@ -320,9 +320,9 @@ eglw::EGLBoolean OhosLibrary::swapBuffers(eglw::EGLDisplay dpy, eglw::EGLSurface
     return OHOS::OhosContextI::GetInstance().OH_swapBuffers(dpy, surface);
 }
 
-eglw::EGLBoolean OhosLibrary::swapBuffersWithDamageKHR(eglw::EGLDisplay dpy, eglw::EGLSurface surface, eglw::EGLint *rects, eglw::EGLint n_rects) const
+eglw::EGLBoolean OhosLibrary::swapBuffersWithDamageKHR(eglw::EGLDisplay dpy, eglw::EGLSurface surface, const eglw::EGLint *rects, eglw::EGLint n_rects) const
 {
-    return OHOS::OhosContextI::GetInstance().OH_swapBuffersWithDamageKHR(dpy, surface, rects, n_rects);
+    return OHOS::OhosContextI::GetInstance().OH_swapBuffersWithDamageKHR(dpy, surface, const_cast<eglw::EGLint*>(rects), n_rects);
 }
 
 eglw::EGLBoolean OhosLibrary::swapInterval(eglw::EGLDisplay dpy, eglw::EGLint interval) const

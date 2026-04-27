@@ -163,14 +163,28 @@ ohos_source_set("deqp_vk_pipeline_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/pipeline/vktPipelineVertexInputTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/pipeline/vktPipelineVertexUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/pipeline/vktPipelineVertexUtil.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/pipeline/vktPipelineBinaryTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/pipeline/vktPipelineBinaryTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/pipeline/vktPipelineBlendTestsCommon.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/pipeline/vktPipelineBlendTestsCommon.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/pipeline/vktPipelineDualBlendTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/pipeline/vktPipelineDualBlendTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/pipeline/vktPipelineEmptyFSTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/pipeline/vktPipelineEmptyFSTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/pipeline/vktPipelineLegacyAttrTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/pipeline/vktPipelineLegacyAttrTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/pipeline/vktPipelineNoQueuesTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/pipeline/vktPipelineNoQueuesTests.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs
   include_dirs += [
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/shader_object",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/pipeline",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util",
     "//third_party/vk-gl-cts/external/amber/src/include",
+
   ]
 
   deps = [

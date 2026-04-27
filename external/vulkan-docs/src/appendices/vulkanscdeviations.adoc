@@ -104,7 +104,6 @@ This subset was decided by:
   * Non-KHR or EXT extension are supported on request.
 
 [NOTE]
-.Note
 ====
 During development it is likely that application developers will need
 additional functionality in a Vulkan SC implementation beyond what is
@@ -181,8 +180,8 @@ a framework for handling deviations.
 |Directive  |4.6: "_typedefs_ that indicate size and signedness should be used
              in place of the basic numerical types"
 |Category   |Advisory
-|Note       |This is reported for every `char` and `float` variable used in the
-             API.
+|Note       |This is reported for every code:char and code:float variable
+             used in the API.
 |Rationale  |Vulkan SC maintains the Base Vulkan type conventions for
              compatibility between APIs.
 |===
@@ -271,7 +270,7 @@ a framework for handling deviations.
 |Rule       |8.6: "An identifier with external linkage shall have exactly one
              external definition"
 |Category   |Required
-|Note       |This is reported for every API entry point declaration, and the
+|Note       |This is reported for every API command declaration, and the
              external definitions are provided by the implementation.
 |Rationale  |It is expected that a Vulkan SC application will link against an
              implementation that provides these definitions.

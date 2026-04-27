@@ -41,6 +41,22 @@ ohos_source_set("deqp_vk_texture_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktTextureTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktTextureTexelBufferTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktTextureTexelOffsetTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktSampleVerifier.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktSampleVerifierUtil.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktTextureCompressedFormatTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktTextureConversionTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktTextureFilteringAnisotropyTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktTextureFilteringExplicitLodTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktTextureFilteringTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktTextureMipmapTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktTextureMultisampleTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktTextureShadowTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktTextureSubgroupLodTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktTextureSwizzleTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktTextureTestUtil.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktTextureTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktTextureTexelBufferTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/texture/vktTextureTexelOffsetTests.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs

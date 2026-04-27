@@ -36,7 +36,7 @@ It exposes the following new imaging operations
   in the _sampled image_, using a set of MxN weights in the _weight image_.
   * The `OpImageBoxFilterQCOM` instruction takes 3 operands: _sampled
     image_, _box size_, and texture coordinates.
-    Note that _box size_ specifies a floating point width and height in
+    Note that _box size_ specifies a floating-point width and height in
     texels.
     The instruction computes a weighted average of all texels in the
     _sampled image_ that are covered (either partially or fully) by a box
@@ -58,9 +58,9 @@ The instructions do not-support sampling of mipmap, multi-plane,
 multi-layer, multi-sampled, or depth/stencil images.
 The instructions can be used in any shader stage.
 
-Implementations of this this extension should support these operations
-natively at the HW instruction level, offering potential performance gains
-as well as ease of development.
+Implementations of this extension should support these operations natively
+at the HW instruction level, offering potential performance gains as well as
+ease of development.
 
 include::{generated}/interfaces/VK_QCOM_image_processing.adoc[]
 

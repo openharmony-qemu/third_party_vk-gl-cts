@@ -1,5 +1,5 @@
-#!/usr/bin/python3
-# Copyright 2013-2024 The Khronos Group Inc.
+#!/usr/bin/env python3
+# Copyright 2013-2025 The Khronos Group Inc.
 # SPDX-License-Identifier: Apache-2.0
 
 # linkcheck - check internal links of the specified HTML file against
@@ -12,7 +12,7 @@ from lxml import etree as et
 
 def printSet(s):
     for key in sorted(s):
-        print('    {}'.format(key))
+        print(f'    {key}')
 
 def checkLinks(file, args):
     parser = et.HTMLParser()
@@ -35,7 +35,7 @@ def checkLinks(file, args):
         if e.tag != 'link':
             xref = e.get('href')
 
-            if xref[0:1] == '#':
+            if xref.startswith('#'):
                 # Internal anchor
                 internals.add(xref[1:])
             else:

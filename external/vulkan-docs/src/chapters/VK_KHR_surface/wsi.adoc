@@ -1,4 +1,4 @@
-// Copyright 2014-2024 The Khronos Group Inc.
+// Copyright 2014-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -29,7 +29,7 @@ Use of these extensions is guarded by preprocessor symbols as defined in the
 <<boilerplate-wsi-header,Window System-Specific Header Control>> appendix.
 
 In order for an application to be compiled to use WSI with a given platform,
-it must either:
+it must: either:
 
   * `#define` the appropriate preprocessor symbol prior to including the
     `{full_header}` header file, or
@@ -63,7 +63,6 @@ handles of other Vulkan objects.
 
 ifdef::implementation-guide[]
 [NOTE]
-.Note
 ====
 On certain platforms, the Vulkan loader and ICDs may: have conventions that
 treat the handle as a pointer to a structure containing the
@@ -76,17 +75,6 @@ sname:VkSurfaceKHR objects.
 ====
 endif::implementation-guide[]
 --
-
-ifdef::editing-notes[]
-[NOTE]
-.editing-note
-====
-TODO: Consider replacing the above note editing note with a pointer to the
-loader specification, when it exists.
-However, the information is not relevant to users of the API nor does it
-affect conformance of a Vulkan implementation.
-====
-endif::editing-notes[]
 
 ifdef::VK_KHR_android_surface[]
 include::{chapters}/VK_KHR_android_surface/platformCreateSurface_android.adoc[]
@@ -140,6 +128,9 @@ ifdef::VK_QNX_screen_surface[]
 include::{chapters}/VK_QNX_screen_surface/platformCreateSurface_screen.adoc[]
 endif::VK_QNX_screen_surface[]
 
+ifdef::VK_OHOS_surface[]
+include::{chapters}/VK_OHOS_surface/platformCreateSurface_OHOS.adoc[]
+endif::VK_OHOS_surface[]
 
 === Platform-Independent Information
 
@@ -224,8 +215,9 @@ include::{generated}/api/protos/vkGetPhysicalDeviceSurfaceSupportKHR.adoc[]
   * pname:physicalDevice is the physical device.
   * pname:queueFamilyIndex is the queue family.
   * pname:surface is the surface.
-  * pname:pSupported is a pointer to a basetype:VkBool32, which is set to
-    ename:VK_TRUE to indicate support, and ename:VK_FALSE otherwise.
+  * pname:pSupported is a pointer to a basetype:VkBool32.
+    ename:VK_TRUE indicates support, and ename:VK_FALSE indicates no
+    support.
 
 include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
 
@@ -289,6 +281,10 @@ ifdef::VK_QNX_screen_surface[]
 include::{chapters}/VK_QNX_screen_surface/platformQuerySupport_screen.adoc[]
 endif::VK_QNX_screen_surface[]
 
+ifdef::VK_OHOS_surface[]
+include::{chapters}/VK_OHOS_surface/platformQuerySupport_OHOS.adoc[]
+endif::VK_OHOS_surface[]
+
 
 == Surface Queries
 
@@ -299,7 +295,6 @@ The resulting capabilities can: be obtained with the queries listed below in
 this section.
 
 [NOTE]
-.Note
 ====
 In addition to the surface capabilities as obtained by surface queries
 below, swapchain images are also subject to ordinary image creation limits
@@ -399,9 +394,12 @@ include::{generated}/api/structs/VkSurfaceCapabilitiesKHR.adoc[]
     representing the ways the application can: use the presentable images of
     a swapchain created
 ifdef::VK_KHR_shared_presentable_image[]
-    with elink:VkPresentModeKHR set to ename:VK_PRESENT_MODE_IMMEDIATE_KHR,
-    ename:VK_PRESENT_MODE_MAILBOX_KHR, ename:VK_PRESENT_MODE_FIFO_KHR or
-    ename:VK_PRESENT_MODE_FIFO_RELAXED_KHR
+    with elink:VkPresentModeKHR set to
+ifdef::VK_KHR_present_mode_fifo_latest_ready,VK_EXT_present_mode_fifo_latest_ready[]
+    ename:VK_PRESENT_MODE_FIFO_LATEST_READY_KHR,
+endif::VK_KHR_present_mode_fifo_latest_ready,VK_EXT_present_mode_fifo_latest_ready[]
+    ename:VK_PRESENT_MODE_IMMEDIATE_KHR, ename:VK_PRESENT_MODE_MAILBOX_KHR,
+    ename:VK_PRESENT_MODE_FIFO_KHR or ename:VK_PRESENT_MODE_FIFO_RELAXED_KHR
 endif::VK_KHR_shared_presentable_image[]
     for the surface on the specified device.
     ename:VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT must: be included in the set.
@@ -410,7 +408,6 @@ endif::VK_KHR_shared_presentable_image[]
 
 ifdef::VK_KHR_shared_presentable_image[]
 [NOTE]
-.Note
 ====
 Supported usage flags of a presentable image when using
 ename:VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR or
@@ -421,7 +418,6 @@ slink:VkSharedPresentSurfaceCapabilitiesKHR::pname:sharedPresentSupportedUsageFl
 endif::VK_KHR_shared_presentable_image[]
 
 [NOTE]
-.Note
 ====
 Formulas such as [eq]#min(N, pname:maxImageCount)# are not correct, since
 pname:maxImageCount may: be zero.
@@ -468,28 +464,28 @@ ifdef::VK_EXT_full_screen_exclusive+VK_KHR_win32_surface[]
     slink:VkSurfaceFullScreenExclusiveWin32InfoEXT structure must: be
     included in the pname:pNext chain of pname:pSurfaceInfo
 endif::VK_EXT_full_screen_exclusive+VK_KHR_win32_surface[]
-ifdef::VK_EXT_surface_maintenance1[]
+ifdef::VK_KHR_surface_maintenance1,VK_EXT_surface_maintenance1[]
   * [[VUID-vkGetPhysicalDeviceSurfaceCapabilities2KHR-pNext-07776]]
-    If a slink:VkSurfacePresentModeCompatibilityEXT structure is included in
+    If a slink:VkSurfacePresentModeCompatibilityKHR structure is included in
     the pname:pNext chain of pname:pSurfaceCapabilities, a
-    slink:VkSurfacePresentModeEXT structure must: be included in the
+    slink:VkSurfacePresentModeKHR structure must: be included in the
     pname:pNext chain of pname:pSurfaceInfo
   * [[VUID-vkGetPhysicalDeviceSurfaceCapabilities2KHR-pNext-07777]]
-    If a slink:VkSurfacePresentScalingCapabilitiesEXT structure is included
+    If a slink:VkSurfacePresentScalingCapabilitiesKHR structure is included
     in the pname:pNext chain of pname:pSurfaceCapabilities, a
-    slink:VkSurfacePresentModeEXT structure must: be included in the
+    slink:VkSurfacePresentModeKHR structure must: be included in the
     pname:pNext chain of pname:pSurfaceInfo
 ifdef::VK_GOOGLE_surfaceless_query[]
   * [[VUID-vkGetPhysicalDeviceSurfaceCapabilities2KHR-pNext-07778]]
-    If a slink:VkSurfacePresentModeCompatibilityEXT structure is included in
+    If a slink:VkSurfacePresentModeCompatibilityKHR structure is included in
     the pname:pNext chain of pname:pSurfaceCapabilities,
     pname:pSurfaceInfo->surface must: be a valid slink:VkSurfaceKHR handle
   * [[VUID-vkGetPhysicalDeviceSurfaceCapabilities2KHR-pNext-07779]]
-    If a slink:VkSurfacePresentScalingCapabilitiesEXT structure is included
+    If a slink:VkSurfacePresentScalingCapabilitiesKHR structure is included
     in the pname:pNext chain of pname:pSurfaceCapabilities,
     pname:pSurfaceInfo->surface must: be a valid slink:VkSurfaceKHR handle
 endif::VK_GOOGLE_surfaceless_query[]
-endif::VK_EXT_surface_maintenance1[]
+endif::VK_KHR_surface_maintenance1,VK_EXT_surface_maintenance1[]
 ****
 
 include::{generated}/validity/protos/vkGetPhysicalDeviceSurfaceCapabilities2KHR.adoc[]
@@ -541,8 +537,9 @@ ifdef::VK_KHR_win32_surface+VK_EXT_full_screen_exclusive[]
     included in the pname:pNext chain
 endif::VK_KHR_win32_surface+VK_EXT_full_screen_exclusive[]
   * [[VUID-VkPhysicalDeviceSurfaceInfo2KHR-surface-07919]]
+    If surface is not VK_NULL_HANDLE,
 ifdef::VK_GOOGLE_surfaceless_query[]
-    If the `apiext:VK_GOOGLE_surfaceless_query` extension is not enabled,
+    and the `apiext:VK_GOOGLE_surfaceless_query` extension is not enabled,
 endif::VK_GOOGLE_surfaceless_query[]
     pname:surface must: be a valid slink:VkSurfaceKHR handle
 ****
@@ -580,20 +577,20 @@ sname:VkSurfaceFullScreenExclusiveInfoEXT::pname:fullScreenExclusive are:
 
 include::{generated}/api/enums/VkFullScreenExclusiveEXT.adoc[]
 
-  * ename:VK_FULL_SCREEN_EXCLUSIVE_DEFAULT_EXT indicates the implementation
-    should: determine the appropriate full-screen method by whatever means
-    it deems appropriate.
-  * ename:VK_FULL_SCREEN_EXCLUSIVE_ALLOWED_EXT indicates the implementation
-    may: use full-screen exclusive mechanisms when available.
+  * ename:VK_FULL_SCREEN_EXCLUSIVE_DEFAULT_EXT specifies that the
+    implementation should: determine the appropriate full-screen method by
+    whatever means it deems appropriate.
+  * ename:VK_FULL_SCREEN_EXCLUSIVE_ALLOWED_EXT specifies that the
+    implementation may: use full-screen exclusive mechanisms when available.
     Such mechanisms may: result in better performance and/or the
     availability of different presentation capabilities, but may: require a
     more disruptive transition during swapchain initialization, first
     presentation and/or destruction.
-  * ename:VK_FULL_SCREEN_EXCLUSIVE_DISALLOWED_EXT indicates the
+  * ename:VK_FULL_SCREEN_EXCLUSIVE_DISALLOWED_EXT specifies that the
     implementation should: avoid using full-screen mechanisms which rely on
     disruptive transitions.
-  * ename:VK_FULL_SCREEN_EXCLUSIVE_APPLICATION_CONTROLLED_EXT indicates the
-    application will manage full-screen exclusive mode by using the
+  * ename:VK_FULL_SCREEN_EXCLUSIVE_APPLICATION_CONTROLLED_EXT specifies that
+    the application will manage full-screen exclusive mode by using the
     flink:vkAcquireFullScreenExclusiveModeEXT and
     flink:vkReleaseFullScreenExclusiveModeEXT commands.
 --
@@ -612,7 +609,6 @@ include::{generated}/api/structs/VkSurfaceFullScreenExclusiveWin32InfoEXT.adoc[]
     to create the surface with.
 
 [NOTE]
-.Note
 ====
 If pname:hmonitor is invalidated (e.g. the monitor is unplugged) during the
 lifetime of a swapchain created with this structure, operations on that
@@ -620,7 +616,6 @@ swapchain will return ename:VK_ERROR_OUT_OF_DATE_KHR.
 ====
 
 [NOTE]
-.Note
 ====
 It is the responsibility of the application to change the display settings
 of the targeted Win32 display using the appropriate platform APIs.
@@ -699,33 +694,39 @@ slink:VkPhysicalDeviceSurfaceInfo2KHR::pname:surface can: be
 dlink:VK_NULL_HANDLE.
 In that case, the contents of
 slink:VkSurfaceCapabilities2KHR::pname:surfaceCapabilities as well as any
-other struct chained to it will be undefined:.
+other structure chained to it will be undefined:.
 endif::VK_GOOGLE_surfaceless_query[]
 
 include::{generated}/validity/structs/VkSurfaceProtectedCapabilitiesKHR.adoc[]
 --
 endif::VK_KHR_surface_protected_capabilities[]
 
-ifdef::VK_EXT_surface_maintenance1[]
-[open,refpage='VkSurfacePresentScalingCapabilitiesEXT',desc='Structure describing the presentation scaling capabilities of the surface',type='structs']
+ifdef::VK_KHR_surface_maintenance1,VK_EXT_surface_maintenance1[]
+[open,refpage='VkSurfacePresentScalingCapabilitiesKHR',desc='Structure describing the presentation scaling capabilities of the surface',type='structs',alias='VkSurfacePresentScalingCapabilitiesEXT']
 --
-The sname:VkSurfacePresentScalingCapabilitiesEXT structure is defined as:
+The sname:VkSurfacePresentScalingCapabilitiesKHR structure is defined as:
+
+include::{generated}/api/structs/VkSurfacePresentScalingCapabilitiesKHR.adoc[]
+
+ifdef::VK_EXT_surface_maintenance1[]
+or the equivalent
 
 include::{generated}/api/structs/VkSurfacePresentScalingCapabilitiesEXT.adoc[]
+endif::VK_EXT_surface_maintenance1[]
 
   * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:supportedPresentScaling is a bitmask of
-    elink:VkPresentScalingFlagBitsEXT representing the scaling methods
+    elink:VkPresentScalingFlagBitsKHR representing the scaling methods
     supported by the surface, or `0` if application-defined scaling is not
     supported.
   * pname:supportedPresentGravityX is a bitmask of
-    elink:VkPresentGravityFlagBitsEXT representing the X-axis pixel gravity
+    elink:VkPresentGravityFlagBitsKHR representing the X-axis pixel gravity
     supported by the surface, or `0` if Vulkan-defined pixel gravity is not
     supported for the X axis.
   * pname:supportedPresentGravityY is a bitmask of
-    elink:VkPresentGravityFlagBitsEXT representing the Y-axis pixel gravity
+    elink:VkPresentGravityFlagBitsKHR representing the Y-axis pixel gravity
     supported by the surface, or `0` if Vulkan-defined pixel gravity is not
     supported for the Y axis.
   * pname:minScaledImageExtent contains the smallest valid swapchain extent
@@ -744,67 +745,87 @@ include::{generated}/api/structs/VkSurfacePresentScalingCapabilitiesEXT.adoc[]
     or equal to the corresponding pname:width and pname:height of
     slink:VkSurfaceCapabilitiesKHR::pname:maxImageExtent.
 
-ifdef::VK_EXT_swapchain_maintenance1[]
-Before creating a swapchain whose scaling mode can: be specified through the
-use of slink:VkSwapchainPresentScalingCreateInfoEXT, obtain the set of
-supported scaling modes by including a slink:VkSurfacePresentModeEXT
-structure in the pname:pNext chain of slink:VkPhysicalDeviceSurfaceInfo2KHR
-when calling flink:vkGetPhysicalDeviceSurfaceCapabilities2KHR.
+To query the set of supported scaling modes for a given present mode, add a
+slink:VkSurfacePresentModeKHR structure in the pname:pNext chain of
+slink:VkPhysicalDeviceSurfaceInfo2KHR when calling
+flink:vkGetPhysicalDeviceSurfaceCapabilities2KHR.
 The implementation must: return the same values in
-sname:VkSurfacePresentScalingCapabilitiesEXT for any of the compatible
+sname:VkSurfacePresentScalingCapabilitiesKHR for any of the compatible
 present modes as obtained through
-slink:VkSurfacePresentModeCompatibilityEXT.
-endif::VK_EXT_swapchain_maintenance1[]
+slink:VkSurfacePresentModeCompatibilityKHR.
 
-include::{generated}/validity/structs/VkSurfacePresentScalingCapabilitiesEXT.adoc[]
+ifdef::VK_KHR_swapchain_maintenance1,VK_EXT_swapchain_maintenance1[]
+The application can: specify the scaling mode when creating a swapchain
+through the use of slink:VkSwapchainPresentScalingCreateInfoKHR.
+endif::VK_KHR_swapchain_maintenance1,VK_EXT_swapchain_maintenance1[]
+
+include::{generated}/validity/structs/VkSurfacePresentScalingCapabilitiesKHR.adoc[]
 --
 
-[open,refpage='VkPresentScalingFlagBitsEXT',desc='Bitmask specifying presentation scaling methods',type='enums']
+[open,refpage='VkPresentScalingFlagBitsKHR',desc='Bitmask specifying presentation scaling methods',type='enums',alias='VkPresentScalingFlagBitsEXT']
 --
 Bits which may: be set in
-slink:VkSurfacePresentScalingCapabilitiesEXT::pname:supportedPresentScaling,
+slink:VkSurfacePresentScalingCapabilitiesKHR::pname:supportedPresentScaling,
 specifying scaling modes supported by the surface, are:
 
-include::{generated}/api/enums/VkPresentScalingFlagBitsEXT.adoc[]
+include::{generated}/api/enums/VkPresentScalingFlagBitsKHR.adoc[]
 
-  * ename:VK_PRESENT_SCALING_ONE_TO_ONE_BIT_EXT specifies that no scaling
+ifdef::VK_EXT_surface_maintenance1[]
+or the equivalent
+
+include::{generated}/api/enums/VkPresentScalingFlagBitsEXT.adoc[]
+endif::VK_EXT_surface_maintenance1[]
+
+  * ename:VK_PRESENT_SCALING_ONE_TO_ONE_BIT_KHR specifies that no scaling
     occurs, and pixels in the swapchain image are mapped to one and only one
     pixel in the surface.
     The mapping between pixels is defined by the chosen presentation
     gravity.
-  * ename:VK_PRESENT_SCALING_ASPECT_RATIO_STRETCH_BIT_EXT specifies that the
+  * ename:VK_PRESENT_SCALING_ASPECT_RATIO_STRETCH_BIT_KHR specifies that the
     swapchain image will be minified or magnified such that at least one of
     the resulting width or height is equal to the corresponding surface
     dimension, and the other resulting dimension is less than or equal to
     the corresponding surface dimension, with the aspect ratio of the
     resulting image being identical to that of the original swapchain image.
-  * ename:VK_PRESENT_SCALING_STRETCH_BIT_EXT specifies that the swapchain
+  * ename:VK_PRESENT_SCALING_STRETCH_BIT_KHR specifies that the swapchain
     image will be minified or magnified such that the resulting image
     dimensions are equal to those of the surface.
 --
 
-[open,refpage='VkPresentScalingFlagsEXT',desc='Bitmask of VkPresentScalingFlagBitsEXT',type='flags']
+[open,refpage='VkPresentScalingFlagsKHR',desc='Bitmask of VkPresentScalingFlagBitsKHR',type='flags',alias='VkPresentScalingFlagsEXT']
 --
+include::{generated}/api/flags/VkPresentScalingFlagsKHR.adoc[]
+
+ifdef::VK_EXT_surface_maintenance1[]
+or the equivalent
+
 include::{generated}/api/flags/VkPresentScalingFlagsEXT.adoc[]
+endif::VK_EXT_surface_maintenance1[]
 
-tname:VkPresentScalingFlagsEXT is a bitmask type for setting a mask of zero
-or more elink:VkPresentScalingFlagBitsEXT.
+tname:VkPresentScalingFlagsKHR is a bitmask type for setting a mask of zero
+or more elink:VkPresentScalingFlagBitsKHR.
 --
 
-[open,refpage='VkPresentGravityFlagBitsEXT',desc='Bitmask specifying presentation pixel gravity on either the x or y axis',type='enums']
+[open,refpage='VkPresentGravityFlagBitsKHR',desc='Bitmask specifying presentation pixel gravity on either the x or y axis',type='enums',alias='VkPresentGravityFlagBitsEXT']
 --
 Bits which may: be set in the
-slink:VkSurfacePresentScalingCapabilitiesEXT::pname:supportedPresentGravityX
+slink:VkSurfacePresentScalingCapabilitiesKHR::pname:supportedPresentGravityX
 or pname:supportedPresentGravityY fields, specifying the gravity of
 presented pixels supported by the surface, are:
 
-include::{generated}/api/enums/VkPresentGravityFlagBitsEXT.adoc[]
+include::{generated}/api/enums/VkPresentGravityFlagBitsKHR.adoc[]
 
-  * ename:VK_PRESENT_GRAVITY_MIN_BIT_EXT means that the pixels will
+ifdef::VK_EXT_surface_maintenance1[]
+or the equivalent
+
+include::{generated}/api/enums/VkPresentGravityFlagBitsEXT.adoc[]
+endif::VK_EXT_surface_maintenance1[]
+
+  * ename:VK_PRESENT_GRAVITY_MIN_BIT_KHR means that the pixels will
     gravitate towards the top or left side of the surface.
-  * ename:VK_PRESENT_GRAVITY_MAX_BIT_EXT means that the pixels will
+  * ename:VK_PRESENT_GRAVITY_MAX_BIT_KHR means that the pixels will
     gravitate towards the bottom or right side of the surface.
-  * ename:VK_PRESENT_GRAVITY_CENTERED_BIT_EXT means that the pixels will be
+  * ename:VK_PRESENT_GRAVITY_CENTERED_BIT_KHR means that the pixels will be
     centered in the surface.
 
 If the value in slink:VkSurfaceCapabilitiesKHR::pname:currentTransform is
@@ -813,31 +834,43 @@ implementation-defined whether the gravity configuration applies to the
 presented image before or after transformation.
 --
 
-[open,refpage='VkPresentGravityFlagsEXT',desc='Bitmask of VkPresentGravityFlagBitsEXT',type='flags']
+[open,refpage='VkPresentGravityFlagsKHR',desc='Bitmask of VkPresentGravityFlagBitsKHR',type='flags',alias='VkPresentGravityFlagsEXT']
 --
+include::{generated}/api/flags/VkPresentGravityFlagsKHR.adoc[]
+
+ifdef::VK_EXT_surface_maintenance1[]
+or the equivalent
+
 include::{generated}/api/flags/VkPresentGravityFlagsEXT.adoc[]
+endif::VK_EXT_surface_maintenance1[]
 
-tname:VkPresentGravityFlagsEXT is a bitmask type for setting a mask of zero
-or more elink:VkPresentGravityFlagBitsEXT.
+tname:VkPresentGravityFlagsKHR is a bitmask type for setting a mask of zero
+or more elink:VkPresentGravityFlagBitsKHR.
 --
 
-[open,refpage='VkSurfacePresentModeEXT',desc='Structure describing present mode of a surface',type='structs']
+[open,refpage='VkSurfacePresentModeKHR',desc='Structure describing present mode of a surface',type='structs',alias='VkSurfacePresentModeEXT']
 --
-The sname:VkSurfacePresentModeEXT structure is defined as:
+The sname:VkSurfacePresentModeKHR structure is defined as:
+
+include::{generated}/api/structs/VkSurfacePresentModeKHR.adoc[]
+
+ifdef::VK_EXT_surface_maintenance1[]
+or the equivalent
 
 include::{generated}/api/structs/VkSurfacePresentModeEXT.adoc[]
+endif::VK_EXT_surface_maintenance1[]
 
   * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:presentMode is the presentation mode the swapchain will use.
 
-If the sname:VkSurfacePresentModeEXT structure is included in the
+If the sname:VkSurfacePresentModeKHR structure is included in the
 pname:pNext chain of slink:VkPhysicalDeviceSurfaceInfo2KHR, the values
 returned in slink:VkSurfaceCapabilitiesKHR::pname:minImageCount,
 slink:VkSurfaceCapabilitiesKHR::pname:maxImageCount,
-slink:VkSurfacePresentScalingCapabilitiesEXT::pname:minScaledImageExtent,
-and slink:VkSurfacePresentScalingCapabilitiesEXT::pname:maxScaledImageExtent
+slink:VkSurfacePresentScalingCapabilitiesKHR::pname:minScaledImageExtent,
+and slink:VkSurfacePresentScalingCapabilitiesKHR::pname:maxScaledImageExtent
 are valid only for the specified pname:presentMode.
 ifdef::VK_KHR_shared_presentable_image[]
 If pname:presentMode is ename:VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR or
@@ -845,12 +878,11 @@ ename:VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR, the per-present mode
 image counts must: both be one.
 endif::VK_KHR_shared_presentable_image[]
 The per-present mode image counts may: be less-than or greater-than the
-image counts returned when sname:VkSurfacePresentModeEXT is not provided.
+image counts returned when sname:VkSurfacePresentModeKHR is not provided.
 
 [NOTE]
-.Note
 ====
-If slink:VkSwapchainPresentModesCreateInfoEXT is provided to swapchain
+If slink:VkSwapchainPresentModesCreateInfoKHR is provided to swapchain
 creation, the requirements for forward progress may be less strict.
 For example, a FIFO swapchain might only require 2 images to guarantee
 forward progress, but a MAILBOX one might require 4.
@@ -861,31 +893,37 @@ Conversely, an implementation may return a low number for minImageCount, but
 internally bump the image count when application queries
 flink:vkGetSwapchainImagesKHR, which can surprise applications, and is not
 discoverable until swapchain creation.
-Using sname:VkSurfacePresentModeEXT and
-slink:VkSwapchainPresentModesCreateInfoEXT together effectively removes this
+Using sname:VkSurfacePresentModeKHR and
+slink:VkSwapchainPresentModesCreateInfoKHR together effectively removes this
 problem.
 
-slink:VkSwapchainPresentModesCreateInfoEXT is required for the specification
+slink:VkSwapchainPresentModesCreateInfoKHR is required for the specification
 to be backwards compatible with applications that do not know about, or make
 use of this feature.
 ====
 
 .Valid Usage
 ****
-  * [[VUID-VkSurfacePresentModeEXT-presentMode-07780]]
+  * [[VUID-VkSurfacePresentModeKHR-presentMode-07780]]
     pname:presentMode must: be a value reported by
     flink:vkGetPhysicalDeviceSurfacePresentModesKHR for the specified
-    surface.
+    surface
 ****
 
-include::{generated}/validity/structs/VkSurfacePresentModeEXT.adoc[]
+include::{generated}/validity/structs/VkSurfacePresentModeKHR.adoc[]
 --
 
-[open,refpage='VkSurfacePresentModeCompatibilityEXT',desc='Structure describing the subset of compatible presentation modes for the purposes of switching without swapchain recreation',type='structs']
+[open,refpage='VkSurfacePresentModeCompatibilityKHR',desc='Structure describing the subset of compatible presentation modes for the purposes of switching without swapchain recreation',type='structs',alias='VkSurfacePresentModeCompatibilityEXT']
 --
-The sname:VkSurfacePresentModeCompatibilityEXT structure is defined as:
+The sname:VkSurfacePresentModeCompatibilityKHR structure is defined as:
+
+include::{generated}/api/structs/VkSurfacePresentModeCompatibilityKHR.adoc[]
+
+ifdef::VK_EXT_surface_maintenance1[]
+or the equivalent
 
 include::{generated}/api/structs/VkSurfacePresentModeCompatibilityEXT.adoc[]
+endif::VK_EXT_surface_maintenance1[]
 
   * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
@@ -897,31 +935,32 @@ include::{generated}/api/structs/VkSurfacePresentModeCompatibilityEXT.adoc[]
     returned.
 
 If pname:pPresentModes is `NULL`, then the number of present modes that are
-compatible with the one specified in slink:VkSurfacePresentModeEXT is
+compatible with the one specified in slink:VkSurfacePresentModeKHR is
 returned in pname:presentModeCount.
-Otherwise, pname:presentModeCount must be set by the user to the number of
-elements in the pname:pPresentModes array, and on return the variable is
-overwritten with the number of values actually written to
-pname:pPresentModes.
+Otherwise, pname:presentModeCount must: point to a variable set by the
+application to the number of elements in the pname:pPresentModes array, and
+on return the variable is overwritten with the number of values actually
+written to pname:pPresentModes.
 If the value of pname:presentModeCount is less than the number of compatible
 present modes that are supported, at most pname:presentModeCount values will
 be written to pname:pPresentModes.
 The implementation must: include the present mode passed to
-slink:VkSurfacePresentModeEXT in pname:pPresentModes, unless
+slink:VkSurfacePresentModeKHR in pname:pPresentModes, unless
 pname:presentModeCount is zero.
 
-ifdef::VK_EXT_swapchain_maintenance1[]
-Before creating a swapchain whose present modes can: be modified through the
-use of slink:VkSwapchainPresentModesCreateInfoEXT, obtain the set of present
-modes compatible with a given initial present mode by including a
-slink:VkSurfacePresentModeEXT structure in the pname:pNext chain of
-slink:VkPhysicalDeviceSurfaceInfo2KHR when calling
+To query the set of present modes compatible with a given initial present
+mode, add a slink:VkSurfacePresentModeKHR structure in the pname:pNext chain
+of slink:VkPhysicalDeviceSurfaceInfo2KHR when calling
 flink:vkGetPhysicalDeviceSurfaceCapabilities2KHR.
-endif::VK_EXT_swapchain_maintenance1[]
 
-include::{generated}/validity/structs/VkSurfacePresentModeCompatibilityEXT.adoc[]
+ifdef::VK_KHR_swapchain_maintenance1,VK_EXT_swapchain_maintenance1[]
+The application can: create a swapchain whose present mode can: be modified
+through the use of slink:VkSwapchainPresentModesCreateInfoKHR.
+endif::VK_KHR_swapchain_maintenance1,VK_EXT_swapchain_maintenance1[]
+
+include::{generated}/validity/structs/VkSurfacePresentModeCompatibilityKHR.adoc[]
 --
-endif::VK_EXT_surface_maintenance1[]
+endif::VK_KHR_surface_maintenance1,VK_EXT_surface_maintenance1[]
 
 ifdef::VK_KHR_shared_presentable_image[]
 [open,refpage='VkSharedPresentSurfaceCapabilitiesKHR',desc='Structure describing capabilities of a surface for shared presentation',type='structs']
@@ -980,8 +1019,8 @@ include::{generated}/api/structs/VkSurfaceCapabilitiesFullScreenExclusiveEXT.ado
   * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
-  * pname:fullScreenExclusiveControlSupported is a boolean describing
-    whether the surface is able to make use of exclusive full-screen access.
+  * pname:fullScreenExclusiveSupported is a boolean describing whether the
+    surface is able to make use of exclusive full-screen access.
 
 This structure can: be included in the pname:pNext chain of
 slink:VkSurfaceCapabilities2KHR to determine support for exclusive
@@ -1019,6 +1058,58 @@ present barrier feature is not obtainable for this surface.
 include::{generated}/validity/structs/VkSurfaceCapabilitiesPresentBarrierNV.adoc[]
 --
 endif::VK_NV_present_barrier[]
+
+ifdef::VK_KHR_present_id2[]
+[open,refpage='VkSurfaceCapabilitiesPresentId2KHR',desc='Structure describing presentation-ID capabilities of a surface',type='structs']
+--
+The sname:VkSurfaceCapabilitiesPresentId2KHR structure is defined as:
+
+include::{generated}/api/structs/VkSurfaceCapabilitiesPresentId2KHR.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:presentId2Supported is a boolean describing whether the surface is
+    able to support the present-ID extension
+
+This structure can: be included in the pname:pNext chain of
+slink:VkSurfaceCapabilities2KHR to determine support for present-wait.
+If pname:presentId2Supported is ename:VK_FALSE, it indicates that attaching
+an ID to presentation requests is not possible for this surface.
+
+Applications must: not attempt to include slink:VkPresentId2KHR in the
+pname:pNext chain of a slink:VkPresentInfoKHR if pname:presentId2Supported
+is ename:VK_FALSE.
+
+include::{generated}/validity/structs/VkSurfaceCapabilitiesPresentId2KHR.adoc[]
+--
+endif::VK_KHR_present_id2[]
+
+ifdef::VK_KHR_present_wait2[]
+[open,refpage='VkSurfaceCapabilitiesPresentWait2KHR',desc='Structure describing presentation-wait capabilities of a surface',type='structs']
+--
+The sname:VkSurfaceCapabilitiesPresentWait2KHR structure is defined as:
+
+include::{generated}/api/structs/VkSurfaceCapabilitiesPresentWait2KHR.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:presentWait2Supported is a boolean describing whether the surface
+    is able to support the present-wait extension
+
+This structure can: be included in the pname:pNext chain of
+slink:VkSurfaceCapabilities2KHR to determine support for present-wait.
+If pname:presentWait2Supported is ename:VK_FALSE, it indicates that waiting
+for presentation is not possible for this surface.
+
+Applications must: not attempt to call flink:vkWaitForPresent2KHR on a
+swapchain if pname:presentWait2Supported is ename:VK_FALSE.
+
+include::{generated}/validity/structs/VkSurfaceCapabilitiesPresentWait2KHR.adoc[]
+--
+endif::VK_KHR_present_wait2[]
+
 endif::VK_KHR_get_surface_capabilities2[]
 
 ifdef::VK_EXT_display_surface_counter[]
@@ -1133,9 +1224,9 @@ If pname:pSurfaceFormats is `NULL`, then the number of format pairs
 supported for the given pname:surface is returned in
 pname:pSurfaceFormatCount.
 Otherwise, pname:pSurfaceFormatCount must: point to a variable set by the
-user to the number of elements in the pname:pSurfaceFormats array, and on
-return the variable is overwritten with the number of structures actually
-written to pname:pSurfaceFormats.
+application to the number of elements in the pname:pSurfaceFormats array,
+and on return the variable is overwritten with the number of structures
+actually written to pname:pSurfaceFormats.
 If the value of pname:pSurfaceFormatCount is less than the number of format
 pairs supported, at most pname:pSurfaceFormatCount structures will be
 written, and ename:VK_INCOMPLETE will be returned instead of
@@ -1214,9 +1305,9 @@ If pname:pSurfaceFormats is `NULL`, then the number of format tuples
 supported for the given pname:surface is returned in
 pname:pSurfaceFormatCount.
 Otherwise, pname:pSurfaceFormatCount must: point to a variable set by the
-user to the number of elements in the pname:pSurfaceFormats array, and on
-return the variable is overwritten with the number of structures actually
-written to pname:pSurfaceFormats.
+application to the number of elements in the pname:pSurfaceFormats array,
+and on return the variable is overwritten with the number of structures
+actually written to pname:pSurfaceFormats.
 If the value of pname:pSurfaceFormatCount is less than the number of format
 tuples supported, at most pname:pSurfaceFormatCount structures will be
 written, and ename:VK_INCOMPLETE will be returned instead of
@@ -1260,8 +1351,8 @@ ifdef::VK_EXT_image_compression_control[]
 ****
   * [[VUID-VkSurfaceFormat2KHR-pNext-06750]]
 ifdef::VK_EXT_image_compression_control_swapchain[]
-    If the <<features-imageCompressionControlSwapchain,
-    pname:imageCompressionControlSwapchain>> feature is not enabled, the
+    If the `apiext:VK_EXT_image_compression_control_swapchain` extension is
+    not supported, the
 endif::VK_EXT_image_compression_control_swapchain[]
 ifndef::VK_EXT_image_compression_control_swapchain[The]
     pname:pNext chain must: not include an
@@ -1278,52 +1369,55 @@ While the pname:format of a presentable image refers to the encoding of each
 pixel, the pname:colorSpace determines how the presentation engine
 interprets the pixel values.
 A color space in this document refers to a specific color space (defined by
-the chromaticities of its primaries and a white point in CIE Lab), and a
-transfer function that is applied before storing or transmitting color data
-in the given color space.
+the chromaticities of its primaries and a white point in CIE Lab), and
+transfer functions indicating the mapping between the image data and the
+colorimetry with respect to the given color space.
 
 [open,refpage='VkColorSpaceKHR',desc='Supported color space of the presentation engine',type='enums']
 --
 Possible values of slink:VkSurfaceFormatKHR::pname:colorSpace, specifying
-supported color spaces of a presentation engine, are:
+the color spaces that a presentation engine can accept, are:
 
 include::{generated}/api/enums/VkColorSpaceKHR.adoc[]
 
-  * ename:VK_COLOR_SPACE_SRGB_NONLINEAR_KHR specifies support for the sRGB
-    color space.
+  * ename:VK_COLOR_SPACE_SRGB_NONLINEAR_KHR specifies support for the images
+    in sRGB color space, encoded according to the sRGB specification.
 ifdef::VK_EXT_swapchain_colorspace[]
   * ename:VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT specifies support for the
-    Display-P3 color space to be displayed using an sRGB-like EOTF (defined
-    below).
+    images in Display-P3 color space, encoded using a Display-P3 transfer
+    function.
   * ename:VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT specifies support for the
-    extended sRGB color space to be displayed using a linear EOTF.
+    images in extended sRGB color space, encoded using a linear transfer
+    function.
   * ename:VK_COLOR_SPACE_EXTENDED_SRGB_NONLINEAR_EXT specifies support for
-    the extended sRGB color space to be displayed using an sRGB EOTF.
+    the images in extended sRGB color space, encoded according to the scRGB
+    specification.
   * ename:VK_COLOR_SPACE_DISPLAY_P3_LINEAR_EXT specifies support for the
-    Display-P3 color space to be displayed using a linear EOTF.
+    images in Display-P3 color space, encoded using a linear transfer
+    function.
   * ename:VK_COLOR_SPACE_DCI_P3_NONLINEAR_EXT specifies support for the
-    DCI-P3 color space to be displayed using the DCI-P3 EOTF.
+    images in DCI-P3 color space, encoded according to the DCI-P3
+    specification.
     Note that values in such an image are interpreted as XYZ encoded color
     data by the presentation engine.
-  * ename:VK_COLOR_SPACE_BT709_LINEAR_EXT specifies support for the BT709
-    color space to be displayed using a linear EOTF.
-  * ename:VK_COLOR_SPACE_BT709_NONLINEAR_EXT specifies support for the BT709
-    color space to be displayed using the SMPTE 170M EOTF.
-  * ename:VK_COLOR_SPACE_BT2020_LINEAR_EXT specifies support for the BT2020
-    color space to be displayed using a linear EOTF.
-  * ename:VK_COLOR_SPACE_HDR10_ST2084_EXT specifies support for the HDR10
-    (BT2020 color) space to be displayed using the SMPTE ST2084 Perceptual
-    Quantizer (PQ) EOTF.
-  * ename:VK_COLOR_SPACE_DOLBYVISION_EXT specifies support for the Dolby
-    Vision (BT2020 color space), proprietary encoding, to be displayed using
-    the SMPTE ST2084 EOTF.
-  * ename:VK_COLOR_SPACE_HDR10_HLG_EXT specifies support for the HDR10
-    (BT2020 color space) to be displayed using the Hybrid Log Gamma (HLG)
-    EOTF.
-  * ename:VK_COLOR_SPACE_ADOBERGB_LINEAR_EXT specifies support for the
-    AdobeRGB color space to be displayed using a linear EOTF.
+  * ename:VK_COLOR_SPACE_BT709_LINEAR_EXT specifies support for the images
+    in BT709 color space, encoded using a linear transfer function.
+  * ename:VK_COLOR_SPACE_BT709_NONLINEAR_EXT specifies support for the
+    images in BT709 color space, encoded according to the BT709
+    specification.
+  * ename:VK_COLOR_SPACE_BT2020_LINEAR_EXT specifies support for the images
+    in BT2020 color space, encoded using a linear transfer function.
+  * ename:VK_COLOR_SPACE_HDR10_ST2084_EXT specifies support for the images
+    in HDR10 (BT2020) color space, encoded according to SMPTE ST2084
+    Perceptual Quantizer (PQ) specification.
+  * ename:VK_COLOR_SPACE_HDR10_HLG_EXT specifies support for the images in
+    HDR10 (BT2020) color space, encoded according to the Hybrid Log Gamma
+    (HLG) specification.
+  * ename:VK_COLOR_SPACE_ADOBERGB_LINEAR_EXT specifies support for images in
+    Adobe RGB color space, encoded using a linear transfer function.
   * ename:VK_COLOR_SPACE_ADOBERGB_NONLINEAR_EXT specifies support for the
-    AdobeRGB color space to be displayed using the Gamma 2.2 EOTF.
+    images in Adobe RGB color space, encoded according to the Adobe RGB
+    specification (approximately Gamma 2.2).
   * ename:VK_COLOR_SPACE_PASS_THROUGH_EXT specifies that color components
     are used "`as is`".
     This is intended to allow applications to supply data for color spaces
@@ -1341,13 +1435,14 @@ ifdef::hidden[]
   * elink:VkColorSpaceKHR (deprecated aliases)
   ** etext:VK_COLORSPACE_SRGB_NONLINEAR_KHR <<SCID-8>>
   ** etext:VK_COLOR_SPACE_DCI_P3_LINEAR_EXT <<SCID-8>>
+  * elink:VkColorSpaceKHR (not well-defined)
+  ** ename:VK_COLOR_SPACE_DOLBYVISION_EXT <<SCID-8>>
 // end::scremoved[]
 endif::hidden[]
 endif::VKSC_VERSION_1_0[]
 
 ifndef::VKSC_VERSION_1_0[]
 [NOTE]
-.Note
 ====
 In the initial release of the `apiext:VK_KHR_surface` and
 `apiext:VK_KHR_swapchain` extensions, the token
@@ -1360,7 +1455,6 @@ The older enum is still available for backwards compatibility.
 ====
 
 [NOTE]
-.Note
 ====
 In older versions of this extension
 ename:VK_COLOR_SPACE_DISPLAY_P3_LINEAR_EXT was misnamed
@@ -1371,20 +1465,49 @@ The old name is deprecated but is maintained for backwards compatibility.
 endif::VKSC_VERSION_1_0[]
 
 [NOTE]
-.Note
+====
+In older versions of the `apiext:VK_EXT_swapchain_colorspace` extension,
+ename:VK_COLOR_SPACE_DOLBYVISION_EXT was exposed.
+The intent was to indicate the presentation engine shall decode an image
+using the SMPTE ST 2084 Perceptual Quantizer (PQ) EOTF, and then apply a
+proprietary OOTF to process the image.
+However, Dolby Vision profile 8.4 describes an encoding using the Hybrid Log
+Gamma (HLG) OETF, and there is no swapchain extension for signaling Dolby
+Vision metadata to be used by a proprietary OOTF.
+This enum is deprecated but is maintained for backwards compatibility.
+====
+
+[NOTE]
 ====
 For a traditional "`Linear`" or non-gamma transfer function color space use
 ename:VK_COLOR_SPACE_PASS_THROUGH_EXT.
 ====
 
-The color components of non-linear color space swapchain images must: have
-had the appropriate transfer function applied.
-The color space selected for the swapchain image will not affect the
-processing of data written into the image by the implementation.
-Vulkan requires that all implementations support the sRGB transfer function
-by use of an SRGB pixel format.
-Other transfer functions, such as SMPTE 170M or SMPTE2084, can: be performed
-by the application shader.
+ifdef::VK_KHR_wayland_surface[]
+[NOTE]
+====
+On Wayland, ename:VK_COLOR_SPACE_PASS_THROUGH_EXT can be used to disable
+color management by the WSI on a surface, which makes it possible for the
+application to create a code:wp_color_management_surface_v1 object without
+triggering a code:surface_exists protocol error.
+
+See flink:vkCreateWaylandSurfaceKHR
+====
+endif::VK_KHR_wayland_surface[]
+
+The presentation engine interprets the pixel values of the R, G, and B
+components as having been encoded using an appropriate transfer function.
+Applications should: ensure that the appropriate transfer function has been
+applied.
+<<textures-output-format-conversion, Textures Output Format Conversion>>
+requires that all implementations implicitly apply the sRGB EOTF^-1^ on R,
+G, and B components when shaders write to an sRGB pixel format image, which
+is useful for sRGB color spaces.
+For sRGB color spaces with other pixel formats, or other non-linear color
+spaces, applications can: apply the transfer function explicitly in a
+shader.
+The A channel is always interpreted as linearly encoded.
+
 This extension defines enums for elink:VkColorSpaceKHR that correspond to
 the following color spaces:
 
@@ -1395,13 +1518,12 @@ the following color spaces:
 | Name           | Red Primary  | Green Primary | Blue Primary | White-point          | Transfer function
 | DCI-P3         | 1.000, 0.000 | 0.000, 1.000  | 0.000, 0.000 | 0.3333, 0.3333       | DCI P3
 | Display-P3     | 0.680, 0.320 | 0.265, 0.690  | 0.150, 0.060 | 0.3127, 0.3290 (D65) | Display-P3
-| BT709          | 0.640, 0.330 | 0.300, 0.600  | 0.150, 0.060 | 0.3127, 0.3290 (D65) | ITU (SMPTE 170M)
+| BT709          | 0.640, 0.330 | 0.300, 0.600  | 0.150, 0.060 | 0.3127, 0.3290 (D65) | BT709
 | sRGB           | 0.640, 0.330 | 0.300, 0.600  | 0.150, 0.060 | 0.3127, 0.3290 (D65) | sRGB
-| extended sRGB  | 0.640, 0.330 | 0.300, 0.600  | 0.150, 0.060 | 0.3127, 0.3290 (D65) | extended sRGB
+| extended sRGB  | 0.640, 0.330 | 0.300, 0.600  | 0.150, 0.060 | 0.3127, 0.3290 (D65) | scRGB
 | HDR10_ST2084   | 0.708, 0.292 | 0.170, 0.797  | 0.131, 0.046 | 0.3127, 0.3290 (D65) | ST2084 PQ
-| DOLBYVISION    | 0.708, 0.292 | 0.170, 0.797  | 0.131, 0.046 | 0.3127, 0.3290 (D65) | ST2084 PQ
 | HDR10_HLG      | 0.708, 0.292 | 0.170, 0.797  | 0.131, 0.046 | 0.3127, 0.3290 (D65) | HLG
-| AdobeRGB       | 0.640, 0.330 | 0.210, 0.710  | 0.150, 0.060 | 0.3127, 0.3290 (D65) | AdobeRGB
+| Adobe RGB      | 0.640, 0.330 | 0.210, 0.710  | 0.150, 0.060 | 0.3127, 0.3290 (D65) | Adobe RGB
 |====
 
 The transfer functions are described in the "`Transfer Functions`" chapter
@@ -1410,7 +1532,7 @@ of the <<data-format,Khronos Data Format Specification>>.
 Except Display-P3 OETF, which is:
 
 [latexmath]
-+++++++++++++++++++
+++++
 \begin{aligned}
 E & =
   \begin{cases}
@@ -1418,13 +1540,12 @@ E & =
     12.92 \times L                       & \text{for}\  0 \leq L < 0.0030186
   \end{cases}
 \end{aligned}
-+++++++++++++++++++
+++++
 
 where [eq]#L# is the linear value of a color component and [eq]#E# is the
 encoded value (as stored in the image in memory).
 
 [NOTE]
-.Note
 ====
 For most uses, the sRGB OETF is equivalent.
 ====
@@ -1455,10 +1576,10 @@ include::{generated}/api/protos/vkGetPhysicalDeviceSurfacePresentModesKHR.adoc[]
 If pname:pPresentModes is `NULL`, then the number of presentation modes
 supported for the given pname:surface is returned in
 pname:pPresentModeCount.
-Otherwise, pname:pPresentModeCount must: point to a variable set by the user
-to the number of elements in the pname:pPresentModes array, and on return
-the variable is overwritten with the number of values actually written to
-pname:pPresentModes.
+Otherwise, pname:pPresentModeCount must: point to a variable set by the
+application to the number of elements in the pname:pPresentModes array, and
+on return the variable is overwritten with the number of values actually
+written to pname:pPresentModes.
 If the value of pname:pPresentModeCount is less than the number of
 presentation modes supported, at most pname:pPresentModeCount values will be
 written, and ename:VK_INCOMPLETE will be returned instead of
@@ -1574,6 +1695,26 @@ include::{generated}/api/enums/VkPresentModeKHR.adoc[]
     New requests are appended to the end of the queue, and one request is
     removed from the beginning of the queue and processed during or after
     each vertical blanking period in which the queue is non-empty.
+ifdef::VK_KHR_present_mode_fifo_latest_ready,VK_EXT_present_mode_fifo_latest_ready[]
+  * ename:VK_PRESENT_MODE_FIFO_LATEST_READY_KHR specifies that the
+    presentation engine waits for the next vertical blanking period to
+    update the current image.
+    Tearing cannot: be observed.
+    An internal queue is used to hold pending presentation requests.
+    New requests are appended to the end of the queue.
+    At each vertical blanking period, the presentation engine dequeues all
+    successive requests that are ready to be presented from the beginning of
+    the queue.
+ifdef::VK_GOOGLE_display_timing[]
+    If using `apiext:VK_GOOGLE_display_timing` to provide a target present
+    time, the presentation engine will check the specified time for each
+    image.
+    If the target present time is less-than or equal-to the current time,
+    the presentation engine will dequeue the image and check the next one.
+endif::VK_GOOGLE_display_timing[]
+    The image of the last dequeued request will be presented.
+    The other dequeued requests will be dropped.
+endif::VK_KHR_present_mode_fifo_latest_ready,VK_EXT_present_mode_fifo_latest_ready[]
 ifdef::VK_KHR_shared_presentable_image[]
   * ename:VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR specifies that the
     presentation engine and application have concurrent access to a single
@@ -1602,7 +1743,7 @@ The supported elink:VkImageUsageFlagBits of the presentable images of a
 swapchain created for a surface may: differ depending on the presentation
 mode, and can be determined as per the table below:
 
-.Presentable image usage queries
+.Presentable Image Usage Queries
 [width="100%",cols="<50%,<50%",options="header"]
 |====
 | Presentation mode                                   | Image usage flags
@@ -1610,13 +1751,15 @@ mode, and can be determined as per the table below:
 | ename:VK_PRESENT_MODE_MAILBOX_KHR                   | slink:VkSurfaceCapabilitiesKHR::pname:supportedUsageFlags
 | ename:VK_PRESENT_MODE_FIFO_KHR                      | slink:VkSurfaceCapabilitiesKHR::pname:supportedUsageFlags
 | ename:VK_PRESENT_MODE_FIFO_RELAXED_KHR              | slink:VkSurfaceCapabilitiesKHR::pname:supportedUsageFlags
+ifdef::VK_KHR_present_mode_fifo_latest_ready,VK_EXT_present_mode_fifo_latest_ready[]
+| ename:VK_PRESENT_MODE_FIFO_LATEST_READY_KHR         | slink:VkSurfaceCapabilitiesKHR::pname:supportedUsageFlags
+endif::VK_KHR_present_mode_fifo_latest_ready,VK_EXT_present_mode_fifo_latest_ready[]
 | ename:VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR     | slink:VkSharedPresentSurfaceCapabilitiesKHR::pname:sharedPresentSupportedUsageFlags
 | ename:VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR | slink:VkSharedPresentSurfaceCapabilitiesKHR::pname:sharedPresentSupportedUsageFlags
 |====
 endif::VK_KHR_shared_presentable_image[]
 
 [NOTE]
-.Note
 ====
 For reference, the mode indicated by ename:VK_PRESENT_MODE_FIFO_KHR is
 equivalent to the behavior of {wgl|glX|egl}SwapBuffers with a swap interval
@@ -1625,6 +1768,7 @@ equivalent to the behavior of {wgl|glX}SwapBuffers with a swap interval of
 -1 (from the {WGL|GLX}_EXT_swap_control_tear extensions).
 ====
 --
+
 
 ifdef::VK_EXT_full_screen_exclusive[]
 == Full Screen Exclusive Control
@@ -1687,11 +1831,10 @@ include::{generated}/api/protos/vkReleaseFullScreenExclusiveModeEXT.adoc[]
     from.
 
 [NOTE]
-.Note
 ====
 Applications will not be able to present to pname:swapchain after this call
 until exclusive full-screen access is reacquired.
-This is usually useful to handle when an application is minimised or
+This is usually useful to handle when an application is minimized or
 otherwise intends to stop presenting for a time.
 ====
 
@@ -1705,6 +1848,8 @@ otherwise intends to stop presenting for a time.
     pname:fullScreenExclusive set to
     ename:VK_FULL_SCREEN_EXCLUSIVE_APPLICATION_CONTROLLED_EXT
 ****
+
+include::{generated}/validity/protos/vkReleaseFullScreenExclusiveModeEXT.adoc[]
 --
 endif::VK_EXT_full_screen_exclusive[]
 
@@ -1890,9 +2035,10 @@ include::{generated}/api/protos/vkGetPhysicalDevicePresentRectanglesKHR.adoc[]
 
 If pname:pRects is `NULL`, then the number of rectangles used when
 presenting the given pname:surface is returned in pname:pRectCount.
-Otherwise, pname:pRectCount must: point to a variable set by the user to the
-number of elements in the pname:pRects array, and on return the variable is
-overwritten with the number of structures actually written to pname:pRects.
+Otherwise, pname:pRectCount must: point to a variable set by the application
+to the number of elements in the pname:pRects array, and on return the
+variable is overwritten with the number of structures actually written to
+pname:pRects.
 If the value of pname:pRectCount is less than the number of rectangles, at
 most pname:pRectCount structures will be written, and ename:VK_INCOMPLETE
 will be returned instead of ename:VK_SUCCESS, to indicate that not all the
@@ -1922,9 +2068,27 @@ ifdef::VK_KHR_present_wait[]
 include::{chapters}/VK_KHR_present_wait/present_wait.adoc[]
 endif::VK_KHR_present_wait[]
 
+ifdef::VK_KHR_present_wait2[]
+include::{chapters}/VK_KHR_present_wait2/present_wait2.adoc[]
+endif::VK_KHR_present_wait2[]
+
 include::{chapters}/VK_KHR_swapchain/wsi.adoc[]
+
+ifdef::VK_EXT_hdr_metadata[]
+include::{chapters}/VK_EXT_hdr_metadata.adoc[]
+endif::VK_EXT_hdr_metadata[]
+
 endif::VK_KHR_swapchain[]
+
+ifdef::VK_AMD_anti_lag,VK_NV_low_latency2[]
+include::{chapters}/VK_KHR_swapchain/lag_control.adoc[]
+endif::VK_AMD_anti_lag,VK_NV_low_latency2[]
 
 ifdef::VK_NV_present_barrier[]
 include::{chapters}/VK_NV_present_barrier/present_barrier.adoc[]
 endif::VK_NV_present_barrier[]
+
+ifdef::VK_NV_present_metering[]
+include::{chapters}/VK_NV_present_metering/present_metering.adoc[]
+endif::VK_NV_present_metering[]
+

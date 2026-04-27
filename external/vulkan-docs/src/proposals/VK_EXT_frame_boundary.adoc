@@ -1,9 +1,12 @@
-// Copyright 2022-2024 The Khronos Group Inc.
+// Copyright 2022-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
 # Proposal: `VK_EXT_frame_boundary`
 :toc: left
+:docs: https://docs.vulkan.org/spec/latest/
+:extensions: {docs}appendices/extensions.html#
+:sectnums:
 
 `VK_EXT_frame_boundary` is a device extension that helps *tools* (such as
 debuggers) to group queue submissions per frames in non-trivial scenarios,
@@ -47,9 +50,9 @@ A graphics application may pipeline its frame preparation such that work for
 different frames is being submitted in an interleaved way, a scenario we call
 here "`overlapping frames`".
 
-For instance, consider a graphics app where each frame is executed via two
-`vkQueueSubmit` followed by a `vkQueuePresentKHR`, and frame preparation is
-pipelined, such that the serialized commands look like:
+For instance, consider a graphics application where each frame is executed
+via two `vkQueueSubmit` followed by a `vkQueuePresentKHR`, and frame
+preparation is pipelined, such that the serialized commands look like:
 
 ....
 vkQueueSubmit();     // 1st submit of Frame N
@@ -246,7 +249,7 @@ vkQueueSubmit( frame:N-1 ); // Some other submissions for an other frame
 vkQueueSubmit( frame:N+1 ); // Some other submissions for an other frame
 
 // 2nd submit of frame N, logically the last one, but waits on a TLS not yet
-// signalled for that value
+// signaled for that value
 vkQueueSubmit( frame:N, frameEnd, wait:TLS(42) );
 
 vkQueueSubmit( frame:... ); // Some other submissions for other frames

@@ -31,8 +31,6 @@ ohos_source_set("deqp_vk_ssbo_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ssbo/vktSSBOLayoutCase.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ssbo/vktSSBOLayoutTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/ssbo/vktSSBOLayoutTests.hpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util/vktTypeComparisonUtil.cpp",
-    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util/vktTypeComparisonUtil.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs
@@ -41,6 +39,7 @@ ohos_source_set("deqp_vk_ssbo_source") {
 
   deps = [
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util:libdeqp_vk_util",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
   ]
   part_name = "acts"

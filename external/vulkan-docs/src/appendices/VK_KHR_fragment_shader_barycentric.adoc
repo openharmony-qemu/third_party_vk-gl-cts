@@ -1,4 +1,4 @@
-// Copyright 2018-2024 The Khronos Group Inc.
+// Copyright 2018-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -12,7 +12,7 @@ include::{generated}/meta/{refprefix}VK_KHR_fragment_shader_barycentric.adoc[]
     No known IP claims.
 *Interactions and External Dependencies*::
   - This extension provides API support for
-    https://github.com/KhronosGroup/GLSL/blob/master/extensions/ext/GLSL_EXT_fragment_shader_barycentric.txt[`GL_EXT_fragment_shader_barycentric`]
+    https://github.com/KhronosGroup/GLSL/blob/main/extensions/ext/GLSL_EXT_fragment_shader_barycentric.txt[`GL_EXT_fragment_shader_barycentric`]
 *Contributors*::
   - Stu Smith, AMD
   - Tobias Hector, AMD
@@ -80,9 +80,9 @@ code:BaryCoordNoPerspKHR interpolated?
 code:BaryCoordNoPerspKHR may: also be decorated with the code:Centroid or
 code:Sample qualifiers to specify interpolation, like any other fragment
 shader input.
-If <<features-shaderSampleRateInterpolationFunctions,
-pname:shaderSampleRateInterpolationFunctions>> is enabled, the extended
-instructions InterpolateAtCentroid, InterpolateAtOffset, and
+If the <<features-shaderSampleRateInterpolationFunctions,
+pname:shaderSampleRateInterpolationFunctions>> feature is enabled, the
+extended instructions InterpolateAtCentroid, InterpolateAtOffset, and
 InterpolateAtSample from the GLSL.std.450 may: also be used with inputs
 decorated with code:BaryCoordKHR or code:BaryCoordNoPerspKHR.
 

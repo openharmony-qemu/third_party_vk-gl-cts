@@ -1,10 +1,10 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Copyright (c) 2019 Collabora, Ltd.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# Author(s):    Ryan Pavlik <ryan.pavlik@collabora.com>
+# Author(s):    Rylie Pavlik <rylie.pavlik@collabora.com>
 #
 # Purpose:      This script checks some "business logic" in the XML registry.
 
@@ -32,15 +32,21 @@ EXTENSION_ENUM_NAME_SPELLING_CHANGE = {
 EXTENSION_NAME_VERSION_EXCEPTIONS = (
     'VK_AMD_gpu_shader_int16',
     'VK_EXT_index_type_uint8',
+    'VK_EXT_shader_float8',
     'VK_EXT_shader_image_atomic_int64',
     'VK_KHR_video_decode_h264',
     'VK_KHR_video_decode_h265',
+    'VK_KHR_video_decode_vp9',
+    'VK_KHR_video_decode_av1',
     'VK_KHR_video_encode_h264',
     'VK_KHR_video_encode_h265',
+    'VK_KHR_video_encode_av1',
     'VK_KHR_external_fence_win32',
     'VK_KHR_external_memory_win32',
     'VK_KHR_external_semaphore_win32',
+    'VK_KHR_index_type_uint8',
     'VK_KHR_shader_atomic_int64',
+    'VK_KHR_shader_bfloat16',
     'VK_KHR_shader_float16_int8',
     'VK_KHR_spirv_1_4',
     'VK_NV_external_memory_win32',
@@ -68,6 +74,10 @@ EXTENSION_API_NAME_EXCEPTIONS = {
     'VkPipelineColorBlendStateCreateFlagBits',
     'VkPipelineDepthStencilStateCreateFlagBits',
     'VkPipelineLayoutCreateFlagBits',
+    'VkComponentTypeKHR',
+    'VkDeviceOrHostAddressKHR',
+    'VkDeviceOrHostAddressConstKHR',
+    'OHNativeWindow',
 }
 
 # These are APIs which contain _RESERVED_ intentionally
@@ -92,6 +102,10 @@ CHECK_MEMBER_PNEXT_OPTIONAL_EXCEPTIONS = (
 CHECK_ARRAY_ENUMERATION_RETURN_CODE_EXCEPTIONS = (
     'vkGetDeviceFaultInfoEXT',
     'vkEnumerateDeviceLayerProperties',
+    'vkGetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI',
+    'vkCreatePipelineBinariesKHR',
+    'vkGetPipelineBinaryDataKHR',
+    'vkConvertCooperativeVectorMatrixNV',
 )
 
 # Exceptions to unknown structure type constants.
@@ -111,20 +125,16 @@ CHECK_TYPE_STYPE_EXCEPTIONS = (
     'VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_SC_1_0_PROPERTIES',
 )
 
+# Exceptions to bitmask types requiring _BIT in their name
+EXTENSION_BITFLAG_WITHOUT_BIT_NAME_EXCEPTIONS = (
+)
+
 def get_extension_commands(reg):
     extension_cmds = set()
     for ext in reg.extensions:
         for cmd in ext.findall('./require/command[@name]'):
             extension_cmds.add(cmd.get('name'))
     return extension_cmds
-
-
-def get_enum_value_names(reg, enum_type):
-    names = set()
-    result_elem = reg.groupdict[enum_type].elem
-    for val in result_elem.findall('./enum[@name]'):
-        names.add(val.get('name'))
-    return names
 
 
 # Regular expression matching an extension name ending in a (possible) version number
@@ -141,6 +151,12 @@ def get_extension_source(extname):
     fn = f'{extname}.adoc'
     return str(SPECIFICATION_DIR / 'appendices' / fn)
 
+def containsWord(name, word):
+    """Check if API name contains the specified word, which must not be
+       imbedded in a longer word.
+       This allows either '..._word_... or '..._word'."""
+
+    return ('_' + word + '_') in name or name.endswith('_' + word)
 
 class EntityDatabase(OrigEntityDatabase):
 
@@ -208,48 +224,10 @@ class Checker(XMLChecker):
         db = EntityDatabase(args)
 
         self.extension_cmds = get_extension_commands(db.registry)
-        self.return_codes = get_enum_value_names(db.registry, 'VkResult')
-        self.structure_types = get_enum_value_names(db.registry, TYPEENUM)
 
         # Dict of entity name to a list of messages to suppress. (Exclude any context data and "Warning:"/"Error:")
         # Keys are entity names, values are tuples or lists of message text to suppress.
         suppressions = {}
-
-        # Structures explicitly allowed to have 'limittype' attributes
-        self.allowedStructs = set((
-            'VkFormatProperties',
-            'VkFormatProperties2',
-            'VkPhysicalDeviceProperties',
-            'VkPhysicalDeviceProperties2',
-            'VkPhysicalDeviceLimits',
-            'VkQueueFamilyProperties',
-            'VkQueueFamilyProperties2',
-            'VkSparseImageFormatProperties',
-            'VkSparseImageFormatProperties2',
-        ))
-
-        # Substructures of allowed structures. This can be found by looking
-        # at tags, but there are so few cases that it is hardwired for now.
-        self.nestedStructs = set((
-            'VkPhysicalDeviceLimits',
-            'VkPhysicalDeviceSparseProperties',
-            'VkPhysicalDeviceProperties',
-            'VkQueueFamilyProperties',
-            'VkSparseImageFormatProperties',
-        ))
-
-        # Structures all of whose (non pNext/sType) members are required to
-        # have 'limittype' attributes, as are their descendants
-        self.requiredStructs = set((
-            'VkPhysicalDeviceProperties',
-            'VkPhysicalDeviceProperties2',
-            'VkPhysicalDeviceLimits',
-            'VkSparseImageFormatProperties',
-            'VkSparseImageFormatProperties2',
-        ))
-
-        # Structures which have already have their limittype attributes validated
-        self.validatedLimittype = set()
 
         # Initialize superclass
         super().__init__(entity_db=db, conventions=conventions,
@@ -262,18 +240,16 @@ class Checker(XMLChecker):
     def check(self):
         """Extends base class behavior with additional checks"""
 
-        # This test is not run on a per-structure basis, but loops over
-        # specific structures
-        self.check_type_required_limittype()
-
         super().check()
 
     def check_command(self, name, info):
         """Extends base class behavior with additional checks"""
 
-        if name[0:5] == 'vkCmd':
+        if name.startswith('vkCmd'):
             if info.elem.get('tasks') is None:
                 self.record_error(f'{name} is a vkCmd* command, but is missing a "tasks" attribute')
+            if info.elem.get('conditionalrendering') is None:
+                self.record_error(f'{name} is a vkCmd* command, but is missing a "conditionalrendering" attribute')
 
         super().check_command(name, info)
 
@@ -292,10 +268,10 @@ class Checker(XMLChecker):
         codes = successcodes.union(errorcodes)
 
         # Check that all return codes are recognized.
-        unrecognized = codes - self.return_codes
-        if unrecognized:
+        unrecognized = [code for code in codes if not self.is_enum_value(code, 'VkResult')]
+        if len(unrecognized) > 0:
             self.record_error('Unrecognized return code(s):',
-                              unrecognized)
+                              ', '.join(unrecognized))
 
         elem = info.elem
         params = [(getElemName(elt), elt) for elt in elem.findall('param')]
@@ -314,17 +290,22 @@ class Checker(XMLChecker):
         if countParams:
             assert(len(countParams) == 1)
             if 'VK_INCOMPLETE' not in successcodes:
-                message = "Apparent enumeration of an array without VK_INCOMPLETE in successcodes for command {}.".format(name)
+                message = f"Apparent enumeration of an array without VK_INCOMPLETE in successcodes for command {name}."
                 if name in CHECK_ARRAY_ENUMERATION_RETURN_CODE_EXCEPTIONS:
                     self.record_warning('(Allowed exception)', message)
                 else:
                     self.record_error(message)
 
         elif 'VK_INCOMPLETE' in successcodes:
-            message = "VK_INCOMPLETE in successcodes of command {} that is apparently not an array enumeration.".format(name)
+            message = f"VK_INCOMPLETE in successcodes of command {name} that is apparently not an array enumeration."
             if name in CHECK_ARRAY_ENUMERATION_RETURN_CODE_EXCEPTIONS:
                 self.record_warning('(Allowed exception)', message)
             else:
+                self.record_error(message)
+
+        for code in (('VK_ERROR_UNKNOWN', 'VK_ERROR_VALIDATION_FAILED')):
+            if code not in errorcodes:
+                message = f'{code} must be present in errorcodes of {name}'
                 self.record_error(message)
 
     def check_param(self, param):
@@ -378,7 +359,7 @@ class Checker(XMLChecker):
         else:
             type_elt = type_elts[0]
             val = type_elt.get('values')
-            if val and val not in self.structure_types:
+            if val and not self.is_enum_value(val, TYPEENUM):
                 message = f'{self.entity} has unknown structure type constant {val}'
                 if val in CHECK_TYPE_STYPE_EXCEPTIONS:
                     self.record_warning('(Allowed exception)', message)
@@ -400,68 +381,67 @@ class Checker(XMLChecker):
                 else:
                     self.record_error(message)
 
-    def __isLimittypeStruct(self, name, info, allowedStructs):
-        """Check if a type element is a structure allowed to have 'limittype' attributes
-           name - name of a structure
-           info - corresponding TypeInfo object
-           allowedStructs - set of struct names explicitly allowed"""
+    def check_type_limittype(self, name, info):
+        """Check whether a struct has 'limittype' attributes for members, if
+           they are required; or does not have them, if not required.
 
-        # Is this an explicitly allowed struct?
-        if name in allowedStructs:
-            return True
+           Relies on the 'requiredlimittype' attribute of the struct.
+           While this has to be set explicitly (or validated against an
+           explicit list) for base structures, their extending structures
+           must be consistent with the parent, as must nested structures."""
 
-        # Is this a struct extending an explicitly allowed struct?
+        self.set_error_context(entity=name, elem=info.elem)
+
+        # Helper
+        def getRequiredLimittype(info):
+            return (info.elem.get('requiredlimittype', 'false') == 'true')
+
+        requiredLimittype = getRequiredLimittype(info)
+
+        # Check consistency with parent structure(s) with
+        # 'requiredlimittype'
         extends = info.elem.get('structextends')
-        if extends is not None:
-            # See if any name in the structextends attribute is an allowed
-            # struct
-            if len(set(extends.split(',')) & allowedStructs) > 0:
-                return True
+        if extends:
+            for parent_name in extends.split(','):
+                parent_info = self.reg.typedict[parent_name]
+                if getRequiredLimittype(parent_info) and not requiredLimittype:
+                    self.record_error(f'{name} missing \'requiredlimittype="true"\' attribute, which must match parent {parent_name}')
 
-        return False
-
-    def __validateStructLimittypes(self, name, info, requiredLimittype):
-        """Validate 'limittype' attributes for a single struct.
-           info - TypeInfo for a struct <type>
-           requiredLimittype - True if members *must* have a limittype"""
-
-        # Do not re-check structures
-        if name in self.validatedLimittype:
-            return {}
-        self.validatedLimittype.add(name)
-
-        limittypeDiags = namedtuple('limittypeDiags', ['missing', 'invalid'])
-        badFields = defaultdict(lambda : limittypeDiags(missing=[], invalid=[]))
+        # Check individual members for consistency with 'requiredlimittype'
         validLimittypes = { 'min', 'max', 'not', 'pot', 'mul', 'bits', 'bitmask', 'range', 'struct', 'exact', 'noauto' }
+
         for member in info.getMembers():
-            memberName = member.findtext('name')
-            if memberName in ['sType', 'pNext']:
+            member_name = member.findtext('name')
+            if member_name in ['sType', 'pNext']:
                 continue
+
             limittype = member.get('limittype')
-            if limittype is None:
-                # Do not tag this as missing if it is not required
-                if requiredLimittype:
-                    badFields[info.elem.get('name')].missing.append(memberName)
-            elif limittype == 'struct':
-                typeName = member.findtext('type')
-                memberType = self.reg.typedict[typeName]
-                badFields.update(self.__validateStructLimittypes(typeName, memberType, requiredLimittype))
-            else:
-                for value in limittype.split(','):
-                    if value not in validLimittypes:
-                        badFields[info.elem.get('name')].invalid.append(memberName)
+            if requiredLimittype:
+                if limittype is None:
+                    self.record_error(f'{name} member {member_name} is missing required \'limittype\' attribute.')
+                elif limittype == 'struct':
+                    # Check nested structures (and their own parents, if
+                    # any) for consistency.
+                    # We do not need to check their individual members here.
+                    type_name = member.findtext('type')
+                    member_info = self.reg.typedict[type_name]
+                    if not getRequiredLimittype(member_info):
+                        self.record_error(f'{type_name} is missing \'requiredlimittype="true"\' attribute, because it is a nested member of {name}.')
+                else:
+                    for value in limittype.split(','):
+                        if value not in validLimittypes:
+                            self.record_error(f'{name} member {member_name} has invalid limittype="{value}".')
+                            continue
 
-        return badFields
-
-    def check_type_disallowed_limittype(self, name, info):
-        """Check if a struct type's members cannot have the 'limittype' attribute"""
-
-        # If not allowed to have limittypes, verify this for each member
-        if not self.__isLimittypeStruct(name, info, self.allowedStructs.union(self.nestedStructs)):
-            for member in info.getMembers():
-                if member.get('limittype') is not None:
-                    memname = member.findtext('name')
-                    self.record_error(f'{name} member {memname} has disallowed limittype attribute')
+                        # Make sure VkBool32 does not use disallowed limit types
+                        # There are many more constraints that could potentially be checked.
+                        type_name = member.findtext('type')
+                        if type_name == 'VkBool32':
+                            if value not in (('exact', 'min', 'max')):
+                                self.record_error(f'{name} member {member_name} has invalid limittype="{value}" for a VkBool32 type. Use "exact", "min", or "max" instead.')
+            elif limittype is not None:
+                # This structure cannot have limittypes
+                self.record_error(f'{name} member {member_name} has a disallowed \'limittype\' attribute, because the structure does not have \'requiredlimittype="true"\'.')
 
     def check_type_optional_value(self, name, info):
         """Check if a struct type's members have disallowed 'optional' attribute values"""
@@ -474,32 +454,61 @@ class Checker(XMLChecker):
                 message = f'{name} member {memname} has disallowed \'optional="false"\' attribute (remove this attribute)'
                 self.record_error(message, elem=member)
 
-    def check_type_required_limittype(self):
-        """Check struct type members which must have the 'limittype' attribute
+    def check_type_bitmask(self, name, info):
+        """Check bitmask types for consistent name and size"""
 
-        Called from check."""
+        if 'Flags' in name:
+            # The corresponding FlagBits type
+            expected_bits_type = name.replace('Flags', 'FlagBits')
 
-        for name in self.allowedStructs:
-            # Assume that only extending structs of structs explicitly
-            # requiring limittypes also require them
-            requiredLimittype = (name in self.requiredStructs)
+            # Flags types may have either a 'require' or 'bitvalues'
+            # attribute
+            bits_attrib = 'requires'
+            bits_type = info.elem.get(bits_attrib)
+            if bits_type is None:
+                # Might be able to use the 'bitvalues' attribute as a proxy for
+                # 64-bit types
+                bits_attrib = 'bitvalues'
+                bits_type = info.elem.get(bits_attrib)
 
-            info = self.reg.typedict[name]
+            if bits_type is not None and expected_bits_type != bits_type:
+                self.record_error(f'{name} has unexpected {bits_attrib} attribute value:'
+                                  f'got {bits_type} but expected {expected_bits_type}')
 
-            self.set_error_context(entity=name, elem=info.elem)
+            # If this is an alias, or a Flags type which does not yet have a
+            # corresponding FlagBits type, skip the size consistency check
+            if info.elem.get('alias') is not None or bits_type is None:
+                return
 
-            badFields = self.__validateStructLimittypes(name, info, requiredLimittype)
-            for extendingStructName in self.reg.validextensionstructs[name]:
-                extendingStruct = self.reg.typedict[extendingStructName]
-                badFields.update(self.__validateStructLimittypes(extendingStructName, extendingStruct, requiredLimittype))
+            # Determine the width of the *Flags type by looking at its
+            # <type>
+            base_type_elem = info.elem.find('.//type')
+            if base_type_elem is None:
+                self.record_error(f'{name} is missing a <type> tag')
+                return
 
-            if badFields:
-                for key in sorted(badFields.keys()):
-                    diags = badFields[key]
-                    if diags.missing:
-                        self.record_error(f'{name} missing limittype for members {", ".join(badFields[key].missing)}')
-                    if diags.invalid:
-                        self.record_error(f'{name} has invalid limittype for members {", ".join(badFields[key].invalid)}')
+            base_type = base_type_elem.text
+
+            if base_type == 'VkFlags':
+                flags_width = '32'
+            elif base_type == 'VkFlags64':
+                flags_width = '64'
+            else:
+                self.record_error(f'flags type {name} has unexpected base type {base_type}, expected VkFlags or VkFlags64')
+                return
+
+            # Look for the corresponding <enums> tag and ensure its width is
+            # consistent with flags_width
+            enums_elem = self.reg.reg.find(f"enums[@name='{bits_type}']")
+            if enums_elem is None:
+                self.record_error(f'Cannot find <enums name="{bits_type}"> element corresponding to {name}')
+                return
+
+            # <enums bitwidth=> attribute defaults to 32 if not present
+            enums_width = enums_elem.get('bitwidth', '32')
+
+            if flags_width != enums_width:
+                self.record_error(f'{name} has size {flags_width} bits which does not match corresponding {bits_type} <enums> with (possibly implicit) bitwidth={enums_width}')
 
     def check_type(self, name, info, category):
         """Check a type's XML data for consistency.
@@ -515,19 +524,14 @@ class Checker(XMLChecker):
                 self.check_type_stype(name, info, type_elts)
                 self.check_type_pnext(name, info)
 
-            # Check for disallowed limittypes on all structures
-            self.check_type_disallowed_limittype(name, info)
+            # Check for consistent 'limittype' attributes
+            self.check_type_limittype(name, info)
 
             # Check for disallowed 'optional' values
             self.check_type_optional_value(name, info)
         elif category == 'bitmask':
-            if 'Flags' in name:
-                expected_require = name.replace('Flags', 'FlagBits')
-                require = info.elem.get('require')
-                if require is not None and expected_require != require:
-                    self.record_error('Unexpected require attribute value:',
-                                      'got', require,
-                                      'but expected', expected_require)
+            self.check_type_bitmask(name, info)
+
         super().check_type(name, info, category)
 
     def check_suffixes(self, name, info, supported, name_exceptions):
@@ -599,8 +603,8 @@ Other exceptions can be added to xml_consistency.py:EXTENSION_API_NAME_EXCEPTION
             alt_authors = set()
             if len(depends) > 0:
                 for name in dependencyNames(depends):
-                    # Skip core versions
-                    if name[0:11] != 'VK_VERSION_':
+                    # Skip core versions and feature dependencies
+                    if not name.startswith('VK_VERSION_') and '::' not in name:
                         # Extract author ID from extension name
                         id = name.split('_')[1]
                         alt_authors.add(id)
@@ -608,6 +612,32 @@ Other exceptions can be added to xml_consistency.py:EXTENSION_API_NAME_EXCEPTION
             check_names(req_elem.findall('./command'), author, alt_authors, name_exceptions)
             check_names(req_elem.findall('./type'), author, alt_authors, name_exceptions)
             check_names(req_elem.findall('./enum'), author, alt_authors, name_exceptions)
+
+    def check_instance_device_dependency(self, name, info, depends):
+        """Check that instance extensions do not have dependencies on device
+           extensions.
+
+           Called from check_extension.
+
+           name - extension name
+           info - extdict entry for name
+           depends - dependency expression to check. May be an empty string.
+                     The check is run for the extension 'depends' as well as
+                     all 'depends' in 'require' blocks."""
+
+        if len(depends) == 0:
+            return
+
+        for depname in dependencyNames(depends):
+            # Skip core versions and feature dependencies
+            if not self.conventions.is_api_version_name(depname) and '::' not in depname:
+                ext_elem = self.reg.reg.find(f"extensions/extension[@name='{depname}']")
+                if ext_elem is None:
+                    self.record_error(f'The dependency name {depname} is not an extension')
+                else:
+                    ext_type = ext_elem.get('type', '')
+                    if ext_type == 'device':
+                        self.record_error(f'Dependency on device extension {depname}')
 
     def check_extension(self, name, info, supported):
         """Check an extension's XML data for consistency.
@@ -635,7 +665,7 @@ Other exceptions can be added to xml_consistency.py:EXTENSION_API_NAME_EXCEPTION
             # Treat the version number as a separate word.
             base = matches.group('base')
             version = matches.group('version')
-            ext_enum_name = base.upper() + '_' + version
+            ext_enum_name = f"{base.upper()}_{version}"
             # Keep track of this case
             ext_versioned_name = True
 
@@ -670,7 +700,8 @@ Other exceptions can be added to xml_consistency.py:EXTENSION_API_NAME_EXCEPTION
             if revisions:
                 ver_from_text = str(max(revisions))
                 if ver_from_xml != ver_from_text:
-                    self.record_error('Version enum mismatch: spec text indicates', ver_from_text,
+                    self.record_error('Version enum mismatch: spec text from', fn,
+                                      'indicates', ver_from_text,
                                       'but XML says', ver_from_xml)
             else:
                 if ver_from_xml == '1':
@@ -688,6 +719,22 @@ Other exceptions can be added to xml_consistency.py:EXTENSION_API_NAME_EXCEPTION
                     self.record_error(enum_name, 'should not contain _RESERVED_ for a supported extension.\n\
 If this is intentional, add it to EXTENSION_NAME_RESERVED_EXCEPTIONS in scripts/xml_consistency.py.')
 
+                # Check for bitflags without _BIT in their name and which
+                # are not old aliases or exceptions.
+                # _NONE is allowed in bitflag names without _BIT as it is
+                # not, in fact, a bitflag but the value '0'.
+                extends = enum.get('extends')
+                if extends and 'FlagBits' in extends and not containsWord(enum_name, 'BIT'):
+                        if containsWord(enum_name, 'NONE'):
+                            continue
+                        if enum.get('deprecated') == 'aliased':
+                            continue
+                        if enum_name in EXTENSION_BITFLAG_WITHOUT_BIT_NAME_EXCEPTIONS:
+                            continue
+
+                        self.record_error(f'{enum_name} extends the bitmask type {extends} but does not contain _BIT\n\
+If this is intentional, either make this name an alias of the correct name and give it the deprecated="aliased" attribute, or add it to EXTENSION_BITFLAG_WITHOUT_BIT_NAME_EXCEPTIONS in scripts/xml_consistency.py.')
+
         name_define = f'{ext_enum_name}_EXTENSION_NAME'
         name_elem = findNamedElem(enums, name_define)
         if name_elem is None:
@@ -700,6 +747,36 @@ If this is intentional, add it to EXTENSION_NAME_RESERVED_EXCEPTIONS in scripts/
                 self.record_error('Incorrect name enum: expected', expected_name,
                                   'got', name_val)
 
+        # Make sure extensions have corresponding features (#3951) unless
+        # tagged otherwise.
+        if supported:
+            # Get the nofeatures attribute.
+            # Defaults to 'false' (a <feature> tag is required) if not set.
+            nofeatures = elem.get('nofeatures', 'false')
+            if nofeatures not in (('true', 'false')):
+                self.record_error(f'<extension nofeatures="{nofeatures}"> attribute must be "true" or "false"')
+
+            # Get <features> tags in the extension
+            features = elem.findall('./require/feature')
+
+            if len(features) == 0:
+                if nofeatures == 'false':
+                    self.record_error('Missing <feature> tag, but the <extension nofeatures="false"> attribute is set (implicitly or explicitly)')
+            else:
+                if nofeatures == 'true':
+                    self.record_error('A <feature> tag is present, but the <extension nofeatures="true"> attribute is set')
+
+        # Check that instance extensions do not have dependencies on device extensions
+        ext_type = elem.get('type')
+        if ext_type == 'instance':
+            depends = elem.get('depends', '')
+            self.check_instance_device_dependency(name, info, depends)
+
+            for req_elem in elem.findall('./require'):
+                depends = req_elem.get('depends', '')
+                self.check_instance_device_dependency(name, info, depends)
+
+        # Check suffixes of new APIs required by this extension
         self.check_suffixes(name, info, supported, { version_name, name_define })
 
         # More general checks

@@ -1,10 +1,11 @@
-// Copyright 2021-2024 The Khronos Group Inc.
+// Copyright 2021-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
 = VK_KHR_video_queue
 :toc: left
-:refpage: https://registry.khronos.org/vulkan/specs/1.2-extensions/man/html/
+:docs: https://docs.vulkan.org/spec/latest/
+:extensions: {docs}appendices/extensions.html#
 :sectnums:
 
 This document outlines a proposal to enable performing video coding operations in Vulkan.
@@ -697,7 +698,7 @@ vkGetPhysicalDeviceVideoFormatPropertiesKHR(physicalDevice, &formatInfo, &format
 VkVideoFormatPropertiesKHR* formatProps = calloc(formatCount, sizeof(VkVideoFormatPropertiesKHR));
 
 for (uint32_t i = 0; i < formatCount; ++i) {
-    formatProps.sType = VK_STRUCTURE_TYPE_VIDEO_FORMAT_PROPERTIES_KHR;
+    formatProps[i].sType = VK_STRUCTURE_TYPE_VIDEO_FORMAT_PROPERTIES_KHR;
 }
 
 vkGetPhysicalDeviceVideoFormatPropertiesKHR(physicalDevice, &formatInfo, &formatCount, formatProps);
@@ -744,7 +745,7 @@ vkGetVideoSessionMemoryRequirementsKHR(device, videoSession, &memReqCount, NULL)
 VkVideoSessionMemoryRequirementsKHR* memReqs = calloc(memReqCount, sizeof(VkVideoSessionMemoryRequirementsKHR));
 
 for (uint32_t i = 0; i < memReqCount; ++i) {
-    memReqs.sType = VK_STRUCTURE_TYPE_VIDEO_SESSION_MEMORY_REQUIREMENTS_KHR;
+    memReqs[i].sType = VK_STRUCTURE_TYPE_VIDEO_SESSION_MEMORY_REQUIREMENTS_KHR;
 }
 
 vkGetVideoSessionMemoryRequirementsKHR(device, videoSession, &memReqCount, memReqs);

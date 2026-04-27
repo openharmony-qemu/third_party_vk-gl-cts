@@ -1,10 +1,11 @@
-// Copyright 2021-2024 The Khronos Group Inc.
+// Copyright 2021-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
 = VK_KHR_video_encode_queue
 :toc: left
-:refpage: https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/
+:docs: https://docs.vulkan.org/spec/latest/
+:extensions: {docs}appendices/extensions.html#
 :sectnums:
 
 This document outlines a proposal to enable performing video encode operations in Vulkan.
@@ -204,7 +205,6 @@ The image subresource backing the encode input picture has to be in the new `VK_
 Accordingly, `pSetupReferenceSlot` must never be `NULL`, except when the video session was created without any DPB slots.
 
 [NOTE]
-.Note
 ====
 The original version of this extension only required the specification of the reconstructed picture information (i.e. a non-`NULL` `pSetupReferenceSlot`) when the application intended to set up a reference picture by activating a DPB slot. Consequently, the presence of reconstructed picture information always implied DPB slot activation. This was changed in revision 12 of the extension, and whether DPB slot activation happens is now subject to codec-specific semantics. More details on this change are discussed in the corresponding issue in this proposal document.
 ====
@@ -239,7 +239,7 @@ If the video profile in use requires additional codec-specific parameters for th
 
 Encoder implementations usually only support a subset of the available encoding tools defined by the corresponding video compression standards. This may prevent some implementation from being able to respect certain codec-specific parameters, or specific parameter values.
 
-Enumerating exhaustively all of these constraints and potentially defining application queryable capabilities corresponding to those is not practical, as it would potentially require separate capabilities for almost every single codec-specific parameter, parameter value, and combinations of those, as usually there are complicated interactions between those codec-specific parameters. Instead, this proposal approaches this problem from the other direction.
+Enumerating exhaustively all of these constraints and potentially defining application-queryable capabilities corresponding to those is not practical, as it would potentially require separate capabilities for almost every single codec-specific parameter, parameter value, and combinations of those, as usually there are complicated interactions between those codec-specific parameters. Instead, this proposal approaches this problem from the other direction.
 
 Instead of defining capabilities for each of these constraints, implementations are allowed to override codec-specific parameter values or combinations thereof, so that the resulting overridden codec-specific parameters now comply to the constraints of the target implementation. This has multiple benefits:
 
@@ -307,7 +307,7 @@ When this feedback indicates that implementation overrides were applied, the app
 
 The application can choose to use the `vkGetEncodedVideoSessionParametersKHR` command to encode the video session parameters even if the implementation did not override any of the parameters, but in this case it can also choose to encode the respective bitstream elements on its own.
 
-It is worth calling out though that if the application does not use this command to determine whether video session parameter overrides happened or does not use the encoded parameters retrievable using this command when video session parameter overrides happened, but rather just encodes the respective bitstream elements with its own choice of codec-specific parameters, then it risks the resulting video bitstream to end up being non-compliant to the video compression standard.
+It is worth calling out though that if the application does not use this command to determine whether video session parameter overrides happened or does not use the encoded parameters retrievable using this command when video session parameter overrides happened, but rather just encodes the respective bitstream elements with its own choice of codec-specific parameters, then it risks the resulting video bitstream to end up being non-compliant with the video compression standard.
 
 
 === Capabilities
@@ -658,7 +658,7 @@ formatInfo.imageUsage = VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR;
 vkGetPhysicalDeviceVideoFormatPropertiesKHR(physicalDevice, &formatInfo, &formatCount, NULL);
 formatProps = calloc(formatCount, sizeof(VkVideoFormatPropertiesKHR));
 for (uint32_t i = 0; i < formatCount; ++i) {
-    formatProps.sType = VK_STRUCTURE_TYPE_VIDEO_FORMAT_PROPERTIES_KHR;
+    formatProps[i].sType = VK_STRUCTURE_TYPE_VIDEO_FORMAT_PROPERTIES_KHR;
 }
 vkGetPhysicalDeviceVideoFormatPropertiesKHR(physicalDevice, &formatInfo, &formatCount, formatProps);
 
@@ -674,7 +674,7 @@ formatInfo.imageUsage = VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR;
 vkGetPhysicalDeviceVideoFormatPropertiesKHR(physicalDevice, &formatInfo, &formatCount, NULL);
 formatProps = calloc(formatCount, sizeof(VkVideoFormatPropertiesKHR));
 for (uint32_t i = 0; i < formatCount; ++i) {
-    formatProps.sType = VK_STRUCTURE_TYPE_VIDEO_FORMAT_PROPERTIES_KHR;
+    formatProps[i].sType = VK_STRUCTURE_TYPE_VIDEO_FORMAT_PROPERTIES_KHR;
 }
 vkGetPhysicalDeviceVideoFormatPropertiesKHR(physicalDevice, &formatInfo, &formatCount, formatProps);
 
@@ -1306,7 +1306,7 @@ Such minimal and necessary implementation overrides are expected to be applied o
 
 === RESOLVED: Can the application disable all implementation overrides?
 
-No. Without the ability to override codec-specific parameters, as necessitated by the constraints of the target implementation, the implementation may not be able to guarantee that the generated bitstreams will be compliant to the video compression standard in question.
+No. Without the ability to override codec-specific parameters, as necessitated by the constraints of the target implementation, the implementation may not be able to guarantee that the generated bitstreams will be compliant with the video compression standard in question.
 
 Accordingly, if the API would allow the application to disable all implementation overrides, that would, for all practical purposes, be equivalent to a flag enabling undefined behavior from the perspective of video compression standard compliance.
 
@@ -1377,3 +1377,4 @@ Currently the following layered extensions are available:
 
   * `VK_KHR_video_encode_h264` - adds support for encoding H.264/AVC video sequences
   * `VK_KHR_video_encode_h265` - adds support for encoding H.265/HEVC video sequences
+  * `VK_KHR_video_encode_av1` - adds support for encoding AV1 video sequences

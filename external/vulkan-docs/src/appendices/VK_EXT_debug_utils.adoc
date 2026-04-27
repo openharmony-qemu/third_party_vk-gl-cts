@@ -1,4 +1,4 @@
-// Copyright 2017-2024 The Khronos Group Inc.
+// Copyright 2017-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -76,14 +76,14 @@ include::{generated}/interfaces/VK_EXT_debug_utils.adoc[]
 `VK_EXT_debug_utils` allows an application to register multiple callbacks
 with any Vulkan component wishing to report debug information.
 Some callbacks may log the information to a file, others may cause a debug
-break point or other application defined behavior.
+break point or other application-defined behavior.
 An application can: register callbacks even when no validation layers are
 enabled, but they will only be called for loader and, if implemented, driver
 events.
 
 To capture events that occur while creating or destroying an instance an
 application can: link a slink:VkDebugUtilsMessengerCreateInfoEXT structure
-to the pname:pNext element of the slink:VkInstanceCreateInfo structure given
+to the pname:pNext chain of the slink:VkInstanceCreateInfo structure passed
 to flink:vkCreateInstance.
 
 Example uses: Create three callback objects.

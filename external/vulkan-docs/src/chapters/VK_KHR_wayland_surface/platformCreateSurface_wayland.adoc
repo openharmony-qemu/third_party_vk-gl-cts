@@ -1,4 +1,4 @@
-// Copyright 2014-2024 The Khronos Group Inc.
+// Copyright 2014-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -86,6 +86,13 @@ by the use of Wayland proxy object wrappers, to avoid race conditions.
 If the application wishes to synchronize any window changes with a
 particular frame, such requests must: be sent to the Wayland display server
 prior to calling flink:vkQueuePresentKHR.
+
+ifdef::VK_EXT_swapchain_colorspace[]
+The implementation must: ensure that no code:wp_color_management_surface_v1
+object exists for a surface, which has no swapchains, or only swapchains
+with a pname:imageColorSpace of ename:VK_COLOR_SPACE_PASS_THROUGH_EXT
+associated with it.
+endif::VK_EXT_swapchain_colorspace[]
 
 [open,refpage='VkWaylandSurfaceCreateFlagsKHR',desc='Reserved for future use',type='flags']
 --

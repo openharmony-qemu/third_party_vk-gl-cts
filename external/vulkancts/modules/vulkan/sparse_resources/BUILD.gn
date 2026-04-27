@@ -61,6 +61,16 @@ ohos_source_set("deqp_vk_sparse_resources_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/sparse_resources/vktSparseResourcesTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/sparse_resources/vktSparseResourcesTestsUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/sparse_resources/vktSparseResourcesTestsUtil.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/sparse_resources/vktSparseResourcesBufferRebind.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/sparse_resources/vktSparseResourcesBufferRebind.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/sparse_resources/vktSparseResourcesImageRebind.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/sparse_resources/vktSparseResourcesImageRebind.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/sparse_resources/vktSparseResourcesMultisampledImageSparseBinding.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/sparse_resources/vktSparseResourcesMultisampledImageSparseBinding.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/sparse_resources/vktSparseResourcesMultisampledImageSparseResidency.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/sparse_resources/vktSparseResourcesMultisampledImageSparseResidency.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/sparse_resources/vktSparseResourcesTransferQueueTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/sparse_resources/vktSparseResourcesTransferQueueTests.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs

@@ -27,9 +27,6 @@ ohos_source_set("deqp_vk_fragment_ops_source") {
   sources = [
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_ops/vktFragmentOperationsEarlyFragmentTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_ops/vktFragmentOperationsEarlyFragmentTests.hpp",
-
-    #"//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_ops/vktFragmentOperationsMakeUtil.cpp",
-    #"//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_ops/vktFragmentOperationsMakeUtil.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_ops/vktFragmentOperationsOcclusionQueryTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_ops/vktFragmentOperationsOcclusionQueryTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/fragment_ops/vktFragmentOperationsScissorMultiViewportTests.cpp",

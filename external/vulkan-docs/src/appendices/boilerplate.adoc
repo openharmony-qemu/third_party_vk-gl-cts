@@ -1,4 +1,4 @@
-// Copyright 2016-2024 The Khronos Group Inc.
+// Copyright 2016-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -137,8 +137,8 @@ define this type.
 Applications that do not make use of window system-specific extensions may
 simply include `{core_header}` instead of `{full_header}`, although there is
 usually no reason to do so.
-In addition to the Vulkan API, `{core_header}` also defines a small number
-of C preprocessor macros that are described below.
+In addition to the Vulkan API, `{core_header}` also defines and / or uses a
+small number of C preprocessor macros that are described below.
 
 ifdef::VKSC_VERSION_1_0[]
 `{core_header_hpp}` provides the same functionality as `{core_header}`, but
@@ -147,6 +147,37 @@ In contrast, `{core_header}` is aligned for compliance with MISRA C:2012.
 endif::VKSC_VERSION_1_0[]
 
 
+==== Vulkan Header File Compile Time Controls
+
+[open,refpage='VK_NO_PROTOTYPES',desc='Vulkan header file prototype inclusion control',type='freeform',xrefs='VK_ONLY_EXPORTED_PROTOTYPES']
+--
+If the dname:VK_NO_PROTOTYPES macro is defined by an application at compile
+time, prototypes for Vulkan APIs will not be included.
+Only typedefs for API function pointers will be defined.
+
+This is intended for applications using their own function loader and
+dispatch mechanism.
+
+If the macro is not defined by the application, prototypes for Vulkan APIs
+will be included.
+--
+
+[open,refpage='VK_ONLY_EXPORTED_PROTOTYPES',desc='Vulkan header file exported prototype inclusion control',type='freeform',xrefs='VK_NO_PROTOTYPES']
+--
+If the dname:VK_ONLY_EXPORTED_PROTOTYPES macro is defined by an application
+at compile time, only prototypes for Vulkan APIs tagged as `"exported"`in
+the API XML will be included.
+For non-tagged APIs, only typedefs for API function pointers will be
+defined.
+
+This is intended to match APIs which are statically exported by the Vulkan
+loader.
+At present, the exported APIs are only those defined by Vulkan core
+versions.
+
+If the macro is not defined by the application, prototypes for all Vulkan
+APIs will be included.
+--
 
 
 ==== Vulkan Header File Version Number
@@ -187,6 +218,7 @@ include::{generated}/api/defines/VK_API_VERSION.adoc[]
 --
 endif::VKSC_VERSION_1_0[]
 
+
 ==== Vulkan Handle Macros
 
 [open,refpage='VK_DEFINE_HANDLE',desc='Declare a dispatchable object handle',type='defines',xrefs='VkCommandBuffer VkDevice VkInstance VkPhysicalDevice VkQueue']
@@ -214,7 +246,6 @@ include::{generated}/api/defines/VK_DEFINE_NON_DISPATCHABLE_HANDLE.adoc[]
 Most Vulkan handle types, such as slink:VkBuffer, are non-dispatchable.
 
 [NOTE]
-.Note
 ====
 The `{core_header}` header allows the
 dlink:VK_DEFINE_NON_DISPATCHABLE_HANDLE and dlink:VK_NULL_HANDLE definitions
@@ -253,7 +284,6 @@ or any other value to use a 64-bit unsigned integer type.
 include::{generated}/api/defines/VK_USE_64_BIT_PTR_DEFINES.adoc[]
 
 [NOTE]
-.Note
 ====
 The `{core_header}` header allows the dname:VK_USE_64_BIT_PTR_DEFINES
 definition to be overridden by the application.
@@ -265,7 +295,6 @@ configuration.
 
 ifndef::VKSC_VERSION_1_0[]
 [NOTE]
-.Note
 ====
 This macro was introduced starting with the Vulkan 1.2.174 headers, and its
 availability can be checked at compile time by requiring
@@ -337,6 +366,7 @@ the <<boilerplate-wsi-header-table,following table>>.
   `apiext:VK_GGP_frame_token`           | Google Games Platform  | `vulkan_ggp.h`           | <ggp_c/vulkan_types.h>     | dname:VK_USE_PLATFORM_GGP
 | `apiext:VK_MVK_ios_surface`           | iOS                    | `vulkan_ios.h`           | None                       | dname:VK_USE_PLATFORM_IOS_MVK
 | `apiext:VK_MVK_macos_surface`         | macOS                  | `vulkan_macos.h`         | None                       | dname:VK_USE_PLATFORM_MACOS_MVK
+| `apiext:VK_OHOS_surface`              | OHOS                   | `vulkan_ohos.h`          | None                       | dname:VK_USE_PLATFORM_OHOS
 | `apiext:VK_NN_vi_surface`             | VI                     | `vulkan_vi.h`            | None                       | dname:VK_USE_PLATFORM_VI_NN
 | `apiext:VK_FUCHSIA_imagepipe_surface` | Fuchsia                | `vulkan_fuchsia.h`       | `<zircon/types.h>`         | dname:VK_USE_PLATFORM_FUCHSIA
 | `apiext:VK_EXT_metal_surface`         | Metal on CoreAnimation | `vulkan_metal.h`         | None                       | dname:VK_USE_PLATFORM_METAL_EXT
@@ -349,7 +379,6 @@ endif::VKSC_VERSION_1_0[]
 |====
 
 [NOTE]
-.Note
 ====
 This section describes the purpose of the headers independently of the
 specific underlying functionality of the window system extensions
@@ -378,7 +407,6 @@ headers>>: before including `vulkan_beta.h`, applications must: include
 `{core_header}`.
 
 [NOTE]
-.Note
 ====
 Sometimes a provisional extension will include a subset of its interfaces in
 `{core_header}`.
@@ -389,13 +417,13 @@ All other interfaces of that provisional extension which are not aliased
 will be included in `vulkan_beta.h`.
 ====
 
+[[VK_ENABLE_BETA_EXTENSIONS]]
 As a convenience for applications, `{full_header}` conditionally includes
 `vulkan_beta.h`.
 Applications can: control inclusion of `vulkan_beta.h` by #defining the
 macro etext:VK_ENABLE_BETA_EXTENSIONS before including `{full_header}`.
 
 [NOTE]
-.Note
 ====
 Starting in version 1.2.171 of the Specification, all provisional enumerants
 are protected by the macro etext:VK_ENABLE_BETA_EXTENSIONS.
@@ -405,7 +433,6 @@ This is a minor change to behavior, affecting only provisional extensions.
 ====
 
 [NOTE]
-.Note
 ====
 This section describes the purpose of the provisional header independently
 of the specific provisional extensions which are contained in that header at
@@ -448,5 +475,10 @@ associated with the externally-provided video compression standards.
 | `vulkan_video_codec_h265std`        | ITU-T H.265 common definitions          | `<vk_video/vulkan_video_codec_h265std.h>`        | apiext:VK_KHR_video_decode_h265, apiext:VK_KHR_video_encode_h265
 | `vulkan_video_codec_h265std_decode` | ITU-T H.265 decode-specific definitions | `<vk_video/vulkan_video_codec_h265std_decode.h>` | apiext:VK_KHR_video_decode_h265
 | `vulkan_video_codec_h265std_encode` | ITU-T H.265 encode-specific definitions | `<vk_video/vulkan_video_codec_h265std_encode.h>` | apiext:VK_KHR_video_encode_h265
+| `vulkan_video_codec_vp9std`         | VP9 common definitions                  | `<vk_video/vulkan_video_codec_vp9std.h>`         | apiext:VK_KHR_video_decode_vp9
+| `vulkan_video_codec_vp9std_decode`  | VP9 decode-specific definitions         | `<vk_video/vulkan_video_codec_vp9std_decode.h>`  | apiext:VK_KHR_video_decode_vp9
+| `vulkan_video_codec_av1std`         | AV1 common definitions                  | `<vk_video/vulkan_video_codec_av1std.h>`         | apiext:VK_KHR_video_decode_av1
+| `vulkan_video_codec_av1std_decode`  | AV1 decode-specific definitions         | `<vk_video/vulkan_video_codec_av1std_decode.h>`  | apiext:VK_KHR_video_decode_av1
+| `vulkan_video_codec_av1std_encode`  | AV1 encode-specific definitions         | `<vk_video/vulkan_video_codec_av1std_encode.h>`  | apiext:VK_KHR_video_encode_av1
 |====
 endif::VKSC_VERSION_1_0[]

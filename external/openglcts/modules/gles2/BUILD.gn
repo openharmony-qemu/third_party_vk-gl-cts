@@ -33,7 +33,7 @@ ohos_source_set("glcts-es2_source") {
   ]
   include_dirs = [
     "//third_party/zlib/src",
-    "//third_party/spirv-headers/include",
+    "//third_party/vk-gl-cts/external/spirv-headers/src/include",
 
     #"//third_party/vk-gl-cts/external/amber",
     #"//third_party/vk-gl-cts/external/renderdoc/src",
@@ -49,9 +49,9 @@ ohos_source_set("glcts-es2_source") {
     "//third_party/vk-gl-cts/external/openglcts/modules/glesext",
     "//third_party/vk-gl-cts/external/openglcts/modules/.",
     "//third_party/vk-gl-cts/modules/glshared",
-    "//third_party/glslang/glslang",
-    "//third_party/glslang/SPIRV",
-    "//third_party/spirv-tools/include",
+    "//third_party/vk-gl-cts/external/glslang/src/glslang",
+    "//third_party/vk-gl-cts/external/glslang/src/SPIRV",
+    "//third_party/vk-gl-cts/external/spirv-tools/src/include",
   ]
   include_dirs += deqp_common_include_dirs
 

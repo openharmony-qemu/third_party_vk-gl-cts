@@ -30,6 +30,8 @@ set(DEQP_VK_VKSC_RENDER_PASS_SRCS
 	vktRenderPassUnusedClearAttachmentTests.hpp
 	vktRenderPassMultipleSubpassesMultipleCommandBuffersTests.cpp
 	vktRenderPassMultipleSubpassesMultipleCommandBuffersTests.hpp
+	vktRenderPassRemainingArrayLayersTests.cpp
+	vktRenderPassRemainingArrayLayersTests.hpp
 	)
 
 set(DEQP_VK_RENDER_PASS_SRCS
@@ -43,6 +45,8 @@ set(DEQP_VK_RENDER_PASS_SRCS
 	vktRenderPassDitheringTests.hpp
 	vktDynamicRenderingTests.cpp
 	vktDynamicRenderingTests.hpp
+	vktDynamicRenderingLocalReadTests.cpp
+	vktDynamicRenderingLocalReadTests.hpp
 	vktRenderPassDepthStencilWriteConditionsTests.cpp
 	vktRenderPassDepthStencilWriteConditionsTests.hpp
 	vktRenderPassSubpassMergeFeedbackTests.cpp
@@ -51,12 +55,16 @@ set(DEQP_VK_RENDER_PASS_SRCS
 	vktDynamicRenderingRandomTests.hpp
 	vktDynamicRenderingUnusedAttachmentsTests.cpp
 	vktDynamicRenderingUnusedAttachmentsTests.hpp
+	vktDynamicRenderingDepthStencilResolveTests.cpp
+	vktDynamicRenderingDepthStencilResolveTests.hpp
+	vktRenderPassNestedCommandBuffersTests.cpp
+	vktRenderPassNestedCommandBuffersTests.hpp
 	)
 
 PCH(DEQP_VK_RENDER_PASS_SRCS ../pch.cpp)
 
 add_library(deqp-vk-render-pass STATIC ${DEQP_VK_VKSC_RENDER_PASS_SRCS} ${DEQP_VK_RENDER_PASS_SRCS})
-target_link_libraries(deqp-vk-render-pass tcutil vkutil deqp-vk-draw)
+target_link_libraries(deqp-vk-render-pass deqp-vk-pipeline-util tcutil vkutil deqp-vk-draw)
 
 add_library(deqp-vksc-render-pass STATIC ${DEQP_VK_VKSC_RENDER_PASS_SRCS})
-target_link_libraries(deqp-vksc-render-pass PUBLIC deqp-vksc-util tcutil vkscutil deqp-vksc-draw)
+target_link_libraries(deqp-vksc-render-pass PUBLIC deqp-vksc-util deqp-vksc-pipeline-util tcutil vkscutil deqp-vksc-draw)

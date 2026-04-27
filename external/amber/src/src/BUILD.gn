@@ -31,7 +31,7 @@ config("amber_config") {
     "-Wno-c++98-compat-pedantic",
     "-Wno-format-pedantic",
     "-Wno-unknown-warning-option",
-    "-std=gnu++11",
+    "-std=gnu++14",
   ]
 
   defines = deqp_common_defines
@@ -55,6 +55,7 @@ config("amber_config") {
 #lib OSDependent
 ohos_source_set("amber_source") {
   sources = [
+    "//third_party/vk-gl-cts/external/amber/src/src/acceleration_structure.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/amber.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/amberscript/parser.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/buffer.cc",
@@ -96,7 +97,7 @@ ohos_source_set("amber_source") {
     "//third_party/vk-gl-cts/framework/delibs/deutil",
     "//third_party/vk-gl-cts/framework/delibs/destream",
     "//third_party/zlib",
-    "//third_party/spirv-headers/include",
+    "//third_party/vk-gl-cts/external/spirv-headers/src/include",
     "//third_party/vk-gl-cts/external/amber/src/include",
     "//third_party/vk-gl-cts/external/amber/src",
     "//third_party/vk-gl-cts/external/amber/src/src",

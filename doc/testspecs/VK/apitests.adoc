@@ -68,7 +68,7 @@ tcu::TestStatus createSamplerTest (Context& context)
         const struct VkSamplerCreateInfo        samplerInfo =
         {
             VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,  //  VkStructureType sType;
-            DE_NULL,                                //  const void*     pNext;
+            nullptr,                                //  const void*     pNext;
             VK_TEX_FILTER_NEAREST,                  //  VkTexFilter     magFilter;
             VK_TEX_FILTER_NEAREST,                  //  VkTexFilter     minFilter;
             VK_TEX_MIPMAP_MODE_BASE,                //  VkTexMipmapMode mipMode;
@@ -76,7 +76,7 @@ tcu::TestStatus createSamplerTest (Context& context)
             VK_TEX_ADDRESS_CLAMP,                   //  VkTexAddress    addressV;
             VK_TEX_ADDRESS_CLAMP,                   //  VkTexAddress    addressW;
             0.0f,                                   //  float           mipLodBias;
-            0u,                                     //  deUint32        maxAnisotropy;
+            0u,                                     //  uint32_t        maxAnisotropy;
             VK_COMPARE_OP_ALWAYS,                   //  VkCompareOp     compareOp;
             0.0f,                                   //  float           minLod;
             0.0f,                                   //  float           maxLod;

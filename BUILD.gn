@@ -17,7 +17,7 @@ import("//build/ohos.gni")
 
 group("deqp") {
   deps = [
-    "//third_party/glslang:glslang",
+    "//third_party/vk-gl-cts/external/glslang/src:glslang",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",  #deps
                                                                 # openglcts/modules/glesext
     "//third_party/vk-gl-cts/framework/delibs/debase:libdeqp_debase",

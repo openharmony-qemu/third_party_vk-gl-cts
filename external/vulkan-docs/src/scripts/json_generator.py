@@ -1,6 +1,6 @@
-#!/usr/bin/python3 -i
+#!/usr/bin/env python3 -i
 #
-# Copyright 2020-2024 The Khronos Group Inc.
+# Copyright 2020-2025 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -16,7 +16,7 @@ from generator import (GeneratorOptions, OutputGenerator, noneStr,
 
 copyright = """
 /*
- * Copyright 2021-2024 The Khronos Group Inc.
+ * Copyright 2021-2025 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,12 +97,12 @@ static void dumpPNextChain(const void* pNext);
 static void print_size_t(const size_t* o, const std::string& s, bool commaNeeded=true)
 {
     PRINT_SPACE
-    _OUT << \"\\\"\" << s << \"\\\"\" << \" : \" << static_cast<%s>(*o) << (commaNeeded ? \",\" : \"\") << std::endl;\\
+    _OUT << \"\\\"\" << s << \"\\\"\" << \" : \" << static_cast<uint32_t>(*o) << (commaNeeded ? \",\" : \"\") << std::endl;\\
 }
 static void print_size_t(size_t o, const std::string& s, bool commaNeeded=true)
 {
     PRINT_SPACE
-    _OUT << \"\\\"\" << s << \"\\\"\" << \" : \" << static_cast<%s>(o) << (commaNeeded ? \",\" : \"\") << std::endl;\\
+    _OUT << \"\\\"\" << s << \"\\\"\" << \" : \" << static_cast<uint32_t>(o) << (commaNeeded ? \",\" : \"\") << std::endl;\\
 }
 """
 
@@ -118,10 +118,10 @@ encodeBase64CodeCTS = """
 class Base64Formatter
 {
 public:
-	const deUint8*	data;
+	const uint8_t*	data;
 	int				numBytes;
 
-	Base64Formatter(const deUint8* data_, int numBytes_) : data(data_), numBytes(numBytes_) {}
+	Base64Formatter(const uint8_t* data_, int numBytes_) : data(data_), numBytes(numBytes_) {}
 };
 
 std::ostream& operator<< (std::ostream& str, const Base64Formatter& fmt)
@@ -135,7 +135,7 @@ std::ostream& operator<< (std::ostream& str, const Base64Formatter& fmt)
 		'0','1','2','3','4','5','6','7','8','9','+','/'
 	};
 
-	const deUint8*	data = fmt.data;
+	const uint8_t*	data = fmt.data;
 	int				numBytes = fmt.numBytes;
 	int				srcNdx = 0;
 
@@ -145,9 +145,9 @@ std::ostream& operator<< (std::ostream& str, const Base64Formatter& fmt)
 	while (srcNdx < numBytes)
 	{
 		int		numRead = de::min(3, numBytes - srcNdx);
-		deUint8	s0 = data[srcNdx];
-		deUint8	s1 = (numRead >= 2) ? data[srcNdx + 1] : 0;
-		deUint8	s2 = (numRead >= 3) ? data[srcNdx + 2] : 0;
+		uint8_t	s0 = data[srcNdx];
+		uint8_t	s1 = (numRead >= 2) ? data[srcNdx + 1] : 0;
+		uint8_t	s2 = (numRead >= 3) ? data[srcNdx + 2] : 0;
 		char	d[4];
 
 		srcNdx += numRead;
@@ -167,13 +167,13 @@ std::ostream& operator<< (std::ostream& str, const Base64Formatter& fmt)
 	return str;
 }
 
-inline Base64Formatter toBase64(const deUint8* bytes, int numBytes) {return Base64Formatter(bytes, numBytes); }
+inline Base64Formatter toBase64(const uint8_t* bytes, int numBytes) {return Base64Formatter(bytes, numBytes); }
 
 static void print_void_data(const void * o, int oSize, const std::string& s, bool commaNeeded=true)
 {
 	if (o != NULL && oSize != 0)
 	{
-		PRINT_SPACE _OUT << "\\\"" << s << "\\\"" << " : " << "\\\"" << toBase64((deUint8*)o, oSize) << "\\\"" << (commaNeeded ? "," : "") << std::endl;
+		PRINT_SPACE _OUT << "\\\"" << s << "\\\"" << " : " << "\\\"" << toBase64((uint8_t*)o, oSize) << "\\\"" << (commaNeeded ? "," : "") << std::endl;
 	}
 	else
 	{
@@ -334,7 +334,7 @@ class JSONOutputGenerator(OutputGenerator):
 
             # Some special handling needed here.
             if baseType == 'char':
-                write("static void print_%s(const %s * const* o, const std::string& s, bool commaNeeded=true)\n" %(baseType, self.baseTypeListMap[baseType]) +
+                write(f"static void print_{baseType}(const {baseType} * const* o, const std::string& s, bool commaNeeded=true)\n" +
                   "{\n"                                                                                                           						+
                   "    PRINT_STR(commaNeeded)\n"                                                                                  						+
                   "}\n"
@@ -355,7 +355,7 @@ class JSONOutputGenerator(OutputGenerator):
                 printStr +="		PRINT_VAL(commaNeeded)\n"
                 printStr +="	}\n"
 
-            write("static void print_%s(%s o, const std::string& s, bool commaNeeded=true)\n" %(baseType, self.baseTypeListMap[baseType]) +
+            write(f"static void print_{baseType}({baseType} o, const std::string& s, bool commaNeeded=true)\n" +
                   "{\n"                                                                                        						 +
                   printStr                                                                                     						 +
                   "}\n"
@@ -379,7 +379,7 @@ class JSONOutputGenerator(OutputGenerator):
                 printStr +="		PRINT_VAL(commaNeeded)\n"
                 printStr +="	}\n"
 
-            write("static void print_%s(const %s * o, const std::string& s, bool commaNeeded=true)\n" %(baseType, self.baseTypeListMap[baseType]) +
+            write(f"static void print_{baseType}(const {baseType} * o, const std::string& s, bool commaNeeded=true)\n" +
                   "{\n"                                                                                                						 +
                   printStr                                                                                             						 +
                   "}\n"
@@ -492,8 +492,8 @@ class JSONOutputGenerator(OutputGenerator):
                     for m in members:
                             n = type.get('name')
                             if m.get('values') and (n in self.vkFeatureLayerList):
-                                code += "             case %s:" %(m.get('values'))
-                                code += "print_%s((%s *) pNext, \"%s\", true);\n" %(n, n, n)
+                                code += f"             case {m.get('values')}:"
+                                code += f"print_{n}(({n} *) pNext, \"{n}\", true);\n"
                                 code += "             break;\n"
 
         code += "             default: assert(false); // No structure type matching\n"
@@ -515,25 +515,9 @@ class JSONOutputGenerator(OutputGenerator):
 
         self.isCTS = genOpts.isCTS
 
-        self.baseTypeListMap  = {
-                                  "int32_t"   : "deInt32" if self.isCTS else "int32_t",
-                                  "uint32_t"  : "deUint32" if self.isCTS else "uint32_t",
-                                  "uint8_t"   : "deUint8" if self.isCTS else "uint8_t",
-                                  "uint64_t"  : "deUint64" if self.isCTS else "uint64_t",
-                                  "float"     : "float",
-                                  "int"       : "int",
-                                  "double"    : "double",
-                                  "int64_t"   : "deInt64" if self.isCTS else "int64_t",
-                                  "uint16_t"  : "deUint16" if self.isCTS else "uint16_t",
-                                  "char"      : "char"
-                                }
-
         write(headerGuardTop, file=self.outFile, end='')
         write(copyright, file=self.outFile)
-        if self.isCTS:
-            write(predefinedCode % ("deUint32", "deUint32"), file=self.outFile)
-        else:
-            write(predefinedCode % ("uint32_t", "uint32_t"), file=self.outFile)
+        write(predefinedCode, file=self.outFile)
         self.printBaseTypes()
         if self.isCTS:
             write(encodeBase64CodeCTS, file=self.outFile)
@@ -554,7 +538,7 @@ class JSONOutputGenerator(OutputGenerator):
     def endFeature(self):
         if self.emit:
             if self.feature_not_empty:
-                if self.genOpts.conventions.writeFeature(self.featureExtraProtect, self.genOpts.filename):
+                if self.genOpts.conventions.writeFeature(self.featureName, self.featureExtraProtect, self.genOpts.filename):
 
                     for section in self.TYPE_SECTIONS:
                         contents = self.sections[section]
@@ -627,9 +611,9 @@ class JSONOutputGenerator(OutputGenerator):
             code += "         if (b[i] == 1) {\n"
             code += "             bitCount++;\n"
             code += "             if (bitCount < b.count())\n"
-            code += "                 _OUT << %s_map[1ULL<<i] << \" | \";\n" %(mapName)
+            code += f"                 _OUT << {mapName}_map[1ULL<<i] << \" | \";\n"
             code += "             else\n"
-            code += "                 _OUT << %s_map[1ULL<<i];\n" %(mapName)
+            code += f"                 _OUT << {mapName}_map[1ULL<<i];\n"
             code += "         }\n"
             code += "     }\n"
             code += "     if (commaNeeded)\n"
@@ -671,19 +655,16 @@ class JSONOutputGenerator(OutputGenerator):
                 for elem in typeElem:
                     if elem.tag == 'name':
                         body += self.genBitmaskCode("", " obj,", elem.text, typeElem.get('requires'))
-                        body += self.genBitmaskCode("const ", " * obj,", elem.text, typeElem.get('requires'))
 
             elif typeElem.get('category') == 'basetype':
                     for elem in typeElem:
                         if elem.tag == 'name':
                             body += self.genBasetypeCode("", " obj,", elem.text)
-                            body += self.genBasetypeCode("const ", " * obj,", elem.text)
 
             elif typeElem.get('category') == 'handle':
                     for elem in typeElem:
                         if elem.tag == 'name':
                             body += self.genHandleCode("", " obj,", elem.text)
-                            body += self.genHandleCode("const ", " * obj,", elem.text)
             if body:
                 self.appendSection(section, body)
 
@@ -735,10 +716,10 @@ class JSONOutputGenerator(OutputGenerator):
             code += "         PRINT_SPACE\n"
             code += "         _OUT << \"[\" << std::endl;\n"
             code += "         for (unsigned int i = 0; i < %s; i++) {\n" %(length)
-            code += "           if (i+1 == %s)\n" %(length)
-            code += "               print_%s(%s%s[i], \"%s\", 0);\n" %(typeName, str2, memberName, memberName)
+            code += f"           if (i+1 == {length})\n"
+            code += f"               print_{typeName}({str2}{memberName}[i], \"{memberName}\", 0);\n"
             code += "           else\n"
-            code += "               print_%s(%s%s[i], \"%s\", 1);\n" %(typeName, str2, memberName, memberName)
+            code += f"               print_{typeName}({str2}{memberName}[i], \"{memberName}\", 1);\n"
             code += "         }\n"
             code += "         PRINT_SPACE\n"
             if isCommaNeeded:
@@ -748,9 +729,9 @@ class JSONOutputGenerator(OutputGenerator):
             code += "    }\n"
         else:
             if (typeName == "VkAccelerationStructureGeometryKHR"):
-                code += "           print_%s(*%s%s, \"%s\", %s);\n" %(typeName, str2, memberName, memberName, str(isCommaNeeded))
+                code += f"           print_{typeName}(*{str2}{memberName}, \"{memberName}\", {str(isCommaNeeded)});\n"
             else:
-                code += "           print_%s(%s%s, \"%s\", %s);\n" %(typeName, str2, memberName, memberName, str(isCommaNeeded))
+                code += f"           print_{typeName}({str2}{memberName}, \"{memberName}\", {str(isCommaNeeded)});\n"
             code += "     }\n"
 
         if self.paramIsPointer(param):
@@ -767,7 +748,7 @@ class JSONOutputGenerator(OutputGenerator):
     def genPNextCode(self, str2):
         code  = ""
         code += "      if (%spNext) {\n" %(str2)
-        code += "         dumpPNextChain(%spNext);\n" %(str2)
+        code += f"         dumpPNextChain({str2}pNext);\n"
         code += "      } else {\n"
         code += "         PRINT_SPACE\n"
         code += "         _OUT << \"\\\"pNext\\\":\" << \"\\\"NULL\\\"\"<< \",\"<< std::endl;\n"
@@ -812,16 +793,16 @@ class JSONOutputGenerator(OutputGenerator):
             code += "       _OUT << \"[\" << std::endl;\n"
             code += "       for (unsigned int i = 0; i < %s; i++) {\n" %(arraySize)
             if self.isCTS and (structName == "VkPipelineLayoutCreateInfo" or structName == "VkDescriptorSetLayoutBinding"):
-                code += "           bool isCommaNeeded = (i+1) != %s;\n" %(arraySize)
+                code += f"           bool isCommaNeeded = (i+1) != {arraySize};\n"
                 code += "           if (isCommaNeeded)\n"
                 code += "           {\n"
                 code += "               PRINT_SPACE\n"
-                code += "               _OUT << %s%s[i].getInternal() << \",\" << std::endl;\n" %(str2, name)
+                code += f"               _OUT << {str2}{name}[i].getInternal() << \",\" << std::endl;\n"
                 code += "           }\n"
                 code += "           else\n"
                 code += "           {\n"
                 code += "               PRINT_SPACE\n"
-                code += "               _OUT << %s%s[i].getInternal() << std::endl;\n" %(str2, name)
+                code += f"               _OUT << {str2}{name}[i].getInternal() << std::endl;\n"
                 code += "           }\n"
             else:
                 if needsTmp:
@@ -830,22 +811,22 @@ class JSONOutputGenerator(OutputGenerator):
                     # Special case handling for giving unique names for pImmutableSamplers if there are multiple
                     # bindings in the same Descriptor set layout.
                     if name == "pImmutableSamplers":
-                        code += "           tmp << \"%s\" << \"_\" << (%sbinding) << \"_\" << i;\n" %(name, str2)
+                        code += f"           tmp << \"{name}\" << \"_\" << ({str2}binding) << \"_\" << i;\n"
                     else:
-                        code += "           tmp << \"%s\" << \"_\" << i;\n" %(name)
+                        code += f"           tmp << \"{name}\" << \"_\" << i;\n"
 
-                code += "           bool isCommaNeeded = (i+1) != %s;\n" %(arraySize)
+                code += f"           bool isCommaNeeded = (i+1) != {arraySize};\n"
 
                 if str(self.getTypeCategory(typeName)) == 'handle':
-                    code += "           print_%s(%s%s[i], tmp.str(), isCommaNeeded);\n" %(typeName, str2, name)
+                    code += f"           print_{typeName}({str2}{name}[i], tmp.str(), isCommaNeeded);\n"
                 else:
                     if self.isCTS and name == "pipelineIdentifier":
-                        code += "           print_uint32_t((%s)%s%s[i], %s, isCommaNeeded);\n" %(self.baseTypeListMap["uint32_t"], str2, name, printStr)
+                        code += f"           print_uint32_t((uint32_t){str2}{name}[i], {printStr}, isCommaNeeded);\n"
                     else:
-                        code += "           print_%s(%s%s[i], %s, isCommaNeeded);\n" %(typeName, str2, name, printStr)
+                        code += f"           print_{typeName}({str2}{name}[i], {printStr}, isCommaNeeded);\n"
             code += "       }\n"
             code += "       PRINT_SPACE\n"
-            code += "       _OUT << \"]\" << \"%s\" << std::endl;\n" %(comma)
+            code += f"       _OUT << \"]\" << \"{comma}\" << std::endl;\n"
             if not isArrayType == True:
                 code += "     } else {\n"
                 code += "       _OUT << \"\\\"NULL\\\"\" << \"%s\" << std::endl;\n" %(comma)
@@ -859,7 +840,7 @@ class JSONOutputGenerator(OutputGenerator):
 
         for elem in param:
             if elem.text.find('PFN_') != -1:
-                return "     /** Note: Ignoring function pointer (%s). **/\n" %(elem.text)
+                return f"     /** Note: Ignoring function pointer ({elem.text}). **/\n"
 
             if elem.text == 'pNext':
                 return self.genPNextCode(str2)
@@ -884,10 +865,10 @@ class JSONOutputGenerator(OutputGenerator):
         # Ignore void* data members
         elif self.paramIsPointer(param) and typeName == 'void':
             if structName == "VkSpecializationInfo":
-                    return "     print_void_data(%s%s, int(%sdataSize), \"%s\", 0);\n" %(str2, memberName, str2, memberName)
+                    return f"     print_void_data({str2}{memberName}, int({str2}dataSize), \"{memberName}\", 0);\n"
             if self.isCTS:
                 if structName == "VkPipelineCacheCreateInfo":
-                    return "     print_void_data(%s%s, int(%sinitialDataSize), \"%s\", 0);\n" %(str2, memberName, str2, memberName)
+                    return f"     print_void_data({str2}{memberName}, int({str2}initialDataSize), \"{memberName}\", 0);\n"
             return "     /** Note: Ignoring void* data. **/\n"
 
         # For pointers where we have the 'len' field, dump them as arrays.
@@ -899,7 +880,7 @@ class JSONOutputGenerator(OutputGenerator):
 
         # Special handling for VkPipelineMultisampleStateCreateInfo::pSampleMask
         elif typeName in "VkSampleMask":
-            code += "     %s sampleMaskSize = ((%srasterizationSamples + 31) / 32);\n" % (self.baseTypeListMap["uint32_t"], str2)
+            code += f"     uint32_t sampleMaskSize = (({str2}rasterizationSamples + 31) / 32);\n"
             code += self.genArrayCode(structName, memberName, "uint32_t", str2, "sampleMaskSize", False, False, isCommaNeeded)
             return code
 
@@ -908,7 +889,7 @@ class JSONOutputGenerator(OutputGenerator):
             return self.genEmptyCode(memberName, str2, isCommaNeeded)
 
         else:
-            code += "     print_%s(%s%s, \"%s\", %s);\n" %(typeName, str2, memberName, memberName, str(isCommaNeeded))
+            code += f"     print_{typeName}({str2}{memberName}, \"{memberName}\", {str(isCommaNeeded)});\n"
 
         return code
 
@@ -926,7 +907,7 @@ class JSONOutputGenerator(OutputGenerator):
             genStr4 = ["     if (obj.", "     if (obj->"]
 
             for index in range(len(genStr1)):
-                body += "static void print_%s(%s%s%s\n" %(typeName, genStr1[index], typeName, genStr3[index])
+                body += f"static void print_{typeName}({genStr1[index]}{typeName}{genStr3[index]}\n"
                 body += "     PRINT_SPACE\n"
                 body += "     _OUT << \"{\" << std::endl;\n"
                 body += "     INDENT(4);\n"
@@ -959,22 +940,22 @@ class JSONOutputGenerator(OutputGenerator):
         body = ""
         section = 'enum'
 
-        body += "static std::map<%s, std::string> %s_map = {\n" %(self.baseTypeListMap["uint64_t"], groupName)
+        body += "static std::map<uint64_t, std::string> %s_map = {\n" %(groupName)
         enums = groupElem.findall('enum')
 
         for enum in enums:
             if enum.get('value'):
-                body += "    std::make_pair(%s, \"%s\"),\n" %(enum.get('value'), enum.get('name'))
+                body += f"    std::make_pair({enum.get('value')}, \"{enum.get('name')}\"),\n"
 
             elif enum.get('bitpos'):
-                body += "    std::make_pair(1ULL << %s, \"%s\"),\n" %(enum.get('bitpos'), enum.get('name'))
+                body += f"    std::make_pair(1ULL << {enum.get('bitpos')}, \"{enum.get('name')}\"),\n"
 
             #TODO: Some enums have no offset. How to handle those?
             elif enum.get('extends') and enum.get("extnumber") and enum.get("offset"):
                 extNumber = int(enum.get("extnumber"))
                 offset = int(enum.get("offset"))
                 enumVal = self.extBase + (extNumber - 1) * self.extBlockSize + offset
-                body += "    std::make_pair(%s, \"%s\"),\n" %(str(enumVal), enum.get('name'))
+                body += f"    std::make_pair({str(enumVal)}, \"{enum.get('name')}\"),\n"
 
         body += "};\n"
         body += self.genEnumCode(groupName)

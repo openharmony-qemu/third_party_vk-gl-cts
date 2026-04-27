@@ -4,7 +4,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# Author(s):    Ryan Pavlik <ryan.pavlik@collabora.com>
+# Author(s):    Rylie Pavlik <rylie.pavlik@collabora.com>
 
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -168,14 +168,14 @@ class BasePrinter(ABC):
 
         May override, default is message_type:
         """
-        return '{}:'.format(message_type)
+        return f'{message_type}:'
 
     def formatEntityBrief(self, entity_data, _with_color=True):
         """Format an entity in a brief way.
 
         May override, default is macro:entity.
         """
-        return '{}:{}'.format(entity_data.macro, entity_data.entity)
+        return f'{entity_data.macro}:{entity_data.entity}'
 
     def formatBrief(self, obj, with_color=True):
         """Format any object in a brief way.

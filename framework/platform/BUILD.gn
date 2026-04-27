@@ -32,18 +32,18 @@ ohos_source_set("tcutil-platform_source") {
   ]
   include_dirs = [
     "//third_party/zlib/src",
-    "//third_party/spirv-headers/include",
+    "//third_party/vk-gl-cts/external/spirv-headers/src/include",
     "//third_party/amber",
     "//third_party/renderdoc/src",
     "//third_party/vulkancts/framework/vulkan",
 
     #"//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkan",
-    "//third_party/glslang/glslang",
+    "//third_party/vk-gl-cts/external/glslang/src/glslang",
     "//third_party/vk-gl-cts/build/include",
-    "//third_party/glslang/SPIRV",
-    "//third_party/spirv-tools/include",
-    "//third_party/spirv-headers/include",
+    "//third_party/vk-gl-cts/external/glslang/src/SPIRV",
+    "//third_party/vk-gl-cts/external/spirv-tools/src/include",
+    "//third_party/vk-gl-cts/external/spirv-headers/src/include",
   ]
   include_dirs += deqp_common_include_dirs
 
@@ -140,8 +140,7 @@ ohos_shared_library("libdeqp_ohos_platform") {
     "//foundation/window/window_manager/wm:libwm",
     "//foundation/window/window_manager/wmserver:libwms",
     "//third_party/libpng:libpng",
-    "//third_party/spirv-tools:libdeqp_spirvtools",
-    "//third_party/spirv-tools/source/opt:libdeqp_spirvtools-opt",
+    "//third_party/vk-gl-cts/external/spirv-tools/src:libdeqp_spirvtools",
     "//third_party/vk-gl-cts/external/openglcts/modules:libdeqp_glcts",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutilnoshader",
 
@@ -283,7 +282,7 @@ ohos_shared_library("libdeqp_ohos_platform_app") {
     "ohos/rosen_context",
 
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
-    "//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
+    "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkan",
   ]
   deps = [
     ":libdeqp_tcutil-platform",
@@ -377,7 +376,7 @@ ohos_shared_library("glcts_app") {
     "ohos/rosen_context",
 
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
-    "//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
+    "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkan",
   ]
   deps = [
     "ohos/rosen_context:vk_app_context",
@@ -430,7 +429,7 @@ ohos_executable("glcts_app_mock") {
     "ohos/rosen_context",
 
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan",
-    "//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
+    "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkan",
   ]
   deps = [
     ":glcts_app",

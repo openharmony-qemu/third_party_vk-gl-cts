@@ -1,20 +1,23 @@
-// Copyright 2021-2024 The Khronos Group Inc.
+// Copyright 2021-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
 = VK_EXT_shader_tile_image
 :toc: left
-:refpage: https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/
+:docs: https://docs.vulkan.org/spec/latest/
+:extensions: {docs}appendices/extensions.html#
 :sectnums:
+// Required so images render in github
+ifndef::images[:images: ../images]
 
-`VK_EXT_shader_tile_image` is a device extension that explicitly enables access to on-chip pixel data. For GPUs supporting this extension, it is a replacement for many use-cases for subpasses, which are not available when the `VK_KHR_dynamic_rendering` extension is used.
+`VK_EXT_shader_tile_image` is a device extension that explicitly enables access to on-chip pixel data. For GPUs supporting this extension, it is a replacement for many use cases for subpasses, which are not available when the `VK_KHR_dynamic_rendering` extension is used.
 
 == Problem Statement
 
 Some implementations, in particular tile-based GPUs, want to allow applications to effectively exploit local, e.g. on-chip, memory.
 A classic example would be optimizing G-buffer based deferred shading techniques where the G-buffer is produced and consumed on-chip.
 
-Subpasses were designed to support such use-cases with an API mechanism that was portable across all implementations. In practice, that has led to some problems, including:
+Subpasses were designed to support such use cases with an API mechanism that was portable across all implementations. In practice, that has led to some problems, including:
 
  * the high level abstraction is far removed from the mental model an application developer needs to have to be able to optimize for keeping data on-chip
  * the subpass design affects other parts of the API and is seen as a 'tax' on applications that do not target implementations that benefit from on-chip storage
@@ -51,7 +54,7 @@ There are two choices broadly based on what the functionality is for, and which 
 
 2. A slightly higher level API to enable broad GPU support for framebuffer fetch like functionality within draw calls in dynamic render passes.
  * Provides framebuffer fetch like functionality.
- * This is intended to be supported by a wide range of GPUs. The GPUs in general have optimised support for framebuffer fetch within a render pass.
+ * This is intended to be supported by a wide range of GPUs. The GPUs in general have optimized support for framebuffer fetch within a render pass.
  * This addresses use cases such a programmable image composition, or programmable resolve.
  * Attachment data is not guaranteed to be on-chip within a render pass and may spill to DRAM. Implementations may opportunistically cache data in their cache hierarchy.
  * Raster order access to framebuffer data from fragment shader is not "free". Many implementations may prefer non-coherent access with explicit synchronization from applications.
@@ -69,7 +72,7 @@ This proposal targets the first option, but adds building blocks to enable futur
 The reasoning behind this choice is that:
 
  * It should be possible to support this extension on existing GPUs
- * Many use-cases that benefit from subpasses could be implemented with this functionality
+ * Many use cases that benefit from subpasses could be implemented with this functionality
  * Ease of integration; this option requires the least amount of changes to rendering engines
  * Time to market; several IHVs would like at least the subpass equivalent functionality to be implemented alongside `VK_KHR_dynamic_rendering`
 
@@ -85,7 +88,9 @@ Tile image variables currently have to 'alias' a color attachment location, and 
 
 === Concept
 
-image::{images}/tile_image.svg[align="center",title="Tile Image",align="center",opts="{imageopts}"]
+images = {images} path = {images}/proposals/tile_image.svg
+
+image::{images}/proposals/tile_image.svg[align="center",title="Tile Image",align="center",opts="{imageopts}"]
 
 Introduce the concept of a 'tile image'. When the extension is enabled, the framebuffer is logically divided into a grid of non-overlapping tiles called tile images.
 
@@ -93,28 +98,65 @@ Introduce the concept of a 'tile image'. When the extension is enabled, the fram
 
 Add a new feature struct `VkPhysicalDeviceShaderTileImageFeaturesEXT` containing:
 
- * shaderTileImageColorReadAccess
- * shaderTileImageDepthReadAccess
- * shaderTileImageStencilReadAccess
+ * `shaderTileImageColorReadAccess`
+ * `shaderTileImageDepthReadAccess`
+ * `shaderTileImageStencilReadAccess`
 
-shaderTileImageColorReadAccess is mandatory if this extension is supported.
+`shaderTileImageColorReadAccess` is mandatory if this extension is supported.
 
-shaderTileImageColorReadAccess provides the ability to access current (rasterization order) color values from tile memory via tile images.
+`shaderTileImageColorReadAccess` provides the ability to access current (rasterization order) color values from tile memory via tile images.
 There is no support for the storage format to be redefined as part of this feature.
 Output data is still written via Fragment Output variables.
-Since the framebuffer format is not re-declared, fixed-function blending works as normal.
+Since the framebuffer format is not redeclared, fixed-function blending works as normal.
 
 Existing shaders do not to need to be modified to write to color attachments.
 
 Reading color values using the functionality in this extension guarantees that the access is in rasterization order.
 See the spec (Fragment Shader Tile Image Reads) for details on which samples reads qualify for coherent read access.
 
-shaderTileImageDepthReadAccess and shaderTileImageStencilReadAccess provide similar ability to read the depth and stencil values of any sample location covered by the fragment.
+`shaderTileImageDepthReadAccess` and `shaderTileImageStencilReadAccess` provide similar ability to read the depth and stencil values of any sample location covered by the fragment.
 Depth and stencil fetches use implicit tile images.
 If no depth / stencil attachment is present then the values returned by fetches are undefined.
 Early fragment tests are disallowed if depth or stencil fetch is used.
 
 Reading depth/stencil values have similar rasterization order and synchronization guarantees as color.
+
+
+==== Explicit Synchronization
+
+When non-coherent tile image reads are enabled, writes via color, depth and
+stencil attachments are not automatically made visible to the corresponding
+attachment reads via tile images.
+For the writes to be made visible, an explicit memory dependency must be
+inserted between when the attachment is written to and when it is read from
+by later fragments.
+Such memory dependencies must be inserted every time a fragment will read
+values at a particular sample (x, y, layer, sample) coordinate, if those
+values have been written since the most recent pipeline barrier; or since
+the start of the render pass instance, if there have been no pipeline
+barriers since the start of the render pass instance.
+When such memory dependencies are used the values at all sample locations
+inside the fragment area are made visible, regardless of coverage.
+
+To insert a memory dependency for explicit render pass tile image
+synchronization, link:{docs}chapters/synchronization.html#vkCmdPipelineBarrier[vkCmdPipelineBarrier]
+and link:{docs}chapters/synchronization.html#vkCmdPipelineBarrier2[vkCmdPipelineBarrier2]
+can now be called inside a render pass instance started with
+link:{docs}chapters/renderpass.html#vkCmdBeginRendering[vkCmdBeginRendering].
+The following restrictions apply for such pipeline barriers:
+
+  * `dependencyFlags` must include `VK_DEPENDENCY_BY_REGION_BIT`.
+  * The pipeline barriers can include only memory barriers.
+    That is, buffer memory barriers and image memory barriers must not be
+    used.
+  * The stages in the `srcStageMask` and `dstStageMask` members of link:{docs}chapters/synchronization.html#VkMemoryBarrier2[VkMemoryBarrier2] are restricted to framebuffer
+    space stages.
+  * The access types in the `srcAccessMask` and `dstAccessMask` members of link:{docs}chapters/synchronization.html#VkMemoryBarrier2[VkMemoryBarrier2] are restricted to the
+    following types: `VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT`,
+    `VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT`,
+    `VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT`, and
+    `VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT`.
+
 
 === SPIR-V changes
 
@@ -124,7 +166,7 @@ Specifically:
 
  * `Dim` is extended with `TileImageDataEXT`.
  * `OpTypeImage` gets the additional constraint that if `Dim` is `TileImageDataEXT`:
- ** `Sampled` must: be `2`
+ ** `Sampled` *must* be `2`
  ** `Image Format` must be `Unknown` as the format is implicitly specified by the color attachment
  *** (We could relax this in a further extension if we wanted to support format reinterpretation in the shader.)
  ** `Execution Model` must be `Fragment`
@@ -132,7 +174,7 @@ Specifically:
  ** Extend the use of `Location` such that it specifies the color attachment index
  * Add `OpColorAttachmentReadEXT`, which is similar to `OpImageRead` but helps disambiguate between color/depth/stencil.
  * Add `OpDepthAttachmentReadEXT` and `OpStencilAttachmentReadEXT` to read depth/stencil
- ** These take an optional `Sample` parameter for MSAA use-cases
+ ** These take an optional `Sample` parameter for MSAA use cases
  * Add a `TileImageEXT` Storage Class that is only supported for variables of `OpTypeImage` with `Dim` equal to `TileImageDataEXT`
 
 === GLSL changes
@@ -357,7 +399,7 @@ vkCmdDraw(...);
 
 === Barrier Proposal C: New simple API for tile image barriers
 
-New API entry point `vkCmdTileBarrierEXT(..)` where the app can specify which attachments to synchronize. This can be easily extended to tile shader if an implementation desires explicit barriers - by specifying all of tile memory needs to be synchronized and explicitly specifying tile-wide synchronization.
+New API entry point `vkCmdTileBarrierEXT(..)` where the application can specify which attachments to synchronize. This can be easily extended to tile shader if an implementation desires explicit barriers - by specifying all of tile memory needs to be synchronized and explicitly specifying tile-wide synchronization.
 
 [source,c]
 ----

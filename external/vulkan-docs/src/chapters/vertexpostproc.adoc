@@ -1,5 +1,4 @@
-// Copyright 2015-2024 The Khronos Group Inc.
-//
+// Copyright 2015-2025 The Khronos Group Inc.
 // SPDX-License-Identifier: CC-BY-4.0
 
 [[vertexpostproc]]
@@ -18,7 +17,7 @@ ifdef::VK_NV_viewport_swizzle[]
     Swizzle>>)
 endif::VK_NV_viewport_swizzle[]
   * Flat shading (see <<vertexpostproc-flatshading>>).
-  * Primitive clipping, including client-defined half-spaces (see
+  * Primitive clipping, including application-defined half-spaces (see
     <<vertexpostproc-clipping,Primitive Clipping>>).
   * Shader output attribute clipping (see
     <<vertexpostproc-clipping-shader-outputs,Clipping Shader Outputs>>).
@@ -32,14 +31,6 @@ endif::VK_NV_clip_space_w_scaling[]
     <<vertexpostproc-viewport,Controlling the Viewport>>).
   * Front face determination for polygon primitives (see
     <<primsrast-polygons-basic,Basic Polygon Rasterization>>).
-
-ifdef::editing-notes[]
-[NOTE]
-.editing-note
-====
-TODO:Odd that this one link to a different chapter is in this list.
-====
-endif::editing-notes[]
 
 Next, rasterization is performed on primitives as described in chapter
 <<primsrast,Rasterization>>.
@@ -85,8 +76,8 @@ indicated by the value stored by the implementation in the counter buffer.
 For multi-vertex primitives, all values for a given vertex are written
 before writing values for any other vertex.
 ifdef::VK_EXT_provoking_vertex[]
-When <<features-transformFeedbackPreservesProvokingVertex,
-pname:transformFeedbackPreservesProvokingVertex>> is not enabled,
+When the <<features-transformFeedbackPreservesProvokingVertex,
+pname:transformFeedbackPreservesProvokingVertex>> feature is not enabled,
 implementations
 endif::VK_EXT_provoking_vertex[]
 ifndef::VK_EXT_provoking_vertex[]
@@ -116,9 +107,9 @@ order defined as follows:
     <<tessellation-isoline-tessellation, isoline tessellation>>.
 
 ifdef::VK_EXT_provoking_vertex[]
-When <<features-transformFeedbackPreservesProvokingVertex,
-pname:transformFeedbackPreservesProvokingVertex>> is enabled, then in
-addition to writing vertices with a consistent winding order, the vertex
+When the <<features-transformFeedbackPreservesProvokingVertex,
+pname:transformFeedbackPreservesProvokingVertex>> feature is enabled, then
+in addition to writing vertices with a consistent winding order, the vertex
 order must: preserve the <<vertexpostproc-flatshading, provoking vertex>> of
 each primitive:
 
@@ -126,12 +117,12 @@ each primitive:
     <<VkPipelineRasterizationProvokingVertexStateCreateInfoEXT,pipeline's
     provoking vertex mode>> is
     ename:VK_PROVOKING_VERTEX_MODE_FIRST_VERTEX_EXT, the primitive's
-    provoking vertex must be the first vertex written.
+    provoking vertex must: be the first vertex written.
   * When the
     <<VkPipelineRasterizationProvokingVertexStateCreateInfoEXT,pipeline's
     provoking vertex mode>> is
     ename:VK_PROVOKING_VERTEX_MODE_LAST_VERTEX_EXT, the primitive's
-    provoking vertex must be the last vertex written.
+    provoking vertex must: be the last vertex written.
 
 If <<limits-transformFeedbackPreservesTriangleFanProvokingVertex,
 pname:transformFeedbackPreservesTriangleFanProvokingVertex>> is
@@ -139,8 +130,8 @@ ename:VK_FALSE, neither <<geometry, geometry>> nor <<tessellation,
 tessellation>> shading is active, and the <<drawing-primitive-topologies,
 primitive topology>> is ename:VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN, then the
 first vertex written from each primitive is implementation-defined even when
-<<features-transformFeedbackPreservesProvokingVertex,
-pname:transformFeedbackPreservesProvokingVertex>> is enabled.
+the <<features-transformFeedbackPreservesProvokingVertex,
+pname:transformFeedbackPreservesProvokingVertex>> feature is enabled.
 
 endif::VK_EXT_provoking_vertex[]
 
@@ -158,7 +149,9 @@ For matrix types, outputs are written as an array of column vectors.
 
 If any component of an output with an assigned transform feedback offset was
 not written to by its shader, the value recorded for that component is
-undefined:.
+undefined:, and the primitives needed and primitives written counts in the
+corresponding ename:VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT query will
+increment as normal.
 All components of an output variable must: be written at an offset aligned
 to the size of the component.
 The size of each component of an output variable must: be at least 32-bits.
@@ -293,6 +286,14 @@ include::{generated}/api/protos/vkCmdBeginTransformFeedbackEXT.adoc[]
     If the byte offset stored to the counter buffer location was done using
     flink:vkCmdEndTransformFeedbackEXT it can be used to resume transform
     feedback from the previous location.
+    In that case, a pipeline barrier is required between the calls to
+    fname:vkCmdEndTransformFeedbackEXT and
+    fname:vkCmdBeginTransformFeedbackEXT, with
+    ename:VK_PIPELINE_STAGE_TRANSFORM_FEEDBACK_BIT_EXT as the source and
+    destination stages,
+    ename:VK_ACCESS_TRANSFORM_FEEDBACK_COUNTER_WRITE_BIT_EXT as the source
+    access and ename:VK_ACCESS_TRANSFORM_FEEDBACK_COUNTER_READ_BIT_EXT as
+    the destination access.
     If pname:pCounterBuffers is `NULL`, then transform feedback will start
     capturing vertex data to byte offset zero in all bound transform
     feedback buffers.
@@ -345,6 +346,10 @@ feedback buffer will not be captured.
     dlink:VK_NULL_HANDLE it must: have been created with a pname:usage value
     containing
     ename:VK_BUFFER_USAGE_TRANSFORM_FEEDBACK_COUNTER_BUFFER_BIT_EXT
+  * [[VUID-vkCmdBeginTransformFeedbackEXT-firstCounterBuffer-09630]]
+    The sum of pname:firstCounterBuffer and pname:counterBufferCount must:
+    be less than or equal to the number of transform feedback buffers bound
+    by flink:vkCmdBindTransformFeedbackBuffersEXT
   * [[VUID-vkCmdBeginTransformFeedbackEXT-None-06233]]
 ifdef::VK_EXT_shader_object[]
     If the <<features-shaderObject, pname:shaderObject>> feature is not
@@ -365,6 +370,12 @@ ifdef::VK_VERSION_1_1,VK_KHR_multiview[]
     Transform feedback must: not be made active in a render pass instance
     with multiview enabled
 endif::VK_VERSION_1_1,VK_KHR_multiview[]
+ifdef::VK_QCOM_tile_shading[]
+  * [[VUID-vkCmdBeginTransformFeedbackEXT-None-10656]]
+    This command must: not be recorded when
+    <<renderpass-per-tile-execution-model,per-tile execution model>> is
+    enabled
+endif::VK_QCOM_tile_shading[]
 ****
 
 include::{generated}/validity/protos/vkCmdBeginTransformFeedbackEXT.adoc[]
@@ -435,6 +446,12 @@ include::{generated}/api/protos/vkCmdEndTransformFeedbackEXT.adoc[]
     dlink:VK_NULL_HANDLE it must: have been created with a pname:usage value
     containing
     ename:VK_BUFFER_USAGE_TRANSFORM_FEEDBACK_COUNTER_BUFFER_BIT_EXT
+ifdef::VK_QCOM_tile_shading[]
+  * [[VUID-vkCmdEndTransformFeedbackEXT-None-10657]]
+    This command must: not be recorded when
+    <<renderpass-per-tile-execution-model,per-tile execution model>> is
+    enabled
+endif::VK_QCOM_tile_shading[]
 ****
 
 include::{generated}/validity/protos/vkCmdEndTransformFeedbackEXT.adoc[]
@@ -667,8 +684,8 @@ include::{generated}/api/structs/VkPipelineRasterizationProvokingVertexStateCrea
   * pname:provokingVertexMode is a elink:VkProvokingVertexModeEXT value
     selecting the provoking vertex mode.
 
-If this struct is not provided when creating the pipeline, the pipeline will
-use the ename:VK_PROVOKING_VERTEX_MODE_FIRST_VERTEX_EXT mode.
+If this structure is not provided when creating the pipeline, the pipeline
+will use the ename:VK_PROVOKING_VERTEX_MODE_FIRST_VERTEX_EXT mode.
 
 If the <<limits-provokingVertexModePerPipeline,
 pname:provokingVertexModePerPipeline>> limit is ename:VK_FALSE, then all
@@ -763,13 +780,13 @@ _clip volume_.
 In clip coordinates, the _view volume_ is defined by:
 
 [latexmath]
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++
 \begin{array}{c}
 -w_c \leq x_c \leq w_c \\
 -w_c \leq y_c \leq w_c \\
 z_m \leq z_c \leq w_c
 \end{array}
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++
 
 where
 ifdef::VK_EXT_depth_clip_control[]
@@ -780,12 +797,12 @@ endif::VK_EXT_depth_clip_control[]
 [eq]#z~m~# is equal to zero.
 
 This view volume can: be further restricted by as many as
-sname:VkPhysicalDeviceLimits::pname:maxClipDistances client-defined
+sname:VkPhysicalDeviceLimits::pname:maxClipDistances application-defined
 half-spaces.
 
 The cull volume is the intersection of up to
-sname:VkPhysicalDeviceLimits::pname:maxCullDistances client-defined
-half-spaces (if no client-defined cull half-spaces are enabled, culling
+sname:VkPhysicalDeviceLimits::pname:maxCullDistances application-defined
+half-spaces (if no application-defined cull half-spaces are enabled, culling
 against the cull volume is skipped).
 
 A shader must: write a single cull distance for each enabled cull half-space
@@ -796,9 +813,9 @@ discarded.
 Otherwise the primitive is clipped against the clip volume as defined below.
 
 The clip volume is the intersection of up to
-sname:VkPhysicalDeviceLimits::pname:maxClipDistances client-defined
-half-spaces with the view volume (if no client-defined clip half-spaces are
-enabled, the clip volume is the view volume).
+sname:VkPhysicalDeviceLimits::pname:maxClipDistances application-defined
+half-spaces with the view volume (if no application-defined clip half-spaces
+are enabled, the clip volume is the view volume).
 
 A shader must: write a single clip distance for each enabled clip half-space
 to elements of the code:ClipDistance array.
@@ -816,10 +833,10 @@ described in sections <<primsrast-lines-basic,Basic Line Segment
 Rasterization>> and <<primsrast-polygons-basic,Basic Polygon
 Rasterization>>, using the perspective interpolation equations.
 
-The number of client-defined clip and cull half-spaces that are enabled is
-determined by the explicit size of the built-in arrays code:ClipDistance and
-code:CullDistance, respectively, declared as an output in the interface of
-the entry point of the final shader stage before clipping.
+The number of application-defined clip and cull half-spaces that are enabled
+is determined by the explicit size of the built-in arrays code:ClipDistance
+and code:CullDistance, respectively, declared as an output in the interface
+of the entry point of the final shader stage before clipping.
 
 ifdef::VK_EXT_depth_clip_enable[]
 If slink:VkPipelineRasterizationDepthClipStateCreateInfoEXT is present in
@@ -877,7 +894,7 @@ depth clipping is enabled when depth clamping is disabled and vice versa.
 include::{chapters}/commonvalidity/dynamic_state3_feature_common.adoc[]
   * [[VUID-vkCmdSetDepthClampEnableEXT-depthClamp-07449]]
     If the <<features-depthClamp, pname:depthClamp>> feature is not enabled,
-    pname:depthClampEnable must be ename:VK_FALSE
+    pname:depthClampEnable must: be ename:VK_FALSE
 ****
 
 include::{generated}/validity/protos/vkCmdSetDepthClampEnableEXT.adoc[]
@@ -908,8 +925,8 @@ slink:VkPipelineDynamicStateCreateInfo::pname:pDynamicStates.
 endif::VK_EXT_extended_dynamic_state3[]
 Otherwise, this state is specified by the
 slink:VkPipelineRasterizationDepthClipStateCreateInfoEXT::pname:depthClipEnable
-value used to create the currently active pipeline, or is set to the inverse
-of slink:VkPipelineRasterizationStateCreateInfo::pname:depthClampEnable if
+value used to create the currently active pipeline, or by the inverse of
+slink:VkPipelineRasterizationStateCreateInfo::pname:depthClampEnable if
 sname:VkPipelineRasterizationDepthClipStateCreateInfoEXT is not specified.
 
 :refpage: vkCmdSetDepthClipEnableEXT
@@ -998,7 +1015,7 @@ vertices into a polygon.
 If a polygon intersects an edge of the clip volume's boundary, the clipped
 polygon must: include a point on this boundary edge.
 
-Primitives rendered with user-defined half-spaces must: satisfy a
+Primitives rendered with application-defined half-spaces must: satisfy a
 complementarity criterion.
 Suppose a series of primitives is drawn where each vertex [eq]#i# has a
 single specified clip distance [eq]#d~i~# (or a number of similarly
@@ -1027,8 +1044,8 @@ include::{generated}/api/structs/VkPipelineViewportDepthClipControlCreateInfoEXT
 .Valid Usage
 ****
   * [[VUID-VkPipelineViewportDepthClipControlCreateInfoEXT-negativeOneToOne-06470]]
-    If <<features-depthClipControl, pname:depthClipControl>> is not enabled,
-    pname:negativeOneToOne must: be ename:VK_FALSE
+    If the <<features-depthClipControl, pname:depthClipControl>> feature is
+    not enabled, pname:negativeOneToOne must: be ename:VK_FALSE
 ****
 
 include::{generated}/validity/structs/VkPipelineViewportDepthClipControlCreateInfoEXT.adoc[]
@@ -1143,18 +1160,19 @@ coordinates into _framebuffer coordinates_.
 If a vertex in clip coordinates has a position given by
 
 [latexmath]
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++
 \left(\begin{array}{c}
 x_c \\
 y_c \\
 z_c \\
 w_c
 \end{array}\right)
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++
 
 then the vertex's normalized device coordinates are
+
 [latexmath]
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++
 \left(
         \begin{array}{c}
                 x_d \\
@@ -1169,7 +1187,7 @@ then the vertex's normalized device coordinates are
                 \frac{z_c}{w_c}
         \end{array}
 \right)
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++
 
 
 ifdef::VK_QCOM_render_pass_transform[]
@@ -1186,7 +1204,7 @@ primitives for all subpasses of the render pass.
 The transformed vertex in clip coordinates has a position given by
 
 [latexmath]
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++
 \left(
         \begin{array}{c}
                 x_{c_{trans}} \\
@@ -1201,7 +1219,7 @@ The transformed vertex in clip coordinates has a position given by
                 z_c
         \end{array}
 \right)
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++
 
 where
 
@@ -1217,7 +1235,7 @@ where
 
 The transformed vertex's normalized device coordinates are
 [latexmath]
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++
 \left(
         \begin{array}{c}
                 x_d \\
@@ -1232,8 +1250,7 @@ The transformed vertex's normalized device coordinates are
                 \frac{z_{c_{trans}}}{w_c}
         \end{array}
 \right)
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+++++
 
 When render pass transform is enabled for a render pass instance, the
 following additional features are enabled:
@@ -1284,7 +1301,8 @@ and height in pixels, [eq]#p~x~# and [eq]#p~y~#, respectively, and its
 center [eq]#(o~x~, o~y~)# (also in pixels), as well as its depth range min
 and max determining a depth range scale value [eq]#p~z~# and a depth range
 bias value [eq]#o~z~# (defined below).
-The vertex's framebuffer coordinates [eq]#(x~f~, y~f~, z~f~)# are given by
+The vertex's framebuffer coordinates [eq]#(x~f~, y~f~)# and depth [eq]#z~f~#
+are given by
 
   {empty}:: [eq]#x~f~ = (p~x~ / 2) x~d~ {plus} o~x~#
   {empty}:: [eq]#y~f~ = (p~y~ / 2) y~d~ {plus} o~y~#
@@ -1299,11 +1317,11 @@ structure used in pipeline creation.
 [eq]#x~f~# and [eq]#y~f~# have limited precision, where the number of
 fractional bits retained is specified by
 sname:VkPhysicalDeviceLimits::pname:subPixelPrecisionBits.
-ifdef::VK_EXT_line_rasterization[]
+ifdef::VK_VERSION_1_4,VK_KHR_line_rasterization,VK_EXT_line_rasterization[]
 When rasterizing <<primsrast-lines,line segments>>, the number of fractional
 bits is specified by
-sname:VkPhysicalDeviceLineRasterizationPropertiesEXT::pname:lineSubPixelPrecisionBits.
-endif::VK_EXT_line_rasterization[]
+sname:VkPhysicalDeviceLineRasterizationProperties::pname:lineSubPixelPrecisionBits.
+endif::VK_VERSION_1_4,VK_KHR_line_rasterization,VK_EXT_line_rasterization[]
 
 [open,refpage='VkPipelineViewportStateCreateInfo',desc='Structure specifying parameters of a newly created pipeline viewport state',type='structs']
 --
@@ -1649,7 +1667,6 @@ include::{generated}/api/structs/VkViewport.adoc[]
   * pname:minDepth and pname:maxDepth are the depth range for the viewport.
 
 [NOTE]
-.Note
 ====
 Despite their names, pname:minDepth can: be less than, equal to, or greater
 than pname:maxDepth.

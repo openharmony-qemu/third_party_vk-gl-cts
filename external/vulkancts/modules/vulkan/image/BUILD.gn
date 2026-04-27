@@ -73,6 +73,16 @@ ohos_source_set("deqp_vk_image_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageTranscodingSupportTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageTransfer.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageTransfer.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImage2dArrayCompatibleTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImage2dArrayCompatibleTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageConcurrentCopyTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageConcurrentCopyTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageDepthStencilSeparateTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageDepthStencilSeparateTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageGeneralLayoutTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageGeneralLayoutTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageNonUniformOffsetSampleTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image/vktImageNonUniformOffsetSampleTests.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs

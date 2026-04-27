@@ -27,6 +27,15 @@ ohos_source_set("deqp_vk_util_source") {
   sources = [
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util/vktDrawUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util/vktExternalMemoryUtil.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util/vktConstexprVectorUtil.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util/vktDrawUtil.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util/vktExternalMemoryAndroidHardwareBufferUtil.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util/vktExternalMemoryAndroidHardwareBufferUtil.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util/vktExternalMemoryUtil.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util/vktShaderObjectUtil.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util/vktShaderObjectUtil.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util/vktTypeComparisonUtil.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/util/vktTypeComparisonUtil.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs

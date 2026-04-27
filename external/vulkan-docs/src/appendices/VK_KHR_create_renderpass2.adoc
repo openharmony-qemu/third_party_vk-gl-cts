@@ -1,4 +1,4 @@
-// Copyright 2016-2024 The Khronos Group Inc.
+// Copyright 2016-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -14,8 +14,8 @@ include::{generated}/meta/{refprefix}VK_KHR_create_renderpass2.adoc[]
 
 === Description
 
-This extension provides a new entry point to create render passes in a way
-that can be easily extended by other extensions through the substructures of
+This extension provides a new command to create render passes in a way that
+can be easily extended by other extensions through the substructures of
 render pass creation.
 The Vulkan 1.0 render pass creation sub-structures do not include
 ptext:sType/ptext:pNext members.
@@ -45,7 +45,7 @@ The details of these mappings are explained fully in the new structures.
 
 All functionality in this extension is included in core Vulkan 1.2, with the
 KHR suffix omitted.
-The original type, enum and command names are still available as aliases of
+The original type, enum, and command names are still available as aliases of
 the core functionality.
 
 include::{generated}/interfaces/VK_KHR_create_renderpass2.adoc[]

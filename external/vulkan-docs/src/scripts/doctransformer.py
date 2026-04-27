@@ -1,5 +1,4 @@
-# Copyright 2023-2024 The Khronos Group Inc.
-#
+# Copyright 2023-2025 The Khronos Group Inc.
 # SPDX-License-Identifier: Apache-2.0
 
 """Utilities for automatic transformation of spec sources.  Most of the logic
@@ -33,7 +32,7 @@ conditionalStart = re.compile(r'^(ifdef|ifndef)::')
 #   :attribute-setting
 #   macro-directive::terms
 #   +                   standalone list item continuation
-#   label::             labelled list - label must be standalone
+#   label::             labeled list - label must be standalone
 endPara = re.compile(r'^( *|\[.*\]|//.*|<<<<|:.*|[a-z]+::.*|\+|.*::)$')
 
 # Special case of markup ending a paragraph, used to track the current
@@ -336,7 +335,7 @@ class DocTransformer:
         return oldname.rstrip(upper) == newname.rstrip(upper)
 
     def transformFile(self, lines):
-        """Transform lines, and possibly output to to the given file."""
+        """Transform lines, and possibly output to the given file."""
 
         for line in lines:
             self.state.incrLineNumber()
@@ -349,7 +348,7 @@ class DocTransformer:
             # accumulated.
 
             # Test for a blockCommonTransform delimiter comment first, to avoid
-            # treating it solely as a end-Paragraph marker comment.
+            # treating it solely as an end-Paragraph marker comment.
             if line == blockCommonTransform:
                 # Starting or ending a pseudo-block for "common" VU statements.
                 self.endParaBlockTransform(line, vuBlock = True)
@@ -398,7 +397,7 @@ class DocTransformer:
                 self.endParaContinue(line)
 
                 # If it is a title line, track that
-                if line[0:2] == '= ':
+                if line.startswith('= '):
                     thisTitle = True
 
             elif blockPassthrough.match(line):

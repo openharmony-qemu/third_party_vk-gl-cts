@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2020-2024 The Khronos Group Inc.
+# Copyright 2020-2025 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -46,7 +46,7 @@ srcfile=compare/compImages.adoc
 # Boilerplate header
 echo "= Image Comparison of Vulkan images in $branch1 $branch2
 :data-uri:
-:icons: font
+:!icons:
 include::../config/attribs.adoc[]
 " > $srcfile
 

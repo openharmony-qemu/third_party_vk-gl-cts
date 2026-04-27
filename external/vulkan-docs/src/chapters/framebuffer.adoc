@@ -1,4 +1,4 @@
-// Copyright 2015-2024 The Khronos Group Inc.
+// Copyright 2015-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -12,6 +12,9 @@
 Blending combines the incoming _source_ fragment's R, G, B, and A values
 with the _destination_ R, G, B, and A values of each sample stored in the
 framebuffer at the fragment's [eq]#(x~f~,y~f~)# location.
+If any components are missing in the framebuffer attachment, they are
+replaced as described in <<textures-conversion-to-rgba, Conversion to
+RGBA>>.
 Blending is performed for each color sample covered by the fragment, rather
 than just once for each fragment.
 
@@ -39,7 +42,6 @@ floating-point values.
 endif::VK_EXT_blend_operation_advanced[]
 
 [NOTE]
-.Note
 ====
 Blending is only defined for floating-point, UNORM, SNORM, and sRGB formats.
 Within those formats, the implementation may only support blending on some
@@ -80,9 +82,9 @@ ifdef::VK_EXT_extended_dynamic_state3[]
     ename:VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT,
     ename:VK_DYNAMIC_STATE_COLOR_BLEND_EQUATION_EXT, and
     ename:VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT dynamic states set, and
-    either ename:VK_DYNAMIC_STATE_COLOR_BLEND_ADVANCED_EXT set or
+    either ename:VK_DYNAMIC_STATE_COLOR_BLEND_ADVANCED_EXT set or the
     <<features-advancedBlendCoherentOperations,advancedBlendCoherentOperations>>
-    is not enabled on the device.
+    feature is not enabled.
 endif::VK_EXT_extended_dynamic_state3[]
   * pname:pAttachments is a pointer to an array of
     slink:VkPipelineColorBlendAttachmentState structures defining blend
@@ -92,9 +94,9 @@ ifdef::VK_EXT_extended_dynamic_state3[]
     ename:VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT,
     ename:VK_DYNAMIC_STATE_COLOR_BLEND_EQUATION_EXT, and
     ename:VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT dynamic states set, and
-    either ename:VK_DYNAMIC_STATE_COLOR_BLEND_ADVANCED_EXT set or
+    either ename:VK_DYNAMIC_STATE_COLOR_BLEND_ADVANCED_EXT set or the
     <<features-advancedBlendCoherentOperations,advancedBlendCoherentOperations>>
-    is not enabled on the device.
+    feature is not enabled.
 endif::VK_EXT_extended_dynamic_state3[]
   * pname:blendConstants is a pointer to an array of four values used as the
     R, G, B, and A components of the blend constant that are used in
@@ -157,7 +159,7 @@ slink:VkPipelineColorBlendStateCreateInfo::pname:flags parameter are:
 include::{generated}/api/enums/VkPipelineColorBlendStateCreateFlagBits.adoc[]
 
   * ename:VK_PIPELINE_COLOR_BLEND_STATE_CREATE_RASTERIZATION_ORDER_ATTACHMENT_ACCESS_BIT_EXT
-    indicates that access to color and input attachments will have implicit
+    specifies that access to color and input attachments will have implicit
     framebuffer-local memory dependencies, allowing applications to express
     custom blending operations in a fragment shader.
 
@@ -521,7 +523,6 @@ slink:VkPipelineColorBlendAttachmentState::pname:colorWriteMask values used
 to create the currently active pipeline.
 
 [NOTE]
-.Note
 ====
 Formats with bits that are shared between components specified by
 elink:VkColorComponentFlagBits, such as
@@ -1008,8 +1009,8 @@ and pname:pColorWriteEnables pointing to an array of as many ename:VK_TRUE
 values.
 
 If the <<features-colorWriteEnable, pname:colorWriteEnable>> feature is not
-enabled on the device, all basetype:VkBool32 elements in the
-pname:pColorWriteEnables array must: be ename:VK_TRUE.
+enabled, all basetype:VkBool32 elements in the pname:pColorWriteEnables
+array must: be ename:VK_TRUE.
 
 Color Write Enable interacts with the <<framebuffer-color-write-mask,Color
 Write Mask>> as follows:
@@ -1103,10 +1104,10 @@ include::{generated}/api/protos/vkGetFramebufferTilePropertiesQCOM.adoc[]
 
 If pname:pProperties is `NULL`, then the number of tile properties available
 is returned in pname:pPropertiesCount.
-Otherwise, pname:pPropertiesCount must: point to a variable set by the user
-to the number of elements in the pname:pProperties array, and on return the
-variable is overwritten with the number of properties actually written to
-pname:pProperties.
+Otherwise, pname:pPropertiesCount must: point to a variable set by the
+application to the number of elements in the pname:pProperties array, and on
+return the variable is overwritten with the number of properties actually
+written to pname:pProperties.
 If pname:pPropertiesCount is less than the number of tile properties
 available, at most pname:pPropertiesCount structures will be written, and
 ename:VK_INCOMPLETE will be returned instead of ename:VK_SUCCESS, to

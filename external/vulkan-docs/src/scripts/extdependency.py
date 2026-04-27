@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2017-2024 The Khronos Group Inc.
+# Copyright 2017-2025 The Khronos Group Inc.
 # SPDX-License-Identifier: Apache-2.0
 
 """Generate a mapping of extension name -> all required extension names for
@@ -107,9 +107,24 @@ class ApiDependencies:
         self.allExts = set()
         self.khrExts = set()
         self.ratifiedExts = set()
+        self.versions = set()
         self.graph = DiGraph()
         self.extensions = {}
         self.tree = etree.parse(registry_path)
+
+        # Loop over all supported features (versions)
+        for elem in self.tree.findall('feature'):
+            name = elem.get('name')
+            api = elem.get('api')
+
+            if api_name in api.split(','):
+                self.versions.add(name)
+
+                self.graph.add_node(name)
+                depends = elem.get('depends')
+                if depends:
+                    for dep in dependencyNames(depends):
+                        self.graph.add_edge(name, dep)
 
         # Loop over all supported extensions, creating a digraph of the
         # extension dependencies in the 'depends' attribute, which is a
@@ -130,7 +145,7 @@ class ApiDependencies:
             if api_name in supported.split(','):
                 self.allExts.add(name)
 
-                if 'KHR' in name:
+                if conventions.KHR_prefix in name:
                     self.khrExts.add(name)
 
                 if api_name in ratified.split(','):
@@ -163,6 +178,10 @@ class ApiDependencies:
         """Returns a set of all ratified extensions in the graph"""
         return self.ratifiedExts
 
+    def allVersions(self):
+        """Returns a set of all versions in the graph"""
+        return self.versions
+
     def children(self, extension):
         """Returns a set of the dependencies of an extension.
            Throws an exception if the extension is not in the graph."""
@@ -172,6 +191,15 @@ class ApiDependencies:
 
         return set(self.graph.descendants(extension))
 
+    def versionChildren(self, version):
+        """Returns a set of the dependencies of a version.
+           Throws an exception if the version is not in the graph."""
+
+        if version not in self.versions:
+            raise Exception(f'Version {version} not found in XML!')
+
+        return set(self.graph.descendants(version))
+
 
 # Test script
 if __name__ == '__main__':
@@ -179,7 +207,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-registry', action='store',
                         default=APIConventions().registry_path,
-                        help='Use specified registry file instead of ' + APIConventions().registry_path)
+                        help=f"Use specified registry file instead of {APIConventions().registry_path}")
     parser.add_argument('-loops', action='store',
                         default=10, type=int,
                         help='Number of timing loops to run')
@@ -202,4 +230,4 @@ if __name__ == '__main__':
     endTime = time.process_time()
 
     deltaT = endTime - startTime
-    print('Total time = {} time/loop = {}'.format(deltaT, deltaT / args.loops))
+    print(f'Total time = {deltaT} time/loop = {deltaT / args.loops}')

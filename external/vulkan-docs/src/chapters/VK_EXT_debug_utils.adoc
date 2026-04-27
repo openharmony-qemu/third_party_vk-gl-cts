@@ -1,4 +1,4 @@
-// Copyright 2018-2024 The Khronos Group Inc.
+// Copyright 2018-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -30,7 +30,7 @@ It can be useful for an application to provide its own content relative to a
 specific Vulkan object.
 
 The following commands allow application developers to associate
-user-defined information with Vulkan objects.
+application-defined information with Vulkan objects.
 These commands are device-level commands but they may: reference
 instance-level objects (such as slink:VkInstance) and physical device-level
 objects (such as slink:VkPhysicalDevice) with a few restrictions:
@@ -43,14 +43,14 @@ objects (such as slink:VkPhysicalDevice) with a few restrictions:
     most recent version for all sname:VkDevice objects and not just the
     sname:VkDevice used in the most recent API call.
 
+
 [[debugging-object-naming]]
 ==== Object Naming
 
-An object can be provided a user-defined name by calling
-fname:vkSetDebugUtilsObjectNameEXT as defined below.
-
-[open,refpage='vkSetDebugUtilsObjectNameEXT',desc='Give a user-friendly name to an object',type='protos']
+[open,refpage='vkSetDebugUtilsObjectNameEXT',desc='Give an application-defined name to an object',type='protos']
 --
+An object can be given an application-defined name by calling:
+
 include::{generated}/api/protos/vkSetDebugUtilsObjectNameEXT.adoc[]
 
   * pname:device is the device that is associated with the named object
@@ -211,7 +211,7 @@ include::{generated}/validity/structs/VkDebugUtilsObjectTagInfoEXT.adoc[]
 [[debugging-queue-labels]]
 === Queue Labels
 
-All Vulkan work must be submitted using queues.
+All Vulkan work is submitted using queues.
 It is possible for an application to use multiple queues, each containing
 multiple command buffers, when performing work.
 It can be useful to identify which queue, or even where in a queue,
@@ -254,7 +254,7 @@ include::{generated}/api/structs/VkDebugUtilsLabelEXT.adoc[]
     the label.
     A particular implementation may: choose to ignore this color value.
     The values contain RGBA values in order, in the range 0.0 to 1.0.
-    If all elements in pname:color are set to 0.0 then it is ignored.
+    If all elements in pname:color are 0.0, then it is ignored.
 
 include::{generated}/validity/structs/VkDebugUtilsLabelEXT.adoc[]
 --
@@ -378,7 +378,7 @@ include::{generated}/api/protos/vkCmdInsertDebugUtilsLabelEXT.adoc[]
 
   * pname:commandBuffer is the command buffer into which the command is
     recorded.
-  * pname:pInfo is a pointer to a slink:VkDebugUtilsLabelEXT structure
+  * pname:pLabelInfo is a pointer to a slink:VkDebugUtilsLabelEXT structure
     specifying parameters of the label to insert.
 
 include::{generated}/validity/protos/vkCmdInsertDebugUtilsLabelEXT.adoc[]
@@ -391,7 +391,7 @@ include::{generated}/validity/protos/vkCmdInsertDebugUtilsLabelEXT.adoc[]
 Vulkan allows an application to register multiple callbacks with any Vulkan
 component wishing to report debug information.
 Some callbacks may log the information to a file, others may cause a debug
-break point or other application defined behavior.
+break point or other application-defined behavior.
 A primary producer of callback messages are the validation layers.
 An application can: register callbacks even when no validation layers are
 enabled, but they will only be called for the Vulkan loader and, if
@@ -489,13 +489,6 @@ Vulkan call.
 A callback can: be called from multiple threads simultaneously (if the
 application is making Vulkan calls from multiple threads).
 
-.Valid Usage
-****
-  * [[VUID-VkDebugUtilsMessengerCreateInfoEXT-pfnUserCallback-01914]]
-    pname:pfnUserCallback must: be a valid
-    tlink:PFN_vkDebugUtilsMessengerCallbackEXT
-****
-
 include::{generated}/validity/structs/VkDebugUtilsMessengerCreateInfoEXT.adoc[]
 --
 
@@ -522,7 +515,7 @@ include::{generated}/api/enums/VkDebugUtilsMessageSeverityFlagBitsEXT.adoc[]
     informational message such as resource details that may be handy when
     debugging an application.
   * ename:VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT specifies use of
-    Vulkan that may: expose an app bug.
+    Vulkan that may: expose an application bug.
     Such cases may not be immediately harmful, such as a fragment shader
     outputting to a location with no attachment.
     Other cases may: point to behavior that is almost certainly bad when
@@ -533,7 +526,6 @@ include::{generated}/api/enums/VkDebugUtilsMessageSeverityFlagBitsEXT.adoc[]
     application has violated a valid usage condition of the specification.
 
 [NOTE]
-.Note
 ====
 The values of elink:VkDebugUtilsMessageSeverityFlagBitsEXT are sorted based
 on severity.
@@ -638,17 +630,22 @@ include::{generated}/api/structs/VkDebugUtilsMessengerCallbackDataEXT.adoc[]
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is `0` and is reserved for future use.
-  * pname:pMessageIdName is a null-terminated string that identifies the
-    particular message ID that is associated with the provided message.
+  * pname:pMessageIdName is `NULL` or a null-terminated UTF-8 string that
+    identifies the particular message ID that is associated with the
+    provided message.
     If the message corresponds to a validation layer message, then this
-    string may contain the portion of the Vulkan specification that is
-    believed to have been violated.
+    string will be the VUID.
   * pname:messageIdNumber is the ID number of the triggering message.
     If the message corresponds to a validation layer message, then this
-    number is related to the internal number associated with the message
-    being triggered.
-  * pname:pMessage is a null-terminated string detailing the trigger
-    conditions.
+    number is an internal hash of the VUID.
+  * pname:pMessage is
+ifdef::VK_EXT_device_address_binding_report[]
+    `NULL` if pname:messageTypes is equal to
+    ename:VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT, or
+endif::VK_EXT_device_address_binding_report[]
+    a null-terminated UTF-8 string detailing the trigger conditions.
+    If the message corresponds to a validation layer message, then this will
+    contain the main message with the specification text and link.
   * pname:queueLabelCount is a count of items contained in the
     pname:pQueueLabels array.
   * pname:pQueueLabels is `NULL` or a pointer to an array of
@@ -671,7 +668,6 @@ include::{generated}/api/structs/VkDebugUtilsMessengerCallbackDataEXT.adoc[]
     always guaranteed to be the most important object for this message.
 
 [NOTE]
-.Note
 ====
 This structure should only be considered valid during the lifetime of the
 triggered callback.
@@ -685,7 +681,6 @@ pname:pCmdBufLabels will be the first defined (and therefore the oldest)
 while the last label in each list will be the most recent.
 
 [NOTE]
-.Note
 ====
 pname:pQueueLabels will only be non-`NULL` if one of the objects in
 pname:pObjects can be related directly to a defined sname:VkQueue which has
@@ -743,7 +738,7 @@ submit a debug message with the following properties:
 
   * pname:messageSeverity equal to
     ename:VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT
-  * pname:messageType equal to
+  * pname:messageTypes equal to
     ename:VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT
   * sname:VkDebugUtilsMessengerCallbackDataEXT::pname:pObjects must:
     identify the associated Vulkan object
@@ -811,9 +806,7 @@ endif::VK_EXT_device_address_binding_report[]
 
 [open,refpage='vkSubmitDebugUtilsMessageEXT',desc='Inject a message into a debug stream',type='protos']
 --
-There may be times that a user wishes to intentionally submit a debug
-message.
-To do this, call:
+To intentionally submit a debug message, call:
 
 include::{generated}/api/protos/vkSubmitDebugUtilsMessageEXT.adoc[]
 

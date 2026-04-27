@@ -1,4 +1,4 @@
-// Copyright 2020-2024 The Khronos Group Inc.
+// Copyright 2020-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -10,6 +10,7 @@
     ename:VK_IMAGE_LAYOUT_UNDEFINED
   * [[VUID-{refpage}-finalLayout-00843]]
     pname:finalLayout must: not be ename:VK_IMAGE_LAYOUT_UNDEFINED or
+ifdef::VK_EXT_zero_initialize_device_memory[ename:VK_IMAGE_LAYOUT_ZERO_INITIALIZED_EXT or]
     ename:VK_IMAGE_LAYOUT_PREINITIALIZED
   * [[VUID-{refpage}-format-03280]]
     If pname:format is a color format, pname:initialLayout must: not be
@@ -114,4 +115,16 @@ endif::VK_EXT_attachment_feedback_loop_layout[]
     set in pname:imageCreateSampleCounts (as defined in
     <<resources-image-creation-limits,Image Creation Limits>>) for the given
     pname:format
+ifdef::VK_VERSION_1_4,VK_KHR_dynamic_rendering_local_read[]
+  * [[VUID-{refpage}-dynamicRenderingLocalRead-09544]]
+    If the <<features-dynamicRenderingLocalRead,
+    pname:dynamicRenderingLocalRead>> feature is not enabled,
+    pname:initialLayout must: not be
+    ename:VK_IMAGE_LAYOUT_RENDERING_LOCAL_READ
+  * [[VUID-{refpage}-dynamicRenderingLocalRead-09545]]
+    If the <<features-dynamicRenderingLocalRead,
+    pname:dynamicRenderingLocalRead>> feature is not enabled,
+    pname:finalLayout must: not be
+    ename:VK_IMAGE_LAYOUT_RENDERING_LOCAL_READ
+endif::VK_VERSION_1_4,VK_KHR_dynamic_rendering_local_read[]
 // Common Valid Usage

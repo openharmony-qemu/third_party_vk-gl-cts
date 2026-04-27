@@ -1,12 +1,14 @@
-#!/usr/bin/python3 -i
+#!/usr/bin/env python3 -i
 #
-# Copyright 2013-2024 The Khronos Group Inc.
+# Copyright 2013-2025 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 
 import os
 import re
 import sys
+from pathlib import Path
+
 from functools import total_ordering
 from generator import GeneratorOptions, OutputGenerator, regSortFeatures, write
 from parse_dependency import dependencyMarkup, dependencyNames
@@ -68,13 +70,13 @@ class Extension:
         self.promotedFrom = set()
 
         if self.promotedTo is not None and self.deprecatedBy is not None and self.obsoletedBy is not None:
-            self.generator.logMsg('warn', 'All \'promotedto\', \'deprecatedby\' and \'obsoletedby\' attributes used on extension ' + self.name + '! Ignoring \'promotedto\' and \'deprecatedby\'.')
+            self.generator.logMsg('warn', f"All 'promotedto', 'deprecatedby' and 'obsoletedby' attributes used on extension {self.name}! Ignoring 'promotedto' and 'deprecatedby'.")
         elif self.promotedTo is not None and self.deprecatedBy is not None:
-            self.generator.logMsg('warn', 'Both \'promotedto\' and \'deprecatedby\' attributes used on extension ' + self.name + '! Ignoring \'deprecatedby\'.')
+            self.generator.logMsg('warn', f"Both 'promotedto' and 'deprecatedby' attributes used on extension {self.name}! Ignoring 'deprecatedby'.")
         elif self.promotedTo is not None and self.obsoletedBy is not None:
-            self.generator.logMsg('warn', 'Both \'promotedto\' and \'obsoletedby\' attributes used on extension ' + self.name + '! Ignoring \'promotedto\'.')
+            self.generator.logMsg('warn', f"Both 'promotedto' and 'obsoletedby' attributes used on extension {self.name}! Ignoring 'promotedto'.")
         elif self.deprecatedBy is not None and self.obsoletedBy is not None:
-            self.generator.logMsg('warn', 'Both \'deprecatedby\' and \'obsoletedby\' attributes used on extension ' + self.name + '! Ignoring \'deprecatedby\'.')
+            self.generator.logMsg('warn', f"Both 'deprecatedby' and 'obsoletedby' attributes used on extension {self.name}! Ignoring 'deprecatedby'.")
 
         supercededBy = None
         if self.promotedTo is not None:
@@ -95,7 +97,7 @@ class Extension:
             elif supercededBy.startswith(self.conventions.extension_name_prefix):
                 self.supercedingExtension = supercededBy
             else:
-                self.generator.logMsg('error', 'Unrecognized ' + self.deprecationType + ' attribute value \'' + supercededBy + '\'!')
+                self.generator.logMsg('error', f"Unrecognized {self.deprecationType} attribute value '{supercededBy}'!")
 
     def __str__(self):
         return self.name
@@ -129,7 +131,7 @@ class Extension:
             return 'Device extension'
 
         if self.ext_type is not None:
-            self.generator.logMsg('warn', 'The type attribute of ' + self.name + ' extension is neither \'instance\' nor \'device\'. That is invalid (at the time this script was written).')
+            self.generator.logMsg('warn', f"The type attribute of {self.name} extension is neither 'instance' nor 'device'. That is invalid (at the time this script was written).")
         else: # should be unreachable
             self.generator.logMsg('error', 'Logic error in typeToStr(): Missing type attribute!')
         return None
@@ -146,36 +148,36 @@ class Extension:
         if isRefpage:
             # Always link into API spec
             specURL = self.conventions.specURL('api')
-            return 'link:{}#{}[{}^]'.format(specURL, xrefName, xrefText)
+            return f'link:{specURL}#{xrefName}[{xrefText}^]'
         else:
-            return '<<' + xrefName + ', ' + xrefText + '>>'
+            return f'<<{xrefName}, {xrefText}>>'
 
     def conditionalLinkCoreAPI(self, apiVersion, linkSuffix, isRefpage):
-        versionMatch = re.match(self.conventions.api_version_prefix + r'(\d+)_(\d+)', apiVersion)
+        versionMatch = re.match(f"{self.conventions.api_version_prefix}(\\d+)_(\\d+)", apiVersion)
         major = versionMatch.group(1)
         minor = versionMatch.group(2)
 
-        dottedVersion = major + '.' + minor
+        dottedVersion = f'{major}.{minor}'
 
-        xrefName = 'versions-' + dottedVersion + linkSuffix
-        xrefText = self.conventions.api_name() + ' ' + dottedVersion
+        xrefName = f'versions-{dottedVersion}{linkSuffix}'
+        xrefText = f"{self.conventions.api_name()} {dottedVersion}"
 
-        doc  = 'ifdef::' + apiVersion + '[]\n'
-        doc += '    ' + self.specLink(xrefName, xrefText, isRefpage) + '\n'
-        doc += 'endif::' + apiVersion + '[]\n'
-        doc += 'ifndef::' + apiVersion + '[]\n'
-        doc += '    ' + self.conventions.api_name() + ' ' + dottedVersion + '\n'
-        doc += 'endif::' + apiVersion + '[]\n'
+        doc  = f'ifdef::{apiVersion}[]\n'
+        doc += f'    {self.specLink(xrefName, xrefText, isRefpage)}\n'
+        doc += f'endif::{apiVersion}[]\n'
+        doc += f'ifndef::{apiVersion}[]\n'
+        doc += f'    {self.conventions.api_name()} {dottedVersion}\n'
+        doc += f'endif::{apiVersion}[]\n'
 
         return doc
 
     def conditionalLinkExt(self, extName, indent = '    '):
-        doc  = 'ifdef::' + extName + '[]\n'
-        doc +=  indent + self.conventions.formatExtension(extName) + '\n'
-        doc += 'endif::' + extName + '[]\n'
-        doc += 'ifndef::' + extName + '[]\n'
-        doc += indent + '`' + extName + '`\n'
-        doc += 'endif::' + extName + '[]\n'
+        doc  = f'ifdef::{extName}[]\n'
+        doc += f'{indent}{self.conventions.formatExtension(extName)}\n'
+        doc += f'endif::{extName}[]\n'
+        doc += f'ifndef::{extName}[]\n'
+        doc += f'{indent}`{extName}`\n'
+        doc += f'endif::{extName}[]\n'
 
         return doc
 
@@ -190,24 +192,24 @@ class Extension:
         if ext.deprecationType:
             if ext.deprecationType == 'promotion':
                 if ext.supercedingAPIVersion:
-                    write('  ** Which in turn was _promoted_ to\n' + ext.conditionalLinkCoreAPI(ext.supercedingAPIVersion, '-promotions', isRefpage), file=file)
+                    write(f"  ** Which in turn was _promoted_ to\n{ext.conditionalLinkCoreAPI(ext.supercedingAPIVersion, '-promotions', isRefpage)}", file=file)
                 else: # ext.supercedingExtension
-                    write('  ** Which in turn was _promoted_ to extension\n' + ext.conditionalLinkExt(ext.supercedingExtension), file=file)
-                    ext.resolveDeprecationChain(extensions, ext.supercedingExtension, file)
+                    write(f"  ** Which in turn was _promoted_ to extension\n{ext.conditionalLinkExt(ext.supercedingExtension)}", file=file)
+                    ext.resolveDeprecationChain(extensions, ext.supercedingExtension, isRefpage, file)
             elif ext.deprecationType == 'deprecation':
                 if ext.supercedingAPIVersion:
-                    write('  ** Which in turn was _deprecated_ by\n' + ext.conditionalLinkCoreAPI(ext.supercedingAPIVersion, '-new-feature', isRefpage), file=file)
+                    write(f"  ** Which in turn was _deprecated_ by\n{ext.conditionalLinkCoreAPI(ext.supercedingAPIVersion, '-new-feature', isRefpage)}", file=file)
                 elif ext.supercedingExtension:
-                    write('  ** Which in turn was _deprecated_ by\n' + ext.conditionalLinkExt(ext.supercedingExtension) + '    extension', file=file)
-                    ext.resolveDeprecationChain(extensions, ext.supercedingExtension, file)
+                    write(f"  ** Which in turn was _deprecated_ by\n{ext.conditionalLinkExt(ext.supercedingExtension)}    extension", file=file)
+                    ext.resolveDeprecationChain(extensions, ext.supercedingExtension, isRefpage, file)
                 else:
                     write('  ** Which in turn was _deprecated_ without replacement', file=file)
             elif ext.deprecationType == 'obsoletion':
                 if ext.supercedingAPIVersion:
-                    write('  ** Which in turn was _obsoleted_ by\n' + ext.conditionalLinkCoreAPI(ext.supercedingAPIVersion, '-new-feature', isRefpage), file=file)
+                    write(f"  ** Which in turn was _obsoleted_ by\n{ext.conditionalLinkCoreAPI(ext.supercedingAPIVersion, '-new-feature', isRefpage)}", file=file)
                 elif ext.supercedingExtension:
-                    write('  ** Which in turn was _obsoleted_ by\n' + ext.conditionalLinkExt(ext.supercedingExtension) + '    extension', file=file)
-                    ext.resolveDeprecationChain(extensions, ext.supercedingExtension, file)
+                    write(f"  ** Which in turn was _obsoleted_ by\n{ext.conditionalLinkExt(ext.supercedingExtension)}    extension", file=file)
+                    ext.resolveDeprecationChain(extensions, ext.supercedingExtension, isRefpage, file)
                 else:
                     write('  ** Which in turn was _obsoleted_ without replacement', file=file)
             else: # should be unreachable
@@ -233,7 +235,7 @@ class Extension:
             tagPrefix = '\n== '
             tagSuffix = ''
         else:
-            # Use an bolded item list for the tag name
+            # Use a bolded item list for the tag name
             tagPrefix = '*'
             tagSuffix = '*::'
 
@@ -257,18 +259,18 @@ class Extension:
           generating a specification extension appendix include"""
 
         if isRefpage:
-            filename = self.filename.replace('meta/', 'meta/refpage.')
+            filename = self.filename.with_name(f"refpage.{self.filename.name}")
         else:
             filename = self.filename
 
         fp = self.generator.newFile(filename)
 
         if not isRefpage:
-            write('[[' + self.name + ']]', file=fp)
-            write('=== ' + self.name, file=fp)
+            write(f'[[{self.name}]]', file=fp)
+            write(f'== {self.name}', file=fp)
             write('', file=fp)
 
-            self.writeTag('Name String', '`' + self.name + '`', isRefpage, fp)
+            self.writeTag('Name String', f'`{self.name}`', isRefpage, fp)
             if self.conventions.write_extension_type:
                 self.writeTag('Extension Type', self.typeToStr(), isRefpage, fp)
 
@@ -293,9 +295,7 @@ class Extension:
                 separator = ''
             else:
                 separator = '+'
-            write(separator + '\n--\n' +
-                  dependencyMarkup(self.depends) +
-                  '--', file=fp)
+            write(f"{separator}\n--\n{dependencyMarkup(self.depends)}--", file=fp)
         else:
             # Do not specify the base API redundantly, but put something
             # here to avoid formatting trouble.
@@ -328,6 +328,8 @@ class Extension:
             for name in names:
                 write(f'* Interacts with {name}', file=fp)
 
+            write('', file=fp)
+
         if self.name in SPV_deps:
             self.writeTag('SPIR-V Dependencies', None, isRefpage, fp)
 
@@ -341,23 +343,23 @@ class Extension:
 
             if self.deprecationType == 'promotion':
                 if self.supercedingAPIVersion:
-                    write('  * _Promoted_ to\n' + self.conditionalLinkCoreAPI(self.supercedingAPIVersion, '-promotions', isRefpage), file=fp)
+                    write(f"  * _Promoted_ to\n{self.conditionalLinkCoreAPI(self.supercedingAPIVersion, '-promotions', isRefpage)}", file=fp)
                 else: # ext.supercedingExtension
-                    write('  * _Promoted_ to\n' + self.conditionalLinkExt(self.supercedingExtension) + '    extension', file=fp)
+                    write(f"  * _Promoted_ to\n{self.conditionalLinkExt(self.supercedingExtension)}    extension", file=fp)
                     self.resolveDeprecationChain(extensions, self.supercedingExtension, isRefpage, fp)
             elif self.deprecationType == 'deprecation':
                 if self.supercedingAPIVersion:
-                    write('  * _Deprecated_ by\n' + self.conditionalLinkCoreAPI(self.supercedingAPIVersion, '-new-features', isRefpage), file=fp)
+                    write(f"  * _Deprecated_ by\n{self.conditionalLinkCoreAPI(self.supercedingAPIVersion, '-new-features', isRefpage)}", file=fp)
                 elif self.supercedingExtension:
-                    write('  * _Deprecated_ by\n' + self.conditionalLinkExt(self.supercedingExtension) + '    extension' , file=fp)
+                    write(f"  * _Deprecated_ by\n{self.conditionalLinkExt(self.supercedingExtension)}    extension" , file=fp)
                     self.resolveDeprecationChain(extensions, self.supercedingExtension, isRefpage, fp)
                 else:
                     write('  * _Deprecated_ without replacement' , file=fp)
             elif self.deprecationType == 'obsoletion':
                 if self.supercedingAPIVersion:
-                    write('  * _Obsoleted_ by\n' + self.conditionalLinkCoreAPI(self.supercedingAPIVersion, '-new-features', isRefpage), file=fp)
+                    write(f"  * _Obsoleted_ by\n{self.conditionalLinkCoreAPI(self.supercedingAPIVersion, '-new-features', isRefpage)}", file=fp)
                 elif self.supercedingExtension:
-                    write('  * _Obsoleted_ by\n' + self.conditionalLinkExt(self.supercedingExtension) + '    extension' , file=fp)
+                    write(f"  * _Obsoleted_ by\n{self.conditionalLinkExt(self.supercedingExtension)}    extension" , file=fp)
                     self.resolveDeprecationChain(extensions, self.supercedingExtension, isRefpage, fp)
                 else:
                     # TODO: Does not make sense to retroactively ban use of extensions from 1.0.
@@ -382,7 +384,7 @@ class Extension:
                 write('* {}'.format(
                       self.specLink(
                            xrefName = self.conventions.special_use_section_anchor,
-                           xrefText = '{' + use + '}',
+                           xrefText = f"{{{use}}}",
                            isRefpage = isRefpage)), file=fp)
             write('', file=fp)
 
@@ -395,7 +397,7 @@ class Extension:
                 name = ' '.join(contactWords[:-1])
                 handle = contactWords[-1]
                 if handle.startswith('gitlab:'):
-                    prettyHandle = 'icon:gitlab[alt=GitLab, role="red"]' + handle.replace('gitlab:@', '')
+                    prettyHandle = f"icon:gitlab[alt=GitLab, role=\"red\"]{handle.replace('gitlab:@', '')}"
                 elif handle.startswith('@'):
                     issuePlaceholderText = f'[{self.name}] {handle}'
                     issuePlaceholderText += f'%0A*Here describe the issue or question you have about the {self.name} extension*'
@@ -404,7 +406,7 @@ class Extension:
                 else:
                     prettyHandle = handle
 
-                write('  * ' + name + ' ' + prettyHandle, file=fp)
+                write(f'  * {name} {prettyHandle}', file=fp)
             write('', file=fp)
 
         # Check if a proposal document for this extension exists in the
@@ -421,7 +423,7 @@ class Extension:
             """Check if a proposal document for an extension exists,
                returning the path to that proposal or None otherwise."""
 
-            path = 'proposals/{}.adoc'.format(extname)
+            path = f'proposals/{extname}.adoc'
             if os.path.exists(path) and os.access(path, os.R_OK):
                 return path
             else:
@@ -443,7 +445,7 @@ class Extension:
             tag = 'Extension Proposal'
             for (name, path) in sorted(proposals):
                 self.writeTag(tag,
-                    f'link:{{specRepositoryURL}}/{path}[{name}]',
+                    f'{{proposalRefPath}}{path}[{name}]',
                     isRefpage, fp)
                 # Setting tag = None so additional values will not get
                 # additional tag headers.
@@ -492,8 +494,8 @@ class ExtensionMetaDocOutputGenerator(OutputGenerator):
 
     def beginFile(self, genOpts):
         OutputGenerator.beginFile(self, genOpts)
-
-        self.directory = self.genOpts.directory
+        assert self.genOpts
+        self.directory = Path(self.genOpts.directory)
         self.file_suffix = self.genOpts.conventions.file_suffix
 
         # Iterate over all 'tag' Elements and add the names of all the valid vendor
@@ -530,23 +532,23 @@ class ExtensionMetaDocOutputGenerator(OutputGenerator):
     def conditionalExt(self, extName, content, ifdef = None, condition = None):
         doc = ''
 
-        innerdoc  = 'ifdef::' + extName + '[]\n'
-        innerdoc += content + '\n'
-        innerdoc += 'endif::' + extName + '[]\n'
+        innerdoc  = f'ifdef::{extName}[]\n'
+        innerdoc += f"{content}\n"
+        innerdoc += f'endif::{extName}[]\n'
 
         if ifdef:
             if ifdef == 'ifndef':
                 if condition:
-                    doc += 'ifndef::' + condition + '[]\n'
+                    doc += f'ifndef::{condition}[]\n'
                     doc += innerdoc
-                    doc += 'endif::' + condition + '[]\n'
+                    doc += f'endif::{condition}[]\n'
                 else: # no condition is as if condition is defined; "nothing" is always defined :p
                     pass # so no output
             elif ifdef == 'ifdef':
                 if condition:
-                    doc += 'ifdef::' + condition + '+' + extName + '[]\n'
-                    doc += content + '\n' # does not include innerdoc; the ifdef was merged with the one above
-                    doc += 'endif::' + condition + '+' + extName + '[]\n'
+                    doc += f'ifdef::{condition}+{extName}[]\n'
+                    doc += f"{content}\n" # does not include innerdoc; the ifdef was merged with the one above
+                    doc += f'endif::{condition}+{extName}[]\n'
                 else: # no condition is as if condition is defined; "nothing" is always defined :p
                     doc += innerdoc
             else: # should be unreachable
@@ -596,27 +598,28 @@ class ExtensionMetaDocOutputGenerator(OutputGenerator):
                 promotedExtensions.setdefault(ext.supercedingAPIVersion, []).append(ext.name)
 
         for coreVersion, extensions in promotedExtensions.items():
-            promoted_extensions_fp = self.newFile(self.directory + '/promoted_extensions_' + coreVersion + self.file_suffix)
+            promoted_extensions_fp = self.newFile(self.directory / f"promoted_extensions_{coreVersion}{self.file_suffix}")
 
             for extname in sorted(extensions, key=makeSortKey):
+                ext = self.extensions[extname]
                 indent = ''
-                write('  * {blank}\n+\n' + ext.conditionalLinkExt(extname, indent), file=promoted_extensions_fp)
+                write(f"  * {{blank}}\n+\n{ext.conditionalLinkExt(extname, indent)}", file=promoted_extensions_fp)
 
             promoted_extensions_fp.close()
 
         # Generate include directives for the extensions appendix, grouping
         # extensions by status (current, deprecated, provisional, etc.)
-        with self.newFile(self.directory + '/current_extensions_appendix' + self.file_suffix) as current_extensions_appendix_fp, \
-                self.newFile(self.directory + '/deprecated_extensions_appendix' + self.file_suffix) as deprecated_extensions_appendix_fp, \
-                self.newFile(self.directory + '/current_extension_appendices' + self.file_suffix) as current_extension_appendices_fp, \
-                self.newFile(self.directory + '/current_extension_appendices_toc' + self.file_suffix) as current_extension_appendices_toc_fp, \
-                self.newFile(self.directory + '/deprecated_extension_appendices' + self.file_suffix) as deprecated_extension_appendices_fp, \
-                self.newFile(self.directory + '/deprecated_extension_appendices_toc' + self.file_suffix) as deprecated_extension_appendices_toc_fp, \
-                self.newFile(self.directory + '/deprecated_extensions_guard_macro' + self.file_suffix) as deprecated_extensions_guard_macro_fp, \
-                self.newFile(self.directory + '/provisional_extensions_appendix' + self.file_suffix) as provisional_extensions_appendix_fp, \
-                self.newFile(self.directory + '/provisional_extension_appendices' + self.file_suffix) as provisional_extension_appendices_fp, \
-                self.newFile(self.directory + '/provisional_extension_appendices_toc' + self.file_suffix) as provisional_extension_appendices_toc_fp, \
-                self.newFile(self.directory + '/provisional_extensions_guard_macro' + self.file_suffix) as provisional_extensions_guard_macro_fp:
+        with self.newFile(self.directory / f"current_extensions_appendix{self.file_suffix}") as current_extensions_appendix_fp, \
+                self.newFile(self.directory / f"deprecated_extensions_appendix{self.file_suffix}") as deprecated_extensions_appendix_fp, \
+                self.newFile(self.directory / f"current_extension_appendices{self.file_suffix}") as current_extension_appendices_fp, \
+                self.newFile(self.directory / f"current_extension_appendices_toc{self.file_suffix}") as current_extension_appendices_toc_fp, \
+                self.newFile(self.directory / f"deprecated_extension_appendices{self.file_suffix}") as deprecated_extension_appendices_fp, \
+                self.newFile(self.directory / f"deprecated_extension_appendices_toc{self.file_suffix}") as deprecated_extension_appendices_toc_fp, \
+                self.newFile(self.directory / f"deprecated_extensions_guard_macro{self.file_suffix}") as deprecated_extensions_guard_macro_fp, \
+                self.newFile(self.directory / f"provisional_extensions_appendix{self.file_suffix}") as provisional_extensions_appendix_fp, \
+                self.newFile(self.directory / f"provisional_extension_appendices{self.file_suffix}") as provisional_extension_appendices_fp, \
+                self.newFile(self.directory / f"provisional_extension_appendices_toc{self.file_suffix}") as provisional_extension_appendices_toc_fp, \
+                self.newFile(self.directory / f"provisional_extensions_guard_macro{self.file_suffix}") as provisional_extensions_guard_macro_fp:
 
             # Note: there is a hardwired assumption in creating the
             # include:: directives below that all of these files are located
@@ -624,58 +627,95 @@ class ExtensionMetaDocOutputGenerator(OutputGenerator):
             # This is difficult to change, and it is very unlikely changing
             # it will be needed.
 
-            write('', file=current_extensions_appendix_fp)
-            write('include::{generated}/meta/deprecated_extensions_guard_macro' + self.file_suffix + '[]', file=current_extensions_appendix_fp)
-            write('', file=current_extensions_appendix_fp)
-            write('ifndef::HAS_DEPRECATED_EXTENSIONS[]', file=current_extensions_appendix_fp)
-            write('[[extension-appendices-list]]', file=current_extensions_appendix_fp)
-            write('== List of Extensions', file=current_extensions_appendix_fp)
-            write('endif::HAS_DEPRECATED_EXTENSIONS[]', file=current_extensions_appendix_fp)
-            write('ifdef::HAS_DEPRECATED_EXTENSIONS[]', file=current_extensions_appendix_fp)
-            write('[[extension-appendices-list]]', file=current_extensions_appendix_fp)
-            write('== List of Current Extensions', file=current_extensions_appendix_fp)
-            write('endif::HAS_DEPRECATED_EXTENSIONS[]', file=current_extensions_appendix_fp)
-            write('', file=current_extensions_appendix_fp)
-            write('include::{generated}/meta/current_extension_appendices_toc' + self.file_suffix + '[]', file=current_extensions_appendix_fp)
-            write('\n<<<\n', file=current_extensions_appendix_fp)
-            write('include::{generated}/meta/current_extension_appendices' + self.file_suffix + '[]', file=current_extensions_appendix_fp)
+            def write_appendix_header(guard_prefix,
+                                      prefix,
+                                      file_suffix,
+                                      section_title,
+                                      fp,
+                                      guard = None):
+                """Write header of an extension appendix section to a file.
+                   The current, deprecated, and provisional section headers
+                   are sufficiently similar to factor this out.
 
-            write('', file=deprecated_extensions_appendix_fp)
-            write('include::{generated}/meta/deprecated_extensions_guard_macro' + self.file_suffix + '[]', file=deprecated_extensions_appendix_fp)
-            write('', file=deprecated_extensions_appendix_fp)
-            write('ifdef::HAS_DEPRECATED_EXTENSIONS[]', file=deprecated_extensions_appendix_fp)
-            write('[[deprecated-extension-appendices-list]]', file=deprecated_extensions_appendix_fp)
-            write('== List of Deprecated Extensions', file=deprecated_extensions_appendix_fp)
-            write('include::{generated}/meta/deprecated_extension_appendices_toc' + self.file_suffix + '[]', file=deprecated_extensions_appendix_fp)
-            write('\n<<<\n', file=deprecated_extensions_appendix_fp)
-            write('include::{generated}/meta/deprecated_extension_appendices' + self.file_suffix + '[]', file=deprecated_extensions_appendix_fp)
-            write('endif::HAS_DEPRECATED_EXTENSIONS[]', file=deprecated_extensions_appendix_fp)
+                - guard_prefix - prefix to included guard file name
+                - prefix - prefix to other filenames and to anchors
+                - file_suffix - supplied by the APIConventions object
+                - section_title - markup for title of this section
+                - fp - file pointer to write to
+                - guard - asciidoc attribute protecting against multiple
+                  inclusion, or None"""
+
+                if guard is not None:
+                    ifdef_protect = f'ifdef::{guard}[]'
+                    endif_protect = f'endif::{guard}[]'
+                else:
+                    ifdef_protect = ''
+                    endif_protect = ''
+
+                # Do not include the lengthy '*extension_appendices_toc' indices
+                # in the Antora site build, since all the extensions are already
+                # indexed on the right navigation sidebar.
+
+                print('',
+                      f'include::{{generated}}/meta/{guard_prefix}_extensions_guard_macro{file_suffix}[]',
+                      '',
+                      ifdef_protect,
+                      f'[[{prefix}-extension-appendices-list]]',
+                      section_title,
+                      'ifndef::site-gen-antora[]',
+                      f'include::{{generated}}/meta/{prefix}_extension_appendices_toc{file_suffix}[]',
+                      'endif::site-gen-antora[]',
+                      '\n<<<\n',
+                      f'include::{{generated}}/meta/{prefix}_extension_appendices{file_suffix}[]',
+                      endif_protect,
+                      file=fp, sep='\n')
+
+            write_appendix_header(guard_prefix = 'deprecated',
+                                  prefix = 'current',
+                                  file_suffix = self.file_suffix,
+                                  section_title = '\
+ifdef::HAS_DEPRECATED_EXTENSIONS[:sectitle: Current Extensions]\n\
+ifndef::HAS_DEPRECATED_EXTENSIONS[:sectitle: Extensions]\n\
+== List of {sectitle}',
+                                  fp = current_extensions_appendix_fp,
+                                  guard = None)
+
+            write_appendix_header(guard_prefix = 'deprecated',
+                                  prefix = 'deprecated',
+                                  file_suffix = self.file_suffix,
+                                  section_title = '== List of Deprecated Extensions',
+                                  fp = deprecated_extensions_appendix_fp,
+                                  guard = 'HAS_DEPRECATED_EXTENSIONS')
 
             # add include guards to allow multiple includes
             write('ifndef::DEPRECATED_EXTENSIONS_GUARD_MACRO_INCLUDE_GUARD[]', file=deprecated_extensions_guard_macro_fp)
             write(':DEPRECATED_EXTENSIONS_GUARD_MACRO_INCLUDE_GUARD:\n', file=deprecated_extensions_guard_macro_fp)
+
+            write_appendix_header(guard_prefix = 'provisional',
+                                  prefix = 'provisional',
+                                  file_suffix = self.file_suffix,
+                                  section_title = '== List of Provisional Extensions',
+                                  fp = provisional_extensions_appendix_fp,
+                                  guard = 'HAS_PROVISIONAL_EXTENSIONS')
+
             write('ifndef::PROVISIONAL_EXTENSIONS_GUARD_MACRO_INCLUDE_GUARD[]', file=provisional_extensions_guard_macro_fp)
             write(':PROVISIONAL_EXTENSIONS_GUARD_MACRO_INCLUDE_GUARD:\n', file=provisional_extensions_guard_macro_fp)
-
-            write('', file=provisional_extensions_appendix_fp)
-            write('include::{generated}/meta/provisional_extensions_guard_macro' + self.file_suffix + '[]', file=provisional_extensions_appendix_fp)
-            write('', file=provisional_extensions_appendix_fp)
-            write('ifdef::HAS_PROVISIONAL_EXTENSIONS[]', file=provisional_extensions_appendix_fp)
-            write('[[provisional-extension-appendices-list]]', file=provisional_extensions_appendix_fp)
-            write('== List of Provisional Extensions', file=provisional_extensions_appendix_fp)
-            write('include::{generated}/meta/provisional_extension_appendices_toc' + self.file_suffix + '[]', file=provisional_extensions_appendix_fp)
-            write('\n<<<\n', file=provisional_extensions_appendix_fp)
-            write('include::{generated}/meta/provisional_extension_appendices' + self.file_suffix + '[]', file=provisional_extensions_appendix_fp)
-            write('endif::HAS_PROVISIONAL_EXTENSIONS[]', file=provisional_extensions_appendix_fp)
 
             # Emit extensions in author ID order
             sorted_keys = sorted(self.extensions.keys(), key=makeSortKey)
             for name in sorted_keys:
                 ext = self.extensions[name]
 
-                include = self.makeExtensionInclude(ext.name)
-                link = '  * ' + self.conventions.formatExtension(ext.name)
-                if ext.provisional == 'true':
+                # Increase the leveloffset of the extension include so it is
+                # lower than the subsection (extension name) it belongs to
+                include =  ':leveloffset: +1\n'
+                include += f"\n{self.makeExtensionInclude(ext.name)}\n\n"
+                include += ':leveloffset: -1\n'
+
+                link = f"  * {self.conventions.formatExtension(ext.name)}"
+
+                # If something is provisional and deprecated, it is deprecated.
+                if ext.provisional == 'true' and ext.deprecationType is None:
                     write(self.conditionalExt(ext.name, include), file=provisional_extension_appendices_fp)
                     write(self.conditionalExt(ext.name, link), file=provisional_extension_appendices_toc_fp)
                     write(self.conditionalExt(ext.name, ':HAS_PROVISIONAL_EXTENSIONS:'), file=provisional_extensions_guard_macro_fp)
@@ -684,6 +724,13 @@ class ExtensionMetaDocOutputGenerator(OutputGenerator):
                     write(self.conditionalExt(ext.name, link), file=current_extension_appendices_toc_fp)
                 else:
                     condition = ext.supercedingAPIVersion if ext.supercedingAPIVersion else ext.supercedingExtension  # potentially None too
+
+                    if ext.deprecationType == 'promotion' and ext.supercedingAPIVersion:
+                        # Promoted extensions appear in the deprecation list, but
+                        # with a comment.
+                        # We could make a separate 'Promoted Extensions' list.
+
+                        link += ' (promoted to core)'
 
                     write(self.conditionalExt(ext.name, include, 'ifndef', condition), file=current_extension_appendices_fp)
                     write(self.conditionalExt(ext.name, link, 'ifndef', condition), file=current_extension_appendices_toc_fp)
@@ -729,7 +776,7 @@ class ExtensionMetaDocOutputGenerator(OutputGenerator):
         specialuse = self.getAttrib(interface, 'specialuse', OPTIONAL)
         ratified = self.getAttrib(interface, 'ratified', OPTIONAL, '')
 
-        filename = self.directory + '/' + name + self.file_suffix
+        filename = self.directory / f"{name}{self.file_suffix}"
 
         extdata = Extension(
             generator = self,
@@ -763,7 +810,7 @@ class ExtensionMetaDocOutputGenerator(OutputGenerator):
         attrib = elem.get(attribute, default)
         if required and (attrib is None):
             name = elem.get('name', 'UNKNOWN')
-            self.logMsg('error', 'While processing \'' + self.featureName + ', <' + elem.tag + '> \'' + name + '\' does not contain required attribute \'' + attribute + '\'')
+            self.logMsg('error', f"While processing '{self.featureName}, <{elem.tag}> '{name}' does not contain required attribute '{attribute}'")
         return attrib
 
     def numbersToWords(self, name):
@@ -771,26 +818,25 @@ class ExtensionMetaDocOutputGenerator(OutputGenerator):
 
         # temporarily replace allowlist items
         for i, w in enumerate(allowlist):
-            name = re.sub(w, '{' + str(i) + '}', name)
+            name = re.sub(w, f"{{{str(i)}}}", name)
 
         name = re.sub(r'(?<=[A-Z])(\d+)(?![A-Z])', r'_\g<1>', name)
 
         # undo allowlist substitution
         for i, w in enumerate(allowlist):
-            name = re.sub('\\{' + str(i) + '}', w, name)
+            name = re.sub(f"\\{{{str(i)}}}", w, name)
 
         return name
 
     def getSpecVersion(self, elem, extname, default=None):
         """Determine the extension revision from the EXTENSION_NAME_SPEC_VERSION
         enumerant.
-        This only makes sense for Vulkan.
 
         - elem - <extension> element to query
         - extname - extension name from the <extension> 'name' attribute
         - default - default value if SPEC_VERSION token not present"""
         # The literal enumerant name to match
-        versioningEnumName = self.numbersToWords(extname.upper()) + '_SPEC_VERSION'
+        versioningEnumName = f"{self.numbersToWords(extname.upper())}_SPEC_VERSION"
 
         for enum in elem.findall('./require/enum'):
             enumName = self.getAttrib(enum, 'name')
@@ -801,8 +847,8 @@ class ExtensionMetaDocOutputGenerator(OutputGenerator):
         for enum in elem.findall('./require/enum'):
             enumName = self.getAttrib(enum, 'name')
             if enumName.find('SPEC_VERSION') != -1:
-                self.logMsg('diag', 'Missing ' + versioningEnumName + '! Potential misnamed candidate ' + enumName + '.')
+                self.logMsg('diag', f"Missing {versioningEnumName}! Potential misnamed candidate {enumName}.")
                 return self.getAttrib(enum, 'value')
 
-        self.logMsg('error', 'Missing ' + versioningEnumName + '!')
+        self.logMsg('error', f"Missing {versioningEnumName}!")
         return default

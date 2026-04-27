@@ -1,4 +1,4 @@
-// Copyright 2015-2024 The Khronos Group Inc.
+// Copyright 2015-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -100,6 +100,10 @@ endif::VK_KHR_deferred_host_operations[]
 ifdef::VK_NV_device_generated_commands[]
 | ename:VK_OBJECT_TYPE_INDIRECT_COMMANDS_LAYOUT_NV | slink:VkIndirectCommandsLayoutNV
 endif::VK_NV_device_generated_commands[]
+ifdef::VK_EXT_device_generated_commands[]
+| ename:VK_OBJECT_TYPE_INDIRECT_COMMANDS_LAYOUT_EXT | slink:VkIndirectCommandsLayoutEXT
+| ename:VK_OBJECT_TYPE_INDIRECT_EXECUTION_SET_EXT | slink:VkIndirectExecutionSetEXT
+endif::VK_EXT_device_generated_commands[]
 ifdef::VK_FUCHSIA_buffer_collection[]
 | ename:VK_OBJECT_TYPE_BUFFER_COLLECTION_FUCHSIA | slink:VkBufferCollectionFUCHSIA
 endif::VK_FUCHSIA_buffer_collection[]
@@ -112,6 +116,13 @@ endif::VK_NV_optical_flow[]
 ifdef::VK_EXT_shader_object[]
 | ename:VK_OBJECT_TYPE_SHADER_EXT | slink:VkShaderEXT
 endif::VK_EXT_shader_object[]
+ifdef::VK_ARM_tensors[]
+| ename:VK_OBJECT_TYPE_TENSOR_ARM | slink:VkTensorARM
+| ename:VK_OBJECT_TYPE_TENSOR_VIEW_ARM | slink:VkTensorViewARM
+endif::VK_ARM_tensors[]
+ifdef::VK_ARM_data_graph[]
+| ename:VK_OBJECT_TYPE_DATA_GRAPH_PIPELINE_SESSION_ARM | slink:VkDataGraphPipelineSessionARM
+endif::VK_ARM_data_graph[]
 |====
 --
 
@@ -130,6 +141,7 @@ ifdef::VK_EXT_debug_report[]
 include::{chapters}/VK_EXT_debug_report.adoc[]
 endif::VK_EXT_debug_report[]
 
+
 ifdef::VK_NV_device_diagnostic_checkpoints,VK_EXT_device_fault[]
 == Device Loss Debugging
 endif::VK_NV_device_diagnostic_checkpoints,VK_EXT_device_fault[]
@@ -141,6 +153,7 @@ endif::VK_NV_device_diagnostic_checkpoints[]
 ifdef::VKSC_VERSION_1_0[]
 include::{chapters}/fault_handling.adoc[]
 endif::VKSC_VERSION_1_0[]
+
 
 ifdef::VK_EXT_device_fault[]
 === Device Fault Diagnosis
@@ -170,10 +183,10 @@ in the pname:vendorBinarySize member of pname:pFaultCounts.
 If pname:pFaultInfo is not `NULL`, pname:pFaultCounts must: point to a
 slink:VkDeviceFaultCountsEXT structure with each structure count or size
 member (pname:addressInfoCount, pname:vendorInfoCount,
-pname:vendorBinarySize) set by the user to the number of elements in the
-corresponding output array member of pname:pFaultInfo (pname:pAddressInfos
-and pname:pVendorInfos), or to the size of the output buffer in bytes
-(pname:pVendorBinaryData).
+pname:vendorBinarySize) set by the application to the number of elements in
+the corresponding output array member of pname:pFaultInfo
+(pname:pAddressInfos and pname:pVendorInfos), or to the size of the output
+buffer in bytes (pname:pVendorBinaryData).
 On return, each structure count member is overwritten with the number of
 structures actually written to the corresponding output array member of
 pname:pFaultInfo.
@@ -307,7 +320,6 @@ pointer must: lie within the region described.
 
 ifdef::VK_EXT_device_address_binding_report[]
 [NOTE]
-.Note
 ====
 Each element of pname:pAddressInfos describes either:
 
@@ -353,7 +365,6 @@ upper_address = (pInfo->reportedAddress |  (pInfo->addressPrecision-1))
 ----
 
 [NOTE]
-.Note
 ====
 It is valid for the pname:reportedAddress to contain a more precise address
 than indicated by pname:addressPrecision.
@@ -392,7 +403,6 @@ include::{generated}/api/enums/VkDeviceFaultAddressTypeEXT.adoc[]
     specifies an instruction pointer value associated with a fault.
 
 [NOTE]
-.Note
 ====
 The instruction pointer values recorded may not identify the specific
 instruction(s) that triggered the fault.
@@ -443,6 +453,7 @@ include::{generated}/api/structs/VkDeviceFaultVendorBinaryHeaderVersionOneEXT.ad
     enum value specifying the version of the header.
     A consumer of the crash dump should: use the header version to interpret
     the remainder of the header.
+    pname:headerVersion must: be written as exactly 4 bytes.
   * pname:vendorID is the sname:VkPhysicalDeviceProperties::pname:vendorID
     of the implementation.
   * pname:deviceID is the sname:VkPhysicalDeviceProperties::pname:deviceID
@@ -475,17 +486,8 @@ include::{generated}/api/structs/VkDeviceFaultVendorBinaryHeaderVersionOneEXT.ad
   * pname:apiVersion must: be zero or the value specified by
     slink:VkApplicationInfo::pname:apiVersion during instance creation.
 
-Unlike most structures declared by the Vulkan API, all fields of this
-structure are written with the least significant byte first, regardless of
-host byte-order.
-
-The C language specification does not define the packing of structure
-members.
-This layout assumes tight structure member packing, with members laid out in
-the order listed in the structure, and the intended size of the structure is
-56 bytes.
-If a compiler produces code that diverges from that pattern, applications
-must: employ another method to set values at the correct offsets.
+:binary_blob_size: 56
+include::{chapters}/pipelines.adoc[tag=binary_blob_header]
 
 .Valid Usage
 ****
@@ -540,10 +542,10 @@ endif::VK_EXT_tooling_info[]
 
 If pname:pToolProperties is `NULL`, then the number of tools currently
 active on pname:physicalDevice is returned in pname:pToolCount.
-Otherwise, pname:pToolCount must: point to a variable set by the user to the
-number of elements in the pname:pToolProperties array, and on return the
-variable is overwritten with the number of structures actually written to
-pname:pToolProperties.
+Otherwise, pname:pToolCount must: point to a variable set by the application
+to the number of elements in the pname:pToolProperties array, and on return
+the variable is overwritten with the number of structures actually written
+to pname:pToolProperties.
 If pname:pToolCount is less than the number of currently active tools, at
 most pname:pToolCount structures will be written.
 
@@ -691,15 +693,15 @@ pname:pNext chain of <<devsandqueues-submission,queue submission>>,
 ifdef::VK_KHR_swapchain[slink:VkPresentInfoKHR,]
 or slink:VkBindSparseInfo.
 
-The frame identifier is used to associate one or more queue submission to a
-frame, it is thus meant to be unique within a frame lifetime, i.e. it is
-possible (but not recommended) to reuse frame identifiers, as long as any
-two frames with any chance of having overlapping queue submissions (as in
-the example above) use two different frame identifiers.
-
 [NOTE]
-.Note
 ====
+The frame identifier is used to associate one or more queue submissions to a
+frame.
+It is meant to be unique within a frame lifetime, i.e. it is possible
+(though not recommended) to reuse frame identifiers, as long as any two
+frames that may have overlapping queue submissions (as in the example above)
+use different frame identifiers.
+
 Since the concept of frame is application-dependent, there is no way to
 validate the use of frame identifier.
 It is good practice to use a monotonically increasing counter as the frame
@@ -754,5 +756,23 @@ include::{generated}/api/flags/VkFrameBoundaryFlagsEXT.adoc[]
 tlink:VkFrameBoundaryFlagsEXT is a bitmask type for setting a mask of zero
 or more elink:VkFrameBoundaryFlagBitsEXT.
 --
+
+ifdef::VK_ARM_tensors[]
+[open,refpage='VkFrameBoundaryTensorsARM',desc='Add tensor frame boundary information to queue submissions',type='structs']
+--
+The sname:VkFrameBoundaryTensorsARM structure is defined as:
+
+include::{generated}/api/structs/VkFrameBoundaryTensorsARM.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:tensorCount is the number of tensors that store frame results.
+  * pname:pTensors is a pointer to an array of slink:VkTensorARM objects
+    with tensorCount entries.
+
+include::{generated}/validity/structs/VkFrameBoundaryTensorsARM.adoc[]
+--
+endif::VK_ARM_tensors[]
 
 endif::VK_EXT_frame_boundary[]

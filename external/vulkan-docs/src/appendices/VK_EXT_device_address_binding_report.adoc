@@ -1,4 +1,4 @@
-// Copyright 2016-2024 The Khronos Group Inc.
+// Copyright 2016-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -50,7 +50,7 @@ such as buffers and images?
 *RESOLVED*: The extension covers all Vulkan objects, and is not restricted
 to objects backed by VkDeviceMemory objects.
 
-3.) Should reallocation be identified explicitly, or as a unbind/bind pair?
+3.) Should reallocation be identified explicitly, or as an unbind/bind pair?
 
 *RESOLVED*: Reallocation should be represented as an unbind/bind pair.
 
@@ -102,7 +102,7 @@ be bound, and then subregions unbound, resulting in fragmentation?
 
 *RESOLVED*: Splitting of virtual address regions, and unmatched bind/unbind
 callbacks may occur.
-Developers should anticipate that sparse memory may exhibit this behaviour.
+Developers should anticipate that sparse memory may exhibit this behavior.
 
 10.) The specification mandates that a callback must: be triggered whenever
 a GPU virtual address range associated with any Vulkan object is bound or

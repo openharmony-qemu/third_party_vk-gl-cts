@@ -1,6 +1,6 @@
-#!/usr/bin/python3 -i
+#!/usr/bin/env python3 -i
 #
-# Copyright 2013-2024 The Khronos Group Inc.
+# Copyright 2013-2025 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -8,6 +8,8 @@ from pathlib import Path
 
 from generator import GeneratorOptions, OutputGenerator, noneStr, write
 from parse_dependency import dependencyLanguageComment
+from apiconventions import APIConventions as APIConventions
+conventions = APIConventions()
 
 _ENUM_TABLE_PREFIX = """
 [cols=",",options="header",]
@@ -35,14 +37,12 @@ def orgLevelKey(name):
         'VK_KHR_',
         'VK_EXT_')
 
-    i = 0
-    for prefix in prefixes:
+    for index, prefix in enumerate(prefixes):
         if name.startswith(prefix):
-            return i
-        i += 1
+            return index
 
     # Everything else (e.g. vendor extensions) is least important
-    return i
+    return len(prefixes)
 
 
 class DocGeneratorOptions(GeneratorOptions):
@@ -154,7 +154,7 @@ class DocOutputGenerator(OutputGenerator):
 
         # This should be a separate conventions property rather than an
         # inferred type name pattern for different APIs.
-        self.result_type = genOpts.conventions.type_prefix + "Result"
+        self.result_type = f"{genOpts.conventions.type_prefix}Result"
 
     def endFile(self):
         OutputGenerator.endFile(self)
@@ -170,7 +170,7 @@ class DocOutputGenerator(OutputGenerator):
         # Finish processing in superclass
         OutputGenerator.endFeature(self)
 
-    def genRequirements(self, name, mustBeFound = True):
+    def genRequirements(self, name, mustBeFound = True, indent = 0):
         """Generate text showing what core versions and extensions introduce
         an API. This relies on the map in apimap.py, which may be loaded at
         runtime into self.apidict. If not present, no message is
@@ -216,46 +216,56 @@ class DocOutputGenerator(OutputGenerator):
                 provider = ', '.join(sorted(
                                         sorted(features),
                                         key=orgLevelKey))
-                return f'// Provided by {provider}\n'
+                return f"{indent * ' '}// Provided by {provider}\n"
             else:
                 if mustBeFound:
-                    self.logMsg('warn', 'genRequirements: API {} not found'.format(name))
+                    self.logMsg('warn', f'genRequirements: API {name} not found')
                 return ''
         else:
             # No API dictionary available, return nothing
             return ''
 
-    def writeInclude(self, directory, basename, contents):
+    def writeInclude(self, directory, basename, contents, deprecatedby, deprecatedlink):
         """Generate an include file.
 
         - directory - subdirectory to put file in
         - basename - base name of the file
         - contents - contents of the file (Asciidoc boilerplate aside)"""
         # Create subdirectory, if needed
-        directory = self.genOpts.directory + '/' + directory
+        directory = Path(self.genOpts.directory) / directory
         self.makeDir(directory)
 
         # Create file
-        filename = directory + '/' + basename + self.file_suffix
-        self.logMsg('diag', '# Generating include file:', filename)
+        filename = directory / (f"{basename}{self.file_suffix}")
+        self.logMsg('diag', '# Generating include file:', str(filename))
         fp = open(filename, 'w', encoding='utf-8')
 
         # Asciidoc anchor
         write(self.genOpts.conventions.warning_comment, file=fp)
-        write('[[{0}]]'.format(basename), file=fp)
+        write(f'[[{basename}]]', file=fp)
 
         if self.genOpts.conventions.generate_index_terms:
             if basename.startswith(self.conventions.command_prefix):
-                index_term = basename + " (function)"
+                index_term = f"{basename} (function)"
             elif basename.startswith(self.conventions.type_prefix):
-                index_term = basename + " (type)"
+                index_term = f"{basename} (type)"
             elif basename.startswith(self.conventions.api_prefix):
-                index_term = basename + " (define)"
+                index_term = f"{basename} (define)"
             else:
                 index_term = basename
-            write('indexterm:[{}]'.format(index_term), file=fp)
+            write(f'indexterm:[{index_term}]', file=fp)
 
-        write(f'[source,{self.conventions.docgen_language}]', file=fp)
+        source_options = self.conventions.docgen_source_options
+        source_language = self.conventions.docgen_language
+        source_directive = f'[source{source_options},{source_language}]'
+        
+        # Only output deprecation warnings for versions, for now
+        # The vulkansc restriction is a temporary workaround, see internal issue 4402
+        if deprecatedby and self.conventions.xml_api_name != 'vulkansc':
+            write("WARNING: This functionality is deprecated by " + conventions.formatVersionOrExtension(deprecatedby) + ". See <<" + deprecatedlink + ", Deprecated Functionality>> for more information.", file=fp);
+            write('', file=fp);
+
+        write(source_directive, file=fp)
         write('----', file=fp)
         write(contents, file=fp)
         write('----', file=fp)
@@ -263,14 +273,14 @@ class DocOutputGenerator(OutputGenerator):
 
         if self.genOpts.secondaryInclude:
             # Create secondary no cross-reference include file
-            filename = f'{directory}/{basename}.no-xref{self.file_suffix}'
+            filename = directory / f'{basename}.no-xref{self.file_suffix}'
             self.logMsg('diag', '# Generating include file:', filename)
             fp = open(filename, 'w', encoding='utf-8')
 
             # Asciidoc anchor
             write(self.genOpts.conventions.warning_comment, file=fp)
             write('// Include this no-xref version without cross reference id for multiple includes of same file', file=fp)
-            write(f'[source,{self.conventions.docgen_language}]', file=fp)
+            write(source_directive, file=fp)
             write('----', file=fp)
             write(contents, file=fp)
             write('----', file=fp)
@@ -279,7 +289,7 @@ class DocOutputGenerator(OutputGenerator):
     def writeEnumTable(self, basename, values):
         """Output a table of enumerants."""
         directory = Path(self.genOpts.directory) / 'enums'
-        self.makeDir(str(directory))
+        self.makeDir(directory)
 
         filename = str(directory / f'{basename}.comments{self.file_suffix}')
         self.logMsg('diag', '# Generating include file:', filename)
@@ -289,8 +299,8 @@ class DocOutputGenerator(OutputGenerator):
             write(_ENUM_TABLE_PREFIX, file=fp)
 
             for data in values:
-                write("|ename:{}".format(data['name']), file=fp)
-                write("|{}".format(data['comment']), file=fp)
+                write(f"|ename:{data['name']}", file=fp)
+                write(f"|{data['comment']}", file=fp)
 
             write(_TABLE_SUFFIX, file=fp)
 
@@ -303,7 +313,7 @@ class DocOutputGenerator(OutputGenerator):
             write(prefix, file=fp)
 
             for item in items:
-                write("* {}".format(item), file=fp)
+                write(f"* {item}", file=fp)
 
             write(_BLOCK_SUFFIX, file=fp)
 
@@ -314,7 +324,7 @@ class DocOutputGenerator(OutputGenerator):
 
         filename = str(directory / f'{basename}.comments-box{self.file_suffix}')
         self.writeBox(filename, _ENUM_BLOCK_PREFIX,
-                      ("ename:{} -- {}".format(data['name'], data['comment'])
+                      (f"ename:{data['name']} -- {data['comment']}"
                        for data in values))
 
     def writeFlagBox(self, basename, values):
@@ -324,7 +334,7 @@ class DocOutputGenerator(OutputGenerator):
 
         filename = str(directory / f'{basename}.comments{self.file_suffix}')
         self.writeBox(filename, _FLAG_BLOCK_PREFIX,
-                      ("ename:{} -- {}".format(data['name'], data['comment'])
+                      (f"ename:{data['name']} -- {data['comment']}"
                        for data in values))
 
     def genType(self, typeinfo, name, alias):
@@ -341,20 +351,23 @@ class DocOutputGenerator(OutputGenerator):
             self.genStruct(typeinfo, name, alias)
         elif category not in OutputGenerator.categoryToPath:
             # If there is no path, do not write output
-            self.logMsg('diag', 'NOT writing include for {} category {}'.format(
-                        name, category))
+            self.logMsg('diag', f'NOT writing include for {name} category {category}')
         else:
             body = self.genRequirements(name)
+            body += self.deprecationComment(typeElem)
+            # This is not appropriate for Vulkan
+            # if category in ('define',):
+            #    body = body.strip()
             if alias:
                 # If the type is an alias, just emit a typedef declaration
-                body += 'typedef ' + alias + ' ' + name + ';\n'
+                body += f"typedef {alias} {name};\n"
                 self.writeInclude(OutputGenerator.categoryToPath[category],
-                                  name, body)
+                                  name, body, None, None)
             else:
                 # Replace <apientry /> tags with an APIENTRY-style string
                 # (from self.genOpts). Copy other text through unchanged.
                 # If the resulting text is an empty string, do not emit it.
-                body += noneStr(typeElem.text)
+                body += noneStr(typeElem.text).lstrip()
                 for elem in typeElem:
                     if elem.tag == 'apientry':
                         body += self.genOpts.apientry + noneStr(elem.tail)
@@ -363,7 +376,7 @@ class DocOutputGenerator(OutputGenerator):
 
                 if body:
                     self.writeInclude(OutputGenerator.categoryToPath[category],
-                                      name, body + '\n')
+                                      name, f"{body}\n", typeinfo.deprecatedbyversion, typeinfo.deprecatedlink)
                 else:
                     self.logMsg('diag', 'NOT writing empty include file for type', name)
 
@@ -374,32 +387,38 @@ class DocOutputGenerator(OutputGenerator):
         Factored out to allow aliased types to also generate the original type.
         """
         typeElem = typeinfo.elem
-        body = 'typedef ' + typeElem.get('category') + ' ' + typeName + ' {\n'
+        body = f"typedef {typeElem.get('category')} {typeName} {{\n"
 
         targetLen = self.getMaxCParamTypeLength(typeinfo)
         for member in typeElem.findall('.//member'):
+            body += self.deprecationComment(member, indent = 4)
             body += self.makeCParamDecl(member, targetLen + 4)
             body += ';\n'
-        body += '} ' + typeName + ';'
+        body += f"}} {typeName};"
         return body
 
     def genStruct(self, typeinfo, typeName, alias):
         """Generate struct."""
         OutputGenerator.genStruct(self, typeinfo, typeName, alias)
 
-        body = self.genRequirements(typeName)
+        deprecatedby = None
+        deprecatedlink = None
+        body = self.deprecationComment(typeinfo.elem)
+        body += self.genRequirements(typeName)
         if alias:
             if self.conventions.duplicate_aliased_structs:
                 # TODO maybe move this outside the conditional? This would be a visual change.
-                body += '// {} is an alias for {}\n'.format(typeName, alias)
+                body += f'// {typeName} is an alias for {alias}\n'
                 alias_info = self.registry.typedict[alias]
                 body += self.genStructBody(alias_info, alias)
                 body += '\n\n'
-            body += 'typedef ' + alias + ' ' + typeName + ';\n'
+            body += f"typedef {alias} {typeName};\n"
         else:
             body += self.genStructBody(typeinfo, typeName)
+            deprecatedby = typeinfo.deprecatedbyversion
+            deprecatedlink = typeinfo.deprecatedlink
 
-        self.writeInclude('structs', typeName, body)
+        self.writeInclude('structs', typeName, body, deprecatedby, deprecatedlink)
 
     def genEnumTable(self, groupinfo, groupName):
         """Generate tables of enumerant values and short descriptions from
@@ -459,10 +478,10 @@ class DocOutputGenerator(OutputGenerator):
             group_type = groupinfo.elem.get('type')
             if groupName == self.result_type:
                 # Split this into success and failure
-                self.writeEnumTable(groupName + '.success',
+                self.writeEnumTable(f"{groupName}.success",
                                 (data for data in values
                                  if data['value'] >= 0))
-                self.writeEnumTable(groupName + '.error',
+                self.writeEnumTable(f"{groupName}.error",
                                 (data for data in values
                                  if data['value'] < 0))
             elif group_type == 'bitmask':
@@ -471,34 +490,39 @@ class DocOutputGenerator(OutputGenerator):
                 self.writeEnumTable(groupName, values)
                 self.writeEnumBox(groupName, values)
             else:
-                raise RuntimeError("Unrecognized enums type: " + str(group_type))
+                raise RuntimeError(f"Unrecognized enums type: {str(group_type)}")
 
     def genGroup(self, groupinfo, groupName, alias):
         """Generate group (e.g. C "enum" type)."""
         OutputGenerator.genGroup(self, groupinfo, groupName, alias)
 
+        deprecatedby = None
+        deprecatedlink = None
         body = self.genRequirements(groupName)
         if alias:
             # If the group name is aliased, just emit a typedef declaration
             # for the alias.
-            body += 'typedef ' + alias + ' ' + groupName + ';\n'
+            body += f"typedef {alias} {groupName};\n"
         else:
             expand = self.genOpts.expandEnumerants
             (_, enumbody) = self.buildEnumCDecl(expand, groupinfo, groupName)
             body += enumbody
             if self.genOpts.conventions.generate_enum_table:
                 self.genEnumTable(groupinfo, groupName)
+            deprecatedby = groupinfo.deprecatedbyversion
+            deprecatedlink = groupinfo.deprecatedlink
 
-        self.writeInclude('enums', groupName, body)
+        self.writeInclude('enums', groupName, body, deprecatedby, deprecatedlink)
 
     def genEnum(self, enuminfo, name, alias):
         """Generate the C declaration for a constant (a single <enum> value)."""
 
         OutputGenerator.genEnum(self, enuminfo, name, alias)
 
-        body = self.buildConstantCDecl(enuminfo, name, alias)
+        body = self.deprecationComment(enuminfo.elem)
+        body += self.buildConstantCDecl(enuminfo, name, alias)
 
-        self.writeInclude('enums', name, body)
+        self.writeInclude('enums', name, body, enuminfo.deprecatedbyversion, enuminfo.deprecatedlink)
 
     def genCmd(self, cmdinfo, name, alias):
         "Generate command."
@@ -507,4 +531,4 @@ class DocOutputGenerator(OutputGenerator):
         body = self.genRequirements(name)
         decls = self.makeCDecls(cmdinfo.elem)
         body += decls[0]
-        self.writeInclude('protos', name, body)
+        self.writeInclude('protos', name, body, cmdinfo.deprecatedbyversion, cmdinfo.deprecatedlink)

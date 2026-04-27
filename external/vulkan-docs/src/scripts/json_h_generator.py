@@ -1,6 +1,6 @@
-#!/usr/bin/python3 -i
+#!/usr/bin/env python3 -i
 #
-# Copyright 2020-2024 The Khronos Group Inc.
+# Copyright 2020-2025 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -17,7 +17,7 @@ from generator import (GeneratorOptions, OutputGenerator, noneStr,
 
 copyright = """
 /*
-** Copyright 2020-2024 The Khronos Group Inc.
+** Copyright 2020-2025 The Khronos Group Inc.
 **
 ** SPDX-License-Identifier: Apache-2.0
 */
@@ -144,8 +144,8 @@ class JSONHeaderOutputGenerator(OutputGenerator):
                                 code += "#endif\n"
                             currentExtension = self.featureDict[name]
                             if self.featureDict[name] != "VK_VERSION_1_0":
-                                code += "#ifdef %s\n" %(currentExtension)
-                        code += "void print_%s(const %s* obj, const char* str, int commaNeeded);\n" %(name, name)
+                                code += f"#ifdef {currentExtension}\n"
+                        code += f"void print_{name}(const {name}* obj, const char* str, int commaNeeded);\n"
 
        if currentExtension != "VK_VERSION_1_0":
             code += "#endif\n"
@@ -175,7 +175,7 @@ class JSONHeaderOutputGenerator(OutputGenerator):
     def endFeature(self):
         if self.emit:
             if self.feature_not_empty:
-                if self.genOpts.conventions.writeFeature(self.featureExtraProtect, self.genOpts.filename):
+                if self.genOpts.conventions.writeFeature(self.featureName, self.featureExtraProtect, self.genOpts.filename):
 
                     for section in self.TYPE_SECTIONS:
                         contents = self.sections[section]

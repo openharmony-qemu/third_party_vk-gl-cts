@@ -73,6 +73,15 @@ With CMake out-of-source builds are always recommended. Create a build directory
 of your choosing, and in that directory generate Makefiles or IDE project
 using cmake.
 
+If you intend to run the Vulkan CTS video decode or encode tests, you must first
+download the required sample clips by running the two helper scripts in the
+`external/` directory:
+
+	python3 external/fetch_video_decode_samples.py
+	python3 external/fetch_video_encode_samples.py
+
+Each script will pull down the necessary video files into the CTS data tree.
+Both scripts support the `--help` flag to list all available options.
 
 ### Windows x86-32
 
@@ -107,6 +116,14 @@ If building for 32-bit x86 with GCC, you probably also want to add `-msse2
 
 ### Android
 
+There's two types of builds for Android:
+
+#### App
+
+This builds an APK that needs to be invoked via `adb shell` and the output needs
+to be read via `adb logcat`, it's the preferred way for long-running invocations
+on Android since it doesn't depend on an active connection from the host PC.
+
 Following command will build dEQP.apk:
 
 	python3 scripts/android/build_apk.py --sdk <path to Android SDK> --ndk <path to Android NDK>
@@ -126,6 +143,69 @@ To pick which ABI to use at _install time_, use the following command instead:
 
 	adb install -g --abi <ABI name> <build-root>/package/dEQP.apk
 
+#### Executable
+
+This is identical to the builds on other platforms and is better for iterative
+runs of headless tests as CTS can be invoked and the output can be checked from
+a single interactive terminal.
+
+This build doesn't support WSI tests and shouldn't be used for conformance
+submissions, it also isn't recommended for longer running tests since Android
+will terminate this process as soon as the `adb shell` session ends which may
+happen due to an unintentional device disconnection.
+
+	cmake <path to vulkancts> -GNinja -DCMAKE_BUILD_TYPE=Debug \
+	      -DCMAKE_TOOLCHAIN_FILE=<NDK path>/build/cmake/android.toolchain.cmake \
+	      -DCMAKE_ANDROID_NDK=<NDK path> -DANDROID_ABI=<ABI to build eg: arm64-v8a> \
+	      -DDE_ANDROID_API=<API level> -DDEQP_TARGET_TOOLCHAIN=ndk-modern \
+	      -DDEQP_TARGET=android -DDEQP_ANDROID_EXE=ON
+	ninja all
+
+The build needs to be transferred to the device via `adb push` to a directory
+under `/data/` on the device, such as `/data/local/tmp/` which should be writeable
+for non-rooted devices. It should be noted that anywhere on `/sdcard/` won't work
+since it's mounted as `noexec`.
+
+### Note on Debug Build Link Times
+
+Some CTS binaries like `deqp-vk` and `deqp-vksc` are notably large when built
+with debug information. For example, as of the time this text is being written,
+`deqp-vk` is over 700 MiB big. As a consequence of this and the number of
+symbols, linking these binaries takes a long time on some environments. For
+example, on Linux with the BFD or Gold linkers, which are still the default in
+many distributions, linking these binaries in debug mode may take over 10
+seconds even on a relatively fast CPU, and many more if the CPU is slow.
+
+Typically on Linux, both the LLD linker from the LLVM project and the Mold
+linker are able to link these binaries much faster, in less than a second on the
+same fast CPU, using varying amounts of memory and threads.
+
+On both Ubuntu and Fedora, the LLD linker is provided by the "lld" package and
+the Mold linker is provided by the "mold" package. Once installed, there are
+several ways to use them when building CTS.
+
+#### Using lld or mold as the default system-wide linkers
+
+Under both Ubuntu and Fedora, `update-alternatives` can be used to set the
+default link for the `ld` tool and make it point to `ld.lld` or `ld.mold`
+instead of `ld.bfd` or `ld.gold`. Once set, the linker will be used by default
+when linking any binary.
+
+#### Using lld or mold only when building CTS
+
+Both GCC and Clang can be told to use a different linker with the
+`-fuse-ld=LINKER` command-line option at link time. For example, `-fuse-ld=lld`
+or `-fuse-ld=mold`. CMake will automatically pick up that option and use it when
+set in the `LDFLAGS` environment variable before configuring the project, so the
+following example should work:
+
+```
+LDFLAGS="-fuse-ld=lld ${LDFLAGS}"
+export LDFLAGS
+<cmake configuration command>
+```
+
+Note in this case the linker name is passed without the `ld.` prefix.
 
 Building Mustpass
 -----------------
@@ -136,7 +216,7 @@ Current Vulkan mustpass is checked into repository and can be found at:
 
 Current Vulkan SC mustpass can be found at:
 
-	external/vulkancts/mustpass/master/vksc-default.txt
+	external/vulkancts/mustpass/main/vksc-default.txt
 
 This file contains list of files located in vk-default or vksc-default subdirectory. Those files contain
 tests from bigest test groups and together they contain all test cases that should pass.
@@ -155,7 +235,7 @@ Following command line options MUST be used when running CTS:
 	--deqp-log-images=disable
 	--deqp-log-shader-sources=disable
 
-If an implementation ships with [implicit layers](https://github.com/KhronosGroup/Vulkan-Loader/blob/master/loader/LoaderAndLayerInterface.md#implicit-vs-explicit-layers) enabled, then such layers must be enabled
+If an implementation ships with [implicit layers](https://github.com/KhronosGroup/Vulkan-Loader/blob/main/loader/LoaderAndLayerInterface.md#implicit-vs-explicit-layers) enabled, then such layers must be enabled
 when running CTS.
 
 In addition, on multi-device systems the device for which conformance is claimed
@@ -212,6 +292,10 @@ Also non-informative empty LogInfo sections can be removed
 from output into log by specifying:
 
 	--deqp-log-empty-loginfo=disable
+
+Vulkan compute-only implementations must be tested using option
+
+	--deqp-compute-only=enable
 
 There are several additional options used only in conjunction with Vulkan SC tests
 ( for Vulkan SC CTS tests deqp-vksc application should be used ).
@@ -272,6 +356,10 @@ It informs deqp-vksc application that it works as subprocess:
 
 	--deqp-subprocess=[enable|disable]
 
+For platforms where it is needed to override the default loader library path, this option can be used (e.g. loader library vulkan-1.dll):
+
+	--deqp-vk-library-path=<path>
+
 No other command line options are allowed.
 
 ### Win32
@@ -307,6 +395,8 @@ Test log will be written into TestResults.qpa
 
 ### Android
 
+#### App
+
 For Android build using SDK 29 or greater, it is recommended to use `/sdcard/Documents/` instead of `/sdcard/` due to scoped storage.
 
 	adb push <vulkancts>/external/vulkancts/mustpass/main/vk-default.txt /sdcard/vk-default.txt
@@ -322,6 +412,13 @@ Test progress will be written to device log and can be displayed with:
 
 Test log will be written into `/sdcard/TestResults.qpa`.
 
+#### Executable
+
+Identical to [Linux](#linux-1), but within `adb shell` instead:
+
+	adb shell
+	> cd <pushed build directory>/external/vulkancts/modules/vulkan
+	> ./deqp-vk --deqp-caselist-file=...
 
 Conformance Submission Package Requirements
 -------------------------------------------
@@ -659,7 +756,7 @@ to Vulkan SC requirements:
 
 - Vulkan SC CTS contains its own mustpass list
 
-  external/vulkancts/mustpass/master/vksc-default.txt
+  external/vulkancts/mustpass/main/vksc-default.txt
 
 - Vulkan SC CTS uses its own executable module to perform tests: deqp-vksc
 
@@ -695,6 +792,9 @@ OpenGL and OpenCL parameters not affecting Vulkan API were suppressed.
 
   -h, --help
     Show this help
+
+  -q, --quiet
+    Suppress messages to standard output
 
   -n, --deqp-case=<value>
     Test case(s) to run, supports wildcards (e.g. dEQP-GLES2.info.*)
@@ -768,8 +868,12 @@ OpenGL and OpenCL parameters not affecting Vulkan API were suppressed.
     default: '1'
 
   --deqp-log-images=[enable|disable]
-    Enable or disable logging of result images
+    When disabled, prevent any image from being logged into the test results file
     default: 'enable'
+
+  --deqp-log-all-images=[enable|disable]
+    When enabled, log all images from image comparison routines as if COMPARE_LOG_EVERYTHING was used in the code
+    default: 'disable'
 
   --deqp-log-shader-sources=[enable|disable]
     Enable or disable logging of shader sources
@@ -795,8 +899,16 @@ OpenGL and OpenCL parameters not affecting Vulkan API were suppressed.
     Enable or disable test case validation
     default: 'disable'
 
+  --deqp-spirv-validation=[enable|disable]
+    Enable or disable spir-v shader validation
+    default: 'disable' in release builds, 'enable' in debug builds
+
   --deqp-print-validation-errors
     Print validation errors to standard error
+
+  --deqp-duplicate-case-name-check=[enable|disable]
+    Check for duplicate case names when creating test hierarchy
+    default: 'enable' in Debug mode, 'disable' in Release mode
 
   --deqp-optimization-recipe=<value>
     Shader optimization recipe (0=disabled, 1=performance, 2=size)
@@ -840,6 +952,14 @@ OpenGL and OpenCL parameters not affecting Vulkan API were suppressed.
 
   --deqp-terminate-on-fail=[enable|disable]
     Terminate the run on first failure
+    default: 'disable'
+
+  --deqp-terminate-on-device-lost=[enable|disable]
+    Terminate the run on first device lost error
+    default: 'enable'
+
+  --deqp-compute-only=[enable|disable]
+    Perform tests for devices implementing compute-only functionality
     default: 'disable'
 
   --deqp-subprocess=[enable|disable]
@@ -908,6 +1028,18 @@ OpenGL and OpenCL parameters not affecting Vulkan API were suppressed.
   --deqp-pipeline-prefix=<value>
     Prefix for input pipeline compiler files (Vulkan SC only, do not use manually)
     default: ''
+
+  --deqp-vk-video-log-print=[enable|disable]
+    Print log messages of vulkan video tests to stdout
+    default: 'disable'
+
+  --deqp-vk-video-decode-dump=[disable|single|separate]
+    Dump mode for output of vulkan video decoding tests
+    default: 'disable'
+
+  --deqp-vk-video-encode-dump=[disable|yuv|bitstream|all]
+    Dump mode for output of vulkan video encoding tests
+    default: 'disable'
 
 Full list of parameters for the `vksc-server` application:
 

@@ -1,6 +1,6 @@
-#!/usr/bin/python3 -i
+#!/usr/bin/env python3 -i
 #
-# Copyright 2013-2024 The Khronos Group Inc.
+# Copyright 2013-2025 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -87,8 +87,8 @@ class PyOutputGenerator(ScriptOutputGenerator):
         for api in sorted(self.apimap):
             # Sort requirements by first feature in each one
             deps = sorted(self.apimap[api], key = lambda dep: dep[0])
-            reqs = ', '.join('({}, {})'.format(enquote(dep[0]), enquote(dep[1])) for dep in deps)
-            write('{} : [{}],'.format(enquote(api), reqs), file=self.outFile)
+            reqs = ', '.join(f'({enquote(dep[0])}, {enquote(dep[1])})' for dep in deps)
+            write(f'{enquote(api)} : [{reqs}],', file=self.outFile)
         write(self.endDict(), file=self.outFile)
 
         super().endFile()

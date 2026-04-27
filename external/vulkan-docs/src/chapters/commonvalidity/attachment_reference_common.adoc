@@ -1,4 +1,4 @@
-// Copyright 2020-2024 The Khronos Group Inc.
+// Copyright 2020-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -7,6 +7,7 @@
   * [[VUID-{refpage}-layout-03077]]
     If pname:attachment is not ename:VK_ATTACHMENT_UNUSED, pname:layout
     must: not be ename:VK_IMAGE_LAYOUT_UNDEFINED,
+ifdef::VK_EXT_zero_initialize_device_memory[ename:VK_IMAGE_LAYOUT_ZERO_INITIALIZED_EXT,]
     ename:VK_IMAGE_LAYOUT_PREINITIALIZED, or
     ename:VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 ifdef::VK_VERSION_1_2,VK_KHR_separate_depth_stencil_layouts[]
@@ -33,4 +34,10 @@ ifdef::VK_EXT_attachment_feedback_loop_layout[]
     pname:layout must: not be
     ename:VK_IMAGE_LAYOUT_ATTACHMENT_FEEDBACK_LOOP_OPTIMAL_EXT
 endif::VK_EXT_attachment_feedback_loop_layout[]
+ifdef::VK_VERSION_1_4,VK_KHR_dynamic_rendering_local_read[]
+  * [[VUID-{refpage}-dynamicRenderingLocalRead-09546]]
+    If the <<features-dynamicRenderingLocalRead,
+    pname:dynamicRenderingLocalRead>> feature is not enabled, pname:layout
+    must: not be ename:VK_IMAGE_LAYOUT_RENDERING_LOCAL_READ
+endif::VK_VERSION_1_4,VK_KHR_dynamic_rendering_local_read[]
 // Common Valid Usage

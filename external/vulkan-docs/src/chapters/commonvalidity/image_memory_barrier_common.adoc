@@ -1,4 +1,4 @@
-// Copyright 2019-2024 The Khronos Group Inc.
+// Copyright 2019-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -62,12 +62,22 @@
     <<synchronization-image-layout-transitions, image layout transition>>,
     pname:oldLayout must: be ename:VK_IMAGE_LAYOUT_UNDEFINED or the current
     layout of the image subresources affected by the barrier
+ifdef::VK_EXT_zero_initialize_device_memory[]
+  * [[VUID-{refpage}-oldLayout-10767]]
+    If the <<features-zeroInitializeDeviceMemory,
+    zeroInitializeDeviceMemory>> feature is not enabled, pname:oldLayout
+    must: not be ename:VK_IMAGE_LAYOUT_ZERO_INITIALIZED_EXT
+  * [[VUID-{refpage}-oldLayout-10768]]
+    If pname:oldLayout is ename:VK_IMAGE_LAYOUT_ZERO_INITIALIZED_EXT, then
+    all subresources must: be included in the barrier
+endif::VK_EXT_zero_initialize_device_memory[]
   * [[VUID-{refpage}-newLayout-01198]]
     If pname:srcQueueFamilyIndex and pname:dstQueueFamilyIndex define a
     <<synchronization-queue-transfers, queue family ownership transfer>> or
     pname:oldLayout and pname:newLayout define an
     <<synchronization-image-layout-transitions, image layout transition>>,
     pname:newLayout must: not be ename:VK_IMAGE_LAYOUT_UNDEFINED or
+ifdef::VK_EXT_zero_initialize_device_memory[ename:VK_IMAGE_LAYOUT_ZERO_INITIALIZED_EXT or]
     ename:VK_IMAGE_LAYOUT_PREINITIALIZED
 ifdef::VK_VERSION_1_1,VK_KHR_maintenance2[]
   * [[VUID-{refpage}-oldLayout-01658]]
@@ -201,13 +211,6 @@ endif::VK_EXT_queue_family_foreign[]
 endif::VK_VERSION_1_1,VK_KHR_external_memory[]
     a valid queue family
 ifdef::VK_VERSION_1_1,VK_KHR_external_memory[]
-  * [[VUID-{refpage}-srcQueueFamilyIndex-04070]]
-    If pname:srcQueueFamilyIndex is not equal to pname:dstQueueFamilyIndex,
-    at least one of pname:srcQueueFamilyIndex or pname:dstQueueFamilyIndex
-    must: not be ename:VK_QUEUE_FAMILY_EXTERNAL
-ifdef::VK_EXT_queue_family_foreign[]
-    or ename:VK_QUEUE_FAMILY_FOREIGN_EXT
-endif::VK_EXT_queue_family_foreign[]
 ifndef::VKSC_VERSION_1_0[]
   * [[VUID-{refpage}-None-09119]]
     {empty}
@@ -295,6 +298,18 @@ ifdef::VK_KHR_video_encode_queue[]
     ename:VK_IMAGE_LAYOUT_VIDEO_ENCODE_DPB_KHR then pname:image must: have
     been created with ename:VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR
 endif::VK_KHR_video_encode_queue[]
+ifdef::VK_KHR_video_encode_quantization_map[]
+  * [[VUID-{refpage}-srcQueueFamilyIndex-10287]]
+    If pname:srcQueueFamilyIndex and pname:dstQueueFamilyIndex define a
+    <<synchronization-queue-transfers, queue family ownership transfer>> or
+    pname:oldLayout and pname:newLayout define an
+    <<synchronization-image-layout-transitions, image layout transition>>,
+    and pname:oldLayout or pname:newLayout is
+    ename:VK_IMAGE_LAYOUT_VIDEO_ENCODE_QUANTIZATION_MAP_KHR then pname:image
+    must: have been created with
+    ename:VK_IMAGE_USAGE_VIDEO_ENCODE_QUANTIZATION_DELTA_MAP_BIT_KHR or
+    ename:VK_IMAGE_USAGE_VIDEO_ENCODE_EMPHASIS_MAP_BIT_KHR
+endif::VK_KHR_video_encode_quantization_map[]
 ifdef::VK_EXT_attachment_feedback_loop_layout[]
   * [[VUID-{refpage}-srcQueueFamilyIndex-07006]]
     If pname:srcQueueFamilyIndex and pname:dstQueueFamilyIndex define a
@@ -315,4 +330,25 @@ ifdef::VK_EXT_attachment_feedback_loop_layout[]
     pname:newLayout must: not be
     ename:VK_IMAGE_LAYOUT_ATTACHMENT_FEEDBACK_LOOP_OPTIMAL_EXT
 endif::VK_EXT_attachment_feedback_loop_layout[]
+ifdef::VK_VERSION_1_4,VK_KHR_dynamic_rendering_local_read[]
+  * [[VUID-{refpage}-srcQueueFamilyIndex-09550]]
+    If pname:srcQueueFamilyIndex and pname:dstQueueFamilyIndex define a
+    <<synchronization-queue-transfers, queue family ownership transfer>> or
+    pname:oldLayout and pname:newLayout define an
+    <<synchronization-image-layout-transitions, image layout transition>>,
+    and pname:oldLayout or pname:newLayout is
+    ename:VK_IMAGE_LAYOUT_RENDERING_LOCAL_READ then pname:image must: have
+    been created with either ename:VK_IMAGE_USAGE_STORAGE_BIT, or with both
+    ename:VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT and either of
+    ename:VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT or
+    ename:VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+  * [[VUID-{refpage}-dynamicRenderingLocalRead-09551]]
+    If the <<features-dynamicRenderingLocalRead,
+    pname:dynamicRenderingLocalRead>> feature is not enabled,
+    pname:oldLayout must: not be ename:VK_IMAGE_LAYOUT_RENDERING_LOCAL_READ
+  * [[VUID-{refpage}-dynamicRenderingLocalRead-09552]]
+    If the <<features-dynamicRenderingLocalRead,
+    pname:dynamicRenderingLocalRead>> feature is not enabled,
+    pname:newLayout must: not be ename:VK_IMAGE_LAYOUT_RENDERING_LOCAL_READ
+endif::VK_VERSION_1_4,VK_KHR_dynamic_rendering_local_read[]
 // Common Valid Usage

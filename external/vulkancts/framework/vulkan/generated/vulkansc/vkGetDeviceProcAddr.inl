@@ -17,200 +17,257 @@ namespace vkt
 
 using namespace vk;
 
-tcu::TestStatus		testGetDeviceProcAddr		(Context& context)
+
+tcu::TestStatus        testGetDeviceProcAddr        (Context& context)
 {
-	tcu::TestLog&								log						(context.getTestContext().getLog());
-	const PlatformInterface&					platformInterface		= context.getPlatformInterface();
-	const auto									validationEnabled		= context.getTestContext().getCommandLine().isValidationEnabled();
-	const CustomInstance						instance				(createCustomInstanceFromContext(context));
-	const InstanceDriver&						instanceDriver			= instance.getDriver();
-	const VkPhysicalDevice						physicalDevice			= chooseDevice(instanceDriver, instance, context.getTestContext().getCommandLine());
-	const deUint32								queueFamilyIndex		= 0;
-	const deUint32								queueCount				= 1;
-	const float									queuePriority			= 1.0f;
-	const std::vector<VkQueueFamilyProperties>	queueFamilyProperties	= getPhysicalDeviceQueueFamilyProperties(instanceDriver, physicalDevice);
+    tcu::TestLog&                                log                        (context.getTestContext().getLog());
+    const PlatformInterface&                    platformInterface = context.getPlatformInterface();
+    const auto                                    validationEnabled = context.getTestContext().getCommandLine().isValidationEnabled();
+    const CustomInstance                        instance                (createCustomInstanceFromContext(context));
+    const InstanceDriver&                        instanceDriver = instance.getDriver();
+    const VkPhysicalDevice                        physicalDevice = chooseDevice(instanceDriver, instance, context.getTestContext().getCommandLine());
+    const uint32_t                                queueFamilyIndex = 0;
+    const uint32_t                                queueCount = 1;
+    const float                                    queuePriority = 1.0f;
+    const std::vector<VkQueueFamilyProperties>    queueFamilyProperties = getPhysicalDeviceQueueFamilyProperties(instanceDriver, physicalDevice);
 
-	const VkDeviceQueueCreateInfo			deviceQueueCreateInfo =
-	{
-		VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,	//  VkStructureType				sType;
-		DE_NULL,									//  const void*					pNext;
-		(VkDeviceQueueCreateFlags)0u,				//  VkDeviceQueueCreateFlags	flags;
-		queueFamilyIndex,							//  deUint32					queueFamilyIndex;
-		queueCount,									//  deUint32					queueCount;
-		&queuePriority,								//  const float*				pQueuePriorities;
-	};
+    const VkDeviceQueueCreateInfo            deviceQueueCreateInfo =
+    {
+        VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, //  VkStructureType sType;
+        nullptr, //  const void* pNext;
+        (VkDeviceQueueCreateFlags)0u, //  VkDeviceQueueCreateFlags flags;
+        queueFamilyIndex, //  uint32_t queueFamilyIndex;
+        queueCount, //  uint32_t queueCount;
+        &queuePriority, //  const float* pQueuePriorities;
+    };
 
-	const VkDeviceCreateInfo				deviceCreateInfo =
-	{
-		VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,		//  VkStructureType					sType;
-		DE_NULL,									//  const void*						pNext;
-		(VkDeviceCreateFlags)0u,					//  VkDeviceCreateFlags				flags;
-		1u,											//  deUint32						queueCreateInfoCount;
-		&deviceQueueCreateInfo,						//  const VkDeviceQueueCreateInfo*	pQueueCreateInfos;
-		0u,											//  deUint32						enabledLayerCount;
-		DE_NULL,									//  const char* const*				ppEnabledLayerNames;
-		0u,											//  deUint32						enabledExtensionCount;
-		DE_NULL,									//  const char* const*				ppEnabledExtensionNames;
-		DE_NULL,									//  const VkPhysicalDeviceFeatures*	pEnabledFeatures;
-	};
-	const Unique<VkDevice>					device			(createCustomDevice(validationEnabled, platformInterface, instance, instanceDriver, physicalDevice, &deviceCreateInfo));
-	const DeviceDriver						deviceDriver	(platformInterface, instance, device.get(), context.getUsedApiVersion());
+    const VkDeviceCreateInfo                deviceCreateInfo =
+    {
+        VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO, //  VkStructureType sType;
+        nullptr, //  const void* pNext;
+        (VkDeviceCreateFlags)0u, //  VkDeviceCreateFlags flags;
+        1u, //  uint32_t queueCreateInfoCount;
+        &deviceQueueCreateInfo, //  const VkDeviceQueueCreateInfo* pQueueCreateInfos;
+        0u, //  uint32_t enabledLayerCount;
+        nullptr, //  const char* const* ppEnabledLayerNames;
+        0u, //  uint32_t enabledExtensionCount;
+        nullptr, //  const char* const* ppEnabledExtensionNames;
+        nullptr, //  const VkPhysicalDeviceFeatures* pEnabledFeatures;
+    };
+    const Unique<VkDevice>                    device            (createCustomDevice(validationEnabled, platformInterface, instance, instanceDriver, physicalDevice, &deviceCreateInfo));
+    const DeviceDriver                        deviceDriver    (platformInterface, instance, device.get(), context.getUsedApiVersion(), context.getTestContext().getCommandLine());
 
-	const std::vector<std::string> loaderExceptions{
-		"vkSetDebugUtilsObjectNameEXT",
-		"vkSetDebugUtilsObjectTagEXT",
-		"vkQueueBeginDebugUtilsLabelEXT",
-		"vkQueueEndDebugUtilsLabelEXT",
-		"vkQueueInsertDebugUtilsLabelEXT",
-		"vkCmdBeginDebugUtilsLabelEXT",
-		"vkCmdEndDebugUtilsLabelEXT",
-		"vkCmdInsertDebugUtilsLabelEXT",
-	};
+    const std::vector<std::string> functions{
 
-	const std::vector<std::string> functions{
-		"vkDestroySurfaceKHR",
-		"vkGetPhysicalDeviceSurfaceSupportKHR",
-		"vkGetPhysicalDeviceSurfaceCapabilitiesKHR",
-		"vkGetPhysicalDeviceSurfaceFormatsKHR",
-		"vkGetPhysicalDeviceSurfacePresentModesKHR",
-		"vkCreateSwapchainKHR",
-		"vkDestroySwapchainKHR",
-		"vkGetSwapchainImagesKHR",
-		"vkAcquireNextImageKHR",
-		"vkQueuePresentKHR",
-		"vkGetDeviceGroupPresentCapabilitiesKHR",
-		"vkGetDeviceGroupSurfacePresentModesKHR",
-		"vkGetPhysicalDevicePresentRectanglesKHR",
-		"vkAcquireNextImage2KHR",
-		"vkGetPhysicalDeviceDisplayPropertiesKHR",
-		"vkGetPhysicalDeviceDisplayPlanePropertiesKHR",
-		"vkGetDisplayPlaneSupportedDisplaysKHR",
-		"vkGetDisplayModePropertiesKHR",
-		"vkCreateDisplayModeKHR",
-		"vkGetDisplayPlaneCapabilitiesKHR",
-		"vkCreateDisplayPlaneSurfaceKHR",
-		"vkCreateSharedSwapchainsKHR",
-		"vkGetMemoryFdKHR",
-		"vkGetMemoryFdPropertiesKHR",
-		"vkImportSemaphoreFdKHR",
-		"vkGetSemaphoreFdKHR",
-		"vkReleaseDisplayEXT",
-		"vkGetPhysicalDeviceSurfaceCapabilities2EXT",
-		"vkDisplayPowerControlEXT",
-		"vkRegisterDeviceEventEXT",
-		"vkRegisterDisplayEventEXT",
-		"vkGetSwapchainCounterEXT",
-		"vkCmdSetDiscardRectangleEXT",
-		"vkCmdSetDiscardRectangleEnableEXT",
-		"vkCmdSetDiscardRectangleModeEXT",
-		"vkSetHdrMetadataEXT",
-		"vkGetSwapchainStatusKHR",
-		"vkImportFenceFdKHR",
-		"vkGetFenceFdKHR",
-		"vkEnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR",
-		"vkGetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR",
-		"vkAcquireProfilingLockKHR",
-		"vkReleaseProfilingLockKHR",
-		"vkGetPhysicalDeviceSurfaceCapabilities2KHR",
-		"vkGetPhysicalDeviceSurfaceFormats2KHR",
-		"vkGetPhysicalDeviceDisplayProperties2KHR",
-		"vkGetPhysicalDeviceDisplayPlaneProperties2KHR",
-		"vkGetDisplayModeProperties2KHR",
-		"vkGetDisplayPlaneCapabilities2KHR",
-		"vkSetDebugUtilsObjectNameEXT",
-		"vkSetDebugUtilsObjectTagEXT",
-		"vkQueueBeginDebugUtilsLabelEXT",
-		"vkQueueEndDebugUtilsLabelEXT",
-		"vkQueueInsertDebugUtilsLabelEXT",
+		// "VK_EXT_color_write_enable
+		"vkCmdSetColorWriteEnableEXT",
+
+		// "VK_EXT_debug_utils
 		"vkCmdBeginDebugUtilsLabelEXT",
 		"vkCmdEndDebugUtilsLabelEXT",
 		"vkCmdInsertDebugUtilsLabelEXT",
 		"vkCreateDebugUtilsMessengerEXT",
 		"vkDestroyDebugUtilsMessengerEXT",
+		"vkQueueBeginDebugUtilsLabelEXT",
+		"vkQueueEndDebugUtilsLabelEXT",
+		"vkQueueInsertDebugUtilsLabelEXT",
+		"vkSetDebugUtilsObjectNameEXT",
+		"vkSetDebugUtilsObjectTagEXT",
 		"vkSubmitDebugUtilsMessageEXT",
-		"vkCmdSetSampleLocationsEXT",
-		"vkGetPhysicalDeviceMultisamplePropertiesEXT",
-		"vkGetImageDrmFormatModifierPropertiesEXT",
-		"vkGetMemoryHostPointerPropertiesEXT",
-		"vkGetPhysicalDeviceCalibrateableTimeDomainsEXT",
-		"vkGetCalibratedTimestampsEXT",
-		"vkGetPhysicalDeviceFragmentShadingRatesKHR",
-		"vkCmdSetFragmentShadingRateKHR",
-		"vkCreateHeadlessSurfaceEXT",
-		"vkCmdSetLineStippleEXT",
-		"vkCmdSetCullModeEXT",
-		"vkCmdSetFrontFaceEXT",
-		"vkCmdSetPrimitiveTopologyEXT",
-		"vkCmdSetViewportWithCountEXT",
-		"vkCmdSetScissorWithCountEXT",
+
+		// "VK_EXT_direct_mode_display
+		"vkReleaseDisplayEXT",
+
+		// "VK_EXT_discard_rectangles
+		"vkCmdSetDiscardRectangleEXT",
+		"vkCmdSetDiscardRectangleEnableEXT",
+		"vkCmdSetDiscardRectangleModeEXT",
+
+		// "VK_EXT_display_control
+		"vkDisplayPowerControlEXT",
+		"vkGetSwapchainCounterEXT",
+		"vkRegisterDeviceEventEXT",
+		"vkRegisterDisplayEventEXT",
+
+		// "VK_EXT_display_surface_counter
+		"vkGetPhysicalDeviceSurfaceCapabilities2EXT",
+
+		// "VK_EXT_extended_dynamic_state
 		"vkCmdBindVertexBuffers2EXT",
+		"vkCmdSetCullModeEXT",
+		"vkCmdSetDepthBoundsTestEnableEXT",
+		"vkCmdSetDepthCompareOpEXT",
 		"vkCmdSetDepthTestEnableEXT",
 		"vkCmdSetDepthWriteEnableEXT",
-		"vkCmdSetDepthCompareOpEXT",
-		"vkCmdSetDepthBoundsTestEnableEXT",
-		"vkCmdSetStencilTestEnableEXT",
+		"vkCmdSetFrontFaceEXT",
+		"vkCmdSetPrimitiveTopologyEXT",
+		"vkCmdSetScissorWithCountEXT",
 		"vkCmdSetStencilOpEXT",
+		"vkCmdSetStencilTestEnableEXT",
+		"vkCmdSetViewportWithCountEXT",
+
+		// "VK_EXT_extended_dynamic_state2
+		"vkCmdSetDepthBiasEnableEXT",
+		"vkCmdSetLogicOpEXT",
+		"vkCmdSetPatchControlPointsEXT",
+		"vkCmdSetPrimitiveRestartEnableEXT",
+		"vkCmdSetRasterizerDiscardEnableEXT",
+
+		// "VK_EXT_external_memory_host
+		"vkGetMemoryHostPointerPropertiesEXT",
+
+		// "VK_EXT_hdr_metadata
+		"vkSetHdrMetadataEXT",
+
+		// "VK_EXT_headless_surface
+		"vkCreateHeadlessSurfaceEXT",
+
+		// "VK_EXT_image_drm_format_modifier
+		"vkGetImageDrmFormatModifierPropertiesEXT",
+
+		// "VK_EXT_line_rasterization
+		"vkCmdSetLineStippleEXT",
+
+		// "VK_EXT_sample_locations
+		"vkCmdSetSampleLocationsEXT",
+		"vkGetPhysicalDeviceMultisamplePropertiesEXT",
+
+		// "VK_EXT_vertex_input_dynamic_state
+		"vkCmdSetVertexInputEXT",
+
+		// "VK_KHR_calibrated_timestamps
+		"vkGetCalibratedTimestampsKHR",
+		"vkGetPhysicalDeviceCalibrateableTimeDomainsKHR",
+
+		// "VK_KHR_copy_commands2
+		"vkCmdBlitImage2KHR",
+		"vkCmdCopyBuffer2KHR",
+		"vkCmdCopyBufferToImage2KHR",
+		"vkCmdCopyImage2KHR",
+		"vkCmdCopyImageToBuffer2KHR",
+		"vkCmdResolveImage2KHR",
+
+		// "VK_KHR_display
+		"vkCreateDisplayModeKHR",
+		"vkCreateDisplayPlaneSurfaceKHR",
+		"vkGetDisplayModePropertiesKHR",
+		"vkGetDisplayPlaneCapabilitiesKHR",
+		"vkGetDisplayPlaneSupportedDisplaysKHR",
+		"vkGetPhysicalDeviceDisplayPlanePropertiesKHR",
+		"vkGetPhysicalDeviceDisplayPropertiesKHR",
+
+		// "VK_KHR_display_swapchain
+		"vkCreateSharedSwapchainsKHR",
+
+		// "VK_KHR_external_fence_fd
+		"vkGetFenceFdKHR",
+		"vkImportFenceFdKHR",
+
+		// "VK_KHR_external_memory_fd
+		"vkGetMemoryFdKHR",
+		"vkGetMemoryFdPropertiesKHR",
+
+		// "VK_KHR_external_semaphore_fd
+		"vkGetSemaphoreFdKHR",
+		"vkImportSemaphoreFdKHR",
+
+		// "VK_KHR_fragment_shading_rate
+		"vkCmdSetFragmentShadingRateKHR",
+		"vkGetPhysicalDeviceFragmentShadingRatesKHR",
+
+		// "VK_KHR_get_display_properties2
+		"vkGetDisplayModeProperties2KHR",
+		"vkGetDisplayPlaneCapabilities2KHR",
+		"vkGetPhysicalDeviceDisplayPlaneProperties2KHR",
+		"vkGetPhysicalDeviceDisplayProperties2KHR",
+
+		// "VK_KHR_get_surface_capabilities2
+		"vkGetPhysicalDeviceSurfaceCapabilities2KHR",
+		"vkGetPhysicalDeviceSurfaceFormats2KHR",
+
+		// "VK_KHR_line_rasterization
+		"vkCmdSetLineStippleKHR",
+
+		// "VK_KHR_object_refresh
 		"vkCmdRefreshObjectsKHR",
 		"vkGetPhysicalDeviceRefreshableObjectTypesKHR",
-		"vkCmdSetEvent2KHR",
-		"vkCmdResetEvent2KHR",
-		"vkCmdWaitEvents2KHR",
+
+		// "VK_KHR_performance_query
+		"vkAcquireProfilingLockKHR",
+		"vkEnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR",
+		"vkGetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR",
+		"vkReleaseProfilingLockKHR",
+
+		// "VK_KHR_shared_presentable_image
+		"vkGetSwapchainStatusKHR",
+
+		// "VK_KHR_surface
+		"vkDestroySurfaceKHR",
+		"vkGetPhysicalDeviceSurfaceCapabilitiesKHR",
+		"vkGetPhysicalDeviceSurfaceFormatsKHR",
+		"vkGetPhysicalDeviceSurfacePresentModesKHR",
+		"vkGetPhysicalDeviceSurfaceSupportKHR",
+
+		// "VK_KHR_swapchain
+		"vkAcquireNextImage2KHR",
+		"vkAcquireNextImageKHR",
+		"vkCreateSwapchainKHR",
+		"vkGetDeviceGroupPresentCapabilitiesKHR",
+		"vkGetDeviceGroupSurfacePresentModesKHR",
+		"vkGetPhysicalDevicePresentRectanglesKHR",
+		"vkGetSwapchainImagesKHR",
+		"vkQueuePresentKHR",
+
+		// "VK_KHR_synchronization2
 		"vkCmdPipelineBarrier2KHR",
+		"vkCmdResetEvent2KHR",
+		"vkCmdSetEvent2KHR",
+		"vkCmdWaitEvents2KHR",
 		"vkCmdWriteTimestamp2KHR",
 		"vkQueueSubmit2KHR",
-		"vkCmdWriteBufferMarker2AMD",
-		"vkGetQueueCheckpointData2NV",
-		"vkCmdCopyBuffer2KHR",
-		"vkCmdCopyImage2KHR",
-		"vkCmdCopyBufferToImage2KHR",
-		"vkCmdCopyImageToBuffer2KHR",
-		"vkCmdBlitImage2KHR",
-		"vkCmdResolveImage2KHR",
-		"vkCmdSetVertexInputEXT",
-		"vkGetFenceSciSyncFenceNV",
-		"vkGetFenceSciSyncObjNV",
-		"vkImportFenceSciSyncFenceNV",
-		"vkImportFenceSciSyncObjNV",
-		"vkGetPhysicalDeviceSciSyncAttributesNV",
-		"vkGetSemaphoreSciSyncObjNV",
-		"vkImportSemaphoreSciSyncObjNV",
+
+		// "VK_NV_acquire_winrt_display
+		"vkAcquireWinrtDisplayNV",
+		"vkGetWinrtDisplayNV",
+
+		// "VK_NV_external_memory_sci_buf
 		"vkGetMemorySciBufNV",
 		"vkGetPhysicalDeviceExternalMemorySciBufPropertiesNV",
 		"vkGetPhysicalDeviceSciBufAttributesNV",
-		"vkCmdSetPatchControlPointsEXT",
-		"vkCmdSetRasterizerDiscardEnableEXT",
-		"vkCmdSetDepthBiasEnableEXT",
-		"vkCmdSetLogicOpEXT",
-		"vkCmdSetPrimitiveRestartEnableEXT",
-		"vkCmdSetColorWriteEnableEXT",
-		"vkCreateSemaphoreSciSyncPoolNV",
-		"vkDestroySemaphoreSciSyncPoolNV",
+
+		// "VK_NV_external_sci_sync
 		"vkGetFenceSciSyncFenceNV",
 		"vkGetFenceSciSyncObjNV",
+		"vkGetPhysicalDeviceSciSyncAttributesNV",
+		"vkGetSemaphoreSciSyncObjNV",
 		"vkImportFenceSciSyncFenceNV",
 		"vkImportFenceSciSyncObjNV",
-		"vkGetPhysicalDeviceSciSyncAttributesNV",
-		"vkGetScreenBufferPropertiesQNX",
-		"vkCmdSetCheckpointNV",
-		"vkGetQueueCheckpointDataNV",
-	};
+		"vkImportSemaphoreSciSyncObjNV",
 
-	bool fail = false;
-	for (const auto& function : functions)
-	{
-		if (std::find(loaderExceptions.begin(), loaderExceptions.end(), function) != loaderExceptions.end())
-		{
-			continue;
-		}
-		if (deviceDriver.getDeviceProcAddr(device.get(), function.c_str()) != DE_NULL)
-		{
-			fail = true;
-			log << tcu::TestLog::Message << "Function " << function << " is not NULL" << tcu::TestLog::EndMessage;
-		}
-	}
-	if (fail)
-		return tcu::TestStatus::fail("Fail");
-	return tcu::TestStatus::pass("All functions are NULL");
+		// "VK_NV_external_sci_sync2
+		"vkCreateSemaphoreSciSyncPoolNV",
+		"vkGetFenceSciSyncFenceNV",
+		"vkGetFenceSciSyncObjNV",
+		"vkGetPhysicalDeviceSciSyncAttributesNV",
+		"vkImportFenceSciSyncFenceNV",
+		"vkImportFenceSciSyncObjNV",
+
+		// "VK_QNX_external_memory_screen_buffer
+		"vkGetScreenBufferPropertiesQNX",
+    };
+
+    bool fail = false;
+    for (const auto& function : functions)
+    {
+        if (deviceDriver.getDeviceProcAddr(device.get(), function.c_str()) != nullptr)
+        {
+            fail = true;
+            log << tcu::TestLog::Message << "Function " << function << " is not NULL" << tcu::TestLog::EndMessage;
+        }
+    }
+    if (fail)
+        return tcu::TestStatus::fail("Fail");
+    return tcu::TestStatus::pass("All functions are NULL");
 }
 
 void addGetDeviceProcAddrTests (tcu::TestCaseGroup* testGroup)

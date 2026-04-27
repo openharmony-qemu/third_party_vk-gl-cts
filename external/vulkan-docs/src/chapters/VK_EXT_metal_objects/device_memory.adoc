@@ -28,8 +28,8 @@ slink:VkImageCreateInfo structure in the flink:vkCreateImage command.
 
 [open,refpage='VkExportMetalObjectCreateInfoEXT',desc='Structure that identifies the Metal objects that can be exported from Vulkan objects',type='structs']
 --
-To export Metal objects from Vulkan objects, the app must: first indicate
-the intention to do so during the creation of the Vulkan object, by
+To export Metal objects from Vulkan objects, the application must: first
+indicate the intention to do so during the creation of the Vulkan object, by
 including one or more slink:VkExportMetalObjectCreateInfoEXT structures in
 the pname:pNext chain of the slink:VkInstanceCreateInfo,
 slink:VkMemoryAllocateInfo, slink:VkImageCreateInfo,
@@ -58,18 +58,18 @@ corresponding Vulkan object are:
 
 include::{generated}/api/enums/VkExportMetalObjectTypeFlagBitsEXT.adoc[]
 
-  * ename:VK_EXPORT_METAL_OBJECT_TYPE_METAL_DEVICE_BIT_EXT indicates a Metal
-    code:MTLDevice may be exported.
-  * ename:VK_EXPORT_METAL_OBJECT_TYPE_METAL_COMMAND_QUEUE_BIT_EXT indicates
-    a Metal code:MTLCommandQueue may be exported.
-  * ename:VK_EXPORT_METAL_OBJECT_TYPE_METAL_BUFFER_BIT_EXT indicates a Metal
-    code:MTLBuffer may be exported.
-  * ename:VK_EXPORT_METAL_OBJECT_TYPE_METAL_TEXTURE_BIT_EXT indicates a
+  * ename:VK_EXPORT_METAL_OBJECT_TYPE_METAL_DEVICE_BIT_EXT specifies that a
+    Metal code:MTLDevice may be exported.
+  * ename:VK_EXPORT_METAL_OBJECT_TYPE_METAL_COMMAND_QUEUE_BIT_EXT specifies
+    that a Metal code:MTLCommandQueue may be exported.
+  * ename:VK_EXPORT_METAL_OBJECT_TYPE_METAL_BUFFER_BIT_EXT specifies that a
+    Metal code:MTLBuffer may be exported.
+  * ename:VK_EXPORT_METAL_OBJECT_TYPE_METAL_TEXTURE_BIT_EXT specifies that a
     Metal code:MTLTexture may be exported.
-  * ename:VK_EXPORT_METAL_OBJECT_TYPE_METAL_IOSURFACE_BIT_EXT indicates a
-    Metal code:IOSurface may be exported.
-  * ename:VK_EXPORT_METAL_OBJECT_TYPE_METAL_SHARED_EVENT_BIT_EXT indicates a
-    Metal code:MTLSharedEvent may be exported.
+  * ename:VK_EXPORT_METAL_OBJECT_TYPE_METAL_IOSURFACE_BIT_EXT specifies that
+    a Metal code:IOSurface may be exported.
+  * ename:VK_EXPORT_METAL_OBJECT_TYPE_METAL_SHARED_EVENT_BIT_EXT specifies
+    that a Metal code:MTLSharedEvent may be exported.
 --
 
 [open,refpage='VkExportMetalObjectTypeFlagsEXT',desc='Bitmask of VkExportMetalObjectTypeFlagBitsEXT',type='flags']
@@ -173,23 +173,24 @@ include::{generated}/api/structs/VkExportMetalObjectsInfoEXT.adoc[]
   * [[VUID-VkExportMetalObjectsInfoEXT-pNext-06799]]
     If the pname:pNext chain includes a slink:VkExportMetalTextureInfoEXT
     structure, and if the slink:VkImage in its pname:image member does not
-    have a multi-planar format, then its pname:plane member must: be
-    ename:VK_IMAGE_ASPECT_PLANE_0_BIT
+    have a <<formats-multiplanar, multi-planar format>>, then its
+    pname:plane member must: be ename:VK_IMAGE_ASPECT_PLANE_0_BIT
   * [[VUID-VkExportMetalObjectsInfoEXT-pNext-06800]]
     If the pname:pNext chain includes a slink:VkExportMetalTextureInfoEXT
     structure, and if the slink:VkImage in its pname:image member has a
-    multi-planar format with only two planes, then its pname:plane member
-    must: not be ename:VK_IMAGE_ASPECT_PLANE_2_BIT
+    <<formats-multiplanar, multi-planar format>> with only two planes, then
+    its pname:plane member must: not be ename:VK_IMAGE_ASPECT_PLANE_2_BIT
   * [[VUID-VkExportMetalObjectsInfoEXT-pNext-06801]]
     If the pname:pNext chain includes a slink:VkExportMetalTextureInfoEXT
     structure, and if the slink:VkImageView in its pname:imageView member
-    does not have a multi-planar format, then its pname:plane member must:
-    be ename:VK_IMAGE_ASPECT_PLANE_0_BIT
+    does not have a <<formats-multiplanar, multi-planar format>>, then its
+    pname:plane member must: be ename:VK_IMAGE_ASPECT_PLANE_0_BIT
   * [[VUID-VkExportMetalObjectsInfoEXT-pNext-06802]]
     If the pname:pNext chain includes a slink:VkExportMetalTextureInfoEXT
     structure, and if the slink:VkImageView in its pname:imageView member
-    has a multi-planar format with only two planes, then its pname:plane
-    member must: not be ename:VK_IMAGE_ASPECT_PLANE_2_BIT
+    has a <<formats-multiplanar, multi-planar format>> with only two planes,
+    then its pname:plane member must: not be
+    ename:VK_IMAGE_ASPECT_PLANE_2_BIT
   * [[VUID-VkExportMetalObjectsInfoEXT-pNext-06803]]
     If the pname:pNext chain includes a slink:VkExportMetalIOSurfaceInfoEXT
     structure, the slink:VkImage in its pname:image member must: have been
@@ -334,8 +335,8 @@ include::{generated}/api/structs/VkImportMetalBufferInfoEXT.adoc[]
   * pname:mtlBuffer is the Metal `id<MTLBuffer>` object that is to underlie
     the slink:VkDeviceMemory.
 
-The app must: ensure that the configuration of the `id<MTLBuffer>` object is
-compatible with the configuration of the slink:VkDeviceMemory.
+The application must: ensure that the configuration of the `id<MTLBuffer>`
+object is compatible with the configuration of the slink:VkDeviceMemory.
 Failure to do so results in undefined: behavior.
 
 include::{generated}/validity/structs/VkImportMetalBufferInfoEXT.adoc[]
@@ -367,7 +368,7 @@ include::{generated}/api/structs/VkExportMetalTextureInfoEXT.adoc[]
   * pname:image is dlink:VK_NULL_HANDLE or a slink:VkImage.
   * pname:imageView is dlink:VK_NULL_HANDLE or a slink:VkImageView.
   * pname:bufferView is dlink:VK_NULL_HANDLE or a slink:VkBufferView.
-  * pname:plane indicates the plane of a multi-planar slink:VkImage or
+  * pname:plane specifies the plane of a multi-planar slink:VkImage or
     slink:VkImageView.
   * pname:mtlTexture is the Metal `id<MTLTexture>` object underlying the
     slink:VkImage, slink:VkImageView, or slink:VkBufferView object in
@@ -395,15 +396,16 @@ include::{generated}/api/structs/VkImportMetalTextureInfoEXT.adoc[]
   * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
-  * pname:plane indicates the plane of the slink:VkImage that the
+  * pname:plane specifies the plane of the slink:VkImage that the
     `id<MTLTexture>` object should be attached to.
   * pname:mtlTexture is a the Metal `id<MTLTexture>` object that is to
     underlie the slink:VkImage plane.
 
 The pname:pNext chain must: include one sname:VkImportMetalTextureInfoEXT
 structure for each plane in the slink:VkImage.
-The app must: ensure that the configuration of the Metal `id<MTLTexture>`
-objects are compatible with the configuration of the slink:VkImage.
+The application must: ensure that the configuration of the Metal
+`id<MTLTexture>` objects are compatible with the configuration of the
+slink:VkImage.
 Failure to do so results in undefined: behavior.
 
 include::{generated}/validity/structs/VkImportMetalTextureInfoEXT.adoc[]
@@ -464,7 +466,7 @@ the slink:VkImage.
 If pname:ioSurface is dlink:VK_NULL_HANDLE, the implementation will create a
 new code:IOSurface to underlie the slink:VkImage.
 
-If provided, the app must: ensure that the configuration of the
+If provided, the application must: ensure that the configuration of the
 basetype:IOSurfaceRef object is compatible with the configuration of the
 slink:VkImage.
 Failure to do so results in undefined: behavior.
@@ -530,8 +532,8 @@ ifdef::VK_KHR_timeline_semaphore[]
 If the pname:pNext chain of the slink:VkSemaphoreCreateInfo structure
 includes both sname:VkImportMetalSharedEventInfoEXT and
 slink:VkSemaphoreTypeCreateInfo, the code:signaledValue property of the
-imported `id<MTLSharedEvent>` object will be set to pname:initialValue of
-slink:VkSemaphoreTypeCreateInfo.
+imported `id<MTLSharedEvent>` object will be set to
+slink:VkSemaphoreTypeCreateInfo::pname:initialValue.
 endif::VK_KHR_timeline_semaphore[]
 
 include::{generated}/validity/structs/VkImportMetalSharedEventInfoEXT.adoc[]

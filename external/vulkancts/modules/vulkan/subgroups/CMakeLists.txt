@@ -28,6 +28,8 @@ set(DEQP_VK_VKSC_SUBGROUPS_SRCS
   vktSubgroupsShuffleTests.hpp
   vktSubgroupsQuadTests.cpp
   vktSubgroupsQuadTests.hpp
+  vktSubgroupsQuadControlTests.cpp
+  vktSubgroupsQuadControlTests.hpp
   vktSubgroupsScanHelpers.cpp
   vktSubgroupsScanHelpers.hpp
   vktSubgroupsShapeTests.cpp
@@ -45,6 +47,8 @@ set(DEQP_VK_VKSC_SUBGROUPS_SRCS
 set(DEQP_VK_SUBGROUPS_SRCS
   vktSubgroupsPartitionedTests.cpp
   vktSubgroupsPartitionedTests.hpp
+  vktSubgroupsUniformDescriptorIndexingTests.cpp
+  vktSubgroupsUniformDescriptorIndexingTests.hpp
   vktSubgroupUniformControlFlowTests.cpp
   vktSubgroupUniformControlFlowTests.hpp
   )

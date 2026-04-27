@@ -33,6 +33,7 @@ ohos_source_set("deqp_vk_modifiers_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/image",
 
     #"//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/modifiers/vktModifiersTests.hpp",
   ]
 
   deps = []

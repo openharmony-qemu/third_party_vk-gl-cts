@@ -67,15 +67,15 @@ include::{generated}/api/structs/VkCudaLaunchInfoNV.adoc[]
   * pname:function is the CUDA-Driver handle to the function being launched.
   * pname:gridDimX is the number of local workgroups to dispatch in the X
     dimension.
-    It must be less than or equal to
+    It must: be less than or equal to
     sname:VkPhysicalDeviceLimits::pname:maxComputeWorkGroupCount[0]
   * pname:gridDimY is the number of local workgroups to dispatch in the Y
     dimension.
-    It must be less than or equal to
+    It must: be less than or equal to
     sname:VkPhysicalDeviceLimits::pname:maxComputeWorkGroupCount[1]
   * pname:gridDimZ is the number of local workgroups to dispatch in the Z
     dimension.
-    It must be less than or equal to
+    It must: be less than or equal to
     sname:VkPhysicalDeviceLimits::pname:maxComputeWorkGroupCount[2]
   * pname:blockDimX is block size in the X dimension.
   * pname:blockDimY is block size in the Y dimension.
@@ -93,9 +93,9 @@ much the same way as described in
 link:++https://docs.nvidia.com/cuda/cuda-driver-api/group__CUDA__EXEC.html#group__CUDA__EXEC_1gb8f3dc3031b40da29d5f9a7139e52e15++[cuLaunchKernel]
 
 If pname:function has N parameters, then pname:pParams must: be an array of
-N pointers and pname:paramCount must: be set to N. Each of
-pname:kernelParams[0] through pname:kernelParams[N-1] must: point to a
-region of memory from which the actual kernel parameter will be copied.
+N pointers and pname:paramCount must: be N. Each of pname:kernelParams[0]
+through pname:kernelParams[N-1] must: point to a region of memory from which
+the actual kernel parameter will be copied.
 The number of kernel parameters and their offsets and sizes are not
 specified here as that information is stored in the slink:VkCudaFunctionNV
 object.
@@ -118,14 +118,14 @@ flink:vkCmdCudaLaunchKernelNV has returned.
     sname:VkPhysicalDeviceLimits::pname:maxComputeWorkGroupCount[2]
   * [[VUID-VkCudaLaunchInfoNV-paramCount-09409]]
     pname:paramCount must: be the total amount of parameters listed in the
-    pname:pParams table.
+    pname:pParams table
   * [[VUID-VkCudaLaunchInfoNV-pParams-09410]]
     pname:pParams must: be a pointer to a table of pname:paramCount
-    parameters, corresponding to the arguments of pname:function.
+    parameters, corresponding to the arguments of pname:function
   * [[VUID-VkCudaLaunchInfoNV-extraCount-09411]]
-    pname:extraCount must be 0
+    pname:extraCount must: be 0
   * [[VUID-VkCudaLaunchInfoNV-pExtras-09412]]
-    pname:pExtras must be NULL
+    pname:pExtras must: be NULL
 ****
 
 include::{generated}/validity/structs/VkCudaLaunchInfoNV.adoc[]

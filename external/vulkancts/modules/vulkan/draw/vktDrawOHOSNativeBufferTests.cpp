@@ -55,15 +55,15 @@ namespace Draw
 namespace
 {
 
-const deUint32 SEED = 0xc2a39fu;
+const uint32_t SEED = 0xc2a39fu;
 
 struct DrawParams
 {
-	DrawParams (deUint32 numVertices, deUint32 numLayers)
+	DrawParams (uint32_t numVertices, uint32_t numLayers)
 	: m_numVertices(numVertices), m_numLayers(numLayers) {}
 
-	deUint32					m_numVertices;
-	deUint32					m_numLayers;
+	uint32_t					m_numVertices;
+	uint32_t					m_numLayers;
 	vector<PositionColorVertex>	m_vertices;
 };
 
@@ -112,7 +112,7 @@ public:
 		for (int packetNdx = 0; packetNdx < numPackets; ++packetNdx)
 		{
 			rr::FragmentPacket& packet = packets[packetNdx];
-			for (deUint32 fragNdx = 0; fragNdx < rr::NUM_FRAGMENTS_PER_PACKET; ++fragNdx)
+			for (uint32_t fragNdx = 0; fragNdx < rr::NUM_FRAGMENTS_PER_PACKET; ++fragNdx)
 			{
 				tcu::Vec4 color = rr::readVarying<float>(packet, context, 0, fragNdx);
 				rr::writeFragmentOutput(context, packetNdx, fragNdx, 0, color);
@@ -176,7 +176,7 @@ void OHOSNativeBufferTestInstance::generateRefImage (const tcu::PixelBufferAcces
 
 	renderer.draw(rr::DrawCommand(renderState, renderTarget, program, DE_LENGTH_OF_ARRAY(vertexAttribs),
 								  &vertexAttribs[0], rr::PrimitiveList(rr::PRIMITIVETYPE_TRIANGLES,
-                                  (deUint32)vertices.size(), 0)));
+                                  (uint32_t)vertices.size(), 0)));
 }
 
 class OHOSNativeBufferTestCase : public TestCase
@@ -261,7 +261,7 @@ void OHOSNativeBufferTestInstance::generateDrawData (void)
 {
 	de::Random rnd (SEED ^ m_data.m_numLayers ^ m_data.m_numVertices);
 
-	for (deUint32 i = 0; i < m_data.m_numVertices; i++)
+	for (uint32_t i = 0; i < m_data.m_numVertices; i++)
 	{
 		const float f0 = rnd.getFloat(-1.0f, 1.0f);
 		const float f1 = rnd.getFloat(-1.0f, 1.0f);
@@ -279,27 +279,27 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 	tcu::TestLog								&log					= m_context.getTestContext().getLog();
 	const VkQueue								queue					= m_context.getUniversalQueue();
 	const VkDevice								device					= m_context.getDevice();
-	const deUint32								queueFamilyIndex		= m_context.getUniversalQueueFamilyIndex();
+	const uint32_t								queueFamilyIndex		= m_context.getUniversalQueueFamilyIndex();
 	const PipelineLayoutCreateInfo				pipelineLayoutCreateInfo;
 	const Unique<VkPipelineLayout>				pipelineLayout			(createPipelineLayout(vk, device,
                                                                          &pipelineLayoutCreateInfo));
 	vector<Move<VkBuffer>>						resultBuffers;
 	vector<de::MovePtr<Allocation>>				resultBufferAllocations;
 
-	for (deUint32 i = 0u; i < m_data.m_numLayers; i++)
+	for (uint32_t i = 0u; i < m_data.m_numLayers; i++)
 	{
 		const VkBufferUsageFlags	bufferUsage	(VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 		const VkDeviceSize			pixelSize	= mapVkFormat(colorAttachmentFormat).getPixelSize();
 		const VkBufferCreateInfo	createInfo	=
 		{
 			VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,	// VkStructureType		sType
-			DE_NULL,								// const void*			pNext
+			nullptr,								// const void*			pNext
 			0u,										// VkBufferCreateFlags	flags
 			WIDTH * HEIGHT * pixelSize,				// VkDeviceSize			size
 			bufferUsage,							// VkBufferUsageFlags	usage
 			VK_SHARING_MODE_EXCLUSIVE,				// VkSharingMode		sharingMode
 			0u,										// uint32_t				queueFamilyIndexCount
-			DE_NULL									// const uint32_t*		pQueueFamilyIndices
+			nullptr									// const uint32_t*		pQueueFamilyIndices
 		};
 
 		resultBuffers.push_back(createBuffer(vk, device, &createInfo));
@@ -324,7 +324,7 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 
 	m_context.requireDeviceFunctionality("VK_OHOS_external_memory");
 
-	deUint64 requiredUsage = api->VKUsageToOHOSUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+	uint64_t requiredUsage = api->VKUsageToOHOSUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
 
     if (targetImageCreateInfo.arrayLayers > 1) {
         TCU_THROW(NotSupportedError, "Required number of layers for OHOS Native Buffer not supported");
@@ -333,7 +333,7 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 	pt::OHOSNativeBufferPtr bufferPtr = api->Allocate(WIDTH, HEIGHT,
                                                 api->VKFormatToOHOSFormat(colorAttachmentFormat), requiredUsage);
 
-	if (bufferPtr.internal == DE_NULL)
+	if (bufferPtr.internal == nullptr)
 		TCU_THROW(NotSupportedError, "Required number of layers for OHOS Native Buffer not supported");
 
 	NativeHandle			nativeHandle(bufferPtr);
@@ -343,13 +343,13 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 											  targetImageCreateInfo.usage, targetImageCreateInfo.mipLevels,
                                               targetImageCreateInfo.arrayLayers));
 
-	deUint32 ohosFormat	= 0;
-	api->Describe(nativeHandle.GetOhosNativeBuffer(), DE_NULL, DE_NULL, &ohosFormat, DE_NULL, DE_NULL);
+	uint32_t ohosFormat	= 0;
+	api->Describe(nativeHandle.GetOhosNativeBuffer(), nullptr, nullptr, &ohosFormat, nullptr, nullptr);
 
 	VkNativeBufferPropertiesOHOS	ohosProperties		=
 	{
 		VK_STRUCTURE_TYPE_NATIVE_BUFFER_PROPERTIES_OHOS,	            // VkStructureType    sType
-		DE_NULL,														// void*              pNext
+		nullptr,														// void*              pNext
 		0u,																// VkDeviceSize       allocationSize
 		0u																// uint32_t           memoryTypeBits
 	};
@@ -359,7 +359,7 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 	const VkImportNativeBufferInfoOHOS	importInfo		=
 	{
 		VK_STRUCTURE_TYPE_IMPORT_NATIVE_BUFFER_INFO_OHOS,	            // VkStructureType            sType
-		DE_NULL,														// const void*                pNext
+		nullptr,														// const void*                pNext
 		nativeHandle.GetOhosNativeBuffer()							    // struct AHardwareBuffer*    buffer
 	};
 
@@ -368,7 +368,7 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 		VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO_KHR,	// VkStructureType    sType
 		&importInfo,											// const void*        pNext
 		*colorTargetImage,										// VkImage            image
-		DE_NULL,												// VkBuffer           buffer
+		VK_NULL_HANDLE,											// VkBuffer           buffer
 	};
 
 	const VkMemoryAllocateInfo					allocateInfo		=
@@ -386,7 +386,7 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 	vector<VkImageView>							colorAttachments;
 	RenderPassCreateInfo						renderPassCreateInfo;
 
-	for (deUint32 i = 0u; i < m_data.m_numLayers; i++)
+	for (uint32_t i = 0u; i < m_data.m_numLayers; i++)
 	{
 		const VkImageSubresourceRange	subresourceRange	=
 		{
@@ -400,7 +400,7 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 		const VkImageViewCreateInfo		imageViewCreateInfo	=
 		{
 			VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,	// VkStructureType            sType
-			DE_NULL,									// const void*                pNext
+			nullptr,									// const void*                pNext
 			0u,											// VkImageViewCreateFlags     flags
 			*colorTargetImage,							// VkImage                    image
 			VK_IMAGE_VIEW_TYPE_2D,						// VkImageViewType            viewType
@@ -431,13 +431,13 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 		renderPassCreateInfo.addSubpass(SubpassDescription(VK_PIPELINE_BIND_POINT_GRAPHICS,
 														   0,
 														   0,
-														   DE_NULL,
+														   nullptr,
 														   1u,
 														   &colorAttachmentReference,
-														   DE_NULL,
+														   nullptr,
 														   AttachmentReference(),
 														   0,
-														   DE_NULL));
+														   nullptr));
 	}
 
 	Unique<VkRenderPass>				renderPass				(createRenderPass(vk, device, &renderPassCreateInfo));
@@ -448,7 +448,7 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 	const VkVertexInputBindingDescription vertexInputBindingDescription =
 	{
 		0,									// uint32_t             binding
-		(deUint32)sizeof(tcu::Vec4) * 2,	// uint32_t             stride
+		(uint32_t)sizeof(tcu::Vec4) * 2,	// uint32_t             stride
 		VK_VERTEX_INPUT_RATE_VERTEX,		// VkVertexInputRate    inputRate
 	};
 
@@ -465,7 +465,7 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 			1u,								// uint32_t    location
 			0u,								// uint32_t    binding
 			VK_FORMAT_R32G32B32A32_SFLOAT,	// VkFormat    format
-			(deUint32)(sizeof(float)* 4),	// uint32_t    offset
+			(uint32_t)(sizeof(float)* 4),	// uint32_t    offset
 		}
 	};
 
@@ -479,7 +479,7 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 																	  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT),
                                                                       m_context.getDefaultAllocator(),
                                                                       MemoryRequirement::HostVisible);
-	deUint8*								ptr						= reinterpret_cast<deUint8*>(
+	uint8_t*								ptr						= reinterpret_cast<uint8_t*>(
                                                                       vertexBuffer->getBoundMemory().getHostPtr());
 
 	deMemcpy(ptr, &(m_data.m_vertices[0]), static_cast<size_t>(dataSize));
@@ -510,10 +510,10 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 	pipelineCreateInfo.addState(PipelineCreateInfo::RasterizerState());
 	pipelineCreateInfo.addState(PipelineCreateInfo::MultiSampleState());
 
-	for (deUint32 i = 0; i < m_data.m_numLayers; i++)
+	for (uint32_t i = 0; i < m_data.m_numLayers; i++)
 	{
 		pipelineCreateInfo.subpass = i;
-		pipelines.push_back(createGraphicsPipeline(vk, device, DE_NULL, &pipelineCreateInfo));
+		pipelines.push_back(createGraphicsPipeline(vk, device, VK_NULL_HANDLE, &pipelineCreateInfo));
 	}
 
 	beginCommandBuffer(vk, *cmdBuffer, 0u);
@@ -521,21 +521,21 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 	const VkImageMemoryBarrier				initialTransition		=
 	{
 		VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,		// VkStructureType	sType
-		DE_NULL,									// const void*		pNext
+		nullptr,									// const void*		pNext
 		0u,											// VkAccessFlags	srcAccessMask
 		VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,		// VkAccessFlags	dstAccessMask
 		VK_IMAGE_LAYOUT_UNDEFINED,					// VkImageLayout	oldLayout
 		VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,	// VkImageLayout	newLayout
-		VK_QUEUE_FAMILY_IGNORED,					// deUint32			srcQueueFamilyIndex
-		VK_QUEUE_FAMILY_IGNORED,					// deUint32			destQueueFamilyIndex
+		VK_QUEUE_FAMILY_IGNORED,					// uint32_t			srcQueueFamilyIndex
+		VK_QUEUE_FAMILY_IGNORED,					// uint32_t			destQueueFamilyIndex
 		*colorTargetImage,							// VkImage			image
         // VkImageSubresourceRange	subresourceRange
 		makeImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT, 0u, 1u, 0, m_data.m_numLayers)
 	};
 
 	vk.cmdPipelineBarrier(*cmdBuffer, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                         (vk::VkDependencyFlags)0, 0, (const vk::VkMemoryBarrier*)DE_NULL, 0,
-                         (const vk::VkBufferMemoryBarrier*)DE_NULL, 1, &initialTransition);
+                         (vk::VkDependencyFlags)0, 0, (const vk::VkMemoryBarrier*)nullptr, 0,
+                         (const vk::VkBufferMemoryBarrier*)nullptr, 1, &initialTransition);
 
 	const VkRect2D					renderArea				= makeRect2D(WIDTH, HEIGHT);
 
@@ -544,11 +544,11 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 	const VkRenderPassBeginInfo		renderPassBeginInfo		=
 	{
 		VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,	// VkStructureType         sType
-		DE_NULL,									// const void*             pNext
+		nullptr,									// const void*             pNext
 		*renderPass,								// VkRenderPass            renderPass
 		*framebuffer,								// VkFramebuffer           framebuffer
 		renderArea,									// VkRect2D                renderArea
-		(deUint32)clearColors.size(),				// deUint32                clearValueCount
+		(uint32_t)clearColors.size(),				// uint32_t                clearValueCount
 		clearColors.data(),							// const VkClearValue*     pClearValues
 	};
 
@@ -558,7 +558,7 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 	const VkBuffer							vertexBufferObj			= vertexBuffer->object();
 
 	vk.cmdBindVertexBuffers(*cmdBuffer, 0, 1, &vertexBufferObj, &vertexBufferOffset);
-	for (deUint32 i = 0; i < m_data.m_numLayers; i++)
+	for (uint32_t i = 0; i < m_data.m_numLayers; i++)
 	{
 		if (i != 0)
 			vk.cmdNextSubpass(*cmdBuffer, VK_SUBPASS_CONTENTS_INLINE);
@@ -572,36 +572,36 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 	const VkImageMemoryBarrier				imageBarrier			=
 	{
 		VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,		// VkStructureType			sType
-		DE_NULL,									// const void*				pNext
+		nullptr,									// const void*				pNext
 		VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,		// VkAccessFlags			srcAccessMask
 		VK_ACCESS_TRANSFER_READ_BIT,				// VkAccessFlags			dstAccessMask
 		VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,	// VkImageLayout			oldLayout
 		VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,		// VkImageLayout			newLayout
-		VK_QUEUE_FAMILY_IGNORED,					// deUint32					srcQueueFamilyIndex
-		VK_QUEUE_FAMILY_IGNORED,					// deUint32					destQueueFamilyIndex
+		VK_QUEUE_FAMILY_IGNORED,					// uint32_t					srcQueueFamilyIndex
+		VK_QUEUE_FAMILY_IGNORED,					// uint32_t					destQueueFamilyIndex
 		*colorTargetImage,							// VkImage					image
         // VkImageSubresourceRange	subresourceRange;
 		makeImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT, 0u, 1u, 0, m_data.m_numLayers)
 	};
 
 	vk.cmdPipelineBarrier(*cmdBuffer, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0u,
-						  0u, DE_NULL, 0u, DE_NULL, 1u, &imageBarrier);
+						  0u, nullptr, 0u, nullptr, 1u, &imageBarrier);
 
-	for (deUint32 i = 0; i < m_data.m_numLayers; i++)
+	for (uint32_t i = 0; i < m_data.m_numLayers; i++)
 	{
 		const VkImageSubresourceLayers	subresource	=
 		{
 			VK_IMAGE_ASPECT_COLOR_BIT,	// VkImageAspectFlags	aspectMask
-			0u,							// deUint32				mipLevel
-			i,							// deUint32				baseArrayLayer
-			1u							// deUint32				layerCount
+			0u,							// uint32_t				mipLevel
+			i,							// uint32_t				baseArrayLayer
+			1u							// uint32_t				layerCount
 		};
 
 		const VkBufferImageCopy			region		=
 		{
 			0ull,							// VkDeviceSize					bufferOffset
-			0u,								// deUint32						bufferRowLength
-			0u,								// deUint32						bufferImageHeight
+			0u,								// uint32_t						bufferRowLength
+			0u,								// uint32_t						bufferImageHeight
 			subresource,					// VkImageSubresourceLayers		imageSubresource
 			makeOffset3D(0, 0, 0),			// VkOffset3D					imageOffset
 			makeExtent3D(WIDTH, HEIGHT, 1u)	// VkExtent3D					imageExtent
@@ -613,18 +613,18 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 		const VkBufferMemoryBarrier	bufferBarrier =
 		{
 			VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,	// VkStructureType	sType
-			DE_NULL,									// const void*		pNext
+			nullptr,									// const void*		pNext
 			VK_ACCESS_TRANSFER_WRITE_BIT,				// VkAccessFlags	srcAccessMask
 			VK_ACCESS_HOST_READ_BIT,					// VkAccessFlags	dstAccessMask
-			VK_QUEUE_FAMILY_IGNORED,					// deUint32			srcQueueFamilyIndex
-			VK_QUEUE_FAMILY_IGNORED,					// deUint32			dstQueueFamilyIndex
+			VK_QUEUE_FAMILY_IGNORED,					// uint32_t			srcQueueFamilyIndex
+			VK_QUEUE_FAMILY_IGNORED,					// uint32_t			dstQueueFamilyIndex
 			*resultBuffers[i],							// VkBuffer			buffer
 			0ull,										// VkDeviceSize		offset
 			VK_WHOLE_SIZE								// VkDeviceSize		size
 		};
 
 		vk.cmdPipelineBarrier(*cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_HOST_BIT, 0u,
-							  0u, DE_NULL, 1u, &bufferBarrier, 0u, DE_NULL);
+							  0u, nullptr, 1u, &bufferBarrier, 0u, nullptr);
 	}
 
 	endCommandBuffer(vk, *cmdBuffer);
@@ -633,7 +633,7 @@ tcu::TestStatus OHOSNativeBufferTestInstance::iterate (void)
 
 	qpTestResult res = QP_TEST_RESULT_PASS;
 
-	for (deUint32 i = 0; i < m_data.m_numLayers; i++)
+	for (uint32_t i = 0; i < m_data.m_numLayers; i++)
 	{
 		invalidateMappedMemoryRange(vk, m_context.getDevice(), resultBufferAllocations[i]->getMemory(),
 									resultBufferAllocations[i]->getOffset(), VK_WHOLE_SIZE);

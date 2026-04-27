@@ -1,10 +1,11 @@
-#!/usr/bin/python3 -i
+#!/usr/bin/env python3 -i
 #
 # Copyright (c) 2019 Collabora, Ltd.
+# Copyright 2018-2025 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# Author(s):    Ryan Pavlik <ryan.pavlik@collabora.com>
+# Author(s):    Rylie Pavlik <rylie.pavlik@collabora.com>
 """Provides utilities to write a script to verify XML registry consistency."""
 
 import re
@@ -104,9 +105,8 @@ class XMLChecker:
         for codes in self.input_type_to_codes.values():
             specified_codes.update(codes)
 
-        self.return_codes: Set[str]
-        unrecognized = specified_codes - self.return_codes
-        if unrecognized:
+        unrecognized = [code for code in specified_codes if not self.is_enum_value(code, 'VkResult')]
+        if len(unrecognized) > 0:
             raise RuntimeError("Return code mentioned in script that isn't in the registry: " +
                                ', '.join(unrecognized))
 
@@ -148,12 +148,30 @@ class XMLChecker:
 
         return ret
 
+    def is_enum_value(self, value, expected_type):
+        if value not in self.reg.enumvaluedict:
+            return False
+
+        enumtype = self.reg.enumvaluedict[value]
+        if enumtype in self.reg.aliasdict:
+            enumtype = self.reg.aliasdict
+        return enumtype == expected_type
+
     def strip_extension_tag(self, name):
         """Remove a single author tag from the end of a name, if any.
 
         Returns the stripped name and the tag, or the input and None if there was no tag.
         """
+        # Author tag can be suffixed with experimental version
+        name_no_experimental = re.sub("X[0-9]*$", "", name)
+
         for t in self.tags:
+            if (
+                self.conventions.allows_x_number_suffix
+                and name_no_experimental.endswith(t)
+            ):
+                name = name_no_experimental
+
             if name.endswith(t):
                 name = name[:-(len(t))]
                 if name[-1] == "_":
@@ -240,18 +258,41 @@ class XMLChecker:
         if entities_with_messages:
             print('xml_consistency/consistency_tools error and warning messages follow.')
 
+        # Track whether warnings were issued (and not printed) to avoid lots of noise
+        warning_flag = False
+
         for entity in entities_with_messages:
+            # Track whether header for this entity was printed
+            header_done = False
+            def msg_header(entity, done):
+                if not done:
+                    print()
+                    print('-------------------')
+                    print('Messages for', entity)
+                    print()
+                return True
+
             messages = self.errors.get(entity)
             if messages:
-                print(f'\nError messages for {entity}')
+                header_done = msg_header(entity, header_done)
+
                 for m in messages:
-                    print('ERROR:', m)
+                    print('Error:', m)
 
             messages = self.warnings.get(entity)
-            if messages and self.display_warnings:
-                print(f'\nWarning messages for {entity}')
-                for m in messages:
-                    print('WARNING:', m)
+            if messages:
+                if self.display_warnings:
+                    header_done = msg_header(entity, header_done)
+
+                    for m in messages:
+                        print('Warning:', m)
+                else:
+                    warning_flag = True
+
+        # If not displaying warnings, but they existed, acknowledge that
+        if not self.display_warnings and warning_flag:
+            print('Warnings found, but were not printed - try using "xml_consistency.py -warn" or "check_spec_links.py --include_warn"')
+
 
     def check_param(self, param):
         """Check a member of a struct or a param of a function.
@@ -278,11 +319,10 @@ class XMLChecker:
         externsyncs = ExternSyncEntry.parse_externsync_from_param(param)
         if externsyncs:
             for entry in externsyncs:
-                if entry.entirely_extern_sync:
-                    if len(externsyncs) > 1:
-                        self.record_error("Comma-separated list in externsync attribute includes 'true' for",
-                                          param_name)
-                else:
+                if len(externsyncs) > 1:
+                    self.record_error("externsync attribute cannot be a comma-separated list",
+                                      param_name)
+                if not entry.entirely_extern_sync:
                     # member name
                     # TODO only looking at the superficial feature here,
                     # not entry.param_ref_parts
@@ -379,7 +419,7 @@ class XMLChecker:
         extension_number = info.elem.get('number')
         if extension_number is not None and extension_number != '0':
             if extension_number in self.ext_numbers:
-                self.record_error('Duplicate extension number ' + extension_number)
+                self.record_error(f"Duplicate extension number {extension_number}")
             else:
                 self.ext_numbers.add(extension_number)
 
@@ -470,7 +510,7 @@ class XMLChecker:
         May extend."""
         referenced_input = self.referenced_input_types[name]
         referenced_types = self.referenced_types[name]
-        error_prefix = self.conventions.api_prefix + "ERROR"
+        error_prefix = f"{self.conventions.api_prefix}ERROR"
 
         bad_success = {x for x in successcodes if x.startswith(error_prefix)}
         if bad_success:
@@ -602,12 +642,12 @@ class XMLChecker:
             return message
 
         if fn is None:
-            return "Line {}: {}".format(sourceline, message)
+            return f"Line {sourceline}: {message}"
 
         if sourceline is None:
-            return "{}: {}".format(fn, message)
+            return f"{fn}: {message}"
 
-        return "{}:{}: {}".format(fn, sourceline, message)
+        return f"{fn}:{sourceline}: {message}"
 
 
 class HandleParents(RecursiveMemoize):

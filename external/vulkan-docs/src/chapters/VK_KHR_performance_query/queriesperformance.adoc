@@ -1,4 +1,4 @@
-// Copyright 2019-2024 The Khronos Group Inc.
+// Copyright 2019-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -16,7 +16,6 @@ Implementations may: limit access to performance counters based on platform
 requirements or only to specialized drivers for development purposes.
 
 [NOTE]
-.Note
 ====
 This may include no performance counters being enumerated, or a reduced set.
 Please refer to platform-specific documentation for guidance on any such
@@ -38,7 +37,6 @@ queried via a call to
 flink:vkGetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR.
 
 [NOTE]
-.Note
 ====
 Command buffers created with
 ename:VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT must: not be re-submitted.
@@ -94,7 +92,7 @@ To acquire the profiling lock, call:
 include::{generated}/api/protos/vkAcquireProfilingLockKHR.adoc[]
 
   * pname:device is the logical device to profile.
-  * pname:pInfo is a pointer to a sname:VkAcquireProfilingLockInfoKHR
+  * pname:pInfo is a pointer to a slink:VkAcquireProfilingLockInfoKHR
     structure containing information about how the profiling is to be
     acquired.
 
