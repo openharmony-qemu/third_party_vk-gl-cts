@@ -1,9 +1,8 @@
 # Set the default behavior, in case people don't have core.autocrlf set.
 * text=auto
-
 # Explicitly declare text files you want to always be normalized
 # and converted to native line endings on checkout.
-*.txt text diff=text
+*.txt filter=lfs diff=lfs merge=lfs -text
 /android/cts/master/vk-master.txt filter=lfs diff=lfs merge=lfs -text
 /external/vulkancts/mustpass/master/vk-default.txt filter=lfs diff=lfs merge=lfs -text
 /android/cts/main/vk-master-2022-03-01/pipeline.txt filter=lfs diff=lfs merge=lfs -text
