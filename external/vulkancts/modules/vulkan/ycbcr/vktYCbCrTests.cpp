@@ -31,6 +31,7 @@
 #include "vktYCbCrCopyTests.hpp"
 #include "vktYCbCrStorageImageWriteTests.hpp"
 #include "vktYCbCrImageOffsetTests.hpp"
+#include "vktYCbCrMiscTests.hpp"
 
 namespace vkt
 {
@@ -40,27 +41,28 @@ namespace ycbcr
 namespace
 {
 
-void populateTestGroup (tcu::TestCaseGroup* ycbcrTests)
+void populateTestGroup(tcu::TestCaseGroup *ycbcrTests)
 {
-	tcu::TestContext&	testCtx		= ycbcrTests->getTestContext();
+    tcu::TestContext &testCtx = ycbcrTests->getTestContext();
 
-	ycbcrTests->addChild(createFormatTests(testCtx));
-	ycbcrTests->addChild(createFilteringTests(testCtx));
-	ycbcrTests->addChild(createViewTests(testCtx));
-	ycbcrTests->addChild(createImageQueryTests(testCtx));
-	ycbcrTests->addChild(createConversionTests(testCtx));
-	ycbcrTests->addChild(createCopyTests(testCtx));
-	ycbcrTests->addChild(createDimensionsCopyTests(testCtx));
-	ycbcrTests->addChild(createStorageImageWriteTests(testCtx));
-	ycbcrTests->addChild(createImageOffsetTests(testCtx));
+    ycbcrTests->addChild(createFormatTests(testCtx));
+    ycbcrTests->addChild(createFilteringTests(testCtx));
+    ycbcrTests->addChild(createViewTests(testCtx));
+    ycbcrTests->addChild(createImageQueryTests(testCtx));
+    ycbcrTests->addChild(createConversionTests(testCtx));
+    ycbcrTests->addChild(createCopyTests(testCtx));
+    ycbcrTests->addChild(createDimensionsCopyTests(testCtx));
+    ycbcrTests->addChild(createStorageImageWriteTests(testCtx));
+    ycbcrTests->addChild(createImageOffsetTests(testCtx));
+    ycbcrTests->addChild(createMiscTests(testCtx));
 }
 
-} // anonymous
+} // namespace
 
-tcu::TestCaseGroup* createTests (tcu::TestContext& testCtx, const std::string& name)
+tcu::TestCaseGroup *createTests(tcu::TestContext &testCtx, const std::string &name)
 {
-	return createTestGroup(testCtx, name.c_str(), populateTestGroup);
+    return createTestGroup(testCtx, name.c_str(), populateTestGroup);
 }
 
-} // ycbcr
-} // vkt
+} // namespace ycbcr
+} // namespace vkt

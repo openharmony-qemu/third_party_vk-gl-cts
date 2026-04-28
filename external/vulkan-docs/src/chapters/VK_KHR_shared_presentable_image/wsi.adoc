@@ -1,4 +1,4 @@
-// Copyright 2014-2024 The Khronos Group Inc.
+// Copyright 2014-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -36,7 +36,6 @@ made available during the portion of the presentation engine's refresh cycle
 they are intended for.
 
 [NOTE]
-.Note
 ====
 The `apiext:VK_KHR_shared_presentable_image` extension does not provide
 functionality for determining the timing of the presentation engine's
@@ -74,11 +73,10 @@ interpreted as follows:
   * ename:VK_ERROR_SURFACE_LOST_KHR the surface is no longer available.
 
 [NOTE]
-.Note
 ====
 The swapchain state may: be cached by implementations, so applications
 should: regularly call fname:vkGetSwapchainStatusKHR when using a swapchain
-with elink:VkPresentModeKHR set to
+with elink:VkPresentModeKHR equal to
 ename:VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR.
 ====
 

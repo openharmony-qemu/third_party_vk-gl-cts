@@ -1,4 +1,4 @@
-// Copyright 2015-2024 The Khronos Group Inc.
+// Copyright 2015-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -47,11 +47,24 @@ Here is a link:https://titlecaseconverter.com/rules/[summary] of the rules:
     letters or fewer.
 
 [NOTE]
-.Note
 ====
 The actual AP style guide is behind a paywall.
 The summary here is from a commercial website.
 ====
+
+
+[[write-active]]
+=== Use the Active Voice
+
+The passive voice is often imprecise.
+
+There are too many examples to exhaustively list them.
+Some that have come up include:
+
+  * "`Applications should:`" instead of "`It is recommended that`"
+  * "`To create a command buffer, call`" instead of "`A command buffer is
+    created by calling`" or "`The application may create a command pool by
+    calling`"
 
 
 === Date Format
@@ -86,7 +99,7 @@ For example, if you wanted to say:
 
 A ename:VK_ERROR_DEVICE_LOST error
 
-the correct way to mark this up in asciidoctor would be:
+the correct way to mark this up in asciidoc would be:
 
 [source,asciidoc]
 ----
@@ -128,17 +141,21 @@ except for noted exceptions in the table below.
 [width="60%",options="header"]
 |====
 | Use Spelling  | Instead Of     | Comments
-| color         | colour         |
-| signaled      | signalled      |
 | tessellation  | tesselation    | Historical exception
 |====
 
 [NOTE]
-.Note
 ====
+American spelling is enforced in CI and the `check-spelling` Makefile target
+by the `codespell` builtin dictionary `en-GB_to_en-US`.
+If any exceptions to the dictionary are needed, they can be added in
+`config/CI/codespell-allowed`.
+If specific files need to be excluded, they can be added to the `skip` entry
+in `config/CI/codespellrc`.
+
 There are a few exceptions to `color` in the Vulkan Video extensions, such
 as ename:VK_VIDEO_ENCODE_H264_CAPABILITY_SEPARATE_COLOUR_PLANE_BIT_EXT.
-This is for because those extensions refer to externally defined video
+This is because those extensions refer to externally defined video
 compression standards and headers using that spelling.
 ====
 
@@ -158,11 +175,39 @@ appropriate changes, and enhancing the repository continuous integration
 scripts to report questionable terminology usage.
 This process will take some time.
 
+If use of a term on the list is absolutely unavoidable the CI script check
+can be bypassed by inserting a "`word joiner`" character into the markup of
+that term.
+Rendered HTML output will show this term as a single word and can be
+searched as such.
+
+Asciidoctor predefines the attribute `{wj}` for this purpose:
+
+[source,asciidoc]
+.Example Markup
+----
+The external DRM API supported by the VK_EXT_acquire_drm_display
+extension uses the term "`DRM mast{wj}er` permissions".
+----
+
 Some files in the repository are incorporated unmodified from external
 projects we do not control, and which may not comply with the Inclusive
 Language list.
 We will ask those projects to update their terminology usage, but cannot
 control their choices.
+
+
+[[writing-mustbe]]
+=== Avoid Use of "`set to`" Where Possible
+
+When describing a parameter or member that is required to be, or not to be a
+specific value, avoid extraneous use of "`set to`".
+In particular, when constraining a value passed or returned to the API write
+"`pname:value must: be zero`" (or other simple scalar value) instead of
+"`pname:value must: be set to zero`".
+
+However, in more complicated sentences with multiple clauses and values
+described, "`set to`" sometimes makes language flow more naturally.
 
 
 [[writing-pointers-instances]]
@@ -253,41 +298,52 @@ of a structure as a "`color space`" value.
 [width="70%",options="header",cols="20%,20%,60%"]
 |====
 | Use Spelling  | Instead Of     | Comments
-| bit plane     | bitplane       |
-| compile time  | compile-time   | Per Wikipedia "`compile time`"
-| color space   | colorspace     |
-| cube map      | cubemap        |
-| double-buffer | doublebuffer   |
-| entry point   | entry-point, +
-                  entrypoint
-                | Except if needed to disambiguate from surrounding terms
-| flat shading  | flatshading    |
-| GitHub        | Github         | Site's preferred spelling
+| bit plane     | bit{wj}plane       |
+| compile time  | compile-{wj}time   | Per Wikipedia "`compile time`"
+| closest hit   | closest-{wj}hit    |
+| color space   | color{wj}space     | Not currently checked due to API naming conventions
+| cube map      | cube{wj}map        |
+| double-buffer | double{wj}buffer   |
+| entry point   | entry-{wj}point, +
+                  entry{wj}point
+                                     | Except if needed to disambiguate from
+                                       surrounding terms
+| flat shading  | flat{wj}shading    |
+| GitHub        | Git{wj}hub         | Site's preferred spelling
 | indirect (drawing/dispatching) command
                 | indirect command (draw/dispatch)
-                                 | Even though related commands are named
-                                   ftext:vk*Draw*Indirect
-| LOD           | lod, +
+                                     | Even though related commands are
+                                       named ftext:vk*Draw*Indirect
+| LOD           | lo{wj}d, +
                   level of detail, +
-                  level-of-detail| Acronym for "`Level of Detail`"
+                  level-{wj}of-detail| Acronym for "`Level of Detail`"
 | mip level +
   mip layer +
   mip size  +
   mip tail
-                | miplevel +
-                  miplayer +
-                  mipsize  +
-                  miptail        | "`mipmap *term*`" may be used in time
-| render pass   | renderpass     |
-| reuse         | re-use         |
-| side effect   | side-effect    |
-| use case      | use-case       |
+                | mip{wj}level +
+                  mip{wj}layer +
+                  mip{wj}size  +
+                  mip{wj}tail        | "`mipmap *term*`" may be used in time +
+                                       mip{wj}level is not currently checked due to API naming conventions
+
+| ray tracing   | ray{wj}tracing     |
+| render pass   | render{wj}pass     | Not currently checked due to API naming conventions
+| reuse         | re-{wj}use         |
+| runtime       | run time, +
+                  run-{wj}time
+                | Arbitrary choice for consistency
+| side effect   | side-{wj}effect    |
+| use case      | use-{wj}case       |
 |====
 
 [[spelling-exception-table]]
 .Spelling Exceptions
 [width="70%",options="header",cols="20%,20%,60%"]
 |====
+| Use Spelling  | Instead Of     | Comments
+| floating-point
+                | floating point |
 | general-purpose
                 | general purpose| When used as an adjective
 | happen-before +
@@ -306,7 +362,6 @@ of a structure as a "`color space`" value.
 |====
 
 [NOTE]
-.Note
 ====
 These examples are not complete, and will be added to over time when there
 is reason to.
@@ -396,7 +451,7 @@ As a simple example, say
 
 rather than
 
-"`You/The application/The user can create a command pool by calling
+"`You/The application can create a command pool by calling
 fname:vkCreateCommandPool`".
 ====
 
@@ -438,7 +493,7 @@ existing language.
 This constraint does not apply to enumerated types.
 Language for new enumerants defined by extensions should be added to the
 existing enumerant definition, <<extensions-documenting-extensions,
-protected by asciidoctor conditionals>> for the new extension.
+protected by asciidoc conditionals>> for the new extension.
 
 [NOTE]
 .Guideline
@@ -458,10 +513,10 @@ There are two ways of marking up math expressions, described below.
 
 === Asciidoc Math Markup
 
-Where possible, math is marked up using straight asciidoctor features.
+Where possible, math is marked up using straight asciidoc features.
 For commonality with LaTeX math (see below), some common LaTeX operators and
-names are defined as asciidoctor attributes using the same names, expanding
-to the corresponding Unicode entities.
+names are defined as asciidoc attributes using the same names, expanding to
+the corresponding Unicode entities.
 The complete set of these attributes is found in `config/attribs.adoc`.
 
 .Spelling
@@ -529,18 +584,17 @@ The complete set of these attributes is found in `config/attribs.adoc`.
 [[writing-math-latexmath]]
 === LaTeX Math Markup
 
-Math markup more complex than easily supported in straight asciidoctor
-markup (examples found in the Vulkan Specification include matrices,
-tensors, summation notation, conditional assignments, and division of
-complex expressions) are marked up using LaTeX math notation, which is
-either passed through to the KaTeX in-browser rendering script for HTML
-outputs, or passed through asciidoctor-mathematical for PDF outputs.
+Math markup more complex than easily supported in straight asciidoc markup
+(examples found in the Vulkan Specification include matrices, tensors,
+summation notation, conditional assignments, and division of complex
+expressions) is marked up using LaTeX math notation, which is either passed
+through to the KaTeX in-browser rendering script for HTML outputs, or passed
+through asciidoctor-mathematical for PDF outputs.
 
 [NOTE]
-.Note
 ====
-There are font and style differences between LaTeX and asciidoctor math
-markup which lead to minor visual inconsistencies.
+There are font and style differences between LaTeX and asciidoc math markup
+which lead to minor visual inconsistencies.
 We will try to make this better over time, but it is not significant enough
 to be a big priority.
 ====
@@ -564,13 +618,13 @@ For example:
 ----
 
 Note the escaped bracket in markup for the first expression, which is
-necessary to work around asciidoctor macro parsing.
+necessary to work around asciidoc macro parsing.
 
 _Block math_ is used for more complex equations.
 This example uses the `aligned` environment to delimit the expression.
 
 [latexmath]
-+++++++++++++++++++
+++++
 \begin{aligned}
 c_{RGB} & =
   \begin{cases}
@@ -578,13 +632,13 @@ c_{RGB} & =
     \left ( \frac{c_{sRGB}+0.055}{1.055} \right )^{2.4} & \text{for}\  c_{sRGB} > 0.04045
   \end{cases}
 \end{aligned}
-+++++++++++++++++++
+++++
 
 [source,asciidoc]
 .Example Markup
 ----
 [latexmath]
-+++++++++++++++++++
+++++
 \begin{aligned}
 c_{RGB} & =
   \begin{cases}
@@ -592,11 +646,10 @@ c_{RGB} & =
     \left ( \frac{c_{sRGB}+0.055}{1.055} \right )^{2.4} & \text{for}\  c_{sRGB} > 0.04045
   \end{cases}
 \end{aligned}
-+++++++++++++++++++
+++++
 ----
 
 [NOTE]
-.Note
 ====
 The KaTeX processor used to render LaTeX math inside HTML documents does not
 support all features of LaTeX math.
@@ -606,17 +659,15 @@ everything, though does have some support for AMSMath.
 
 Some workarounds we use are:
 
-.LaTeX math replacements for KaTeX compatibility
+.LaTeX Math Replacements for KaTeX Compatibility
 [width="70%",options="header",cols="20%,20%,60%"]
 |====
 | Replace                  | With                  | Comments
 | `++\begin{equation}++`, +
   `++\end{equation}++`     | _nothing_             | Unnecessary in blocks. Should not be used for inline.
-| `\begin{align*}`         | `++\begin{aligned}++` |
-| `\end{align*}`           | `++\end{aligned}++`   |
 | `++\operatorname{foo}++` | `++\mathbin{foo}++`   |
 | `{\rm A}`                | `++\mathrm{A}++`      |
-| `\text{for }`            | `\text{++for++}\`     | Text ending in spaces is unpredictable - favour escaped spaces after text
+| `\text{for }`            | `\text{++for++}\ `    | Text ending in spaces is unpredictable - favor escaped spaces after text
 |====
 
 The KaTeX repository provides a
@@ -628,10 +679,10 @@ whole specification.
 
 Note that we use a locally-cached copy of KaTeX which may lag the latest
 published version on the website.
-As of April 2021, we are using v0.11.1.
+As of July 2024, we are using KaTeX v0.16.10.
 
 See the mtex2MML repository for a
-link:https://github.com/gjtorikian/mtex2MML/blob/master/SUPPORTED.md[list of
+link:https://github.com/gjtorikian/mtex2MML/blob/main/SUPPORTED.md[list of
 supported operations in the PDF build].
 In particular, `\mathop` is not supported properly, but most other standard
 functionality is included.
@@ -645,7 +696,7 @@ This example is among the most complex expressions in the Vulkan
 specification:
 
 [latexmath]
-+++++++++++++++++++
+++++
 V =
   \begin{cases}
     (-1)^S \times 0.0,                      & E = 0, M = 0     \\
@@ -656,13 +707,13 @@ V =
     (-1)^S \times Inf,             & E = 31, M = 0             \\
     NaN,                           & E = 31, M \neq 0
   \end{cases}
-+++++++++++++++++++
+++++
 
 [source,asciidoc]
 .Example Markup
 ----
 [latexmath]
-+++++++++++++++++++
+++++
 V =
   \begin{cases}
     (-1)^S \times 0.0,                      & E = 0, M = 0     \\
@@ -673,7 +724,7 @@ V =
     (-1)^S \times Inf,             & E = 31, M = 0             \\
     NaN,                           & E = 31, M \neq 0
   \end{cases}
-+++++++++++++++++++
+++++
 ----
 
 
@@ -692,13 +743,13 @@ cell separator must be `a|` instead of just `|`:
 | Overlap Mode                              | Weighting Equations
 | ename:VK_BLEND_OVERLAP_UNCORRELATED_EXT  a|
 [latexmath]
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++
                                               \begin{aligned}
                                                 p_0(A_s,A_d) & = A_sA_d \\
                                                 p_1(A_s,A_d) & = A_s(1-A_d) \\
                                                 p_2(A_s,A_d) & = A_d(1-A_s) \\
                                               \end{aligned}
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++
 |====
 ----
 
@@ -758,9 +809,8 @@ a reference page.
 The open block contains several required attribute values, as described for
 <<writing-refpages, automatic extraction into a reference page>>.
 
-Use a short, active sentence when describing what commands do, instead of
-more passive phrasing like "`A command pool is created by calling:`" or
-"`The application may create a command pool by calling:`".
+Use a short introductory sentence written in the <<write-active, active
+voice>> when describing commands, and follow similar existing examples.
 
 After the description, include the autogenerated prototype for the command
 from the `\{generated}/api/protos/` directory:
@@ -779,8 +829,8 @@ To create a command pool, call:
 ----
 
 Note that each autogenerated command, enumeration, flag, or structure
-definition include file also defines a corresponding asciidoctor anchor
-which is the base name of the file.
+definition include file also defines a corresponding asciidoc anchor which
+is the base name of the file.
 In this case, the anchor is named `vkCreateCommandPool`.
 ====
 
@@ -875,7 +925,7 @@ All content within the block will be extracted for the corresponding
 reference page.
 
 Open blocks delimiting reference page content should not themselves contain
-section headers, as asciidoctor cannot render such nested content correctly.
+section headers, as asciidoc cannot render such nested content correctly.
 Reference pages should in general be relatively short, so this limitation is
 not severe.
 
@@ -962,11 +1012,11 @@ based on.
 These entries should be short and functional, without describing details of
 e.g. new enumerant values, function of individual parameter settings, etc.
 They can refer to other types using the appropriate *link: macros or to
-related sections of the specification using asciidoctor xrefs.
+related sections of the specification using asciidoc `xref` macros.
 
 In rare cases, a member description will cover multiple paragraphs.
 In these cases the normal list nesting and indentation guidelines cannot be
-applied due to limitations of the asciidoctor parser.
+applied due to limitations of the asciidoc parser.
 It is usually best to append a continuation block following the first
 paragraph of such a list item, as shown for pname:pNext above.
 
@@ -1056,7 +1106,7 @@ endif::VK_VERSION_1_1[]
 Each enumerant in the enumerated type is described in a separate bullet list
 item.
 Make sure to protect enumerants added to the type by extensions or future
-core versions with asciidoctor conditionals.
+core versions with asciidoc conditionals.
 Close the open block after all enumerants are described.
 
 [source,asciidoc,subs=attributes+]
@@ -1107,14 +1157,14 @@ See the "`Valid Usage`" section of the Vulkan Specification, and
 particularly the "`Valid Usage for Pointers`" section.
 
 When clauses in valid usage statements apply only when specific extensions
-and/or core API versions are enabled at runtime, use appropriate asciidoctor
+and/or core API versions are enabled at runtime, use appropriate asciidoc
 conditionals around such clauses.
 
 [NOTE]
 ====
 Prior to specification update 1.3.255, there were stronger restrictions on
-placement of asciidoctor conditionals that have been relaxed, allowing
-writing such valid usage statements in a more natural manner and with less
+placement of asciidoc conditionals that have been relaxed, allowing writing
+such valid usage statements in a more natural manner and with less
 duplication of language.
 ====
 
@@ -1136,9 +1186,10 @@ shown above, the tag
 
 was inserted by a script, not the original author.
 
-[NOTE]
-.Guideline
-====
+
+[[sample-writing-common-vu]]
+== Writing Common Explicit Valid Usage Statements
+
 If the same set of valid usage statements are going to be common to multiple
 commands or structures, these should be extracted into a separate file under
 `chapters/commonvalidity/`.
@@ -1184,10 +1235,10 @@ attribute to match the name of the feature, as this is used to correctly
 generate links to expanded common valid usage statements in the built
 specification.
 
-[source,asciidoc]
+[source,asciidoc,subs=attributes+]
 ----
 [open,refpage='vkCmdDrawIndirectByteCountEXT',desc='Draw primitives where the vertex count is derived from the counter byte value in the counter buffer',type='protos']
---
+{blank}--
 :refpage: vkCmdDrawIndirectByteCountEXT
 ----
 
@@ -1195,16 +1246,15 @@ In general, this methodology should be preferred over any other method of
 consolidation - e.g. calling out a block of common valid usage statements,
 or referencing the valid usage statements of another command.
 However, for cases where the boilerplate of setting this up creates more
-text than a simple copy paste (e.g. only two commands consume a single
-valid usage statement), the original VUs can be left intact.
-====
+text than a simple copy paste (e.g. only two commands consume a single valid
+usage statement), the original VUs can be left intact.
 
 
 [[writing-empty-enumerations]]
 == Markup for Empty Enumerated Types
 
 Sometimes an enumerated type has all values defined by extensions, and each
-enumerated value defined by the type will be surrounded by an asciidoctor
+enumerated value defined by the type will be surrounded by an asciidoc
 conditional for the corresponding extension.
 When a specification is built without any of those extensions enabled, the
 type should still be included, even though it is empty.
@@ -1228,7 +1278,6 @@ defined by an extension, will look like this:
 
 \ifndef::VK_KHR_push_descriptor[]
 [NOTE]
-.Note
 ====
 All bits for this type are defined by extensions, and none of those
 extensions are enabled in this build of the specification.
@@ -1245,10 +1294,10 @@ sections of the API Specification.
 This requires that the markup and writing conventions described above be
 adhered to rigidly.
 
-The extraction scripts for a given page rely on the existence of an
-asciidoctor `open` block surrounding markup describing that page, with
-attributes used to specify properties of the reference page.
-Additional heuristics and non-asciidoctor tags, described below, are used to
+The extraction scripts for a given page rely on the existence of an asciidoc
+`open` block surrounding markup describing that page, with attributes used
+to specify properties of the reference page.
+Additional heuristics and non-asciidoc tags, described below, are used to
 identify subsections of a reference page in some cases.
 
 In general the open block introduction will look like:
@@ -1290,7 +1339,7 @@ Attributes which can be set on the block are:
     This attribute is optional.
 
 Attributes of the open block must be written in this format, using single
-quotes as delimiters (even though asciidoctor markup also allows double
+quotes as delimiters (even though asciidoc markup also allows double
 quotes), and escape single quotes in e.g. the *desc* attribute value with
 backquotes.
 
@@ -1311,7 +1360,7 @@ After the open block is started, the following markup should be provided:
     parameters.
   * Paragraphs of text making up the `Description` section of the ref page.
     This section is optional.
-    If it is necessary due to constraints of asciidoctor markup to have an
+    If it is necessary due to constraints of asciidoc markup to have an
     empty line in the bullet list section, add a `// refBody` comment
     immediately following the bullet list and preceding this section:
 +
@@ -1330,7 +1379,7 @@ but it has been needed in the past and may again in the future.
     This line is required for commands and structures, but not for
     interfaces such as enumerated types, which do not have implicit valid
     usage blocks.
-  * Finally, a two-dash asciidoctor delimiter closing the open block:
+  * Finally, a two-dash asciidoc delimiter closing the open block:
 +
 [source,asciidoc]
 ----

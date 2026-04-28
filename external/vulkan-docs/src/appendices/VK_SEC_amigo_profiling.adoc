@@ -1,4 +1,4 @@
-// Copyright 2020-2024 The Khronos Group Inc.
+// Copyright 2020-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -19,15 +19,14 @@ include::{generated}/meta/{refprefix}VK_SEC_amigo_profiling.adoc[]
 
 This extension is intended to communicate information from layered API
 implementations such as ANGLE to internal proprietary system schedulers.
-It has no behavioural implications beyond enabling more intelligent
-behaviour from the system scheduler.
+It has no behavioral implications beyond enabling more intelligent behavior
+from the system scheduler.
 
 Application developers should avoid using this extension.
 It is documented solely for the benefit of tools and layer developers, who
 may need to manipulate pname:pNext chains that include these structures.
 
 [NOTE]
-.Note
 ====
 There is currently no specification language written for this extension.
 The links to APIs defined by the extension are to stubs that only include
@@ -36,7 +35,6 @@ statements.
 ====
 
 [NOTE]
-.Note
 ====
 This extension is only intended for use in specific embedded environments
 with known implementation details, and is therefore undocumented.
@@ -50,6 +48,7 @@ ifndef::isrefpage[]
 
 [open,refpage='VkPhysicalDeviceAmigoProfilingFeaturesSEC',desc='Stub description of VkPhysicalDeviceAmigoProfilingFeaturesSEC',type='structs']
 --
+[[features-amigoProfiling]]
 There is currently no specification language written for this type.
 This section acts only as placeholder and to avoid dead links in the
 specification and reference pages.

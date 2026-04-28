@@ -32,9 +32,12 @@ namespace vkt
 namespace pipeline
 {
 
-tcu::TestCaseGroup* createLogicOpTests (tcu::TestContext& testCtx, vk::PipelineConstructionType pipelineConstructionType);
+tcu::TestCaseGroup *createLogicOpTests(tcu::TestContext &testCtx,
+                                       vk::PipelineConstructionType pipelineConstructionType);
+tcu::TestCaseGroup *createLogicOpInapplicableFormatsTests(tcu::TestContext &testCtx,
+                                                          vk::PipelineConstructionType pipelineConstructionType);
 
-} // pipeline
-} // vkt
+} // namespace pipeline
+} // namespace vkt
 
 #endif // _VKTPIPELINELOGICOPTESTS_HPP

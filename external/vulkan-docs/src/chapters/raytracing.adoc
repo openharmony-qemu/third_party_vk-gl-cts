@@ -1,4 +1,4 @@
-// Copyright 2018-2024 The Khronos Group Inc.
+// Copyright 2018-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -50,21 +50,25 @@ A _shader call_ is an instruction which may: cause execution to continue
 elsewhere by creating one or more invocations that execute a different
 shader stage.
 
-The shader call instructions are:
+The following table lists all shader call instructions and which stages each
+one can: directly call.
 
-  * code:OpTraceRayKHR which may: invoke intersection, any-hit, closest hit,
-    or miss shaders,
+[options="header"]
+|====
+| Instruction | Intersection | Any-Hit | Closest Hit | Miss | Callable
+| code:OpTraceRayKHR |X|X|X|X|
 ifdef::VK_NV_ray_tracing_motion_blur[]
-  * code:OpTraceRayMotionNV which may: invoke intersection, any-hit, closest
-    hit, or miss shaders,
+| code:OpTraceRayMotionNV |X|X|X|X|
 endif::VK_NV_ray_tracing_motion_blur[]
-  * code:OpReportIntersectionKHR which may: invoke any-hit shaders, and
-  * code:OpExecuteCallableKHR which will invoke a callable shader.
+| code:OpReportIntersectionKHR | |X| | |
+| code:OpExecuteCallableKHR | | | | |X
 ifdef::VK_NV_ray_tracing_invocation_reorder[]
-  * code:OpHitObjectTraceRayNV, code:OpHitObjectTraceRayMotionNV, and
-    code:OpHitObjectExecuteShaderNV which may: invoke intersection, any-hit,
-    closest hit, miss, or callable shaders.
+| code:OpHitObjectTraceRayNV |X|X| | |
+| code:OpHitObjectTraceRayMotionNV |X|X| | |
+| code:OpHitObjectExecuteShaderNV | | |X|X|
 endif::VK_NV_ray_tracing_invocation_reorder[]
+|====
+
 
 ifdef::VK_VERSION_1_1[]
 The invocations created by shader call instructions are grouped into
@@ -142,7 +146,6 @@ Similarly, the application must: use code:Volatile semantics on any
 code:RayTmaxKHR decorated code:Builtin used in an intersection shader.
 
 [NOTE]
-.Note
 ====
 <<shaders-group-operations,Subgroup operations>> are permitted in the
 programmable ray tracing shader stages.
@@ -204,139 +207,10 @@ endif::VK_VERSION_1_2,VK_KHR_vulkan_memory_model[]
 
 _Ray tracing commands_ provoke work in the ray tracing pipeline.
 Ray tracing commands are recorded into a command buffer and when executed by
-a queue will produce work that executes according to the currently bound ray
-tracing pipeline.
+a queue will produce work that executes according to the bound ray tracing
+pipeline.
 A ray tracing pipeline must: be bound to a command buffer before any ray
 tracing commands are recorded in that command buffer.
-
-ifdef::VK_NV_ray_tracing[]
-
-[open,refpage='vkCmdTraceRaysNV',desc='Initialize a ray tracing dispatch',type='protos']
---
-:refpage: vkCmdTraceRaysNV
-
-To dispatch ray tracing use:
-
-include::{generated}/api/protos/vkCmdTraceRaysNV.adoc[]
-
-  * pname:commandBuffer is the command buffer into which the command will be
-    recorded.
-  * pname:raygenShaderBindingTableBuffer is the buffer object that holds the
-    shader binding table data for the ray generation shader stage.
-  * pname:raygenShaderBindingOffset is the offset in bytes (relative to
-    pname:raygenShaderBindingTableBuffer) of the ray generation shader being
-    used for the trace.
-  * pname:missShaderBindingTableBuffer is the buffer object that holds the
-    shader binding table data for the miss shader stage.
-  * pname:missShaderBindingOffset is the offset in bytes (relative to
-    pname:missShaderBindingTableBuffer) of the miss shader being used for
-    the trace.
-  * pname:missShaderBindingStride is the size in bytes of each shader
-    binding table record in pname:missShaderBindingTableBuffer.
-  * pname:hitShaderBindingTableBuffer is the buffer object that holds the
-    shader binding table data for the hit shader stages.
-  * pname:hitShaderBindingOffset is the offset in bytes (relative to
-    pname:hitShaderBindingTableBuffer) of the hit shader group being used
-    for the trace.
-  * pname:hitShaderBindingStride is the size in bytes of each shader binding
-    table record in pname:hitShaderBindingTableBuffer.
-  * pname:callableShaderBindingTableBuffer is the buffer object that holds
-    the shader binding table data for the callable shader stage.
-  * pname:callableShaderBindingOffset is the offset in bytes (relative to
-    pname:callableShaderBindingTableBuffer) of the callable shader being
-    used for the trace.
-  * pname:callableShaderBindingStride is the size in bytes of each shader
-    binding table record in pname:callableShaderBindingTableBuffer.
-  * pname:width is the width of the ray trace query dimensions.
-  * pname:height is height of the ray trace query dimensions.
-  * pname:depth is depth of the ray trace query dimensions.
-
-When the command is executed, a ray generation group of [eq]#pname:width
-{times} pname:height {times} pname:depth# rays is assembled.
-
-.Valid Usage
-****
-include::{chapters}/commonvalidity/trace_rays_common.adoc[]
-  * [[VUID-vkCmdTraceRaysNV-commandBuffer-04624]]
-    pname:commandBuffer must: not be a protected command buffer
-  * [[VUID-vkCmdTraceRaysNV-maxRecursionDepth-03625]]
-    This command must: not cause a pipeline trace ray instruction to be
-    executed from a shader invocation with a <<ray-tracing-recursion-depth,
-    recursion depth>> greater than the value of pname:maxRecursionDepth used
-    to create the bound ray tracing pipeline
-  * [[VUID-vkCmdTraceRaysNV-raygenShaderBindingTableBuffer-04042]]
-    If pname:raygenShaderBindingTableBuffer is non-sparse then it must: be
-    bound completely and contiguously to a single sname:VkDeviceMemory
-    object
-  * [[VUID-vkCmdTraceRaysNV-raygenShaderBindingOffset-02455]]
-    pname:raygenShaderBindingOffset must: be less than the size of
-    pname:raygenShaderBindingTableBuffer
-  * [[VUID-vkCmdTraceRaysNV-raygenShaderBindingOffset-02456]]
-    pname:raygenShaderBindingOffset must: be a multiple of
-    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:shaderGroupBaseAlignment
-  * [[VUID-vkCmdTraceRaysNV-missShaderBindingTableBuffer-04043]]
-    If pname:missShaderBindingTableBuffer is non-sparse then it must: be
-    bound completely and contiguously to a single sname:VkDeviceMemory
-    object
-  * [[VUID-vkCmdTraceRaysNV-missShaderBindingOffset-02457]]
-    pname:missShaderBindingOffset must: be less than the size of
-    pname:missShaderBindingTableBuffer
-  * [[VUID-vkCmdTraceRaysNV-missShaderBindingOffset-02458]]
-    pname:missShaderBindingOffset must: be a multiple of
-    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:shaderGroupBaseAlignment
-  * [[VUID-vkCmdTraceRaysNV-hitShaderBindingTableBuffer-04044]]
-    If pname:hitShaderBindingTableBuffer is non-sparse then it must: be
-    bound completely and contiguously to a single sname:VkDeviceMemory
-    object
-  * [[VUID-vkCmdTraceRaysNV-hitShaderBindingOffset-02459]]
-    pname:hitShaderBindingOffset must: be less than the size of
-    pname:hitShaderBindingTableBuffer
-  * [[VUID-vkCmdTraceRaysNV-hitShaderBindingOffset-02460]]
-    pname:hitShaderBindingOffset must: be a multiple of
-    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:shaderGroupBaseAlignment
-  * [[VUID-vkCmdTraceRaysNV-callableShaderBindingTableBuffer-04045]]
-    If pname:callableShaderBindingTableBuffer is non-sparse then it must: be
-    bound completely and contiguously to a single sname:VkDeviceMemory
-    object
-  * [[VUID-vkCmdTraceRaysNV-callableShaderBindingOffset-02461]]
-    pname:callableShaderBindingOffset must: be less than the size of
-    pname:callableShaderBindingTableBuffer
-  * [[VUID-vkCmdTraceRaysNV-callableShaderBindingOffset-02462]]
-    pname:callableShaderBindingOffset must: be a multiple of
-    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:shaderGroupBaseAlignment
-  * [[VUID-vkCmdTraceRaysNV-missShaderBindingStride-02463]]
-    pname:missShaderBindingStride must: be a multiple of
-    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:shaderGroupHandleSize
-  * [[VUID-vkCmdTraceRaysNV-hitShaderBindingStride-02464]]
-    pname:hitShaderBindingStride must: be a multiple of
-    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:shaderGroupHandleSize
-  * [[VUID-vkCmdTraceRaysNV-callableShaderBindingStride-02465]]
-    pname:callableShaderBindingStride must: be a multiple of
-    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:shaderGroupHandleSize
-  * [[VUID-vkCmdTraceRaysNV-missShaderBindingStride-02466]]
-    pname:missShaderBindingStride must: be less than or equal to
-    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:maxShaderGroupStride
-  * [[VUID-vkCmdTraceRaysNV-hitShaderBindingStride-02467]]
-    pname:hitShaderBindingStride must: be less than or equal to
-    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:maxShaderGroupStride
-  * [[VUID-vkCmdTraceRaysNV-callableShaderBindingStride-02468]]
-    pname:callableShaderBindingStride must: be less than or equal to
-    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:maxShaderGroupStride
-  * [[VUID-vkCmdTraceRaysNV-width-02469]]
-    pname:width must: be less than or equal to
-    sname:VkPhysicalDeviceLimits::pname:maxComputeWorkGroupCount[0]
-  * [[VUID-vkCmdTraceRaysNV-height-02470]]
-    pname:height must: be less than or equal to
-    sname:VkPhysicalDeviceLimits::pname:maxComputeWorkGroupCount[1]
-  * [[VUID-vkCmdTraceRaysNV-depth-02471]]
-    pname:depth must: be less than or equal to
-    sname:VkPhysicalDeviceLimits::pname:maxComputeWorkGroupCount[2]
-****
-
-include::{generated}/validity/protos/vkCmdTraceRaysNV.adoc[]
---
-
-endif::VK_NV_ray_tracing[]
 
 ifdef::VK_KHR_ray_tracing_pipeline[]
 [open,refpage='vkCmdTraceRaysKHR',desc='Initialize a ray tracing dispatch',type='protos']
@@ -382,38 +256,15 @@ include::{chapters}/commonvalidity/trace_rays_binding_table_raygen_stride.adoc[]
 :callableShaderBindingTableStride: pname:pCallableShaderBindingTable->stride
 include::{chapters}/commonvalidity/trace_rays_binding_table.adoc[]
 include::{chapters}/commonvalidity/trace_rays_limits_common.adoc[]
+ifdef::VK_KHR_ray_tracing_pipeline,VK_NV_cluster_acceleration_structure[]
+  * [[VUID-vkCmdTraceRaysKHR-allowClusterAccelerationStructure-10578]]
+    If the traced geometry contains a cluster acceleration structure, then
+    slink:VkRayTracingPipelineClusterAccelerationStructureCreateInfoNV::pname:allowClusterAccelerationStructure
+    must: have been set for that pipeline
+endif::VK_KHR_ray_tracing_pipeline,VK_NV_cluster_acceleration_structure[]
 ****
 
 include::{generated}/validity/protos/vkCmdTraceRaysKHR.adoc[]
---
-
-[open,refpage='VkStridedDeviceAddressRegionKHR',desc='Structure specifying a region of device addresses with a stride',type='structs']
---
-:refpage: VkStridedDeviceAddressRegionKHR
-
-The sname:VkStridedDeviceAddressRegionKHR structure is defined as:
-
-include::{generated}/api/structs/VkStridedDeviceAddressRegionKHR.adoc[]
-
-  * pname:deviceAddress is the device address (as returned by the
-    flink:vkGetBufferDeviceAddress command) at which the region starts, or
-    zero if the region is unused.
-  * pname:stride is the byte stride between consecutive elements.
-  * pname:size is the size in bytes of the region starting at
-    pname:deviceAddress.
-
-.Valid Usage
-****
-  * [[VUID-VkStridedDeviceAddressRegionKHR-size-04631]]
-    If pname:size is not zero, all addresses between pname:deviceAddress and
-    [eq]#pname:deviceAddress {plus} pname:size - 1# must: be in the buffer
-    device address range of the same buffer
-  * [[VUID-VkStridedDeviceAddressRegionKHR-size-04632]]
-    If pname:size is not zero, pname:stride must: be less than or equal to
-    the size of the buffer from which pname:deviceAddress was queried
-****
-
-include::{generated}/validity/structs/VkStridedDeviceAddressRegionKHR.adoc[]
 --
 
 ifdef::VK_HUAWEI_invocation_mask[]
@@ -428,8 +279,8 @@ include::{generated}/api/protos/vkCmdBindInvocationMaskHUAWEI.adoc[]
   * pname:commandBuffer is the command buffer into which the command will be
     recorded
   * pname:imageView is an image view handle specifying the invocation mask
-    image pname:imageView may: be set to dlink:VK_NULL_HANDLE, which is
-    equivalent to specifying a view of an image filled with ones value.
+    image pname:imageView may: be dlink:VK_NULL_HANDLE, which is equivalent
+    to specifying a view of an image filled with ones value.
   * pname:imageLayout is the layout that the image subresources accessible
     from pname:imageView will be in when the invocation mask image is
     accessed
@@ -618,8 +469,8 @@ include::{generated}/api/structs/VkTraceRaysIndirectCommand2KHR.adoc[]
 The members of sname:VkTraceRaysIndirectCommand2KHR have the same meaning as
 the similarly named parameters of flink:vkCmdTraceRaysKHR.
 
-Indirect shader binding table buffer parameters must satisfy the same memory
-alignment and binding requirements as their counterparts in
+Indirect shader binding table buffer parameters must: satisfy the same
+memory alignment and binding requirements as their counterparts in
 flink:vkCmdTraceRaysIndirectKHR and flink:vkCmdTraceRaysKHR.
 
 .Valid Usage
@@ -641,6 +492,140 @@ include::{generated}/validity/structs/VkTraceRaysIndirectCommand2KHR.adoc[]
 endif::VK_KHR_ray_tracing_maintenance1[]
 
 endif::VK_KHR_ray_tracing_pipeline[]
+
+
+ifdef::VK_NV_ray_tracing[]
+[open,refpage='vkCmdTraceRaysNV',desc='Initialize a ray tracing dispatch',type='protos']
+--
+:refpage: vkCmdTraceRaysNV
+
+To dispatch ray tracing for the `apiext:VK_NV_ray_tracing` extension use:
+
+include::{generated}/api/protos/vkCmdTraceRaysNV.adoc[]
+
+  * pname:commandBuffer is the command buffer into which the command will be
+    recorded.
+  * pname:raygenShaderBindingTableBuffer is the buffer object that holds the
+    shader binding table data for the ray generation shader stage.
+  * pname:raygenShaderBindingOffset is the offset in bytes (relative to
+    pname:raygenShaderBindingTableBuffer) of the ray generation shader being
+    used for the trace.
+  * pname:missShaderBindingTableBuffer is the buffer object that holds the
+    shader binding table data for the miss shader stage.
+  * pname:missShaderBindingOffset is the offset in bytes (relative to
+    pname:missShaderBindingTableBuffer) of the miss shader being used for
+    the trace.
+  * pname:missShaderBindingStride is the size in bytes of each shader
+    binding table record in pname:missShaderBindingTableBuffer.
+  * pname:hitShaderBindingTableBuffer is the buffer object that holds the
+    shader binding table data for the hit shader stages.
+  * pname:hitShaderBindingOffset is the offset in bytes (relative to
+    pname:hitShaderBindingTableBuffer) of the hit shader group being used
+    for the trace.
+  * pname:hitShaderBindingStride is the size in bytes of each shader binding
+    table record in pname:hitShaderBindingTableBuffer.
+  * pname:callableShaderBindingTableBuffer is the buffer object that holds
+    the shader binding table data for the callable shader stage.
+  * pname:callableShaderBindingOffset is the offset in bytes (relative to
+    pname:callableShaderBindingTableBuffer) of the callable shader being
+    used for the trace.
+  * pname:callableShaderBindingStride is the size in bytes of each shader
+    binding table record in pname:callableShaderBindingTableBuffer.
+  * pname:width is the width of the ray trace query dimensions.
+  * pname:height is height of the ray trace query dimensions.
+  * pname:depth is depth of the ray trace query dimensions.
+
+When the command is executed, a ray generation group of [eq]#pname:width
+{times} pname:height {times} pname:depth# rays is assembled.
+
+.Valid Usage
+****
+include::{chapters}/commonvalidity/trace_rays_common.adoc[]
+  * [[VUID-vkCmdTraceRaysNV-commandBuffer-04624]]
+    pname:commandBuffer must: not be a protected command buffer
+  * [[VUID-vkCmdTraceRaysNV-maxRecursionDepth-03625]]
+    This command must: not cause a pipeline trace ray instruction to be
+    executed from a shader invocation with a <<ray-tracing-recursion-depth,
+    recursion depth>> greater than the value of pname:maxRecursionDepth used
+    to create the bound ray tracing pipeline
+  * [[VUID-vkCmdTraceRaysNV-raygenShaderBindingTableBuffer-04042]]
+    If pname:raygenShaderBindingTableBuffer is non-sparse then it must: be
+    bound completely and contiguously to a single sname:VkDeviceMemory
+    object
+  * [[VUID-vkCmdTraceRaysNV-raygenShaderBindingOffset-02455]]
+    pname:raygenShaderBindingOffset must: be less than the size of
+    pname:raygenShaderBindingTableBuffer
+  * [[VUID-vkCmdTraceRaysNV-raygenShaderBindingOffset-02456]]
+    pname:raygenShaderBindingOffset must: be a multiple of
+    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:shaderGroupBaseAlignment
+  * [[VUID-vkCmdTraceRaysNV-missShaderBindingTableBuffer-04043]]
+    If pname:missShaderBindingTableBuffer is non-sparse then it must: be
+    bound completely and contiguously to a single sname:VkDeviceMemory
+    object
+  * [[VUID-vkCmdTraceRaysNV-missShaderBindingOffset-02457]]
+    pname:missShaderBindingOffset must: be less than the size of
+    pname:missShaderBindingTableBuffer
+  * [[VUID-vkCmdTraceRaysNV-missShaderBindingOffset-02458]]
+    pname:missShaderBindingOffset must: be a multiple of
+    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:shaderGroupBaseAlignment
+  * [[VUID-vkCmdTraceRaysNV-hitShaderBindingTableBuffer-04044]]
+    If pname:hitShaderBindingTableBuffer is non-sparse then it must: be
+    bound completely and contiguously to a single sname:VkDeviceMemory
+    object
+  * [[VUID-vkCmdTraceRaysNV-hitShaderBindingOffset-02459]]
+    pname:hitShaderBindingOffset must: be less than the size of
+    pname:hitShaderBindingTableBuffer
+  * [[VUID-vkCmdTraceRaysNV-hitShaderBindingOffset-02460]]
+    pname:hitShaderBindingOffset must: be a multiple of
+    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:shaderGroupBaseAlignment
+  * [[VUID-vkCmdTraceRaysNV-callableShaderBindingTableBuffer-04045]]
+    If pname:callableShaderBindingTableBuffer is non-sparse then it must: be
+    bound completely and contiguously to a single sname:VkDeviceMemory
+    object
+  * [[VUID-vkCmdTraceRaysNV-callableShaderBindingOffset-02461]]
+    pname:callableShaderBindingOffset must: be less than the size of
+    pname:callableShaderBindingTableBuffer
+  * [[VUID-vkCmdTraceRaysNV-callableShaderBindingOffset-02462]]
+    pname:callableShaderBindingOffset must: be a multiple of
+    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:shaderGroupBaseAlignment
+  * [[VUID-vkCmdTraceRaysNV-missShaderBindingStride-02463]]
+    pname:missShaderBindingStride must: be a multiple of
+    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:shaderGroupHandleSize
+  * [[VUID-vkCmdTraceRaysNV-hitShaderBindingStride-02464]]
+    pname:hitShaderBindingStride must: be a multiple of
+    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:shaderGroupHandleSize
+  * [[VUID-vkCmdTraceRaysNV-callableShaderBindingStride-02465]]
+    pname:callableShaderBindingStride must: be a multiple of
+    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:shaderGroupHandleSize
+  * [[VUID-vkCmdTraceRaysNV-missShaderBindingStride-02466]]
+    pname:missShaderBindingStride must: be less than or equal to
+    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:maxShaderGroupStride
+  * [[VUID-vkCmdTraceRaysNV-hitShaderBindingStride-02467]]
+    pname:hitShaderBindingStride must: be less than or equal to
+    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:maxShaderGroupStride
+  * [[VUID-vkCmdTraceRaysNV-callableShaderBindingStride-02468]]
+    pname:callableShaderBindingStride must: be less than or equal to
+    sname:VkPhysicalDeviceRayTracingPropertiesNV::pname:maxShaderGroupStride
+  * [[VUID-vkCmdTraceRaysNV-width-02469]]
+    pname:width must: be less than or equal to
+    sname:VkPhysicalDeviceLimits::pname:maxComputeWorkGroupCount[0]
+  * [[VUID-vkCmdTraceRaysNV-height-02470]]
+    pname:height must: be less than or equal to
+    sname:VkPhysicalDeviceLimits::pname:maxComputeWorkGroupCount[1]
+  * [[VUID-vkCmdTraceRaysNV-depth-02471]]
+    pname:depth must: be less than or equal to
+    sname:VkPhysicalDeviceLimits::pname:maxComputeWorkGroupCount[2]
+ifdef::VK_KHR_ray_tracing_pipeline,VK_NV_cluster_acceleration_structure[]
+  * [[VUID-vkCmdTraceRaysNV-allowClusterAccelerationStructure-10577]]
+    If the traced geometry contains a cluster acceleration structure, then
+    slink:VkRayTracingPipelineClusterAccelerationStructureCreateInfoNV::pname:allowClusterAccelerationStructure
+    must: have been set for that pipeline
+endif::VK_KHR_ray_tracing_pipeline,VK_NV_cluster_acceleration_structure[]
+****
+
+include::{generated}/validity/protos/vkCmdTraceRaysNV.adoc[]
+--
+endif::VK_NV_ray_tracing[]
 
 
 [[shader-binding-table]]
@@ -667,10 +652,10 @@ data that can be referenced by a code:ShaderRecordBufferKHR block in the
 shader.
 
 The shader binding tables to use in a ray tracing pipeline are passed to the
-ifdef::VK_NV_ray_tracing[]
-flink:vkCmdTraceRaysNV,
-endif::VK_NV_ray_tracing[]
-flink:vkCmdTraceRaysKHR, or flink:vkCmdTraceRaysIndirectKHR commands.
+ifdef::VK_NV_ray_tracing[flink:vkCmdTraceRaysNV]
+ifdef::VK_NV_ray_tracing+VK_KHR_ray_tracing_pipeline[,]
+ifdef::VK_KHR_ray_tracing_pipeline[flink:vkCmdTraceRaysKHR, or flink:vkCmdTraceRaysIndirectKHR]
+commands.
 Shader binding tables are read-only in shaders that are executing on the ray
 tracing pipeline.
 
@@ -697,7 +682,6 @@ ename:VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR
 ename:VK_ACCESS_SHADER_READ_BIT.
 
 [NOTE]
-.Note
 ====
 Because different shader record buffers can be associated with the same
 shader, a shader variable with code:ShaderRecordBufferKHR storage class will
@@ -948,7 +932,6 @@ account any application specific knowledge about the properties of the call
 chains.
 
 [NOTE]
-.Note
 ====
 For example, if an application has two types of closest hit and miss shaders
 that it can use but the first level of rays will only use the first kind
@@ -965,6 +948,7 @@ which assumes that both call levels may be the larger of the two.
 ====
 
 
+ifdef::VK_KHR_ray_tracing_pipeline[]
 [[ray-tracing-capture-replay]]
 == Ray Tracing Capture Replay
 
@@ -985,6 +969,22 @@ shader group handles to those in the capture phase, allowing capture/replay
 tools to reuse previously recorded shader binding table buffer contents or
 to obtain the same handles by calling
 flink:vkGetRayTracingCaptureReplayShaderGroupHandlesKHR again.
+endif::VK_KHR_ray_tracing_pipeline[]
 
 
+ifdef::VK_NV_ray_tracing_validation[]
+[[ray-tracing-validation]]
+== Ray Tracing Validation
 
+Ray tracing validation can: help root cause application issues and improve
+performance.
+Unlike existing validation layers, ray tracing validation performs checks at
+an implementation level, which helps identify potential problems that may:
+not be caught by the layer.
+
+By enabling the <<features-rayTracingValidation, ray tracing validation>>
+feature, warnings and errors can: be delivered straight from a ray tracing
+implementation to the application through a <<debugging-debug-messengers,
+messenger callback>> registered with the implementation, where they can: be
+processed through existing application-side debugging or logging systems.
+endif::VK_NV_ray_tracing_validation[]

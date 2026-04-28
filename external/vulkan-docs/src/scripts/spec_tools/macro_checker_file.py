@@ -4,13 +4,14 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# Author(s):    Ryan Pavlik <ryan.pavlik@collabora.com>
+# Author(s):    Rylie Pavlik <rylie.pavlik@collabora.com>
 
 import logging
 import re
 from collections import OrderedDict, namedtuple
 from enum import Enum
 from inspect import currentframe
+from typing import Set
 
 from .shared import (AUTO_FIX_STRING, CATEGORIES_WITH_VALIDITY,
                      EXTENSION_CATEGORY, NON_EXISTENT_MACROS, EntityData,
@@ -48,12 +49,12 @@ allowed_path_attributes = {
 
 # Matches a generated (api or validity) include line.
 INCLUDE = re.compile(
-    r'include::(?P<directory_traverse>((../){1,4}|\{generated\}/)(generated/)?)(?P<generated_type>(api|validity))/(?P<category>\w+)/(?P<entity_name>[^./]+).adoc[\[][\]]')
+    r'include::(?P<directory_traverse>((../){1,4}|\{generated\}/)(generated/)?)(?P<generated_type>(api|validity))/(?P<category>\w+)/(?P<entity_name>[^./]+).adoc[\[][\]]')  # noqa
 
 # Matches an [[AnchorLikeThis]]
 ANCHOR = re.compile(r'\[\[(?P<entity_name>[^\]]+)\]\]')
 
-# Looks for flink:foo:: or slink::foo:: at the end of string:
+# Looks for flink:foo:: or slink:foo:: at the end of string:
 # used to detect explicit pname context.
 PRECEDING_MEMBER_REFERENCE = re.compile(
     r'\b(?P<macro>[fs](text|link)):(?P<entity_name>[\w*]+)::$')
@@ -61,7 +62,7 @@ PRECEDING_MEMBER_REFERENCE = re.compile(
 # Matches something like slink:foo::pname:bar as well as
 # the under-marked-up slink:foo::bar.
 MEMBER_REFERENCE = re.compile(
-    r'\b(?P<first_part>(?P<scope_macro>[fs](text|link)):(?P<scope>[\w*]+))(?P<double_colons>::)(?P<second_part>(?P<member_macro>pname:?)(?P<entity_name>[\w]+))\b'
+    r'\b(?P<first_part>(?P<scope_macro>[fs](text|link)):(?P<scope>[\w*]+))(?P<double_colons>::)(?P<second_part>(?P<member_macro>pname:?)(?P<entity_name>[\w]+))\b' # noqa
 )
 
 # Matches if a string ends while a link is still "open".
@@ -95,32 +96,6 @@ BRACKETS = re.compile(r'\[(?P<tags>.*)\]')
 REF_PAGE_ATTRIB = re.compile(
     r"(?P<key>[a-z]+)='(?P<value>[^'\\]*(?:\\.[^'\\]*)*)'")
 
-# Exceptions to:
-# error: Definition of link target {} with macro etext (used for category enums) does not exist. (-Wwrong_macro)
-# typically caused by using Vulkan-only enums in Vulkan SC blocks with "etext", or because they
-# are suffixed differently.
-CHECK_UNRECOGNIZED_ETEXT_EXCEPTIONS = (
-    'VK_COLORSPACE_SRGB_NONLINEAR_KHR',
-    'VK_COLOR_SPACE_DCI_P3_LINEAR_EXT',
-    'VK_PIPELINE_CACHE_CREATE_READ_ONLY_BIT',
-    'VK_STENCIL_FRONT_AND_BACK',
-    'VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETER_FEATURES',
-    'VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTER_FEATURES',
-    'VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES2_EXT',
-)
-
-# Exceptions to:
-# warning: Definition of link target {} with macro ename (used for category enums) does not exist. (-Wbad_enumerant)
-# typically caused by Vulkan SC enums not being recognized in Vulkan build
-CHECK_UNRECOGNIZED_ENAME_EXCEPTIONS = (
-    'VK_ERROR_INVALID_PIPELINE_CACHE_DATA',
-    'VK_ERROR_NO_PIPELINE_MATCH',
-    'VK_ERROR_VALIDATION_FAILED',
-    'VK_MEMORY_HEAP_SEU_SAFE_BIT',
-    'VK_PIPELINE_CACHE_CREATE_READ_ONLY_BIT',
-    'VK_PIPELINE_CACHE_CREATE_USE_APPLICATION_STORAGE_BIT',
-    'VK_PIPELINE_CACHE_HEADER_VERSION_SAFETY_CRITICAL_ONE',
-)
 
 class Attrib(Enum):
     """Attributes of a ref page."""
@@ -190,8 +165,8 @@ def _pluralize(word, num):
     if num == 1:
         return word
     if word.endswith('y'):
-        return word[:-1] + 'ies'
-    return word + 's'
+        return f"{word[:-1]}ies"
+    return f"{word}s"
 
 
 def _s_suffix(num):
@@ -221,13 +196,13 @@ def shouldEntityBeText(entity, subscript):
     return False
 
 
-class MacroCheckerFile(object):
+class MacroCheckerFile:
     """Object performing processing of a single AsciiDoctor file from a specification.
 
     For testing purposes, may also process a string as if it were a file.
     """
 
-    def __init__(self, checker, filename, enabled_messages, stream_maker):
+    def __init__(self, checker, filename: str, enabled_messages: Set[MessageId], stream_maker):
         """Construct a MacroCheckerFile object.
 
         Typically called by MacroChecker.processFile or MacroChecker.processString().
@@ -305,7 +280,7 @@ class MacroCheckerFile(object):
 
         if self.block_stack:
             locations = (x.context for x in self.block_stack)
-            formatted_locations = ['{} opened at {}'.format(x.delimiter, self.getBriefLocation(x.context))
+            formatted_locations = [f'{x.delimiter} opened at {self.getBriefLocation(x.context)}'
                                    for x in self.block_stack]
             self.logger.warning("Unclosed blocks: %s",
                                 ', '.join(formatted_locations))
@@ -327,8 +302,8 @@ class MacroCheckerFile(object):
 
             if entity not in self.validity_includes:
                 self.warning(MessageId.MISSING_VALIDITY_INCLUDE,
-                             ['Saw /api/ include for {}, but no matching /validity/ include'.format(entity),
-                              'Expected a line with ' + regenerateIncludeFromMatch(includeContext.match, 'validity')],
+                             [f'Saw /api/ include for {entity}, but no matching /validity/ include',
+                              f"Expected a line with {regenerateIncludeFromMatch(includeContext.match, 'validity')}"],
                              context=includeContext)
 
         # Check that we never include a /validity/ file
@@ -336,20 +311,20 @@ class MacroCheckerFile(object):
         for entity, includeContext in self.validity_includes.items():
             if entity not in self.fs_api_includes:
                 self.error(MessageId.MISSING_API_INCLUDE,
-                           ['Saw /validity/ include for {}, but no matching /api/ include'.format(entity),
-                            'Expected a line with ' + regenerateIncludeFromMatch(includeContext.match, 'api')],
+                           [f'Saw /validity/ include for {entity}, but no matching /api/ include',
+                            f"Expected a line with {regenerateIncludeFromMatch(includeContext.match, 'api')}"],
                            context=includeContext)
 
         if not self.numDiagnostics():
             # no problems, exit quietly
             return
 
-        print('\nFor file {}:'.format(self.filename))
+        print(f'\nFor file {self.filename}:')
 
         self.printMessageCounts()
         numFixes = len(self.fixes)
         if numFixes > 0:
-            fixes = ', '.join(('{} -> {}'.format(search, replace)
+            fixes = ', '.join((f'{search} -> {replace}'
                                for search, replace in self.fixes))
 
             print('{} unique auto-fix {} recorded: {}'.format(numFixes,
@@ -441,7 +416,7 @@ class MacroCheckerFile(object):
             data = self.checker.findEntity(entity)
             if not data:
                 self.error(MessageId.UNKNOWN_INCLUDE,
-                           'Saw include for {}, but that entity is unknown.'.format(entity))
+                           f'Saw include for {entity}, but that entity is unknown.')
                 self.pname_data = None
                 return
 
@@ -461,8 +436,8 @@ class MacroCheckerFile(object):
                     name_and_line = toNameAndLine(
                         self.validity_includes[entity], root_path=self.checker.root_path)
                     self.error(MessageId.API_VALIDITY_ORDER,
-                               ['/api/ include found for {} after a corresponding /validity/ include'.format(entity),
-                                'Validity include located at {}'.format(name_and_line)])
+                               [f'/api/ include found for {entity} after a corresponding /validity/ include',
+                                f'Validity include located at {name_and_line}'])
 
             elif match.group('generated_type') == 'validity':
                 self.recordInclude(self.checker.validityIncludes)
@@ -470,7 +445,7 @@ class MacroCheckerFile(object):
 
                 if entity not in self.pname_mentions:
                     self.error(MessageId.API_VALIDITY_ORDER,
-                               '/validity/ include found for {} without a preceding /api/ include'.format(entity))
+                               f'/validity/ include found for {entity} without a preceding /api/ include')
                     return
 
                 if self.pname_mentions[entity]:
@@ -483,8 +458,8 @@ class MacroCheckerFile(object):
                                if member not in self.pname_mentions[entity]]
                     if missing:
                         self.error(MessageId.UNDOCUMENTED_MEMBER,
-                                   ['Validity include found for {}, but not all members/params apparently documented'.format(entity),
-                                    'Members/params not mentioned with pname: {}'.format(', '.join(missing))])
+                                   [f'Validity include found for {entity}, but not all members/params apparently documented',
+                                    f"Members/params not mentioned with pname: {', '.join(missing)}"])
 
             # If we found an include line, we're done with this line.
             return
@@ -549,8 +524,10 @@ class MacroCheckerFile(object):
                     self.warning(MessageId.EXTENSION, "Seems like this is an extension name that was not linked.",
                                  group='entity_name', replacement=self.makeExtensionLink())
                 else:
+                    macro = data.macro
+                    category = data.category
                     self.warning(MessageId.MISSING_MACRO,
-                                 ['Seems like a "{}" macro was omitted for this reference to a known entity in category "{}".'.format(data.macro, data.category),
+                                 [f'Seems like a "{macro}" macro was omitted for this reference to a known entity in category "{category}".',
                                   'Wrap in ` ` to silence this if you do not want a verified macro here.'],
                                  group='entity_name',
                                  replacement=self.makeMacroMarkup(data.macro))
@@ -571,7 +548,8 @@ class MacroCheckerFile(object):
                                          group='entity_name', replacement=self.makeExtensionLink(data.entity))
                         else:
                             self.warning(MessageId.MISSING_MACRO,
-                                         'Seems like a macro was omitted for this reference to a known entity in category "{}", found by searching case-insensitively.'.format(
+                                         'Seems like a macro was omitted for this reference to a known entity in category "{}"'
+                                         ', found by searching case-insensitively.'.format(
                                              data.category),
                                          replacement=self.makeMacroMarkup(data=data))
 
@@ -732,6 +710,8 @@ class MacroCheckerFile(object):
 
         # Do some validation of pname references.
         if macro == 'pname':
+            # there is only a macro if there is a match
+            assert match
             # See if there's an immediately-preceding entity
             preceding = self.line[:match.start()]
             scope = PRECEDING_MEMBER_REFERENCE.search(preceding)
@@ -749,6 +729,10 @@ class MacroCheckerFile(object):
                 # can't check this.
                 pass
 
+    def shouldSkipUnrecognizedEntity(self, macro,  entity_name):
+        """Return True if we should not warn about not recognizing a macro invocation for entity_name."""
+        return False
+
     def checkRecognizedEntity(self):
         """Check the current macro:entity match to see if it is recognized.
 
@@ -759,6 +743,7 @@ class MacroCheckerFile(object):
         """
         entity = self.entity
         macro = self.macro
+        assert macro
         if self.checker.findMacroAndEntity(macro, entity) is not None:
             # We know this macro-entity combo
             return True
@@ -773,14 +758,13 @@ class MacroCheckerFile(object):
             _pluralize('category', len(possibleCats)),
             ', '.join(possibleCats))]
 
+        if self.shouldSkipUnrecognizedEntity(macro, entity):
+            return False
+
         data = self.checker.findEntity(entity)
         if data:
-            if entity in CHECK_UNRECOGNIZED_ETEXT_EXCEPTIONS:
-                return False
-
             # We found the goof: incorrect macro
-            msg.append('Apparently matching entity in category {} found.'.format(
-                data.category))
+            msg.append(f'Apparently matching entity in category {data.category} found.')
             self.handleWrongMacro(msg, data)
             return True
 
@@ -818,7 +802,7 @@ class MacroCheckerFile(object):
             else:
                 # Doesn't match our pattern,
                 # so probably should be name instead of link.
-                newMacro = macro[0] + 'name'
+                newMacro = f"{macro[0]}name"
                 if self.checker.entity_db.isValidMacro(newMacro):
                     self.error(MessageId.BAD_ENTITY, msg +
                                ['Entity name does not fit the pattern for this API, which would mean it should be a "name" macro instead of a "link" macro'],
@@ -826,7 +810,7 @@ class MacroCheckerFile(object):
                 else:
                     self.error(MessageId.BAD_ENTITY, msg +
                                ['Entity name does not fit the pattern for this API, which would mean it should be a "name" macro instead of a "link" macro',
-                                'However, {} is not a known macro so cannot auto-fix.'.format(newMacro)], see_also=see_also)
+                                f'However, {newMacro} is not a known macro so cannot auto-fix.'], see_also=see_also)
 
         elif macro == 'ename':
             # TODO This might be an ambiguity in the style guide - ename might be a known enumerant value,
@@ -834,11 +818,9 @@ class MacroCheckerFile(object):
             # hard to check this.
             if self.checker.likelyRecognizedEntity(entity):
                 if not self.checkText():
-                    if entity in CHECK_UNRECOGNIZED_ENAME_EXCEPTIONS:
-                        return False
-                    else:
-                        self.warning(MessageId.BAD_ENUMERANT, msg +
-                                 ['Unrecognized ename:{} that we would expect to recognize since it fits the pattern for this API.'.format(entity)], see_also=see_also)
+                    self.warning(MessageId.BAD_ENUMERANT, msg +
+                                 [f'Unrecognized ename:{entity} that we would expect to recognize since it fits the pattern for this API.'],
+                                 see_also=see_also)
         else:
             # This is fine:
             # it doesn't need to be recognized since it's not linked.
@@ -857,26 +839,26 @@ class MacroCheckerFile(object):
         macro = self.macro
         entity = self.entity
         shouldBeText = shouldEntityBeText(entity, self.subscript)
-        if shouldBeText and not self.macro.endswith(
-                'text') and not self.macro == 'code':
-            newMacro = macro[0] + 'text'
+        assert macro
+        if shouldBeText and not macro.endswith('text') and not macro == 'code':
+            newMacro = f"{macro[0]}text"
             if self.checker.entity_db.getCategoriesForMacro(newMacro):
                 self.error(MessageId.MISSING_TEXT,
-                           ['Asterisk/leading or trailing underscore/bracket found - macro should end with "text:", probably {}:'.format(newMacro),
+                           [f'Asterisk/leading or trailing underscore/bracket found - macro should end with "text:", probably {newMacro}:',
                             AUTO_FIX_STRING],
                            group='macro', replacement=newMacro, fix=self.makeFix(newMacro=newMacro))
             else:
                 self.error(MessageId.MISSING_TEXT,
                            ['Asterisk/leading or trailing underscore/bracket found, so macro should end with "text:".',
-                            'However {}: is not a known macro so cannot auto-fix.'.format(newMacro)],
+                            f'However {newMacro}: is not a known macro so cannot auto-fix.'],
                            group='macro')
             return True
         elif macro.endswith('text') and not shouldBeText:
             msg = [
-                "No asterisk/leading or trailing underscore/bracket in the entity, so this might be a mistaken use of the 'text' macro {}:".format(macro)]
+                f"No asterisk/leading or trailing underscore/bracket in the entity, so this might be a mistaken use of the 'text' macro {macro}:"]
             data = self.checker.findEntity(entity)
             if data:
-                if entity in CHECK_UNRECOGNIZED_ETEXT_EXCEPTIONS:
+                if self.shouldSkipUnrecognizedEntity(macro, entity):
                     return False
 
                 # We found the goof: incorrect macro
@@ -900,13 +882,13 @@ class MacroCheckerFile(object):
                     # Only suggest a macro if we aren't in elink/ename/etext,
                     # since ename and elink are not related in an equivalent way
                     # to the relationship between flink and fname.
-                    newMacro = macro[0] + 'name'
+                    newMacro = f"{macro[0]}name"
                     if self.checker.entity_db.getCategoriesForMacro(newMacro):
                         msg.append(
-                            'Consider if {}: might be the correct macro to use here.'.format(newMacro))
+                            f'Consider if {newMacro}: might be the correct macro to use here.')
                     else:
                         msg.append(
-                            'Cannot suggest a new macro because {}: is not a known macro.'.format(newMacro))
+                            f'Cannot suggest a new macro because {newMacro}: is not a known macro.')
                 self.warning(MessageId.MISUSED_TEXT, msg)
             return True
         return False
@@ -950,11 +932,11 @@ class MacroCheckerFile(object):
             return
         if not members:
             self.warning(MessageId.UNRECOGNIZED_CONTEXT,
-                         'pname context entity was un-recognized {}'.format(pname_context))
+                         f'pname context entity was un-recognized {pname_context}')
             return
 
         if entity not in members:
-            self.warning(MessageId.UNKNOWN_MEMBER, ["Could not find member/param named '{}' in {}".format(entity, pname_context),
+            self.warning(MessageId.UNKNOWN_MEMBER, [f"Could not find member/param named '{entity}' in {pname_context}",
                                                     'Known {} member/param names are: {}'.format(
                 pname_context, ', '.join(members))], group='entity_name')
 
@@ -1014,7 +996,10 @@ class MacroCheckerFile(object):
             msg = ["Found reference page markup, but we are already in a refpage block.",
                    "The block before the first message of this type is most likely not closed.", ]
             # Fake-close the previous ref page, if it's trivial to do so.
-            if self.getInnermostBlockEntry().block_type == BlockType.REF_PAGE_LIKE:
+            innermost_block = self.getInnermostBlockEntry()
+            # self.in_ref_page is true only when the innermost block is something
+            assert innermost_block
+            if innermost_block.block_type == BlockType.REF_PAGE_LIKE:
                 msg.append(
                     "Pretending that there was a line with `--` immediately above to close that ref page, for more readable messages.")
                 self.processBlockDelimiter(
@@ -1031,7 +1016,7 @@ class MacroCheckerFile(object):
             VALID_REF_PAGE_ATTRIBS)
         if unknown_attribs:
             self.error(MessageId.REFPAGE_UNKNOWN_ATTRIB,
-                       "Found unknown attrib(s) in reference page markup: " + ','.join(unknown_attribs))
+                       f"Found unknown attrib(s) in reference page markup: {','.join(unknown_attribs)}")
 
         # Required field: refpage='xrValidEntityHere'
         if Attrib.REFPAGE.value in attribs:
@@ -1064,9 +1049,9 @@ class MacroCheckerFile(object):
                 else:
                     # TODO suggest fixes here if applicable
                     self.error(MessageId.REFPAGE_NAME,
-                               [ "Found reference page markup, but refpage='{}' type='{}' does not refer to a recognized entity".format(
+                               ["Found reference page markup, but refpage='{}' type='{}' does not refer to a recognized entity".format(
                                    text, type_text),
-                                 'If this is intentional, add the entity to EXTRA_DEFINES or EXTRA_REFPAGES in check_spec_links.py.' ],
+                                'If this is intentional, add the entity to EXTRA_DEFINES or EXTRA_REFPAGES in check_spec_links.py.'],
                                context=context)
         else:
             self.error(MessageId.REFPAGE_TAG,
@@ -1181,7 +1166,7 @@ class MacroCheckerFile(object):
             # DON'T AUTOFIX HERE because these are likely copy-paste between related entities:
             # e.g. a Create function and the associated CreateInfo struct.
             self.warning(MessageId.REFPAGE_SELF_XREF,
-                         ["Reference page for {} included itself in its cross-references.".format(self.entity),
+                         [f"Reference page for {self.entity} included itself in its cross-references.",
                           "This is typically a copy and paste error, and the dupe should likely be changed to a different but related entity.",
                           "Not auto-fixing for this reason."],
                          context=context,
@@ -1194,7 +1179,7 @@ class MacroCheckerFile(object):
             text = remakeRefs(unique_refs.keys())
             if old_text != text:
                 self.warning(MessageId.REFPAGE_WHITESPACE,
-                             ["Cross-references for reference page for {} had non-minimal whitespace,".format(self.entity),
+                             [f"Cross-references for reference page for {self.entity} had non-minimal whitespace,",
                               "and no other enabled message has re-constructed this value already."],
                              context=context,
                              replacement=text,
@@ -1232,8 +1217,8 @@ class MacroCheckerFile(object):
             msg = ["Found reference page markup, with an enum value listed: {}".format(
                 referenced_entity)]
             self.error(MessageId.REFPAGE_XREFS,
-                    msg,
-                    context=context)
+                       msg,
+                       context=context)
             return
 
         if data:
@@ -1305,7 +1290,9 @@ class MacroCheckerFile(object):
           If None, will assume it is the direct caller of self.warning().
         """
         if not frame:
-            frame = currentframe().f_back
+            f = currentframe()
+            if f:
+                frame = f.f_back
         self.diag(MessageType.WARNING, message_id, messageLines, group=group,
                   replacement=replacement, context=context, fix=fix, see_also=see_also, frame=frame)
 
@@ -1332,7 +1319,9 @@ class MacroCheckerFile(object):
           If None, will assume it is the direct caller of self.error().
         """
         if not frame:
-            frame = currentframe().f_back
+            f = currentframe()
+            if f:
+                frame = f.f_back
         self.diag(MessageType.ERROR, message_id, messageLines, group=group,
                   replacement=replacement, context=context, fix=fix, see_also=see_also, frame=frame)
 
@@ -1375,7 +1364,9 @@ class MacroCheckerFile(object):
             messageLines.append(AUTO_FIX_STRING)
 
         if not frame:
-            frame = currentframe().f_back
+            f = currentframe()
+            if f:
+                frame = f.f_back
         if context is None:
             message = Message(message_id=message_id,
                               message_type=severity,
@@ -1429,8 +1420,7 @@ class MacroCheckerFile(object):
         for message_type in [MessageType.ERROR, MessageType.WARNING]:
             count = self.numMessagesOfType(message_type)
             if count > 0:
-                print('{num} {mtype}{s} generated.'.format(
-                    num=count, mtype=message_type, s=_s_suffix(count)))
+                print(f'{count} {message_type}{_s_suffix(count)} generated.')
 
     def dumpInternals(self):
         """Dump internal variables to screen, for debugging."""
@@ -1456,6 +1446,7 @@ class MacroCheckerFile(object):
         include_dict -- The include dictionary to update: one of self.apiIncludes or self.validityIncludes.
         generated_type -- The type of include (e.g. 'api', 'valid', etc). By default, extracted from self.match.
         """
+        assert self.match
         entity = self.match.group('entity_name')
         if generated_type is None:
             generated_type = self.match.group('generated_type')
@@ -1531,9 +1522,8 @@ class MacroCheckerFile(object):
     def getBriefLocation(self, context):
         """Format a context briefly - omitting the filename if it has newlines in it."""
         if '\n' in context.filename:
-            return 'input string line {}'.format(context.lineNum)
-        return '{}:{}'.format(
-            context.filename, context.lineNum)
+            return f'input string line {context.lineNum}'
+        return f'{context.filename}:{context.lineNum}'
 
     ###
     # Handlers for a variety of diagnostic-meriting conditions
@@ -1543,7 +1533,7 @@ class MacroCheckerFile(object):
 
     def handleIncludeMissingRefPage(self, entity, generated_type):
         """Report a message about an include outside of a ref-page block."""
-        msg = ["Found {} include for {} outside of a reference page block.".format(generated_type, entity),
+        msg = [f"Found {generated_type} include for {entity} outside of a reference page block.",
                "This is probably a missing reference page block."]
         refpage = self.computeExpectedRefPageFromInclude(entity)
         data = self.checker.findEntity(refpage)
@@ -1552,11 +1542,12 @@ class MacroCheckerFile(object):
             msg.append(self.makeRefPageTag(refpage, data=data))
         else:
             msg.append(
-                "But, expected ref page entity name {} isn't recognized...".format(refpage))
+                f"But, expected ref page entity name {refpage} isn't recognized...")
         self.warning(MessageId.REFPAGE_MISSING, msg)
 
     def handleIncludeMismatchRefPage(self, entity, generated_type):
         """Report a message about an include not matching its containing ref-page block."""
+        assert self.current_ref_page
         self.warning(MessageId.REFPAGE_MISMATCH, "Found {} include for {}, inside the reference page block of {}".format(
             generated_type, entity, self.current_ref_page.entity))
 
@@ -1625,13 +1616,13 @@ class MacroCheckerFile(object):
 
     def makeSearch(self):
         """Construct the string self.macro:self.entity, for use in the old text part of a fix pair."""
-        return '{}:{}'.format(self.macro, self.entity)
+        return f'{self.macro}:{self.entity}'
 
     def makeMacroMarkup(self, newMacro=None, newEntity=None, data=None):
         """Construct appropriate markup for referring to an entity.
 
-        Typically constructs macro:entity, but can construct `<<EXTENSION_NAME>>` if the supplied
-        entity is identified as an extension.
+        Typically constructs macro:entity, but can construct `<<EXTENSION_NAME>>`
+        (or equivalent) if the supplied entity is identified as an extension.
 
         Arguments:
         newMacro -- The macro to use. Defaults to data.macro (if available), otherwise self.macro.
@@ -1652,19 +1643,19 @@ class MacroCheckerFile(object):
             data = self.checker.findEntity(newEntity)
         if data and data.category == EXTENSION_CATEGORY:
             return self.makeExtensionLink(newEntity)
-        return '{}:{}'.format(newMacro, newEntity)
+        return f'{newMacro}:{newEntity}'
 
     def makeExtensionLink(self, newEntity=None):
         """Create a correctly-formatted link to an extension.
 
-        Result takes the form `<<EXTENSION_NAME>>`.
+        Result takes the form `<<EXTENSION_NAME>>` or whatever the Conventions define.
 
         Argument:
         newEntity -- The extension name to link to. Defaults to self.entity.
         """
         if not newEntity:
             newEntity = self.entity
-        return '`<<{}>>`'.format(newEntity)
+        return self.checker.conventions().formatExtension(newEntity)
 
     def computeExpectedRefPageFromInclude(self, entity):
         """Compute the expected ref page entity based on an include entity name."""

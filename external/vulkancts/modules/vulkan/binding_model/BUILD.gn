@@ -29,8 +29,12 @@ ohos_source_set("deqp_vk_binding_model_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingBufferDeviceAddressTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingDescriptorBufferTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingDescriptorBufferTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingDescriptorCombinationTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingDescriptorCombinationTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingDescriptorCopyTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingDescriptorCopyTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingDescriptorInlineUniformTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingDescriptorInlineUniformTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingDescriptorSetRandomTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingDescriptorSetRandomTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingDescriptorUpdateASTests.cpp",
@@ -41,13 +45,14 @@ ohos_source_set("deqp_vk_binding_model_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingDynamicOffsetTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingModelTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingModelTests.hpp",
-
-    #"//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingValveMutableTests.cpp",
-    #"//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingValveMutableTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingMutableTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingMutableTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingShaderAccessTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingShaderAccessTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingStagesTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingStagesTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingUnusedInvalidDescriptorTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/binding_model/vktBindingUnusedInvalidDescriptorTests.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs

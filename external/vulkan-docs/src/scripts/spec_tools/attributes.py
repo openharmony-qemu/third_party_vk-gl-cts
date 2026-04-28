@@ -1,6 +1,6 @@
-#!/usr/bin/python3 -i
+#!/usr/bin/env python3 -i
 #
-# Copyright 2013-2024 The Khronos Group Inc.
+# Copyright 2013-2025 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 """Utilities for working with attributes of the XML registry."""
@@ -64,12 +64,12 @@ class LengthEntry:
         return self.full_reference
 
     def get_human_readable(self, make_param_name=None):
-        assert(self.other_param_name)
+        assert self.other_param_name
         return _human_readable_deref(self.full_reference, make_param_name=make_param_name)
 
     def __repr__(self):
         "Formats an object for repr(), debugger display, etc."
-        return 'spec_tools.attributes.LengthEntry("{}")'.format(self.full_reference)
+        return f'spec_tools.attributes.LengthEntry("{self.full_reference}")'
 
     @staticmethod
     def parse_len_from_param(param):
@@ -83,21 +83,29 @@ class LengthEntry:
 class ExternSyncEntry:
     """An entry in a (comma-separated) externsync attribute"""
 
-    TRUE_STRING = 'true'
-    TRUE_WITH_CHILDREN_STRING = 'true_with_children'
-
     def __init__(self, val):
+        # externsync will be 'true', 'maybe', '<expression>' or 'maybe:<expression>'
+        is_true = val == 'true'
+        is_maybe = val == 'maybe'
+        is_maybe_subtype = val.startswith('maybe:')
+
+        if is_maybe_subtype:
+            val = val.removeprefix('maybe:')
+
         self.full_reference = val
-        self.entirely_extern_sync = (val in (ExternSyncEntry.TRUE_STRING, ExternSyncEntry.TRUE_WITH_CHILDREN_STRING))
-        self.children_extern_sync = (val == ExternSyncEntry.TRUE_WITH_CHILDREN_STRING)
+        # If 'true' or 'maybe', externsync applies to the entire parameter
+        self.entirely_extern_sync = is_true or is_maybe
+        # If 'maybe' or 'maybe:<expression>', externsync applies to a member of the parameter only
+        self.conditionally_extern_sync = is_maybe or is_maybe_subtype
         if self.entirely_extern_sync:
             return
 
+        # Parse the expression to separate the param name from the member of that param
         self.param_ref_parts = _split_param_ref(val)
         self.member = self.param_ref_parts[0]
 
     def get_human_readable(self, make_param_name=None):
-        assert(not self.entirely_extern_sync)
+        assert not self.entirely_extern_sync
         return _human_readable_deref(self.full_reference, make_param_name=make_param_name)
 
     @staticmethod
@@ -110,7 +118,7 @@ class ExternSyncEntry:
 
     def __repr__(self):
         "Formats an object for repr(), debugger display, etc."
-        return 'spec_tools.attributes.ExternSyncEntry("{}")'.format(self.full_reference)
+        return f'spec_tools.attributes.ExternSyncEntry("{self.full_reference}")'
 
 
 _TRUE_STRING = 'true'

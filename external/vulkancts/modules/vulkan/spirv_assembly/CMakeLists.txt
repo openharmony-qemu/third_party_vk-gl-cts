@@ -36,6 +36,8 @@ set(DEQP_VK_VKSC_SPIRV_ASSEMBLY_SRCS
 	vktSpvAsmGraphicsShaderTestUtil.hpp
 	vktSpvAsmInstructionTests.cpp
 	vktSpvAsmInstructionTests.hpp
+	vktSpvAsmMultipleShadersTests.cpp
+	vktSpvAsmMultipleShadersTests.hpp
 	vktSpvAsmPointerParameterTests.cpp
 	vktSpvAsmPointerParameterTests.hpp
 	vktSpvAsmSignedIntCompareTests.cpp
@@ -70,6 +72,8 @@ set(DEQP_VK_VKSC_SPIRV_ASSEMBLY_SRCS
 	vktSpvAsmWorkgroupMemoryTests.hpp
 	vktSpvAsmNonSemanticInfoTests.cpp
 	vktSpvAsmNonSemanticInfoTests.hpp
+	vktSpvAsmRelaxedWithForwardReferenceTests.cpp
+	vktSpvAsmRelaxedWithForwardReferenceTests.hpp
 	vktSpvAsmPtrAccessChainTests.cpp
 	vktSpvAsmPtrAccessChainTests.hpp
 	vktSpvAsmVectorShuffleTests.cpp
@@ -80,11 +84,23 @@ set(DEQP_VK_VKSC_SPIRV_ASSEMBLY_SRCS
 	vktSpvAsmTrinaryMinMaxTests.hpp
 	vktSpvAsmPhysicalStorageBufferPointerTests.cpp
 	vktSpvAsmPhysicalStorageBufferPointerTests.hpp
+	vktSpvAsmRawAccessChainTests.cpp
+	vktSpvAsmRawAccessChainTests.hpp
+	vktSpvAsmMaint9VectorizationTests.cpp
+	vktSpvAsmMaint9VectorizationTests.hpp
 	)
 
 set(DEQP_VK_SPIRV_ASSEMBLY_SRCS
+	vktSpvAsmFloatControls2Tests.cpp
+	vktSpvAsmFloatControls2Tests.hpp
 	vktSpvAsmIntegerDotProductTests.cpp
 	vktSpvAsmIntegerDotProductTests.hpp
+	vktSpvAsmUntypedPointersTests.cpp
+	vktSpvAsmUntypedPointersTests.hpp
+	vktSpvAsmComputeShaderDerivativesTests.cpp
+	vktSpvAsmComputeShaderDerivativesTests.hpp
+	vktSpvAsmLdexpTests.cpp
+	vktSpvAsmLdexpTests.hpp
 	)
 
 set(DEQP_VK_SPIRV_ASSEMBLY_LIBS

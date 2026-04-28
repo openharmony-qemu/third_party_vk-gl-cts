@@ -1,9 +1,8 @@
-// Copyright 2018-2024 The Khronos Group Inc.
+// Copyright 2018-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
 // This section is included inside the Debugging chapter (debugging.adoc)
-
 
 [[debugging-debug-markers]]
 == Debug Markers
@@ -23,11 +22,11 @@ the command buffer.
 === Object Annotation
 
 The commands in this section allow application developers to associate
-user-defined information with Vulkan objects at will.
+application-defined information with Vulkan objects at will.
 
-[open,refpage='vkDebugMarkerSetObjectNameEXT',desc='Give a user-friendly name to an object',type='protos']
+[open,refpage='vkDebugMarkerSetObjectNameEXT',desc='Give an application-defined name to an object',type='protos']
 --
-An object can be given a user-friendly name by calling:
+An object can be given an application-defined name by calling:
 
 include::{generated}/api/protos/vkDebugMarkerSetObjectNameEXT.adoc[]
 
@@ -55,8 +54,8 @@ include::{generated}/api/structs/VkDebugMarkerObjectNameInfoEXT.adoc[]
 
 Applications may: change the name associated with an object simply by
 calling fname:vkDebugMarkerSetObjectNameEXT again with a new string.
-To remove a previously set name, pname:pObjectName should: be set to an
-empty string.
+To remove a previously set name, pname:pObjectName should: be an empty
+string.
 
 .Valid Usage
 ****
@@ -155,6 +154,16 @@ include::{generated}/api/protos/vkCmdDebugMarkerBeginEXT.adoc[]
   * pname:pMarkerInfo is a pointer to a slink:VkDebugMarkerMarkerInfoEXT
     structure specifying the parameters of the marker region to open.
 
+.Valid Usage
+****
+ifdef::VK_QCOM_tile_shading[]
+  * [[VUID-vkCmdDebugMarkerBeginEXT-None-10614]]
+    This command must: not be recorded when
+    <<renderpass-per-tile-execution-model,per-tile execution model>> is
+    enabled
+endif::VK_QCOM_tile_shading[]
+****
+
 include::{generated}/validity/protos/vkCmdDebugMarkerBeginEXT.adoc[]
 --
 
@@ -173,7 +182,7 @@ include::{generated}/api/structs/VkDebugMarkerMarkerInfoEXT.adoc[]
     the marker.
     A particular implementation may: choose to ignore this color value.
     The values contain RGBA values in order, in the range 0.0 to 1.0.
-    If all elements in pname:color are set to 0.0 then it is ignored.
+    If all elements in pname:color are 0.0, then it is ignored.
 
 include::{generated}/validity/structs/VkDebugMarkerMarkerInfoEXT.adoc[]
 --
@@ -205,6 +214,12 @@ must: be matched and balanced.
     outstanding flink:vkCmdDebugMarkerBeginEXT command recorded to
     pname:commandBuffer that has not previously been ended by a call to
     flink:vkCmdDebugMarkerEndEXT
+ifdef::VK_QCOM_tile_shading[]
+  * [[VUID-vkCmdDebugMarkerEndEXT-None-10615]]
+    This command must: not be recorded when
+    <<renderpass-per-tile-execution-model,per-tile execution model>> is
+    enabled
+endif::VK_QCOM_tile_shading[]
 ****
 
 include::{generated}/validity/protos/vkCmdDebugMarkerEndEXT.adoc[]

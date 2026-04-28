@@ -101,7 +101,7 @@ public:
     eglw::EGLBoolean signalSyncKHR(eglw::EGLDisplay dpy, eglw::EGLSyncKHR sync, eglw::EGLenum mode) const;
     eglw::EGLBoolean surfaceAttrib(eglw::EGLDisplay dpy, eglw::EGLSurface surface, eglw::EGLint attribute, eglw::EGLint value) const;
     eglw::EGLBoolean swapBuffers(eglw::EGLDisplay dpy, eglw::EGLSurface surface) const;
-    eglw::EGLBoolean swapBuffersWithDamageKHR(eglw::EGLDisplay dpy, eglw::EGLSurface surface, eglw::EGLint *rects, eglw::EGLint n_rects) const;
+    eglw::EGLBoolean swapBuffersWithDamageKHR(eglw::EGLDisplay dpy, eglw::EGLSurface surface, const eglw::EGLint *rects, eglw::EGLint n_rects) const;
     eglw::EGLBoolean swapInterval(eglw::EGLDisplay dpy, eglw::EGLint interval) const;
     eglw::EGLBoolean terminate(eglw::EGLDisplay dpy) const;
     eglw::EGLBoolean unlockSurfaceKHR(eglw::EGLDisplay dpy, eglw::EGLSurface surface) const;

@@ -11,7 +11,8 @@ include::{generated}/meta/{refprefix}VK_NV_geometry_shader_passthrough.adoc[]
 *Interactions and External Dependencies*::
   - This extension provides API support for
     {GLregistry}/NV/NV_geometry_shader_passthrough.txt[`GL_NV_geometry_shader_passthrough`]
-  - This extension requires the pname:geometryShader feature.
+  - This extension requires the <<features-geometryShader,
+    pname:geometryShader>> feature.
 *Contributors*::
   - Piers Daniell, NVIDIA
   - Jeff Bolz, NVIDIA
@@ -42,7 +43,7 @@ qualifier from `GL_NV_geometry_shader_passthrough` maps to the
 code:PassthroughNV decoration.
 To use the code:passthrough layout, in GLSL the
 `GL_NV_geometry_shader_passthrough` extension must be enabled.
-Behaviour is described in the `GL_NV_geometry_shader_passthrough` extension
+Behavior is described in the `GL_NV_geometry_shader_passthrough` extension
 specification.
 
 include::{generated}/interfaces/VK_NV_geometry_shader_passthrough.adoc[]
@@ -82,7 +83,7 @@ following table.
 
 *RESOLVED*: This is described in <<geometry-passthrough-interface,
 Passthrough Interface Matching>>.
-In GL when using passthough geometry shaders in separable mode, all inputs
+In GL when using passthrough geometry shaders in separable mode, all inputs
 must also be explicitly assigned location layout qualifiers.
 In Vulkan all SPIR-V shader inputs (except built-ins) must also have
 location decorations specified.

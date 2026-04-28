@@ -1,4 +1,4 @@
-// Copyright 2017-2024 The Khronos Group Inc.
+// Copyright 2017-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -17,7 +17,7 @@ include::{generated}/meta/{refprefix}VK_KHR_uniform_buffer_standard_layout.adoc[
 
 === Description
 
-This extension enables tighter array and struct packing to be used with
+This extension enables tighter array and structure packing to be used with
 uniform buffers.
 
 It modifies the alignment rules for uniform buffers, allowing for tighter
@@ -30,7 +30,7 @@ be supported in uniform buffers.
 
 All functionality in this extension is included in core Vulkan 1.2, with the
 KHR suffix omitted.
-The original type, enum and command names are still available as aliases of
+The original type, enum, and command names are still available as aliases of
 the core functionality.
 
 include::{generated}/interfaces/VK_KHR_uniform_buffer_standard_layout.adoc[]

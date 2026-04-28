@@ -23,6 +23,7 @@ config("deqp_vkutil_config") {
     "_XOPEN_SOURCE=600",
     "VK_USE_PLATFORM_OHOS_OPENHARMONY",
     "DISABLE_SHADERCACHE_IPC",
+    "CTS_USES_VULKAN",
   ]
 }
 
@@ -48,6 +49,7 @@ ohos_source_set("deqp_vkutilnoshader_source") {
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkMemUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkNullDriver.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkObjUtil.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkPipelineBinaryUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkPipelineConstructionUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkPlatform.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/vkQueryUtil.cpp",
@@ -72,28 +74,25 @@ ohos_source_set("deqp_vkutilnoshader_source") {
 
     #"//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkan",
-    "//third_party/glslang",
-    "//third_party/spirv-tools/include",
-    "//third_party/spirv-tools/source",
+    "//third_party/vk-gl-cts/external/glslang/src",
+    "//third_party/vk-gl-cts/external/spirv-headers/src/include",
+    "//third_party/vk-gl-cts/external/spirv-tools/src/include",
+    "//third_party/vk-gl-cts/external/spirv-tools/src/source",
   ]
 
   deps = [
-    # "//third_party/glslang/OGLCompilersDLL:libdeqp_OGLCompiler",
-    "//third_party/glslang/SPIRV:libdeqp_spirv",
-    "//third_party/glslang/SPIRV:libdeqp_spvremapper",
-    "//third_party/glslang/glslang:libdeqp_GenericCodeGen",
-    "//third_party/glslang/glslang:libdeqp_MachineIndependent",
-    "//third_party/glslang/glslang:libdeqp_OSDependent",
+    # "//third_party/vk-gl-cts/external/glslang/src/OGLCompilersDLL:libdeqp_OGLCompiler",
+    "//third_party/vk-gl-cts/external/glslang/src/SPIRV:libdeqp_spirv",
+    "//third_party/vk-gl-cts/external/glslang/src/SPIRV:libdeqp_spvremapper",
+    "//third_party/vk-gl-cts/external/glslang/src/glslang:libdeqp_GenericCodeGen",
+    "//third_party/vk-gl-cts/external/glslang/src/glslang:libdeqp_MachineIndependent",
+    "//third_party/vk-gl-cts/external/glslang/src/glslang:libdeqp_OSDependent",
 
     #":gen_framework_c",
-    "//third_party/glslang/glslang:libdeqp_glslang",
+    "//third_party/vk-gl-cts/external/glslang/src/glslang:libdeqp_glslang",
 
-    #"//third_party/glslang/hlsl:libdeqp_hlsl",
-    "//third_party/spirv-tools:libdeqp_spirvtools",
-    "//third_party/spirv-tools/source/link:libdeqp_spirvtools-link",
-    "//third_party/spirv-tools/source/opt:libdeqp_spirvtools-opt",
-    "//third_party/spirv-tools/source/reduce:libdeqp_spirvtools-reduce",
-    "//third_party/spirv-tools/source/val:libdeqp_spirvtools-val",
+    #"//third_party/vk-gl-cts/external/glslang/src/hlsl:libdeqp_hlsl",
+    "//third_party/vk-gl-cts/external/spirv-tools/src:libdeqp_spirvtools",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/framework/delibs/depool:libdeqp_depool",
     "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
@@ -153,27 +152,23 @@ ohos_source_set("deqp_vkutil_source") {
 
     #"//third_party/vk-gl-cts/build/external/vulkancts/framework/vulkan",
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkan",
-    "//third_party/glslang",
-    "//third_party/spirv-tools/include",
+    "//third_party/vk-gl-cts/external/glslang/src",
+    "//third_party/vk-gl-cts/external/spirv-tools/src/include",
   ]
 
   deps = [
     ":libdeqp_vkutilnoshader",
 
-    # "//third_party/glslang/OGLCompilersDLL:libdeqp_OGLCompiler",
-    "//third_party/glslang/SPIRV:libdeqp_spirv",
-    "//third_party/glslang/SPIRV:libdeqp_spvremapper",
-    "//third_party/glslang/glslang:libdeqp_GenericCodeGen",
-    "//third_party/glslang/glslang:libdeqp_MachineIndependent",
-    "//third_party/glslang/glslang:libdeqp_OSDependent",
-    "//third_party/glslang/glslang:libdeqp_glslang",
+    # "//third_party/vk-gl-cts/external/glslang/src/OGLCompilersDLL:libdeqp_OGLCompiler",
+    "//third_party/vk-gl-cts/external/glslang/src/SPIRV:libdeqp_spirv",
+    "//third_party/vk-gl-cts/external/glslang/src/SPIRV:libdeqp_spvremapper",
+    "//third_party/vk-gl-cts/external/glslang/src/glslang:libdeqp_GenericCodeGen",
+    "//third_party/vk-gl-cts/external/glslang/src/glslang:libdeqp_MachineIndependent",
+    "//third_party/vk-gl-cts/external/glslang/src/glslang:libdeqp_OSDependent",
+    "//third_party/vk-gl-cts/external/glslang/src/glslang:libdeqp_glslang",
 
-    #"//third_party/glslang/hlsl:libdeqp_hlsl",
-    "//third_party/spirv-tools:libdeqp_spirvtools",
-    "//third_party/spirv-tools/source/link:libdeqp_spirvtools-link",
-    "//third_party/spirv-tools/source/opt:libdeqp_spirvtools-opt",
-    "//third_party/spirv-tools/source/reduce:libdeqp_spirvtools-reduce",
-    "//third_party/spirv-tools/source/val:libdeqp_spirvtools-val",
+    #"//third_party/vk-gl-cts/external/glslang/src/hlsl:libdeqp_hlsl",
+    "//third_party/vk-gl-cts/external/spirv-tools/src:libdeqp_spirvtools",
     "//third_party/vk-gl-cts/framework/common:libdeqp_tcutil",
     "//third_party/vk-gl-cts/framework/opengl:libdeqp_glutil",
   ]

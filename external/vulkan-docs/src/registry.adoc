@@ -1,5 +1,4 @@
-// Copyright 2013-2024 The Khronos Group Inc.
-//
+// Copyright 2013-2025 The Khronos Group Inc.
 // SPDX-License-Identifier: CC-BY-4.0
 
 // Core versions and extensions to enable
@@ -9,7 +8,7 @@ include::{generated}/specattribs.adoc[]
 = The Khronos^®^ Vulkan^®^ API Registry
 Jon Leech
 :data-uri:
-:icons: font
+:!icons:
 :toc2:
 :toclevels: 3
 :numbered:
@@ -104,10 +103,10 @@ which documentation authors must comply.
 [[vulkan-styleguide]] Jon Leech and Tobias Hector.
 _Vulkan Documentation and Extensions: Procedures and Conventions_ (February
 26, 2023).
-https://registry.khronos.org/vulkan/specs/1.3/styleguide.html .
+https://registry.khronos.org/vulkan/specs/latest/styleguide.html .
 
 [[vulkan-spec]] Khronos Vulkan Working Group.
-_Vulkan 1.3.242 - A Specification_ (February 26, 2023).
+_Vulkan 1.4 - A Specification_ (December 2, 2024).
 https://registry.khronos.org/vulkan/ .
 
 
@@ -204,6 +203,40 @@ There are a variety of output generators included:
   * `extensionStubSource.py` - generate a simple C extension loader.
 
 
+[[implementations]]
+= Alternate Registry Processing Frameworks
+
+We encourage people needing to process registry XML to use the Python
+generator framework.
+It has been successfully used by many other projects, such as OpenXR and
+many of its software components
+
+Be aware that the schema is not static.
+Over time, we have introduced a number of non-breaking changes in the form
+of additional XML tags and attributes.
+On rare occasion we have made a breaking change, such as replacing the
+attr:requires syntax and attr:requiresCore attributes for specifying
+extension and version dependencies with the attr:depends attribute.
+
+While such changes are supported in the Python scripts when they are made,
+downstreams using other XML processing code are responsible for tracking and
+implementing corresponding changes.
+
+
+[[implementations-rare]]
+== Rarely Used Tags and Attributes
+
+If you do implement your own XML processing framework, you are responsible
+for complying with the interpretation of the schema and its contents, and
+producing results consistent with the Python framework.
+
+Choosing to not implement processing of certain tags or attributes may
+produce incorrect outputs.
+If you are doing this because the tags or attributes are not currently used
+in the Vulkan XML, you may want to flag a warning or error when they are
+encountered.
+
+
 [[schema]]
 = Vulkan Registry Schema
 
@@ -232,7 +265,7 @@ the API profile requested.
 == API Names
 
 Specific API versions features and extensions can be tagged as belonging to
-to classes of features with the use of _API names_.
+classes of features with the use of _API names_.
 This is intended to allow multiple closely-related API specifications in the
 same family - such as desktop and mobile specifications - to share the same
 XML.
@@ -302,9 +335,27 @@ order should not be important):
     capability.
     Only one tag is used, wrapping all the SPIR-V capabilities.
   * <<tag-sync,tag:sync>> - Defines sync objects
-  * <<tag-syncstage,tag::syncstage>> - Defines all Pipeline Stages
-  * <<tag-syncaccess,tag::syncaccess>> - Defines all Access Types
-  * <<tag-syncpipeline,tag::syncpipeline>> - Defines Pipeline's logical ordering
+  * <<tag-syncstage,tag:syncstage>> - Defines all Pipeline Stages
+  * <<tag-syncaccess,tag:syncaccess>> - Defines all Access Types
+  * <<tag-syncpipeline,tag:syncpipeline>> - Defines Pipeline's logical ordering
+  * <<tag-videocodecs,tag:videocodecs>> - Defines video codecs
+  * <<tag-videocodec,tag:videocodec>> - Defines a video codec category or
+    specific video codec
+  * <<tag-videoprofiles,tag:videoprofiles>> - Defines video profiles
+    supported by a specific video codec
+  * <<tag-videoprofilemember,tag:videoprofilemember>> - Defines video
+    profiles with respect to specific video profile structure members
+  * <<tag-videoprofile,tag:videoprofile>> - Defines a video profile with
+    respect to specific video profile structure members
+  * <<tag-videocapabilities,tag:videocapabilities>> - Specifies a capability
+    structure that applies to the video codec category or specific video
+    codec
+  * <<tag-videoformat,tag:videoformat>> - Defines a video format category
+    that applies to the video codec category or specific video codec
+  * <<tag-videoformatproperties,tag:videoformatproperties>> - Specifies a
+    video format property structure that applies to a video format category
+  * <<tag-videorequirecapabilities,tag:videorequirecapabilities>> - Defines
+    a video capability prerequisite
 
 
 [[tag-comment]]
@@ -353,7 +404,6 @@ A tag:platform tag describes a single platform name.
 +
 --
 [NOTE]
-.Note
 ====
 For example,
 
@@ -374,7 +424,6 @@ is used for the XRandR functionality within the `xlib` platform.
 +
 --
 [NOTE]
-.Note
 ====
 For example,
 
@@ -462,6 +511,14 @@ denoting the type name and other types used in defining this type.
 In some cases, additional attribute and embedded type information is used to
 generate more complicated C types.
 
+For builtin C types, the corresponding tag:type tag should be an empty stub.
+
+For derived types which are expected to be defined in a header file outside
+the scope of the Vulkan API, such as an X11 `VisualID` or a Windows
+`HANDLE`, the tag:type tag can insert a `#include` directive to pull in that
+header.
+
+
 == Attributes of tag:type Tags
 
   * attr:requires - optional.
@@ -521,6 +578,11 @@ generate more complicated C types.
     Specifies the name of a `VkObjectType` enumerant which corresponds to
     this type.
     The enumerant must be defined.
+  * attr:requiredlimittype - only applicable if `"category"` is `struct` or
+    `union`.
+    If `"true"`, then this type's tag:member tags, other than `sType` and
+    `pNext`, must include attr:limittype attributes.
+    Defaults to `"false"`.
 
 == Contents of tag:type Tags
 
@@ -558,24 +620,36 @@ The tag:member tag defines the type and name of a structure or union member.
   * attr:values - only valid on the `sType` member of a struct.
     This is a comma-separated list of enumerant values that are valid for
     the structure type; usually there is only a single value.
-  * attr:len - if the member is an array, len may be one or more of the
-    following things, separated by commas (one for each array indirection):
-    another member of that struct; `"null-terminated"` for a string; `"1"`
-    to indicate it is just a pointer (used for nested pointers); or an
-    equation in math markup for incorporation in the specification (a LaTeX
-    math expression delimited by `latexmath:[` and `]`.
-    The only variables in the equation should be the names of members of the
-    structure.
+  * attr:len - valid length of the data described by the member.
+    If the member is a static array, attr:len must be less than or equal
+    to the size of the array; if not present for a static array, all
+    elements of the array are considered valid.
+    If the member is a pointer, attr:len is the length of the pointed-to
+    data.
+    attr:len must contain one or more expressions defining length (one for
+    each array indirection), separated by commas.
+    Each expression may be one of:
+  ** an equation in math markup for incorporation in the specification (a
+     LaTeX math expression delimited by `latexmath:[` and `]`.
+     The only variables in the equation should be the names of members of
+     the structure;
+  ** the name of another member of the structure specifying the length
+     for the corresponding indirection;
+  ** `"null-terminated"`, indicating a pointer to a null-terminated UTF-8
+     string;
+  ** `"1"` to indicate it is just a pointer (used for nested pointers);
+  ** a C99 expression that refers to another member of the structure
+     indirectly specifying the length for the corresponding indirection;
+  ** or a custom expression that cannot be used directly by code generation
+     and needs manual handling.
   * attr:altlen - if the attr:len attribute is specified, and contains a
-    `latexmath:` equation, this attribute should be specified with an
-    equivalent equation using only C builtin operators, C math library
-    function names, and variables as allowed for attr:len.
-    It must be a valid C99 expression whose result is equal to attr:len for
-    all possible inputs.
-    It is a comma separated list that has size equal to only the `latexmath`
-    item count in attr:len list.
+    `latexmath:` equation, this contains one or more of the other options
+    above, separated by commas (one for each array indirection).
     This attribute is intended to support consumers of the XML who need to
     generate validation code from the allowed length.
+  * attr:stride - if the member is an array, stride specifies the name of
+    another member containing the byte stride between consecutive elements
+    in the array. The array is assumed to be tightly packed if omitted.
   * attr:deprecated - optional.
     Indicates that this member has been deprecated.
     Possible values are:
@@ -598,7 +672,6 @@ The tag:member tag defines the type and name of a structure or union member.
 +
 --
 [NOTE]
-.Note
 ====
 While the attr:optional attribute can be used for scalar types such as
 integers, it does not affect the output generators included with the
@@ -614,8 +687,9 @@ Explicitly specifying `optional="false"` is not supported, but
     If the member is a union, attr:selector identifies another member of the
     struct that is used to select which of that union's members are valid.
   * attr:selection - optional.
-    For a member of a union, attr:selection identifies a value of the
-    attr:selector that indicates this member is valid.
+    For a member of a union, attr:selection identifies one or more
+    comma-separated values of the attr:selector that indicate this member
+    is valid.
   * attr:noautovalidity - prevents automatic validity language being
     generated for the tagged item.
     Only suppresses item-specific validity - parenting issues etc.
@@ -627,25 +701,27 @@ Explicitly specifying `optional="false"` is not supported, but
     `VkPhysicalDeviceProperties`, `VkPhysicalDeviceProperties2`,
     `VkPhysicalDeviceLimits`, `VkQueueFamilyProperties`,
     `VkQueueFamilyProperties2`, `VkSparseImageFormatProperties`,
-    `VkSparseImageFormatProperties2`, and structures extending or members of
+    `VkSparseImageFormatProperties2`, `VkVideoCapabilitiesKHR`,
+    `VkVideoFormatPropertiesKHR`, and structures extending or members of
     any of those structures.
     Specifies the type of a device limit.
-    This type describes how a value might be compared with the value of a
+    This type describes how a value should be compared with the value of a
     member in order to check whether it fits the limit.
-    Valid values:
+    Valid attr:limittype values are:
   ** `"min"` and `"max"` denote minimum and maximum limits.
-     They may also apply to arrays and `VkExtent*D`.
-  ** `"not"` specifies a feature is supported when false.
-  ** `"pot"` denotes a value that has to be a power of two value.
+     They may also apply to arrays and `VkExtent*D`. For `VkBool32`, if the
+     property is `VK_TRUE`, `"min"` indicates the presence of a requirement,
+     while `"max"` indicates the presence of a capability, respectively.
+  ** `"pot"` denotes a value that must be a power of two.
      They may also apply to arrays and `VkExtent*D`.
   ** `"mul"` denotes a value that must be an integer multiple of this limit.
      They may also apply to arrays and `VkExtent*D`.
   ** `"bits"` corresponds to the bits precision of an implementation.
-  ** `"bitmask"` corresponds to bitmasks and `VkBool32`, where set bits
-     indicate the presence of a capability
-  ** `"range"` specifies a [min, max] range
+  ** `"bitmask"` corresponds to bitmasks, where set bits indicate the
+     presence of a capability.
+  ** `"range"` specifies a [min, max] range.
   ** `"struct"` means that the member's fields should be compared.
-  ** `"exact"` specifies a limit that must be a specific value.
+  ** `"exact"` specifies a limit that must exactly match the member value.
   ** `"noauto"` limits cannot be trivially compared.
      This is the default value, if unspecified.
   * attr:objecttype - only applicable for members which are `uint64_t`
@@ -653,9 +729,10 @@ Explicitly specifying `optional="false"` is not supported, but
     Specifies the name of another member which must be a `VkObjectType` or
     `VkDebugReportObjectTypeEXT` value specifying the type of object the
     handle refers to.
-  * attr:stride - if the member is an array, stride specifies the name of
-    another member containing the byte stride between consecutive elements
-    in the array. Is assumed tightly packed if omitted.
+  * attr:featurelink - only applicable for members representing a Boolean API
+    feature. Specifies that the feature has a link in the specification that
+    does not match the name of the feature. Typically for features in
+    extensions that were later promoted but with changes.
 
 
 ==== Contents of tag:member Tags
@@ -668,7 +745,6 @@ In addition it may contain several semantic tags:
     It contains text which is a valid type name found in another tag:type
     tag, and indicates that this type must be previously defined for the
     definition of the command to succeed.
-    Builtin C types should not be wrapped in tag:type tags.
   * The tag:name tag is required, and contains the struct/union member name
     being described.
   * The tag:enum tag is optional.
@@ -782,7 +858,6 @@ In some cases these correspond to a C `enum`, and in some cases they are
 simply compile time constants (e.g. `#define`).
 
 [NOTE]
-.Note
 ====
 It would make more sense to call these `const` or `define` tags.
 This is a historical hangover from the OpenGL XML format which this schema
@@ -797,9 +872,9 @@ was based on.
     group.
     If present, this attribute should match the attr:name attribute of a
     corresponding tag:type tag.
-  * attr:type - optional.
+  * attr:type - required.
     String describing the data type of the values of this group of enums.
-    At present the only accepted categories are `enum` and `bitmask`, as
+    The accepted categories are `bitmask`, `constants`, and `enum`, as
     described below.
   * attr:comment - optional.
     Arbitrary string (unused).
@@ -840,7 +915,7 @@ this results in
 [[tag-enum]]
 = Enumerants (tag:enum Tag)
 
-Each tag:enum tag defines a single Vulkan (or other API) token.
+Each tag:enum tag defines a single API token.
 
 == Attributes of tag:enum Tags
 
@@ -878,8 +953,8 @@ Each tag:enum tag defines a single Vulkan (or other API) token.
     <<compile-time-constants, compile time constant>>, in which case it is
     required when using some output generator paths.
     If present the attribute must be a C scalar type corresponding to the
-    type of attr:value, although only `uint32_t`, `uint64_t`, and `float`
-    are currently meaningful.
+    type of attr:value, although only `uint8_t`, `uint32_t`, `uint64_t`,
+    and `float` are currently meaningful.
     attr:type is used by some output generators to generate constant
     declarations, although the default behavior is to use C `#define` for
     compile time constants.
@@ -893,9 +968,8 @@ Each tag:enum tag defines a single Vulkan (or other API) token.
     An additional preprocessor token used to protect an enum definition.
 
 [NOTE]
-.Note
 ====
-Using attr:alias on a tag:enum means you want the attr:name defined by the
+Using attr:alias on an tag:enum means you want the attr:name defined by the
 tag to be treated as an alias of the token name in the attr:alias attribute
 value.
 For example, the following tag defines `VK_ALIAS` as an alias of `VK_VALUE`:
@@ -907,7 +981,6 @@ For example, the following tag defines `VK_ALIAS` as an alias of `VK_VALUE`:
 ====
 
 [NOTE]
-.Note
 ====
 In older versions of the schema, attr:type was described as allowing only
 the C integer suffix types `u` and `ull`, which is inconsistent with the
@@ -933,7 +1006,6 @@ This just tracks the unused values for the Registrar's use, and is not used
 for header generation.
 
 [NOTE]
-.Note
 ====
 tag:unused tags could be generated and inserted automatically, which would
 be a good way to avoid the attributes becoming out of date.
@@ -1014,6 +1086,15 @@ In this case the allowed attributes include:
   * attr:errorcodes - optional.
     A string describing possible error return codes from the command, as a
     comma-separated list of Vulkan result code names.
++
+--
+[NOTE]
+====
+attr:errorcodes must include `VK_ERROR_UNKNOWN` and
+`VK_ERROR_VALIDATION_FAILED` even if there are no other possible error
+codes.
+====
+--
   * attr:renderpass - optional.
     A string identifying whether the command can be issued only inside a
     render pass (`"inside"`), only outside a render pass (`"outside"`), or
@@ -1028,6 +1109,13 @@ In this case the allowed attributes include:
     called by.
     The format of the string is one or more of the terms `"primary"` and
     `"secondary"`, with multiple terms separated by commas (`","`).
+  * attr:conditionalrendering - required for `vkCmd*` commands.
+    Not allowed for other commands.
+    A value of `"true"` specifies that this command is affected by
+    conditional rendering, and `"false"` that it is not affected.
+  * attr:allownoqueues - optional.
+    A value of `"true"` specifies that this command can be used in a device
+    with no queues. If not present, the value is assumed to be `"false"`.
   * attr:comment - optional.
     Arbitrary string (unused).
 
@@ -1082,7 +1170,6 @@ optional and may be in any order:
     The text is intended to be incorporated into the API specification.
 
 [NOTE]
-.Note
 ====
 Versions of the registry documentation prior to 1.1.93 asserted that command
 aliases "`resolve to the _same_ entry point in the underlying layer stack.`"
@@ -1116,8 +1203,6 @@ In addition to text, it may contain two semantic tags:
     name found in a tag:type tag.
     It indicates that this type must be previously defined for the
     definition of the command to succeed.
-    Builtin C types, and any derived types which are expected to be found in
-    other header files, should not be wrapped in tag:type tags.
   * The tag:name tag is required, and contains the command name being
     described.
 
@@ -1139,24 +1224,36 @@ and union members.
     This definition is only used if the requested API name matches the
     attribute.
     May be used to address subtle incompatibilities.
-  * attr:len - if the param is an array, len may be one or more of the
-    following things, separated by commas (one for each array indirection):
-    another param of that command; `"null-terminated"` for a string; `"1"`
-    to indicate it is just a pointer (used for nested pointers); or an
-    equation in math markup for incorporation in the specification (a LaTeX
-    math expression delimited by `latexmath:[` and `]`.
-    The only variables in the equation should be the names of this or other
-    parameters.
+  * attr:len - valid length of the data described by the parameter.
+    If the parameter is a static array, attr:len must be less than or equal
+    to the size of the array; if not present for a static array, all
+    elements of the array are considered valid.
+    If the parameter is a pointer, attr:len is the length of the pointed-to
+    data.
+    attr:len must contain one or more expressions defining length (one for
+    each array indirection), separated by commas.
+    Each expression may be one of:
+  ** an equation in math markup for incorporation in the specification (a
+     LaTeX math expression delimited by `latexmath:[` and `]`.
+     The only variables in the equation should be the names of parameters of
+     the command;
+  ** the name of another parameter of the command specifying the length
+     for the corresponding indirection;
+  ** `"null-terminated"`, indicating a pointer to a null-terminated UTF-8
+     string;
+  ** `"1"` to indicate it is just a pointer (used for nested pointers);
+  ** a C99 expression that refers to another parameter of the command
+     indirectly specifying the length for the corresponding indirection;
+  ** or a custom expression that cannot be used directly by code generation
+     and needs manual handling.
   * attr:altlen - if the attr:len attribute is specified, and contains a
-    `latexmath:` equation, this attribute should be specified with an
-    equivalent equation using only C builtin operators, C math library
-    function names, and variables as allowed for attr:len.
-    It must be a valid C99 expression whose result is equal to attr:len for
-    all possible inputs.
-    It is a comma separated list that has size equal to only the `latexmath`
-    item count in attr:len list.
+    `latexmath:` equation, this contains one or more of the other options
+    above, separated by commas (one for each array indirection).
     This attribute is intended to support consumers of the XML who need to
     generate validation code from the allowed length.
+  * attr:stride - if the member is an array, stride specifies the name of
+    another member containing the byte stride between consecutive elements
+    in the array. The array is assumed to be tightly packed if omitted.
   * attr:optional - optional.
     A value of `"true"` specifies that this parameter can be omitted by
     providing `NULL` (for pointers), `VK_NULL_HANDLE` (for handles), or 0
@@ -1168,7 +1265,6 @@ and union members.
 +
 --
 [NOTE]
-.Note
 ====
 While the attr:optional attribute can be used for scalar types such as
 integers, it does not affect the output generators included with the
@@ -1192,18 +1288,24 @@ Explicitly specifying `optional="false"` is not supported, but
     A value of `"true"` indicates that this parameter (e.g. the object a
     handle refers to, or the contents of an array a pointer refers to) is
     modified by the command, and is not protected against modification in
-    multiple app threads.
-    If only certain members of an object or elements of an array are
-    modified, multiple strings may be provided, separated by commas.
-    Each string describes a member which is modified.
-    For example, the `VkPresentInfoKHR` struct includes attr:externsync
-    attributes for the `pPresentInfo` array indicating that only specific
-    members of each element of the array are modified:
+    multiple application threads.
+    If the parameter needs to be externally synchronized under specific
+    conditions, a value of `"maybe"` is used to indicate that the exact rule is
+    specified in the Valid Usage language.
+    If only a certain member of an object or elements of an array are
+    modified, an expression string may be provided, describing the member which
+    is modified.
+    This expression may be prefixed by `maybe:` to indicate conditional
+    external synchronization requirements specified in the Valid Usage
+    language.
+    For example, the `vkSetDebugUtilsObjectNameEXT` command includes attr:externsync
+    attributes for the `pNameInfo` parameter indicating that a specific
+    member of the parameter is externally synchronized:
 +
 --
 [source,xml]
 --------------------------------------
-<param externsync="pPresentInfo-&gt;pWaitSemaphores[],pPresentInfo-&gt;pSwapchains[]">const <type>VkPresentInfoKHR</type>* <name>pPresentInfo</name></param>
+<param externsync="pNameInfo-&gt;objectHandle">const <type>VkDebugUtilsObjectNameInfoEXT</type>* <name>pNameInfo</name></param>
 --------------------------------------
 
 Parameters which do not have an attr:externsync attribute are assumed to not
@@ -1231,8 +1333,6 @@ In addition it may contain two semantic tags:
   * The tag:type tag is optional, and contains text which is a valid type
     name found in tag:type tag, and indicates that this type must be
     previously defined for the definition of the command to succeed.
-    Builtin C types, and any derived types which are expected to be found in
-    other header files, should not be wrapped in tag:type tags.
   * The tag:name tag is required, and contains the parameter name being
     described.
 
@@ -1275,25 +1375,67 @@ that API and version.
     Version name, used as the C preprocessor token under which the version's
     interfaces are protected against multiple inclusion.
     Example: `"VK_VERSION_1_0"`.
-  * attr:number - required.
+  * attr:number - required, but deprecated and will eventually be removed.
     Feature version number, usually a string interpreted as
     `majorNumber.minorNumber`.
     Example: `4.2`.
++
+--
+[NOTE]
+====
+attr:number is deprecated, replaced by attr:depends.
+attr:number is retained only for backwards compatibility with downstream
+consumers, and will eventually be removed.
+====
+--
+  * attr:depends - optional.
+    String containing a boolean expression of one or more API core version
+    and extension names.
+    The feature requires the expression in the string to be satisfied to
+    use any functionality it defines.
+    Supported operators include `,` for logical OR, `+` for logical AND, and
+    `(` `)` for grouping.
+    `,` and `+` are of equal precedence, and lower than `(` `)`.
+    Expressions must be evaluated left-to-right for operators of the same
+    precedence.
+    Terms which are core version names are true if the corresponding
+    API version is supported.
+    Terms which are extension names are true if the corresponding extension
+    is enabled.
++
+--
+[NOTE]
+====
+attr:depends replaces the attr:number attribute used in the past.
+The expected purposes of this attribute include sorting features in
+dependency order when emitting them from generator scripts, and ensuring
+that all dependent features are included when building with a specified
+feature.
+====
+--
   * attr:sortorder - optional.
     A decimal number which specifies an order relative to other tag:feature
     tags when calling output generators.
     Defaults to `0`.
-    Rarely used, for when ordering by attr:name is insufficient.
+    Used when ordering by attr:name is insufficient.
   * attr:protect - optional.
     An additional preprocessor token used to protect a feature definition.
     Usually another feature or extension attr:name.
-    Rarely used, for odd circumstances where the definition of a feature or
-    extension requires another to be defined first.
+    Used when the definition of a feature or extension requires another to
+    be defined first.
   * attr:comment - optional.
     Arbitrary string (unused).
 
 [NOTE]
-.Note
+====
+The attr:sortorder and attr:protect attributes may not be used
+in the XML at times.
+If writing an <<implementations, alternate registry processing framework>>,
+refer to the notes on <<implementations-rare, rarely used tags and
+attributes>>.
+====
+
+[NOTE]
 ====
 The attr:name attribute used for Vulkan core versions, such as
 `"VK_VERSION_1_0"`, is not an API construct.
@@ -1305,10 +1447,10 @@ values are packed integers containing Vulkan core version numbers.
 
 == Contents of tag:feature Tags
 
-Zero or more <<tag-required,tag:require and tag:remove tags>>, in arbitrary
-order.
-Each tag describes a set of interfaces that is respectively required for, or
-removed from, this feature, as described below.
+Zero or more <<tag-required,tag:require, tag:remove, and tag:deprecate
+tags>>, in arbitrary order.
+Each tag describes a set of interfaces that is respectively required for,
+removed from, or deprecated by this feature, as described below.
 
 == Example of a tag:feature Tag
 
@@ -1388,7 +1530,7 @@ implemented against.
     A decimal number which specifies an order relative to other
     tag:extension tags when calling output generators.
     Defaults to `0`.
-    Rarely used, for when ordering by attr:number is insufficient.
+    Used when ordering by attr:number is insufficient.
   * attr:author - optional.
     The author name, such as a full company name.
     If not present, this can be taken from the corresponding tag:tag
@@ -1411,7 +1553,7 @@ implemented against.
     `'disabled'`.
     Must be either `'device'` or `'instance'`, if present.
   * [[depends-expressions]] attr:depends - optional.
-    String containing a boolean expression of one or more API core version
+    String containing a boolean expression of one or more API core versions
     and extension names.
     The extension requires the expression in the string to be satisfied to
     use any functionality it defines (for instance extensions), or to use
@@ -1428,7 +1570,6 @@ implemented against.
 +
 --
 [NOTE]
-.Note
 ====
 attr:depends is a breaking change in Vulkan 1.3.241, replacing the
 `requires` and `requiresCore` attributes.
@@ -1450,8 +1591,8 @@ logical AND, and must be replaced by `+` in the `depends` attribute.
     An additional preprocessor token used to protect an extension
     definition.
     Usually another feature or extension attr:name.
-    Rarely used, for odd circumstances where the definition of an extension
-    requires another extension or a header file to be defined first.
+    Used when the definition of a feature or extension requires another to
+    be defined first.
   * attr:platform - optional.
     Indicates that the extension is specific to the platform identified by
     the attribute value, and should be emitted conditional on that platform
@@ -1505,11 +1646,15 @@ logical AND, and must be replaced by `+` in the `depends` attribute.
      libraries.
   ** 'glemulation' - for support of OpenGL and/or OpenGL ES emulation layers
      or libraries, or applications porting from those APIs.
+  * attr:nofeatures - optional.
+    `"true"` if this extension is intended to not have any
+    <<tag-required-feature, individual tag:feature tags>>, `"false"`
+    otherwise.
+    Defaults to `"false"` if not specified.
   * attr:comment - optional.
     Arbitrary string (unused).
 
 [NOTE]
-.Note
 ====
 The attr:depends attribute is used to specify other extensions that *must*
 be enabled for an extension to be enabled.
@@ -1582,36 +1727,46 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateSharedSwapchainsKHR(
 
 
 [[tag-required]]
-= Required and Removed Interfaces (tag:require and tag:remove Tags)
+= Required, Removed, and Deprecated Interfaces (tag:require, tag:remove, and tag:deprecate Tags)
 
 A tag:require block defines a set of interfaces (types, enumerants and
 commands) 'required' by a tag:feature or tag:extension.
+
 A tag:remove block defines a set of interfaces 'removed' by a tag:feature.
 This is primarily for future profiles of an API which may choose to
 deprecate and/or remove some interfaces.
 Extensions should never remove interfaces, although this usage is allowed by
-the schema).
-Except for the tag name and behavior, the contents of tag:require and
-tag:remove tags are identical.
+the schema.
 
-== Attributes of tag:require and tag:remove Tags
+A tag:deprecate block defines a set of interfaces 'deprecated' by a
+tag:feature.
+This will mark the tagged functionality in the spec as deprecated by this
+version.
+Extensions should never deprecate interfaces, although this usage is allowed
+by the schema.
+
+Except for the tag name and behavior, the contents of tag:require, tag:remove
+and tag:deprecate tags are identical.
+
+
+== Attributes of tag:require, tag:remove, and tag:deprecate Tags
 
   * attr:profile - optional.
     String name of an API profile.
-    Interfaces in the tag are only required (or removed) if the specified
-    profile is being generated.
-    If not specified, interfaces are required (or removed) for all API
-    profiles.
+    Interfaces in the tag are only required, removed, or deprecated if the
+    specified profile is being generated.
+    If not specified, interfaces are required, removed, or deprecated for all
+    API profiles.
   * attr:comment - optional.
     Arbitrary string (unused).
   * attr:api - optional comma-separated list of <<schema:apiname, API
-    names>> requiring or removing these interfaces.
-    Interfaces in the tag are only required (or removed) if the requested
-    API name matches an element of the attribute.
-    If not specified, interfaces are required (or removed) for all APIs.
+    names>> requiring, removing, or deprecating these interfaces.
+    Interfaces in the tag are only required, removed, or deprecated if the
+    requested API name matches an element of the attribute.
+    If not specified, interfaces are required, removed, or deprecated for all
+    APIs.
 
 [NOTE]
-.Note
 ====
 The attr:api attribute is only supported inside tag:extension tags, since
 tag:feature tags already define a specific API.
@@ -1625,19 +1780,42 @@ These attributes are allowed only for a tag:require tag.
     String containing a boolean expression of one or more API core version
     and extension names.
     The <<depends-expressions, syntax of this string>> is identical to that
-    of the tag:extension attr:depends attribute.
+    of the tag:extension attr:depends attribute, except that feature
+    Booleans may additionally be included using C struct notation (e.g.
+    `VkStructName::parameterName`).
+    Terms which are feature Booleans are true if the corresponding feature
+    is enabled for device level functionality, or simply supported
+    otherwise.
     Interfaces in the tag are only required if the expression is satisfied.
 +
 --
 [NOTE]
-.Note
 ====
 attr:depends is a breaking change in Vulkan 1.3.241, replacing the
 `extension` and `feature` attributes.
 ====
 --
 
-== Contents of tag:require and tag:remove Tags
+
+[[tag-required-remove]]
+== Attributes of tag:remove Tags
+
+These attributes are allowed only for a tag:remove tag.
+
+  * attr:reasonlink - optional, and only used when generating
+    <<tag-required-feature, individual tag:feature documentation>>.
+    String containing the name of an asciidoc anchor in the <<vulkan-spec,
+    Vulkan API Specification>> to link to, explaining the removal.
+
+[[tag-required-deprecate]]
+== Attributes of tag:deprecate Tags
+
+These attributes are allowed only for a tag:deprecate tag.
+
+  * attr:explanation - a link to an explanation in the specification of why
+    the tagged functionality is deprecated.
+
+== Contents of tag:require, tag:remove, and tag:deprecate Tags
 
 Zero or more of the following tags, in any order:
 
@@ -1647,7 +1825,7 @@ Zero or more of the following tags, in any order:
 
 === Command Tags
 
-tag:command specifies an required (or removed) command defined in a
+tag:command specifies a required, removed, or deprecated command defined in a
 tag:commands block.
 The tag has no content, but contains attributes:
 
@@ -1658,7 +1836,7 @@ The tag has no content, but contains attributes:
 
 === Enum Tags
 
-tag:enum specifies an required (or removed) enumerant defined in a tag:enums
+tag:enum specifies a required, removed, or deprecated enumerant defined in an tag:enums
 block.
 All forms of this tag support the following attributes:
 
@@ -1681,10 +1859,10 @@ No attributes other than attr:name and attr:comment are supported for them.
 tag:enum tags appearing inside tag:remove tags should always be reference
 enums.
 Reference enums may also be used inside tag:require tags, if the
-corresponding value is defined in a tag:enums block.
+corresponding value is defined in an tag:enums block.
 This is typically used for constants not part of an enumerated type.
 
-_Extension enums_ define the value of an enumerant inline in an tag:feature
+_Extension enums_ define the value of an enumerant inline in a tag:feature
 or tag:extensions block.
 Typically these are used to add additional values specified by an extension
 or core feature to an existing enumerated type.
@@ -1716,7 +1894,7 @@ enumerant:
     block is given by the attr:number attribute of the surrounding
     tag:extension tag.
     The numeric value of an enumerant is computed as defined in the
-    ``Assigning Extension Token Values`" section of the <<vulkan-styleguide,
+    ``Assigning Extension Token Values`` section of the <<vulkan-styleguide,
     Vulkan Documentation and Extensions: Procedures and Conventions>>
     document.
   * Attribute attr:dir - if present, the calculated enumerant value will be
@@ -1733,7 +1911,7 @@ enumerant:
     It may also be used when token names have been changed as a result of
     profile changes, or for consistency purposes.
   * attr:protect - define a preprocessor protection symbol for the enum in
-    the same fashion as a tag:enum tag in an <<tag-enum,tag:enums>> block.
+    the same fashion as an tag:enum tag in an <<tag-enum,tag:enums>> block.
 
 Not all combinations of attributes are either meaningful or supported.
 The attr:protect attribute may always be present.
@@ -1766,13 +1944,13 @@ are given below.
 
 === Type Tags
 
-tag:type specifies a required (or removed) type defined in a tag:types
+tag:type specifies a required, removed, or deprecated type defined in a tag:types
 block.
 Most types are picked up implicitly by using the tag:type tags of commands,
 but in a few cases, additional types need to be specified explicitly.
 It is unlikely that a type would ever be removed, although this usage is
 allowed by the schema.
-The tag has no content, but contains elements:
+The tag has no content, but contains attributes:
 
   * attr:name - required.
     Name of the type.
@@ -1820,6 +1998,48 @@ typedef enum VkResult {
 #define VK_KHR_bitmask 0x20000000
 --------------------------------------
 
+
+[[tag-required-feature]]
+=== Individual Feature Tags
+
+tag:feature specifies a required, removed, or deprecated feature, as described in the
+"`Features`" chapter of the <<vulkan-spec, Vulkan API Specification>>.
+The tag has no content, but contains attributes:
+
+  * attr:name - feature name(s).
+    Can be a single element or a comma-separated list.
+    Each element is the name of the feature, and also the name of a member of
+    the corresponding attr:struct structure.
+    If multiple elements are present, indicates that at least one of the
+    elements must be supported.
+    Multiple tags should be used to require multiple features.
+  * attr:struct - feature structure name.
+    Name of the structure queried to determine support for the feature.
+    Must only ever be a single struct name, and all elements of attr:name
+    must be from the same structure.
+  * attr:comment - optional.
+    Arbitrary string (unused).
+
+[NOTE]
+====
+This tag has the same name as the <<tag-feature, API Features>> tag.
+This is an unfortunate consequence of overloading the term "`feature`",
+originally used in the XML schema to refer to a core version of the API but
+also used in the <<vulkan-spec, Vulkan API Specification>> to refer to an
+individual capability introduced by a new extension or core version.
+
+Fortunately, there is no ambiguity in XML parsing since the two tag:feature
+tags are used at different structural levels.
+====
+
+[WARNING]
+====
+Please note that including an individual tag:feature tag in a tag:require block
+with a attr:depends attribute that includes parentheses for complex dependencies
+is currently not supported, and an error will be generated.
+This will be fixed in future, as it is intended to be supported, but it was
+not necessary for feature requirements as initially proposed.
+====
 
 [[tag-formats]]
 = Formats (tag:formats Tag)
@@ -1937,15 +2157,22 @@ are part of an image format.
   * attr:numericFormat - required.
     A string specifying the scalar data type of the component.
     Must be one of the following values:
+  ** `"SFIXED5"` - signed fractional integer values that get converted to
+     floating-point in the range [eq]#[-1024,1023.96875]#
   ** `"SFLOAT"` - signed floating-point numbers
   ** `"SINT"` - signed integer values in the range [-2^n-1^,2^n-1^-1]
   ** `"SNORM"` - signed normalized values in the range [-1,1]
-  ** `"SRGB"` - R, G, and B components are unsigned normalized values that represent values using sRGB nonlinear encoding, while the A component (if one exists) is a regular unsigned normalized value
-  ** `"SSCALED"` - signed integer values that get converted to floating-point in the range [-2^n-1^,2^n-1^-1]
-  ** `"UFLOAT"` - unsigned floating-point numbers (used by packed, shared exponent, and some compressed formats)
+  ** `"SRGB"` - R, G, and B components are unsigned normalized values that
+     represent values using sRGB nonlinear encoding, while the A component
+     (if one exists) is a regular unsigned normalized value
+  ** `"SSCALED"` - signed integer values that get converted to
+     floating-point in the range [-2^n-1^,2^n-1^-1]
+  ** `"UFLOAT"` - unsigned floating-point numbers (used by packed, shared
+     exponent, and some compressed formats)
   ** `"UINT"` - unsigned integer values in the range [0,2^n^-1]
   ** `"UNORM"` - unsigned normalized values in the range [0,1]
-  ** `"USCALED"` - unsigned integer values that get converted to floating-point in the range [0,2^n^-1]
+  ** `"USCALED"` - unsigned integer values that get converted to
+     floating-point in the range [0,2^n^-1]
   * attr:planeIndex - optional.
     A decimal integer specifying which plane this component lies in.
     If present, must correspond to the attr:index attribute value of a
@@ -2017,7 +2244,7 @@ extensions which are defined for the API.
 == Contents of tag:spirvextensions Tags
 
 Each tag:spirvextensions block contains zero or more tag:spirvextension tags, each
-describing an single SPIR-V extension, in arbitrary order.
+describing a single SPIR-V extension, in arbitrary order.
 
 
 [[tag-spirvextension]]
@@ -2062,7 +2289,7 @@ capabilities which are defined for the API.
 == Contents of tag:spirvcapabilities Tags
 
 Each tag:spirvcapabilities block contains zero or more tag:spirvcapability
-tags, each describing an single SPIR-V capability, in arbitrary order.
+tags, each describing a single SPIR-V capability, in arbitrary order.
 
 
 [[tag-spirvcapability]]
@@ -2105,6 +2332,75 @@ There are four forms of tag:enable tags corresponding to different ways the
 API may advertise enablement, though not all forms may be used with
 tag:spirvextension tags.
 Each form is described separately below.
+
+== Attributes for API Version Number Enables
+
+  * attr:version - required.
+    An API feature name, matching a tag:feature attr:name attribute value.
+
+If the API version is supported, the SPIR-V extension or capability is
+enabled.
+
+== Attributes for API Extension Enables
+
+  * attr:extension - required.
+    An API extension name, matching an tag:extension attr:name attribute
+    value.
+
+If the API extension is supported and enabled, the SPIR-V extension or
+capability is enabled.
+
+== Attributes for API Feature Enables
+
+  * attr:struct - required.
+    An API feature structure name, matching a tag:type attr:name attribute
+    of a structure tag:type.
+  * attr:feature - required.
+    An API feature name, matching a tag:member tag:name value of the feature
+    structure.
+  * attr:requires - required.
+    A comma-separated list of API feature version numbers and/or extension
+    names.
+  * attr:alias - optional.
+    Another API feature name which is an alias of attr:feature.
+    Needed when the same feature is provided by two different API versions
+    or extensions.
+
+If one of the API feature version numbers or extensions in the attr:requires
+list is supported or enabled, respectively; and if the attr:feature name is
+enabled in the feature structure, the SPIR-V capability is enabled.
+
+API feature enables are not supported for tag:spirvextension tags.
+
+== Attributes for API Property Enables
+
+  * attr:property - required.
+    An API feature structure name, matching a tag:type attr:name attribute
+    of a structure tag:type.
+  * attr:member - required.
+    An API property name, matching a tag:member tag:name value of the
+    attr:property structure.
+  * attr:value - required.
+    A value, matching an API tag:enum tag:name value.
+    If the property is a bitfield, tag:value must be a bitmask value
+    belonging to the attr:member bitfield type.
+    Otherwise, tag:value must be an tag:enum name defined for the
+    attr:member enumeration type.
+  * attr:requires - optional.
+    A comma-separated list of API feature version numbers and/or extension
+    names.
+
+If one of the API feature version numbers or extensions in the attr:requires
+list is supported or enabled, respectively; and if the attr:member property
+contains the tag:value bit, or matches the tag:value, the SPIR-V capability
+is enabled.
+
+API property enables are not supported for tag:spirvextension tags.
+
+== Contents of tag:enable Tags
+
+None.
+
 
 [[tag-syncstage]]
 = Sync Stage (tag:syncstage Tag)
@@ -2185,73 +2481,114 @@ relationship of Sync elements
     A comma-separated list of Sync Accesses that are the OR logical
     equivalence of the parent Sync Element
 
-== Attributes for API Version Number Enables
 
-  * attr:version - required.
-    An API feature name, matching a tag:feature attr:name attribute value.
+[[tag-videocodecs]]
+= Video Codecs (tag:videocodecs Tag)
 
-If the API version is supported, the SPIR-V extension or capability is
-enabled.
+The tag:videocodecs tag contains information about video codecs.
 
-== Attributes for API Extension Enables
+[[tag-videocodec]]
+= Video Codec (tag:videocodec Tag)
 
-  * attr:extension - required.
-    An API extension name, matching an tag:extension attr:name attribute
-    value.
+The tag:videocodec tag defines a video codec category (e.g. decode or
+encode) or specific video codec (e.g. H.264 decode).
 
-If the API extension is supported and enabled, the SPIR-V extension or
-capability is enabled.
+== Attributes of tag:videocodec Tags
 
-== Attributes for API Feature Enables
+  * attr:name - descriptive name of the video codec category or specific
+    video codec
+  * attr:extend - descriptive name of the video codec category a specific
+    video codec specializes
+  * attr:value - the `VkVideoCodecOperationFlagBitsKHR`` value identifying a
+    specific video codec
 
-  * attr:struct - required.
-    An API feature structure name, matching a tag:struct attr:name attribute
-    value.
-  * attr:feature - required.
-    An API feature name, matching a tag:member tag:name value of the feature
-    structure.
-  * attr:requires - required.
-    A comma-separated list of API feature version numbers and/or extension
-    names.
-  * attr:alias - optional.
-    Another API feature name which is an alias of attr:feature.
-    Needed when the same feature is provided by two different API versions
-    or extensions.
+[[tag-videoprofiles]]
+= Video Profiles (tag:videoprofiles Tag)
 
-If one of the API feature version numbers or extensions in the attr:requires
-list is supported or enabled, respectively; and if the attr:feature name is
-enabled in the feature structure, the SPIR-V capability is enabled.
+The tag:videoprofiles tag defines video profiles supported by a specific
+video codec. Actual video profiles are derived as combinations of general
+video profile information included in `VkVideoProfileInfoKHR` and additional
+video codec specific video profile structure member values.
 
-API feature enables are not supported for tag:spirvextension tags.
+== Attributes of tag:videoprofiles Tags
 
-== Attributes for API Property Enables
+  * attr:struct - name of the video profile info structure corresponding to
+    the specific video codec
 
-  * attr:property - required.
-    An API property structure name, matching a tag:struct attr:name
-    attribute value.
-  * attr:member - required.
-    An API property name, matching a tag:member tag:name value of the
-    attr:property structure.
-  * attr:value - required.
-    A value, matching an API tag:enum tag:name value.
-    If the property is a bitfield, tag:value must be a bitmask value
-    belonging to the attr:member bitfield type.
-    Otherwise, tag:value must be an tag:enum name defined for the
-    attr:member enumeration type.
-  * attr:requires - optional.
-    A comma-separated list of API feature version numbers and/or extension
-    names.
+[[tag-videoprofilemember]]
+= Video Profile Member (tag:videoprofilemember Tag)
 
-If one of the API feature version numbers or extensions in the attr:requires
-list is supported or enabled, respectively; and if the attr:member property
-contains the tag:value bit, or matches the tag:value, the SPIR-V capability
-is enabled.
+The tag:videoprofilemember tag defines video profiles with respect to
+specific video profile structure members.
 
-API property enables are not supported for tag:spirvextension tags.
+== Attributes of tag:videoprofilemember Tags
 
-== Contents of tag:enable Tags
+  * attr:name - name of the video profile structure member
 
-None.
+[[tag-videoprofile]]
+= Video Profile (tag:videoprofile Tag)
+
+The tag:videoprofile tag defines a video profile with respect to specific
+video profile structure members.
+
+== Attributes of tag:videoprofile Tags
+
+  * attr:name - descriptive name of the video profile
+  * attr:value - value of the video profile structure member in case of this
+    video profile
+
+[[tag-videocapabilities]]
+= Video Capabilities (tag:videocapabilities Tag)
+
+The tag:videocapabilities tag specifies a capability structure that applies
+to the video codec category or specific video codec.
+
+== Attributes of tag:videocapabilities Tags
+
+  * attr:struct - name of the video capability structure
+
+[[tag-videoformat]]
+= Video Format (tag:videoformat Tag)
+
+The tag:videoformat tag defines a video format category that applies to the
+video codec category or specific video codec.
+
+== Attributes of tag:videoformat Tags
+
+  * attr:name - descriptive name of the video format category
+  * attr:usage - image usage flags expected to be specified in
+    `VkPhysicalDeviceVideoFormatInfoKHR::imageUsage` to query the format
+    properties for the video format category ("," and "+" can be used to
+    express disjunction and conjunction, respectively)
+
+[[tag-videoformatproperties]]
+= Video Format Properties (tag:videoformatproperties Tag)
+
+The tag:videoformatproperties tag specifies a video format property
+structure that applies to a video format category.
+
+== Attributes of tag:videoformatproperties Tags
+
+  * attr:struct - name of the video format property structure
+
+[[tag-videorequirecapabilities]]
+= Video Capability Prerequisites (tag:videorequirecapabilities Tag)
+
+The tag:videorequirecapabilities tag can be used inside
+<<tag-videoformat,tag:videoformat>> tags to define
+video capability prerequisites for video format categories.
+If more tag:videorequirecapabilities elements are specified, then the
+overall precondition is the conjunction of the individual preconditions.
+
+== Attributes of tag:videorequirecapabilities Tags
+
+  * attr:struct - name of the capability structure used to determine the
+    precondition
+  * attr:member - name of the capability structure member used to determine
+    the precondition
+  * attr:value - the value the member should have to meet the precondition
+    ("," and "+" can be used to express disjunction and conjunction,
+    respectively)
 
 
 [[examples]]
@@ -2370,10 +2707,10 @@ These correspond to the definitions found in the first tag:enums section of
 
 [source,xml]
 --------------------------------------
-<enums name="API Constants"
+<enums name="API Constants" type="constants"
        comment="Vulkan hardcoded constants - not an enumerated type, part of the header boilerplate">
-    <enum value="256"        name="VK_MAX_PHYSICAL_DEVICE_NAME"/>
-    <enum value="256"        name="VK_MAX_EXTENSION_NAME"/>
+    <enum type="uint32_t" value="256"   name="VK_MAX_PHYSICAL_DEVICE_NAME"/>
+    <enum type="uint32_t" value="256"   name="VK_MAX_EXTENSION_NAME"/>
     ...
 --------------------------------------
 
@@ -2467,7 +2804,7 @@ extern "C" {
 #endif
 
 /*
-** Copyright 2015-2024 The Khronos Group Inc.
+** Copyright 2015-2025 The Khronos Group Inc.
     ...
 */
 
@@ -2574,7 +2911,7 @@ specified features are generated.
 == How to Add a Compile Time Constant
 
 Go to the desired tag:feature or tag:extension tag.
-Add (if not present) a nested tag:require block labelled
+Add (if not present) a nested tag:require block labeled
 
 [source,xml]
 --------------------------------------
@@ -2588,11 +2925,11 @@ In this block, add an (appropriately indented) tag like
     <enum name="VK_THE_ANSWER"/>
 --------------------------------------
 
-Then go to the tag:enums block labelled
+Then go to the tag:enums block labeled
 
 [source,xml]
 --------------------------------------
-<enums comment="Misc. hardcoded constants - not an enumerated type">
+<enums name="API Constants" type="constants" ...>
 --------------------------------------
 
 In this block, add a tag whose attr:name attribute matches the attr:name you
@@ -2646,7 +2983,7 @@ used.
 Otherwise, if the struct type is not used directly by a command in the API,
 nor required by a chain of type dependencies for other commands, an explicit
 tag:type dependency should be added to the tag:feature tag.
-Go to the tag:types tag and search for the nested block labelled
+Go to the tag:types tag and search for the nested block labeled
 
 [source,xml]
 --------------------------------------
@@ -2720,7 +3057,7 @@ API, nor required by a chain of type dependencies for commands and structs,
 an explicit tag:type dependency should be added to the tag:feature tag in
 exactly the same fashion as described above for `struct` types.
 
-Next, go to the line labelled
+Next, go to the line labeled
 
 [source,xml]
 --------------------------------------
@@ -2781,7 +3118,7 @@ exactly the same fashion as described above for `struct` types.
 
 Firstly, a definition is needed for the flags type used as a parameter to
 commands or member of functions.
-Go to the line labelled:
+Go to the line labeled:
 
 [source,xml]
 --------------------------------------
@@ -2800,7 +3137,7 @@ The attr:category defines this as a `"bitmask"` type.
 The attr:bitvalues attribute identifies the `*FlagBits` entry defining the
 flag bits associated with this type.
 
-Next, go to the line labelled:
+Next, go to the line labeled:
 
 [source,xml]
 --------------------------------------
@@ -2819,7 +3156,7 @@ This defines a type for the flag bits for generators that need it.
 The attr:category attribute of `"enum"` identifies that this is an
 enumerated type.
 
-Finally, go to the line labelled:
+Finally, go to the line labeled:
 
 [source,xml]
 --------------------------------------
@@ -3031,6 +3368,54 @@ Changes to the `.xml` files and Python scripts are logged in GitHub history.
 [[changelog]]
 = Change Log
 
+  * 2025-06-18 - Allow attr:selection attributes of members of <<tag-type,
+    `"union"`>> types to include multiple comma-separated selections of the
+    same member (internal issue 4246).
+  * 2025-06-11 - Add <<tag-command, command>> attribute
+    attr:conditionalrendering to specify if a `vkCmd*` command may be
+    affected by conditional rendering (internal issue 4287).
+  * 2025-05-07 - Add "maybe" and "maybe:<expression>" to attr:externsync
+    (internal issues 4175 and 4217)
+  * 2025-04-23 - Add <<tag-required, tag:deprecate>> blocks to features.
+  * 2025-03-19 - Establish and clarify the use of "min" and "max" limit
+    types for boolean limits and remove the, now obsolete, "not" limit type.
+  * 2025-02-19 - Clean up description of the tag:member attr:limittype
+    `"exact"` value (internal MR 7142).
+  * 2024-11-12 - Add tag:extension attr:nofeatures attribute to identify
+    extensions which are known to not have <<tag-required-feature,
+    individual tag:feature tags>> (internal issue 3946).
+  * 2024-10-14 - Add ability to include features in 'depends' attributes for
+    require blocks, as well as enabling simple lists of or/and dependencies
+  * 2024-09-25 - Add ability to have multiple features as an or'd list of
+    requirements
+  * 2024-09-18 - Support the attr:stride attribute for array pointers in
+    both <<tag-command:param:attr, command tag:param>> and <<tag:type,
+    structure tag:member>> tags (public issue 2435).
+  * 2024-08-22 - Add <<tag-required-remove, tag:remove>> attribute
+    attr:reasonlink and <<tag-required, tag:required and tag:remove>>
+    attribute <<tag-required-feature, tag:feature>>, to support adding
+    requirements for individual Vulkan features to the schema (internal
+    issue 3478).
+  * Added notes on <<implementations, alternate registry processing
+    frameworks>> and referred to them for rarely used attributes in the
+    <<tag-feature, tag:feature>> tag (public issue 2395).
+  * 2024-07-18 - Remove out of date guidance that builtin and external types
+    should not be wrapped in tag:type tags, replaced with actual examples in
+    the <<tag-type, tag:type>> section (public issue 2394).
+  * 2024-07-10 - Add video related meta information tags
+  * 2024-05-28 - Deprecate the tag:feature attr:number attribute with the
+    new attr:depends tag (public issue 2327).
+  * 2024-05-08 - Add a tag:enums attr:type `"constants"` value for
+    compile time constant definitions so they can be treated more
+    consistently (public issue 2359).
+  * 2024-04-03 - Add `"SFIXED5"` as an allowed tag:component
+    attr:numericFormat type (internal issue 3802).
+  * 2024-03-20 - Add a NOTE to the tag:command attr:errorcodes attribute
+    that certain errors should never be
+    included in the attribute (internal issue 3824).
+  * 2024-01-31 - Specify the meaning of the tag:member attr:len attribute of
+    structure members when the member is a static array (internal issue
+    3743).
   * 2023-11-24 - Clarify that the `promotedto` relationship which may be
     defined for <<tag-extension, tag:extension>> tags does not promise exact
     API-level compatibility (internal issue 4819).

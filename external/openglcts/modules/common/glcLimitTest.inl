@@ -26,7 +26,7 @@ using namespace glw;
 template<typename DataType>
 LimitCase<DataType>::LimitCase(deqp::Context& context,
 							   const char* caseName,
-							   deUint32 limitToken,
+							   uint32_t limitToken,
 							   DataType limitBoundary,
 							   bool isBoundaryMaximum,
 							   const char* glslVersion,
@@ -144,6 +144,7 @@ tcu::TestNode::IterateResult LimitCase<DataType>::iterate(void)
 	DataType builtinValue = data[0];
 	gl.unmapBuffer(GL_SHADER_STORAGE_BUFFER);
 	gl.bindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	gl.deleteBuffers(1, &buffer);
 
 	if (m_limitToken)
 	{

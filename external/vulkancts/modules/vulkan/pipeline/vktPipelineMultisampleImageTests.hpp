@@ -26,16 +26,18 @@
 #include "vktTestCase.hpp"
 #include "vkPipelineConstructionUtil.hpp"
 
-namespace vkt
-{
-namespace pipeline
+namespace vkt::pipeline
 {
 
-tcu::TestCaseGroup* createMultisampleSampledImageTests (tcu::TestContext& testCtx, vk::PipelineConstructionType pipelineConstructionType);
-tcu::TestCaseGroup* createMultisampleStorageImageTests (tcu::TestContext& testCtx, vk::PipelineConstructionType pipelineConstructionType);
-tcu::TestCaseGroup* createMultisampleStandardSamplePositionTests(tcu::TestContext& testCtx, vk::PipelineConstructionType pipelineConstructionType);
+tcu::TestCaseGroup *createMultisampleSampledImageTests(tcu::TestContext &testCtx,
+                                                       vk::PipelineConstructionType pipelineConstructionType);
+tcu::TestCaseGroup *createMultisampleStorageImageTests(tcu::TestContext &testCtx,
+                                                       vk::PipelineConstructionType pipelineConstructionType);
+tcu::TestCaseGroup *createMultisampleStandardSamplePositionTests(tcu::TestContext &testCtx,
+                                                                 vk::PipelineConstructionType pipelineConstructionType);
+tcu::TestCaseGroup *createMultisampleSamplesMappingOrderTests(tcu::TestContext &testCtx,
+                                                              vk::PipelineConstructionType pipelineConstructionType);
 
-} // pipeline
-} // vkt
+} // namespace vkt::pipeline
 
 #endif // _VKTPIPELINEMULTISAMPLEIMAGETESTS_HPP

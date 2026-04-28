@@ -1,6 +1,6 @@
 //% gcc -c -Wall -I. -I../include htest.c
 
-// Copyright 2019-2024 The Khronos Group Inc.
+// Copyright 2019-2025 The Khronos Group Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 // Simple compilation test for Vulkan headers, including all platform
@@ -21,6 +21,7 @@
 #define VK_USE_PLATFORM_IOS_MVK             // No headers needed
 #define VK_USE_PLATFORM_MACOS_MVK           // No headers needed
 #define VK_USE_PLATFORM_METAL_EXT           // No headers needed
+#define VK_USE_PLATFORM_OHOS                // No headers needed
 #define VK_USE_PLATFORM_VI_NN               // No headers needed
 #define VK_USE_PLATFORM_WAYLAND_KHR         // <wayland-client.h>
 #define VK_USE_PLATFORM_WIN32_KHR           // <windows.h>

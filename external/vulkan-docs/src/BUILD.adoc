@@ -1,4 +1,4 @@
-// Copyright 2014-2024 The Khronos Group Inc.
+// Copyright 2014-2025 The Khronos Group Inc.
 // SPDX-License-Identifier: CC-BY-4.0
 
 = Vulkan^(R)^ Specification Build Instructions and Notes
@@ -30,10 +30,13 @@ The repository is located at https://github.com/KhronosGroup/Vulkan-Docs/.
 Next, install all the necessary build tools (see <<depends,Software
 Dependencies>> below).
 If you are using the <<depends-docker, Khronos-Provided Docker Image>>,
-which we strongly recommend, one way to build using the image (assuming a
-Linux docker host) is:
+which we strongly recommend, two ways to build using the image are:
 
+    $ # assuming a Linux docker host
     $ scripts/runDocker
+
+    $ # assuming a Linux podman host
+    $ scripts/runPodman
 
 executed from the specification repository root.
 
@@ -46,11 +49,11 @@ Execute the commands:
     $ cd /vulkan
     $ ./makeSpec -spec core html
 
-to build an HTML5 specification output for the core Vulkan 1.3
+to build an HTML5 specification output for the core Vulkan 1.4
 specification, with no extensions included, or
 
     $ cd /vulkan
-    $ ./makeSpec -spec all all
+    $ ./makeSpec -spec all alldocs allchecks
 
 to build the spec targets `html`, `pdf`, `styleguide`, `registry`,
 `manhtmlpages`, and `allchecks`, with *all* registered extensions included.
@@ -65,7 +68,6 @@ toolchain installed, you can just invoke the same `make` commands from the
 repository root.
 
 [NOTE]
-.Note
 ====
 You can modify the `runDocker` script to change the `docker` command-line
 options, but it is important to always use the Docker image specified in
@@ -73,7 +75,6 @@ that script, so you have the latest version of the spec toolchain.
 ====
 
 [NOTE]
-.Note
 ====
   * While it is possible to invoke `make` directly, this is rarely
     appropriate or useful.
@@ -86,7 +87,7 @@ that script, so you have the latest version of the spec toolchain.
     are irrelevant for most users.
     The `html` target just generates the HTML output, which is often all
     that is needed for spec bugfixes not involving extensions.
-  * The default `make` options build a Vulkan 1.3 specification with no
+  * The default `make` options build a Vulkan 1.4 specification with no
     optional extensions.
   * The `validusage` target is not built as part of the `all` target, due to
     it needing to be built with all extensions enabled (`-spec all`).
@@ -103,18 +104,21 @@ Vulkan Specification::
     dependency in $(OUTDIR)/katex
   * `chunked` -- Chunked HTML5 in `$(OUTDIR)/html/chap?.html`
   * `pdf` -- PDF in `$(OUTDIR)/pdf/vkspec.pdf`
+
 "`styleguide`" (Vulkan Documentation and Extensions: Procedures and Conventions)::
   * `styleguide` -- Single-file HTML5 in `$(OUTDIR)/styleguide.html`
+
 XML Registry schema document::
   * `registry` -- Single-file HTML5 in `$(OUTDIR)/registry.html`
-<<building-diff,Diff spec>>::
-  * `diff_html` -- Single-file HTML5 in `$(OUTDIR)/html/diff.html`
+
 <<refpages,Reference pages>>::
   * `manhtmlpages` -- File-per-entry-point HTML in `$(OUTDIR)/man/html/*`.
     Must be built with all extensions enabled (using `makeSpec -spec all`).
+
 <<validation-scripts,Validator output>>::
   * None at present. The `allchecks` target writes to standard output unless
     the underlying script is given additional options.
+
 Valid usage database::
   * `validusage` - json database of all valid usage statements in the
      specification. Must be built with `./makeAllExts` (for now).
@@ -132,7 +136,7 @@ If you encounter problems refer to the <<troubleshooting>> section.
 [[building-versions]]
 === Building Specifications for Different API Versions
 
-The `Makefile` defaults to building a Vulkan 1.3 specification.
+The `Makefile` defaults to building a Vulkan 1.4 specification.
 This is controlled by Asciidoctor attributes passed in the Makefile variable
 `$(VERSIONS)`
 To instead build a Vulkan 1.1 specification, pass
@@ -170,6 +174,7 @@ Valid values for the `VULKAN_API` environment are:
   * `vulkansc` - build the Vulkan SC API variant.
 
 If `VULKAN_API` is not set, the repository default is used.
+
 
 [[building-extensions]]
 === Building With Extensions Included
@@ -237,36 +242,25 @@ probably cause any more restricted set of refpages to fail to build.
 [[building-diff]]
 ==== Building a Highlighted Extension Diff
 
-The `diff_html` target in the Makefile can be used to generate a version of
-the specification which highlights changes made to the specification by the
-inclusion of a particular set of extensions.
+The `diff_html` Makefile target previously described here is not currently
+working.
 
-Extensions in the Makefile variable `$(EXTENSIONS)` define the base
-extensions to be enabled by the specification, and these will not be
-highlighted in the output.
-Extensions in the Makefile variable `$(DIFFEXTENSIONS)` define the set of
-extensions whose changes to the text will be highlighted when they are
-enabled.
-Any extensions in both variables will be treated as if they were only
-included in `$(DIFFEXTENSIONS)`.
-`$(DIFFEXTENSIONS)` can be set when using the `makeSpec` script described
-above.
+Another way of visualizing differences is to generate two versions of the
+specification HTML, one with and one without the extension in question, and
+compare them using the `htmldiff` script described in
+link:scripts/README.adoc[scripts/README.adoc] to generate a third HTML file.
 
-In the resulting HTML document, content that has been added by one of the
-extensions will be highlighted with a lime background, and content that was
-removed will be highlighted with a pink background.
-Each section has an anchor of `#differenceN`, with an arrow (=>) at the end
-of each section which links to the next difference section.
-The first diff section is `#difference1`.
+For example, diffs specific to the VK_KHR_display extension, and its
+dependencies, can be generated by:
 
-[NOTE]
-.Note
-====
-This output is not without errors.
-It may instead result in visible `+++[.added]##content##+++` and
-`+++[.removed]##content##+++`, and so also highlights not being rendered.
-But such visible markup still correctly encapsulates the modified content.
-====
+[source,sh]
+----
+./makeSpec -clean -spec core -genpath core html
+./makeSpec -clean -spec core -extension VK_KHR_display -genpath ext html
+scripts/htmldiff/htmldiff core/out/html/vkspec.html ext/out/html/vkspec.html > ext/out/html/diff.html
+
+# Now view ext/out/html/diff.html in a browser
+----
 
 
 [[building-test]]
@@ -313,8 +307,8 @@ The supported macros are defined in the `config/spec-macros/extension.rb`
 asciidoctor extension script.
 
 The tags used are described in the
-link:https://registry.khronos.org/vulkan/specs/1.1/styleguide.html[style
-guide] (generated from `styleguide.adoc`).
+link:https://registry.khronos.org/vulkan/specs/latest/styleguide.html[style
+guide].
 
 We (may) eventually tool up the spec and reference pages to the point that
 anywhere there is a type or token referred to, clicking on (or perhaps
@@ -371,7 +365,7 @@ font family].
 == Vulkan Style Guide
 
 If you are writing new spec language or modifying existing language, see the
-link:https://registry.khronos.org/vulkan/specs/1.3/styleguide.html["`style
+link:https://registry.khronos.org/vulkan/specs/latest/styleguide.html["`style
 guide`"] (formally titled "`Vulkan Documentation and Extensions: Procedures
 and Conventions`") document for details of our asciidoctor macros,
 extensions, mathematical equation markup, writing style, etc.
@@ -403,6 +397,10 @@ Docker installation is beyond the scope of this document.
 Refer to link:https://docs.docker.com/get-docker/[the Docker website] for
 information about installing Docker on Linux, Windows, and MacOS X.
 
+Another way to execute the Docker image is using the open source podman
+container tool. See link:https://podman.io/get-started[the Podman website]
+for information about installing podman on Linux, Windows, and MacOS X.
+
 The build image is *named* `khronosgroup/docker-images:asciidoctor-spec`.
 However, due to local and CI caching problems when this image is updated on
 dockerhub, we use the SHA256 of the latest image update, rather than the
@@ -412,18 +410,18 @@ image name. The SHA256 can be determined from
 
 which will print a line like
 
-    image: khronosgroup/docker-images@sha256:42123ba13792c4e809d037b69152c2230ad97fbf43b677338075ab9c928ab6ed
+    image: khronosgroup/docker-images@sha256:5e021da240f12121f064d2135e06320c021ac231c9ae8abbf6205b6130deb58b
 
 Everything following `image: ` is the <imagename> to use. The first time you
-try to run Docker with this <imagename>, as is done by the `runDocker`
-script described above under <<building, Building the Spec>>, the image will
-be pulled from Dockerhub and cached locally on your machine.
+try to run a container with this <imagename>, as is done by the `runDocker`
+and `runPodman` scripts described above under <<building, Building the
+Spec>>, the image will be pulled from Dockerhub and cached locally on your
+machine.
 
 This image is used to build Specification output documents or other Makefile
 targets.
 
 [NOTE]
-.Note
 ====
 When we update the image on Dockerhub, it is to add new components or update
 versions of components used in the specification toolchain.
@@ -453,7 +451,6 @@ link:https://github.com/KhronosGroup/Vulkan-Docs/blob/v1.2.135/BUILD.adoc#depend
 version of BUILD.adoc in the v1.2.135 repository tag]
 
 [NOTE]
-.Note
 ====
 While you do not have to use our Docker image, we cannot support every
 possible build environment.
@@ -463,9 +460,20 @@ toolchain yourself.
 ====
 
 
+[[building-epub-outputs]]
+=== Building EPUB Outputs
+
+The `epub` target will generate an EPUB file in
+`$(OUTDIR)/epub/vkspec.epub`. Note that the `epub` target is
+community-contributed, and not supported by Khronos. See
+https://github.com/KhronosGroup/Vulkan-Docs/pull/2286 for more.
+
+
 [[history]]
 == Revision History
 
+  * 2024-01-24 - Add <<building-epub-outputs, Building EPUB Outputs>>
+    section describing a community-contributed EPUB spec output target.
   * 2023-05-29 - Add Vulkan SC spec build instructions.
   * 2022-10-11 - Update descriptions of using the Docker image to use the
     `runDocker` script and the same SHA256 of the latest image as used by
@@ -494,7 +502,7 @@ toolchain yourself.
   * 2017-01-06 - Replace MathJax with KaTeX.
   * 2016-08-25 - Update for the single-branch model.
   * 2016-07-10 - Update for current state of spec and ref page generation.
-  * 2015-11-11 - Add new can: etc.
+  * 2015-11-11 - Add new *can* etc.
     macros and DBLATEXPREFIX variable.
   * 2015-09-21 - Convert document to asciidoc and rename to README.md in the
     hope the gitlab browser will render it in some fashion.

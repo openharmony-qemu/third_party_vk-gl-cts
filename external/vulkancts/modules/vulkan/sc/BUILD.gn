@@ -20,6 +20,9 @@ config("deqp_vk_sc_config") {
   cflags_cc = deqp_common_cflags_cc
   defines = deqp_common_defines
 
+  # Enable Vulkan SC (Safety Critical) support
+  defines += [ "CTS_USES_VULKANSC" ]
+  
   #defines += [ "_XOPEN_SOURCE=600" ]
 }
 
@@ -45,9 +48,13 @@ ohos_source_set("deqp_vk_sc_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/sc/vktSafetyCriticalTests.hpp",
   ]
 
-  include_dirs = deqp_vk_common_include_dirs
-  include_dirs +=
-      [ "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/sc" ]
+  # Vulkan SC directories must come before standard Vulkan to use SC-specific types
+  include_dirs = [
+    "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan/generated/vulkansc",
+    "//third_party/vk-gl-cts/external/vulkancts/vkscserver",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/sc",
+  ]
+  include_dirs += deqp_vk_common_include_dirs
 
   deps = [
     "//third_party/vk-gl-cts/external/vulkancts/framework/vulkan:libdeqp_vkutil",

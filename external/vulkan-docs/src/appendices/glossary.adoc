@@ -1,4 +1,4 @@
-// Copyright 2015-2024 The Khronos Group Inc.
+// Copyright 2015-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -87,6 +87,10 @@ Allocation Scope::
     as the parent object is freed or destroyed, or during the parent
     command.
 
+API command::
+    Any command defined in the Vulkan specification.
+    These entry points all have a vk prefix.
+
 Aspect (Image)::
     Some image types contain multiple kinds (called "`aspects`") of data for
     each pixel, where each aspect is used in a particular way by the
@@ -120,6 +124,17 @@ endif::VK_NV_ray_tracing,VK_KHR_acceleration_structure[]
 
 Back-Facing::
     See Facingness.
+
+ifdef::VK_KHR_video_queue[]
+Backward Prediction::
+    Sample prediction performed during video decode and encode operations
+    based on reference pictures that occur temporally (in display order)
+    after the current picture.
+
+Backward Reference::
+    A reference picture that occurs temporally (in display order) after the
+    current picture.
+endif::VK_KHR_video_queue[]
 
 Batch::
     A single structure submitted to a queue as part of a
@@ -156,7 +171,7 @@ ifndef::VKSC_VERSION_1_0[, and using the flink:vkQueueBindSparse command for spa
     .
 
 Blend Constant::
-    Four floating point (RGBA) values used as an input to blending.
+    Four floating-point (RGBA) values used as an input to blending.
 
 Blending::
     Arithmetic operations between a fragment color value and a value in a
@@ -201,6 +216,19 @@ Clip Distance::
 
 Clip Volume::
     The intersection of the view volume with all clip half-spaces.
+
+ifdef::VK_KHR_video_queue[]
+Coding Block (Video)::
+    An element of a video picture, comprising a rectangular block of texel
+    values that are coded as a single unit in video coding.
+    Video coding blocks have a corresponding coding block size (width and
+    height) defining the dimensions of these elements in units of texels.
+    These dimensions are usually codec-specific and a single video
+    compression standard may: support more than one coding block type and
+    size.
+    Video compression standards may: use multiple coding block types to
+    organize coding blocks of different kinds and sizes into hierarchies.
+endif::VK_KHR_video_queue[]
 
 Color Attachment::
     A subpass attachment point, or image view, that is the target of
@@ -264,7 +292,7 @@ Compatible Queues::
 
 Complete Mipmap Chain::
     The entire set of mip levels that can be provided for an image, from the
-    largest application specified mip level size down to the _minimum mip
+    largest application-specified mip level size down to the _minimum mip
     level size_.
     See <<resources-image-mip-level-sizing, Image Mip Level Sizing>>.
 
@@ -292,6 +320,7 @@ Compressed Texel Block::
     elements in units of texels, and a size in bytes of the encoding in
     memory.
 
+[[glossary-constant-integral-expression]]
 Constant Integral Expressions::
     A SPIR-V constant instruction whose type is code:OpTypeInt.
     See _Constant Instruction_ in section 2.2.1 "`Instructions`" of the
@@ -302,6 +331,12 @@ Cooperative Matrix::
     A SPIR-V type where the storage for and computations performed on the
     matrix are spread across a set of invocations such as a subgroup.
 endif::VK_NV_cooperative_matrix,VK_KHR_cooperative_matrix[]
+
+ifdef::VK_NV_cooperative_vector[]
+Cooperative Vector::
+    A SPIR-V vector type optimized for the evaluation of small neural
+    networks.
+endif::VK_NV_cooperative_vector[]
 
 ifdef::VK_NV_corner_sampled_image[]
 Corner-Sampled Image::
@@ -383,12 +418,12 @@ Depth/Stencil Resolve Attachment::
 endif::VK_VERSION_1_2,VK_KHR_depth_stencil_resolve[]
 
 Derivative Group::
-    A set of fragment
-ifdef::VK_NV_compute_shader_derivatives[]
-    or compute
-endif::VK_NV_compute_shader_derivatives[]
-    shader invocations that cooperate to compute derivatives, including
-    implicit derivatives for sampled image operations.
+    A set of
+ifdef::VK_KHR_compute_shader_derivatives,VK_NV_compute_shader_derivatives[compute,]
+ifdef::VK_KHR_compute_shader_derivatives[mesh, task,]
+ifdef::VK_KHR_compute_shader_derivatives,VK_NV_compute_shader_derivatives[or]
+    fragment shader invocations that cooperate to compute derivatives,
+    including implicit derivatives for sampled image operations.
 
 Descriptor::
     Information about a resource or resource view written into a descriptor
@@ -499,9 +534,12 @@ Dispatchable Handle::
     A handle of a pointer handle type which may: be used by layers as part
     of intercepting API commands.
 
+[[glossary-dispatching-commands]]
 Dispatching Commands::
-    Commands that provoke work using a compute pipeline.
-    Includes flink:vkCmdDispatch and flink:vkCmdDispatchIndirect.
+    Commands that provoke work using a compute pipeline, such as
+    flink:vkCmdDispatch.
+    See <<dispatch, Dispatching Commands>>.
+
 
 Drawing Commands::
     Commands that provoke work using a graphics pipeline.
@@ -634,11 +672,11 @@ Fence::
     Fences can: be waited on by the host.
     Represented by a slink:VkFence object.
 
-ifdef::VK_KHR_video_coding[]
+ifdef::VK_KHR_video_queue[]
 Field (Video)::
     Possibly discontinuous subregions of a frame.
     Frames may: consist of two fields, a top field and a bottom field.
-endif::VK_KHR_video_coding[]
+endif::VK_KHR_video_queue[]
 
 Flat Shading::
     A property of a vertex attribute that causes the value from a single
@@ -650,6 +688,17 @@ Format Features::
     A set of features from elink:VkFormatFeatureFlagBits that a
     elink:VkFormat is capable of using for various commands.
     The list is determined by factors such as elink:VkImageTiling.
+
+ifdef::VK_KHR_video_queue[]
+Forward Prediction::
+    Sample prediction performed during video decode and encode operations
+    based on reference pictures that occur temporally (in display order)
+    before the current picture.
+
+Forward Reference::
+    A reference picture that occurs temporally (in display order) before the
+    current picture.
+endif::VK_KHR_video_queue[]
 
 Fragment::
     A rectangular framebuffer region with associated data produced by
@@ -990,10 +1039,27 @@ Instance (Resource)::
     Each such replicated resource is an instance of the resource.
 endif::VK_VERSION_1_1,VK_KHR_device_group[]
 
+ifdef::VK_KHR_video_queue[]
+Inter Block (Video)::
+    A video coding block that uses inter prediction.
+
+Inter Prediction (Video)::
+    Sample prediction derived from reference picture samples or metadata.
+endif::VK_KHR_video_queue[]
+
 Internal Synchronization::
     A type of synchronization required: of the implementation, where
     parameters not defined to be externally synchronized may: require
     internal mutexing to avoid multithreaded race conditions.
+
+ifdef::VK_KHR_video_queue[]
+Intra Block (Video)::
+    A video coding block that only uses intra prediction.
+
+Intra Prediction (Video)::
+    Sample prediction that is not derived from reference picture samples or
+    metadata.
+endif::VK_KHR_video_queue[]
 
 Invocation (Shader)::
     A single execution of an entry point in a SPIR-V module.
@@ -1042,12 +1108,14 @@ ifdef::VK_NV_ray_tracing[]
   * a slink:VkAccelerationStructureNV
 endif::VK_NV_ray_tracing[]
 ifdef::VK_KHR_acceleration_structure[]
-
 Because a slink:VkAccelerationStructureKHR resource does not have memory
 bound to it directly, it is considered neither linear nor non-linear.
 However, the slink:VkBuffer on which a slink:VkAccelerationStructureKHR
 resource is placed is a linear resource.
 endif::VK_KHR_acceleration_structure[]
+ifdef::VK_ARM_tensors[]
+  * a slink:VkTensorARM created with ename:VK_TENSOR_TILING_LINEAR_ARM
+endif::VK_ARM_tensors[]
 
 A resource is _non-linear_ if it is one of the following:
 
@@ -1058,6 +1126,9 @@ ifdef::VK_EXT_image_drm_format_modifier[]
     <<glossary-drm-format-modifier,Linux DRM format modifier>> is not
     code:DRM_FORMAT_MOD_LINEAR
 endif::VK_EXT_image_drm_format_modifier[]
+ifdef::VK_ARM_tensors[]
+  * a slink:VkTensorARM created with ename:VK_TENSOR_TILING_OPTIMAL_ARM
+endif::VK_ARM_tensors[]
 --
 
 ifdef::VK_EXT_image_drm_format_modifier[]
@@ -1222,7 +1293,11 @@ endif::VK_VERSION_1_2,VK_KHR_buffer_device_address[]
 
 Overlapped Range (Aliased Range)::
     The aliased range of a device memory allocation that intersects a given
-    image subresource of an image or range of a buffer.
+    image subresource of an image
+ifdef::VK_ARM_tensors[]
+, a given tensor,
+endif::VK_ARM_tensors[]
+or range of a buffer.
 
 Ownership (Resource)::
     If an entity (e.g. a queue family) has ownership of a resource, access
@@ -1231,6 +1306,12 @@ Ownership (Resource)::
 Packed Format::
     A format whose components are stored as a single texel block in memory,
     with their relative locations defined within that element.
+
+ifdef::VK_ARM_tensors[]
+Packed Tensor::
+    A tensor whose elements are densely laid out in memory and thus whose
+    backing memory does not contain any padding data.
+endif::VK_ARM_tensors[]
 
 ifdef::VK_NV_geometry_shader_passthrough[]
 Passthrough Geometry Shader::
@@ -1276,6 +1357,15 @@ Physical-Device-Level Functionality::
 Physical-Device-Level Object::
     Physical device objects.
     For example, slink:VkPhysicalDevice is a physical-device-level object.
+
+ifdef::VK_KHR_video_queue[]
+Picture Partition (Video)::
+    Collective term that refers to a subregion of a video picture resource
+    that may: be decoded or encoded independently according to the
+    partitioning scheme defined in the corresponding video compression
+    standard.
+    Picture partitions may: be non-rectangular.
+endif::VK_KHR_video_queue[]
 
 Pipeline::
     An object controlling how graphics or compute work is executed on the
@@ -1453,6 +1543,11 @@ Protected Image::
     An image to which protected device memory can: be bound.
 endif::VK_VERSION_1_1[]
 
+ifdef::VK_ARM_tensors[]
+Protected Tensor::
+    A tensor to which protected device memory can: be bound.
+endif::VK_ARM_tensors[]
+
 Provisional::
     A feature is released provisionally in order to get wider feedback on
     the functionality before it is finalized.
@@ -1466,6 +1561,11 @@ Provoking Vertex::
     This is generally the "`first`" vertex in the primitive, and depends on
     the primitive topology.
 
+ifdef::VK_NV_partitioned_acceleration_structure,VK_KHR_acceleration_structure[]
+PTLAS::
+    <<partitioned-tlas, Partitioned Top Level Acceleration Structures>>
+endif::VK_NV_partitioned_acceleration_structure,VK_KHR_acceleration_structure[]
+
 Push Constants::
     A small bank of values writable via the API and accessible in shaders.
     Push constants allow the application to set values used in shaders
@@ -1477,13 +1577,13 @@ Push Constant Interface::
     statically used by a shader entry point, and which receive values from
     push constant commands.
 
-ifdef::VK_KHR_push_descriptor[]
+ifdef::VK_VERSION_1_4,VK_KHR_push_descriptor[]
 Push Descriptors::
     Descriptors that are written directly into a command buffer rather than
     into a descriptor set.
     Push descriptors allow the application to set descriptors used in
     shaders without allocating or modifying descriptor sets for each update.
-endif::VK_KHR_push_descriptor[]
+endif::VK_VERSION_1_4,VK_KHR_push_descriptor[]
 
 ifdef::VK_VERSION_1_1,VK_KHR_descriptor_update_template[]
 Descriptor Update Template::
@@ -1602,6 +1702,13 @@ Sample Shading::
 Sampled Image::
     A descriptor type that represents an image view, and supports filtered
     (sampled) and unfiltered read-only access in a shader.
+
+ifdef::VK_QCOM_tile_shading[]
+[[glossary-sampled-tile-image]]
+Sampled Tile Image::
+    A per-tile sampled image view of a framebuffer attachment, enabled by
+    `apiext:VK_QCOM_tile_shading`.
+endif::VK_QCOM_tile_shading[]
 
 Sampler::
     An object containing state controlling how sampled image data is sampled
@@ -1738,9 +1845,22 @@ Storage Image::
     A descriptor type that represents an image view, and supports unfiltered
     loads, stores, and atomics in a shader.
 
+ifdef::VK_ARM_tensors[]
+Storage Tensor::
+    A descriptor type that represents a tensor view, and supports reads,
+    writes, in a shader.
+endif::VK_ARM_tensors[]
+
 Storage Texel Buffer::
     A descriptor type that represents a buffer view, and supports
     unfiltered, formatted reads, writes, and atomics in a shader.
+
+ifdef::VK_QCOM_tile_shading[]
+[[glossary-storage-tile-image]]
+Storage Tile Image::
+    A per-tile storage image view of a framebuffer attachment, enabled by
+    `apiext:VK_QCOM_tile_shading`.
+endif::VK_QCOM_tile_shading[]
 
 ifdef::VK_VERSION_1_1,VK_EXT_shader_subgroup_vote[]
 Subgroup::
@@ -1783,6 +1903,22 @@ Subset (Self-Dependency)::
     each contain a subset of the bits set in the identically named mask in
     the self-dependency.
 
+ifdef::VK_ARM_tensors[]
+Tensor::
+    A resource that represents an N-dimensional formatted interpretation of
+    device memory.
+    Represented by a slink:VkTensorARM object.
+
+Tensor Description::
+    Describes the shape, format, usage and layout in memory of a tensor.
+    Represented by slink:VkTensorDescriptionARM.
+
+Tensor View::
+    An object that represents a specific tensor, and state that controls how
+    the contents are interpreted.
+    Represented by a slink:VkTensorViewARM object.
+endif::VK_ARM_tensors[]
+
 Texel Block::
     A single addressable element of an image with an uncompressed
     elink:VkFormat, or a single compressed block of an image with a
@@ -1797,13 +1933,21 @@ Texel Coordinate System::
     defining how texel coordinates are interpreted in an image or a specific
     mipmap level of an image.
 
+ifdef::VK_QCOM_tile_shading[]
+[[glossary-tile-memory-interface]]
+Tile Attachment Interface::
+    The set of variables with code:TileAttachmentQCOM storage class that are
+    statically used by a shader entry point, invoked within a tile shading
+    render pass which read values from tiled attachments as described in
+    <<renderpass-tile-shading, tile shading>>.
+endif::VK_QCOM_tile_shading[]
+
 ifdef::VK_EXT_shader_tile_image[]
 [[glossary-tile-image]]
 Tile Image::
     A per-tile view of a framebuffer attachment.
     If the `apiext:VK_EXT_shader_tile_image` extension is enabled, the
     framebuffer is considered to be divided into tiles.
-
 endif::VK_EXT_shader_tile_image[]
 
 ifdef::VK_VERSION_1_2,VK_KHR_timeline_semaphore[]
@@ -1850,6 +1994,11 @@ Unprotected Device Memory::
 Unprotected Image::
     An image to which unprotected device memory can: be bound.
 endif::VK_VERSION_1_1[]
+
+ifdef::VK_ARM_tensors[]
+Unprotected Tensor::
+    A tensor to which unprotected device memory can: be bound.
+endif::VK_ARM_tensors[]
 
 User-Defined Variable Interface::
     A shader entry point's variables with code:Input or code:Output storage
@@ -2003,7 +2152,7 @@ Info::
     Information
 
 LOD::
-    Level of Detail
+    Level{nbsp} of Detail
 
 Log::
     Logarithm
@@ -2094,6 +2243,9 @@ MV::
 
 NALU::
     Network Abstraction Layer Unit
+
+OBU::
+    Open Bitstream Unit
 
 PCM::
     Pulse-Code Modulation

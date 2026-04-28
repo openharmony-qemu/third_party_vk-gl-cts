@@ -32,7 +32,7 @@ config("amberenginevulkan_config") {
     "-Wno-format-pedantic",
     "-Wno-unknown-warning-option",
     "-Wno-zero-as-null-pointer-constant",
-    "-std=gnu++11",
+    "-std=gnu++14",
   ]
 
   defines = deqp_common_defines
@@ -56,6 +56,7 @@ config("amberenginevulkan_config") {
 #lib amberenginevulkan
 ohos_source_set("amberenginevulkan_source") {
   sources = [
+    "//third_party/vk-gl-cts/external/amber/src/src/vulkan/blas.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/buffer_backed_descriptor.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/buffer_descriptor.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/command_buffer.cc",
@@ -70,9 +71,13 @@ ohos_source_set("amberenginevulkan_source") {
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/index_buffer.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/pipeline.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/push_constant.cc",
+    "//third_party/vk-gl-cts/external/amber/src/src/vulkan/raytracing_pipeline.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/resource.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/sampler.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/sampler_descriptor.cc",
+    "//third_party/vk-gl-cts/external/amber/src/src/vulkan/sbt.cc",
+    "//third_party/vk-gl-cts/external/amber/src/src/vulkan/tlas.cc",
+    "//third_party/vk-gl-cts/external/amber/src/src/vulkan/tlas_descriptor.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/transfer_buffer.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/transfer_image.cc",
     "//third_party/vk-gl-cts/external/amber/src/src/vulkan/vertex_buffer.cc",
@@ -86,7 +91,7 @@ ohos_source_set("amberenginevulkan_source") {
     "//third_party/vk-gl-cts/framework/delibs/deutil",
     "//third_party/vk-gl-cts/framework/delibs/destream",
     "//third_party/zlib",
-    "//third_party/spirv-headers/include",
+    "//third_party/vk-gl-cts/external/spirv-headers/src/include",
     "//third_party/vk-gl-cts/external/amber/src/include",
     "//third_party/vk-gl-cts/external/amber/src",
     "//third_party/vk-gl-cts/build",

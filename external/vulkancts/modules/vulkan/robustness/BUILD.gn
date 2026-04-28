@@ -36,6 +36,13 @@ ohos_source_set("deqp_vk_robustness_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/robustness/vktRobustnessTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/robustness/vktRobustnessUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/robustness/vktRobustnessVertexAccessTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/robustness/vktNonRobustBufferAccessTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/robustness/vktRobustBufferAccessWithVariablePointersTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/robustness/vktRobustnessBufferAccessTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/robustness/vktRobustnessExtsTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/robustness/vktRobustnessTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/robustness/vktRobustnessUtil.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/robustness/vktRobustnessVertexAccessTests.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs

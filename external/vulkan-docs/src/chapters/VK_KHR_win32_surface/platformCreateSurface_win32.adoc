@@ -1,11 +1,11 @@
-// Copyright 2014-2024 The Khronos Group Inc.
+// Copyright 2014-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
 [[platformCreateSurface_win32]]
 === Win32 Platform
 
-[open,refpage='vkCreateWin32SurfaceKHR',desc='Create a VkSurfaceKHR object for an Win32 native window',type='protos']
+[open,refpage='vkCreateWin32SurfaceKHR',desc='Create a VkSurfaceKHR object for a Win32 native window',type='protos']
 --
 :refpage: vkCreateWin32SurfaceKHR
 
@@ -14,7 +14,7 @@ To create a sname:VkSurfaceKHR object for a Win32 window, call:
 include::{generated}/api/protos/vkCreateWin32SurfaceKHR.adoc[]
 
   * pname:instance is the instance to associate the surface with.
-  * pname:pCreateInfo is a pointer to a sname:VkWin32SurfaceCreateInfoKHR
+  * pname:pCreateInfo is a pointer to a slink:VkWin32SurfaceCreateInfoKHR
     structure containing parameters affecting the creation of the surface
     object.
   * pname:pAllocator is the allocator used for host memory allocated for the
@@ -28,8 +28,8 @@ include::{generated}/validity/protos/vkCreateWin32SurfaceKHR.adoc[]
 Some Vulkan functions may: call the `SendMessage` system API when
 interacting with a sname:VkSurfaceKHR through a sname:VkSwapchainKHR.
 In a multithreaded environment, calling `SendMessage` from a thread that is
-not the thread associated with pname:pCreateInfo::pname:hwnd will block
-until the application has processed the window message.
+not the thread associated with pname:pCreateInfo->hwnd will block until the
+application has processed the window message.
 Thus, applications should: either call these Vulkan functions on the message
 pump thread, or make sure their message pump is actively running.
 Failing to do so may: result in deadlocks.
@@ -40,9 +40,9 @@ The functions subject to this requirement are:
   * flink:vkDestroySwapchainKHR
   * flink:vkAcquireNextImageKHR and flink:vkAcquireNextImage2KHR
   * flink:vkQueuePresentKHR
-ifdef::VK_EXT_swapchain_maintenance1[]
-  * flink:vkReleaseSwapchainImagesEXT
-endif::VK_EXT_swapchain_maintenance1[]
+ifdef::VK_KHR_swapchain_maintenance1,VK_EXT_swapchain_maintenance1[]
+  * flink:vkReleaseSwapchainImagesKHR
+endif::VK_KHR_swapchain_maintenance1,VK_EXT_swapchain_maintenance1[]
 ifdef::VK_EXT_full_screen_exclusive[]
   * flink:vkAcquireFullScreenExclusiveModeEXT
   * flink:vkReleaseFullScreenExclusiveModeEXT
@@ -85,13 +85,12 @@ The pname:currentExtent of a Win32 surface must: have both pname:width and
 pname:height greater than 0, or both of them 0.
 
 [NOTE]
-.Note
 ====
 Due to above restrictions,
-ifdef::VK_EXT_swapchain_maintenance1[]
-unless slink:VkSwapchainPresentScalingCreateInfoEXT is used to specify
+ifdef::VK_KHR_swapchain_maintenance1,VK_EXT_swapchain_maintenance1[]
+unless slink:VkSwapchainPresentScalingCreateInfoKHR is used to specify
 handling of disparities between surface and swapchain dimensions,
-endif::VK_EXT_swapchain_maintenance1[]
+endif::VK_KHR_swapchain_maintenance1,VK_EXT_swapchain_maintenance1[]
 it is only possible to create a new swapchain on this platform with
 pname:imageExtent being equal to the current size of the window, as reported
 in slink:VkSurfaceCapabilitiesKHR::pname:currentExtent.

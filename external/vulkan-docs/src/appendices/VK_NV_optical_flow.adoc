@@ -21,7 +21,6 @@ This extension allows applications to estimate 2D displacement of pixels
 between two frames.
 
 [NOTE]
-.Note
 ====
 This extension is designed to be used with upcoming NVIDIA Optical Flow SDK
 Version 5 which will be available on NVIDIA Developer webpage.
@@ -76,7 +75,7 @@ imageCreateInfo.extent = { width, height, (uint32_t)1};
 imageCreateInfo.mipLevels = 1;
 imageCreateInfo.arrayLayers = 1;
 imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-imageCreateInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;;
+imageCreateInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 
 vkCreateImage(device, &imageCreateInfo, NULL, &input);

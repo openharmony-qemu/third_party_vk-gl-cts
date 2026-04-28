@@ -51,6 +51,8 @@ add_subdirectory(fragment_shading_barycentric)
 add_subdirectory(sc)
 add_subdirectory(video)
 add_subdirectory(shader_object)
+add_subdirectory(device_generated_commands)
+add_subdirectory(cooperative_vector)
 
 include_directories(
 	api
@@ -100,10 +102,12 @@ include_directories(
 	mesh_shader
 	fragment_shading_barycentric
 	video
+	cooperative_vector
 	${DEQP_INL_DIR}
 	sc
 	video
 	shader_object
+	device_generated_commands
 	)
 
 set(DEQP_VK_SRCS
@@ -122,6 +126,8 @@ set(DEQP_VK_SRCS
 	vktInfoTests.hpp
 	vktCustomInstancesDevices.cpp
 	vktCustomInstancesDevices.hpp
+	vktContextManager.cpp
+	vktContextManager.hpp
 	)
 
 set(DEQP_VK_LIBS
@@ -175,6 +181,8 @@ set(DEQP_VK_LIBS
 	deqp-vk-fragment-shading-barycentric
 	deqp-vk-video
 	deqp-vk-shader-object
+	deqp-vk-dgc
+	deqp-vk-cooperative_vector
 	)
 
 set(DEQP_VKSC_LIBS
@@ -224,6 +232,7 @@ set(DEQP_VKSC_LIBS
 #x	deqp-vksc-postmortem
 	deqp-vksc-fragment-shading-rate
 	deqp-vksc-sc
+	deqp-vksc-cooperative_vector
 	)
 
 
@@ -241,12 +250,12 @@ add_data_dir(deqp-vk ../../data/vulkan vulkan)
 add_data_dir(deqp-vk ../../mustpass/main/vk-default vk-default)
 
 # add all directories containing android mustpass
-file(GLOB PATHS_MATCHING_PATTERN ${CMAKE_SOURCE_DIR}/android/cts/master/vk-*/)
+file(GLOB PATHS_MATCHING_PATTERN ${CMAKE_SOURCE_DIR}/android/cts/main/vk-*/)
 FOREACH(FOUND_PATH ${PATHS_MATCHING_PATTERN})
 	IF(IS_DIRECTORY ${FOUND_PATH})
 		SET(LAST_DIRECTORY "")
-		file(RELATIVE_PATH LAST_DIRECTORY ${CMAKE_SOURCE_DIR}/android/cts/master ${FOUND_PATH})
-		add_data_dir(deqp-vk ../../../../android/cts/master/${LAST_DIRECTORY} ${LAST_DIRECTORY})
+		file(RELATIVE_PATH LAST_DIRECTORY ${CMAKE_SOURCE_DIR}/android/cts/main ${FOUND_PATH})
+		add_data_dir(deqp-vk ../../../../android/cts/main/${LAST_DIRECTORY} ${LAST_DIRECTORY})
 	ENDIF()
 ENDFOREACH()
 
@@ -256,7 +265,3 @@ if (DE_OS_IS_WIN32 OR DE_OS_IS_UNIX OR DE_OS_IS_OSX)
 	add_executable(vk-build-programs vktBuildPrograms.cpp)
 	target_link_libraries(vk-build-programs deqp-vk${MODULE_LIB_TARGET_POSTFIX})
 endif ()
-
-if(DE_OS_IS_ANDROID)
-	add_definitions(-DDEQP_EXCLUDE_VK_VIDEO_TESTS)
-endif()

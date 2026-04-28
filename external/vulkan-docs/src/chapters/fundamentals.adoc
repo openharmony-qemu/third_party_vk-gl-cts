@@ -1,4 +1,4 @@
-// Copyright 2015-2024 The Khronos Group Inc.
+// Copyright 2015-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -24,13 +24,12 @@ the host environment with respect to Vulkan implementations:
     their size in bytes.
   * The host must: have runtime support for 32- and 64-bit floating-point
     types satisfying the range and precision constraints in the
-    <<fundamentals-floatingpoint,Floating Point Computation>> section.
+    <<fundamentals-floating-point, Floating-Point Computation>> section.
   * The representation and endianness of these types on the host must: match
     the representation and endianness of the same types on every physical
     device supported.
 
 [NOTE]
-.Note
 ====
 Since a variety of data types and structures in Vulkan may: be accessible by
 both host and physical device operations, the implementation should: be able
@@ -65,7 +64,6 @@ ifndef::VKSC_VERSION_1_0[sparse memory management,]
 and transfer.
 
 [NOTE]
-.Note
 ====
 A single device may: report multiple similar queue families rather than, or
 as well as, reporting multiple members of one or more of those families.
@@ -162,7 +160,6 @@ Additional explicit ordering constraints can be expressed with the various
 <<synchronization, explicit synchronization primitives>>.
 
 [NOTE]
-.Note
 ====
 Implementations have significant freedom to overlap execution of work
 submitted to a queue, and this is common due to deep pipelining and
@@ -174,30 +171,35 @@ Commands recorded in command buffers can perform actions, set state that
 persists across commands, synchronize other commands, or indirectly launch
 other commands, with some commands fulfilling several of these roles.
 The "`Command Properties`" section for each such command lists which of
-these roles the command takes.
-State setting commands update the _current state_ of the command buffer.
-Some commands that perform actions (e.g. draw/dispatch) do so based on the
-current state set cumulatively since the start of the command buffer.
-The work involved in performing action commands is often allowed to overlap
-or to be reordered, but doing so must: not alter the state to be used by
-each action command.
-In general, action commands are those commands that alter framebuffer
-attachments, read/write buffer or image memory, or write to query pools.
+these roles the command takes:
 
-Synchronization commands introduce explicit
-<<synchronization-dependencies,execution and memory dependencies>> between
-two sets of action commands, where the second set of commands depends on the
-first set of commands.
-These dependencies enforce both that the execution of certain
-<<synchronization-pipeline-stages, pipeline stages>> in the later set occurs
-after the execution of certain stages in the source set, and that the
-effects of <<synchronization-global-memory-barriers,memory accesses>>
-performed by certain pipeline stages occur in order and are visible to each
-other.
-When not enforced by an explicit dependency or <<synchronization-implicit,
-implicit ordering guarantees>>, action commands may: overlap execution or
-execute out of order, and may: not see the side effects of each other's
-memory accesses.
+Action::
+  _Action commands_ perform operations that can update values in memory.
+  E.g. <<drawing,draw commands>>, <<dispatch,dispatch commands>>.
+
+State::
+  _State setting commands_ update the current state of a command buffer,
+  affecting the operation of future action commands.
+
+Synchronization::
+  _Synchronization commands_ impose ordering constraints on action commands,
+  by introducing explicit <<synchronization-dependencies,execution and
+  memory dependencies>>.
+
+Indirection::
+  _Indirection commands_ execute other commands which were not directly
+  recorded in the same command buffer.
+
+[NOTE]
+====
+In the absence of explicit synchronization or <<synchronization-implicit,
+implicit ordering guarantees>>, action commands may overlap execution or
+execute out of order, potentially leading to data races.
+However, such reordering does not affect the current state observed by any
+action command.
+Each action command uses the state in effect at the point where the command
+occurs in the command buffer, regardless of when it is executed.
+====
 
 
 [[fundamentals-objectmodel-overview]]
@@ -242,8 +244,11 @@ not be used on other devices.
 Objects are created or allocated by ftext:vkCreate* and ftext:vkAllocate*
 commands, respectively.
 Once an object is created or allocated, its "`structure`" is considered to
-be immutable, though the contents of certain object types is still free to
+be immutable, though the content of certain object types is still free to
 change.
+When an object is passed to another command, it may: be accessed by the
+implementation, which may: include both read and write access unless
+explicitly stated otherwise.
 Objects are destroyed or freed by ftext:vkDestroy* and ftext:vkFree*
 commands, respectively.
 
@@ -259,7 +264,7 @@ frees.
 ifdef::VKSC_VERSION_1_0[]
 In Vulkan SC, data structures for objects are reserved by the implementation
 at device creation time in order to enable implementations to rely solely on
-static memory management at run-time.
+static memory management at runtime.
 The slink:VkDeviceObjectReservationCreateInfo structure provides upper
 bounds on the simultaneous number of objects of each type that can: be
 allocated during the lifetime of the slink:VkDevice.
@@ -267,259 +272,56 @@ Most objects can be created and destroyed as needed, provided that no more
 than the requested number are in existence at any point in time.
 endif::VKSC_VERSION_1_0[]
 
-It is an application's responsibility to track the lifetime of Vulkan
-objects, and not to destroy them while they are still in use.
-
 [[fundamentals-objectmodel-lifetime-acquire]]
-The ownership of application-owned memory is immediately acquired by any
-Vulkan command it is passed
-ifndef::VKSC_VERSION_1_0[into.]
-ifdef::VKSC_VERSION_1_0[into, unless otherwise noted below.]
-Ownership of such memory must: be released back to the application at the
-end of the duration of the command,
+Applications are responsible for managing the lifetimes of Vulkan objects
+and memory passed into the Vulkan API.
+The access semantics of different functions in the API follow a typical
+pattern as laid out below, with any exceptions listed with the commands or
+objects that have them.
+
+Application-owned memory and Vulkan objects may: be accessed at any time
+during the execution of a command they are passed to.
+ifdef::VK_VERSION_1_2,VK_KHR_buffer_device_address[]
+Vulkan objects that device addresses are retrieved from may: be accessed by
+the implementation any time that memory backing the device address is
+accessed.
+Device addresses and
+endif::VK_VERSION_1_2,VK_KHR_buffer_device_address[]
+Vulkan objects passed in during the creation or allocation of another object
+may: be accessed by the implementation any time that the created/allocated
+object is accessed unless explicitly stated otherwise.
+ifdef::VK_VERSION_1_2,VK_KHR_buffer_device_address[]
+Device addresses and
+endif::VK_VERSION_1_2,VK_KHR_buffer_device_address[]
+Vulkan objects passed to a recording command (ftext:vkCmd*) may: be accessed
+at any time during the execution of the command, when the command buffer is
+subsequently recorded into another command buffer, during any subsequent
+command that is recorded to either the command buffer or one it is recorded
+into, or while the command buffer is in the <<commandbuffers-lifecycle,
+_pending state_>>, unless explicitly stated otherwise.
 ifdef::VK_KHR_deferred_host_operations[]
-unless that command was deferred,
+If an application is using <<deferred-host-operations, deferred host
+operations>> in a command, and that operation is successfully deferred,
+objects and memory passed to that command may: be accessed at any time until
+the deferred operation is complete.
 endif::VK_KHR_deferred_host_operations[]
-so that the application can: alter or free this memory as soon as all the
-commands that acquired it have returned.
-ifdef::VK_KHR_deferred_host_operations[]
-If the command was <<deferred-host-operations-requesting, deferred>>,
-ownership of such memory is released back to the application when the
-deferred operation is complete.
-endif::VK_KHR_deferred_host_operations[]
+Some additional operations hold references to other objects or
+application-owned memory beyond the duration of the command; in which case
+the access semantics and lifetime of those references are described by that
+command.
 
-The following object types are consumed when they are passed into a Vulkan
-command and not further accessed by the objects they are used to create.
-They must: not be destroyed in the duration of any API command they are
-passed into:
+When destroying or freeing an object, implementations must: not access any
+memory or other objects that may: otherwise be accessed when the object is
+accessed.
+Applications can: free or destroy objects in any order, except that parent
+objects must: be freed only after all child objects are freed.
+An object is the parent of another child object if the parent was used as
+the first object parameter in the creation of the child.
+Once an object is freed or destroyed it must: not be accessed again, either
+directly or via access through another object.
+Applications must: not free or destroy any object while it is being
+accessed.
 
-ifndef::VKSC_VERSION_1_0[]
-  * sname:VkShaderModule
-endif::VKSC_VERSION_1_0[]
-  * sname:VkPipelineCache
-ifdef::VK_EXT_validation_cache[]
-  * sname:VkValidationCacheEXT
-endif::VK_EXT_validation_cache[]
-
-ifdef::VKSC_VERSION_1_0[]
-A sname:VkPipelineCache object created with
-ename:VK_PIPELINE_CACHE_CREATE_USE_APPLICATION_STORAGE_BIT requires the
-application to maintain the memory contents pointed to by
-sname:VkPipelineCacheCreateInfo::pname:pInitialData for the lifetime of the
-pipeline cache object.
-endif::VKSC_VERSION_1_0[]
-
-A sname:VkRenderPass
-ifdef::VK_VERSION_1_3,VK_KHR_maintenance4[]
-or sname:VkPipelineLayout
-endif::VK_VERSION_1_3,VK_KHR_maintenance4[]
-object passed as a parameter to create another object is not further
-accessed by that object after the duration of the command it is passed into.
-A sname:VkRenderPass used in a command buffer follows the rules described
-below.
-
-ifndef::VK_VERSION_1_3,VK_KHR_maintenance4[]
-A sname:VkPipelineLayout object must: not be destroyed while any command
-buffer that uses it is in the recording state.
-endif::VK_VERSION_1_3,VK_KHR_maintenance4[]
-
-sname:VkDescriptorSetLayout objects may: be accessed by commands that
-operate on descriptor sets allocated using that layout, and those descriptor
-sets must: not be updated with flink:vkUpdateDescriptorSets after the
-descriptor set layout has been destroyed.
-Otherwise, a sname:VkDescriptorSetLayout object passed as a parameter to
-create another object is not further accessed by that object after the
-duration of the command it is passed into.
-
-The application must: not destroy any other type of Vulkan object until all
-uses of that object by the device (such as via command buffer execution)
-have completed.
-
-[[fundamentals-objectmodel-lifetime-cmdbuffers]]
-The following Vulkan objects must: not be destroyed while any command
-buffers using the object are in the <<commandbuffers-lifecycle, pending
-state>>:
-
-  * sname:VkEvent
-ifndef::VKSC_VERSION_1_0[]
-  * sname:VkQueryPool
-endif::VKSC_VERSION_1_0[]
-  * sname:VkBuffer
-  * sname:VkBufferView
-  * sname:VkImage
-  * sname:VkImageView
-  * sname:VkPipeline
-  * sname:VkSampler
-ifdef::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
-  * sname:VkSamplerYcbcrConversion
-endif::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
-ifndef::VKSC_VERSION_1_0[]
-  * sname:VkDescriptorPool
-endif::VKSC_VERSION_1_0[]
-  * sname:VkFramebuffer
-  * sname:VkRenderPass
-  * sname:VkCommandBuffer
-ifndef::VKSC_VERSION_1_0[]
-  * sname:VkCommandPool
-  * sname:VkDeviceMemory
-endif::VKSC_VERSION_1_0[]
-  * sname:VkDescriptorSet
-ifdef::VK_NV_device_generated_commands[]
-  * sname:VkIndirectCommandsLayoutNV
-endif::VK_NV_device_generated_commands[]
-ifdef::VK_NV_ray_tracing[]
-  * sname:VkAccelerationStructureNV
-endif::VK_NV_ray_tracing[]
-ifdef::VK_KHR_acceleration_structure[]
-  * sname:VkAccelerationStructureKHR
-endif::VK_KHR_acceleration_structure[]
-ifdef::VK_KHR_video_queue[]
-  * sname:VkVideoSessionKHR
-  * sname:VkVideoSessionParametersKHR
-endif::VK_KHR_video_queue[]
-
-Destroying these objects will move any command buffers that are in the
-<<commandbuffers-lifecycle, recording or executable state>>, and are using
-those objects, to the <<commandbuffers-lifecycle, invalid state>>.
-
-The following Vulkan objects must: not be destroyed while any queue is
-executing commands that use the object:
-
-  * sname:VkFence
-  * sname:VkSemaphore
-  * sname:VkCommandBuffer
-ifndef::VKSC_VERSION_1_0[]
-  * sname:VkCommandPool
-ifdef::VK_NV_external_sci_sync2[]
-  * sname:VkSemaphoreSciSyncPoolNV
-endif::VK_NV_external_sci_sync2[]
-endif::VKSC_VERSION_1_0[]
-
-In general, objects can: be destroyed or freed in any order, even if the
-object being freed is involved in the use of another object (e.g. use of a
-resource in a view, use of a view in a descriptor set,
-ifdef::VK_KHR_pipeline_library[]
-use of a <<pipelines-library,pipeline library>> in another pipeline,
-endif::VK_KHR_pipeline_library[]
-ifdef::VK_NV_device_generated_commands[]
-use of a <<graphics-shadergroups,referenced pipeline>> for additional
-graphics shader groups in another pipeline,
-endif::VK_NV_device_generated_commands[]
-ifdef::VK_KHR_acceleration_structure[]
-use of a <<acceleration-structure-bottom-level, bottom level acceleration
-structure>> in an instance referenced by a
-<<acceleration-structure-top-level, top level acceleration structure>>,
-endif::VK_KHR_acceleration_structure[]
-use of an object in a command buffer, binding of a memory allocation to a
-resource), as long as any object that uses the freed object is not further
-used in any way except to be destroyed or to be reset in such a way that it
-no longer uses the other object (such as resetting a command buffer).
-If the object has been reset, then it can: be used as if it never used the
-freed object.
-An exception to this is when there is a parent/child relationship between
-objects.
-In this case, the application must: not destroy a parent object before its
-children, except when the parent is explicitly defined to free its children
-when it is destroyed (e.g. for pool objects, as defined below).
-
-sname:VkCommandPool objects are parents of sname:VkCommandBuffer objects.
-sname:VkDescriptorPool objects are parents of sname:VkDescriptorSet objects.
-sname:VkDevice objects are parents of many object types (all that take a
-sname:VkDevice as a parameter to their creation).
-
-The following Vulkan objects have specific restrictions for when they can:
-be destroyed:
-
-  * sname:VkQueue objects cannot: be explicitly destroyed.
-    Instead, they are implicitly destroyed when the sname:VkDevice object
-    they are retrieved from is destroyed.
-ifndef::VKSC_VERSION_1_0[]
-  * Destroying a pool object implicitly frees all objects allocated from
-    that pool.
-    Specifically, destroying sname:VkCommandPool frees all
-    sname:VkCommandBuffer objects that were allocated from it, and
-    destroying sname:VkDescriptorPool frees all sname:VkDescriptorSet
-    objects that were allocated from it.
-endif::VKSC_VERSION_1_0[]
-ifdef::VKSC_VERSION_1_0[]
-  * [[fundamentals-objectmodel-no-destroy]] Device memory
-    (slink:VkDeviceMemory) allocations,
-ifdef::VK_KHR_swapchain[swapchains (slink:VkSwapchainKHR),]
-    and pool objects (slink:VkCommandPool, slink:VkDescriptorPool,
-ifdef::VK_NV_external_sci_sync2[slink:VkSemaphoreSciSyncPoolNV,]
-    slink:VkQueryPool) cannot: be explicitly freed or destroyed.
-    Instead, they are implicitly freed or destroyed when the sname:VkDevice
-    object they are created from is destroyed.
-endif::VKSC_VERSION_1_0[]
-  * sname:VkDevice objects can: be destroyed when all sname:VkQueue objects
-    retrieved from them are idle, and all objects created from them have
-    been destroyed.
-  ** This includes the following objects:
-+
---
-  ** sname:VkFence
-  ** sname:VkSemaphore
-  ** sname:VkEvent
-ifndef::VKSC_VERSION_1_0[]
-  ** sname:VkQueryPool
-endif::VKSC_VERSION_1_0[]
-  ** sname:VkBuffer
-  ** sname:VkBufferView
-  ** sname:VkImage
-  ** sname:VkImageView
-ifndef::VKSC_VERSION_1_0[]
-  ** sname:VkShaderModule
-endif::VKSC_VERSION_1_0[]
-  ** sname:VkPipelineCache
-  ** sname:VkPipeline
-  ** sname:VkPipelineLayout
-  ** sname:VkSampler
-ifdef::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
-  ** sname:VkSamplerYcbcrConversion
-endif::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
-  ** sname:VkDescriptorSetLayout
-ifndef::VKSC_VERSION_1_0[]
-  ** sname:VkDescriptorPool
-endif::VKSC_VERSION_1_0[]
-  ** sname:VkFramebuffer
-  ** sname:VkRenderPass
-ifndef::VKSC_VERSION_1_0[]
-  ** sname:VkCommandPool
-endif::VKSC_VERSION_1_0[]
-  ** sname:VkCommandBuffer
-ifndef::VKSC_VERSION_1_0[]
-  ** sname:VkDeviceMemory
-endif::VKSC_VERSION_1_0[]
-ifdef::VK_EXT_validation_cache[]
-  ** sname:VkValidationCacheEXT
-endif::VK_EXT_validation_cache[]
-ifdef::VK_NV_ray_tracing[]
-  ** sname:VkAccelerationStructureNV
-endif::VK_NV_ray_tracing[]
-ifdef::VK_KHR_acceleration_structure[]
-  ** sname:VkAccelerationStructureKHR
-endif::VK_KHR_acceleration_structure[]
-ifdef::VK_KHR_video_queue[]
-  ** sname:VkVideoSessionKHR
-  ** sname:VkVideoSessionParametersKHR
-endif::VK_KHR_video_queue[]
---
-ifdef::VKSC_VERSION_1_0[]
-  ** This does not include objects that do not have corresponding free or
-     destroy commands.
-     If
-     slink:VkPhysicalDeviceVulkanSC10Properties::<<limits-deviceDestroyFreesMemory,
-     pname:deviceDestroyFreesMemory>> is ename:VK_TRUE, the memory from
-     these objects is returned to the system when the device is destroyed,
-     otherwise it may: not be returned to the system until the process is
-     terminated.
-endif::VKSC_VERSION_1_0[]
-  * sname:VkPhysicalDevice objects cannot: be explicitly destroyed.
-    Instead, they are implicitly destroyed when the sname:VkInstance object
-    they are retrieved from is destroyed.
-  * sname:VkInstance objects can: be destroyed once all sname:VkDevice
-    objects created from any of its sname:VkPhysicalDevice objects have been
-    destroyed.
 
 ifdef::VK_VERSION_1_1,VK_KHR_external_memory_capabilities,VK_KHR_external_semaphore_capabilities,VK_KHR_external_fence_capabilities[]
 [[fundamentals-objectmodel-external]]
@@ -532,7 +334,6 @@ To bring an external object into scope, an external handle must: be exported
 from the object in the source scope and imported into the destination scope.
 
 [NOTE]
-.Note
 ====
 The scope of external handles and their associated resources may: vary
 according to their type, but they can: generally be shared across process
@@ -585,7 +386,6 @@ They may: also provide library symbols for commands defined by additional
 extensions.
 
 [NOTE]
-.Note
 ====
 These requirements and recommendations are intended to allow implementors to
 take advantage of platform-specific conventions for SDKs, ABIs, library
@@ -659,10 +459,30 @@ include::{generated}/api/basetypes/VkDeviceSize.adoc[]
 ifdef::VK_VERSION_1_0,VK_EXT_buffer_device_address,VK_KHR_buffer_device_address[]
 [open,refpage='VkDeviceAddress',desc='Vulkan device address type',type='basetypes']
 --
+:refpage: VkDeviceAddress
+
 basetype:VkDeviceAddress represents device buffer address values:
 
 include::{generated}/api/basetypes/VkDeviceAddress.adoc[]
+
+ifdef::VK_VERSION_1_2,VK_EXT_buffer_device_address,VK_KHR_buffer_device_address[]
+.Valid Usage
+****
+  * [[VUID-VkDeviceAddress-size-11364]]
+    A valid basetype:VkDeviceAddress must: be equal to the sum of an address
+    retrieved from a slink:VkBuffer via flink:vkGetBufferDeviceAddress, and
+    any offset in the range [eq]#[0, pname:size)#, where pname:size is the
+    value of slink:VkBufferCreateInfo::pname:size used to create that
+    slink:VkBuffer
+  * [[VUID-{refpage}-None-10894]]
+    If a basetype:VkDeviceAddress was retrieved from a non-sparse buffer,
+    that buffer must: be bound completely and contiguously to a single
+    sname:VkDeviceMemory object
+****
+endif::VK_VERSION_1_2,VK_EXT_buffer_device_address,VK_KHR_buffer_device_address[]
+
 --
+
 endif::VK_VERSION_1_0,VK_EXT_buffer_device_address,VK_KHR_buffer_device_address[]
 
 Commands that create Vulkan objects are of the form ftext:vkCreate* and take
@@ -674,13 +494,14 @@ ftext:vkDestroy*.
 The last in-parameter to each command that creates or destroys a Vulkan
 object is pname:pAllocator.
 ifndef::VKSC_VERSION_1_0[]
-The pname:pAllocator parameter can: be set to a non-`NULL` value such that
+The pname:pAllocator parameter can: be a non-`NULL` value, in which case
 allocations for the given object are delegated to an application provided
-callback; refer to the <<memory-allocation,Memory Allocation>> chapter for
-further details.
+callback.
+Refer to the <<memory-allocation,Memory Allocation>> chapter for further
+details.
 endif::VKSC_VERSION_1_0[]
 ifdef::VKSC_VERSION_1_0[]
-The pname:pAllocator parameter must: be set to `NULL`.
+The pname:pAllocator parameter must: be `NULL`.
 Refer to the <<memory-allocation,Memory Allocation>> chapter for further
 details.
 endif::VKSC_VERSION_1_0[]
@@ -715,6 +536,162 @@ calling the same command with the same parameters, so long as those
 parameters themselves all remain valid.
 
 
+[[fundamentals-commandsyntax-array-results]]
+=== Array Results
+
+Some query commands of the form ftext:vkGet* and ftext:vkEnumerate* enable
+retrieving multiple results in the form of a return array.
+Such commands typically have two pointer arguments as follows:
+
+  * An element count pointer pointing to an integer variable, conventionally
+    named as ftext:p*Count where ftext:* is the capitalized singular form of
+    the name of the retrieved values.
+  * A pointer to an array where the result array is retrieved,
+    conventionally named as ftext:p* where ftext:* is the capitalized plural
+    form of the name of the retrieved values.
+
+If such commands are called with the array pointer set to `NULL`, then the
+number of retrievable elements is returned in the variable pointed to by the
+element count pointer.
+Otherwise, the element count pointer must: point to a variable set by the
+application to the number of elements in the return array, and on return the
+variable is overwritten with the number of elements actually written to the
+return array.
+If the input element count is less than the number of retrievable array
+elements, the query will write only as many elements to the return array as
+specified by the element count variable set by the application, and the
+command will return ename:VK_INCOMPLETE instead of ename:VK_SUCCESS, to
+indicate that not all retrievable array elements were returned.
+
+[NOTE]
+====
+In practice, this means that applications will typically call such query
+commands twice:
+
+  * First, with the array pointer set to `NULL`, to retrieve the number of
+    retrievable elements.
+  * Second, with the array pointer pointing to an application allocated
+    storage for at least as many elements as indicated by the variable
+    pointed to by the element count pointer, to retrieve at most as many of
+    the retrievable elements.
+====
+
+Query commands that return one or more structures, regardless of whether
+they return a single or an array of structures with or without a pname:pNext
+chain, may: also contain arrays within those structures.
+Such return arrays are typically defined in the form of two members as
+follows:
+
+  * An integer value specifying the element count, conventionally named as
+    ftext:*Count where ftext:* is the singular form of the name of the
+    retrieved values.
+  * A pointer to an array where the result array is retrieved,
+    conventionally named as ftext:p* where ftext:* is the capitalized plural
+    form of the name of the retrieved values.
+
+Analogously to query commands that return multiple results, if the command
+is called with the array pointer member of the output structure in question
+set to `NULL`, then the number of retrievable elements is returned in the
+element count member of that output structure.
+Otherwise, the element count must: specify the number of elements in the
+return array, and on return the element count member is overwritten with the
+number of elements actually written to the return array.
+If the input element count is less than the number of retrievable array
+elements, the query will write only as many elements to the return array as
+specified by the input element count, and the command will return
+ename:VK_INCOMPLETE instead of ename:VK_SUCCESS, if the query command has a
+elink:VkResult return type, to indicate that not all retrievable array
+elements were returned.
+
+[NOTE]
+====
+Applications need to separately track the value they provided as the input
+element count member for such arrays and compare those with the returned
+element counts in order to determine whether the actually returned element
+count is smaller than the size of the return array.
+Another side effect of this is that it is impossible for the application to
+determine if the number of retrievable elements has increased beyond the
+provided input element count so using return arrays in output structures
+should: be limited to _invariant_ array results.
+In practice, this means that applications will typically call such query
+commands multiple times:
+
+  * First, with the array pointer member(s) set to `NULL`, to retrieve the
+    number(s) of retrievable elements.
+  * Second, with the array pointer(s) pointing to an application allocated
+    storage for at least as many elements as indicated by the element count
+    member(s), to retrieve at most as many of the retrievable elements.
+  * Then the process may: need to be repeated for all other newly introduced
+    return arrays in any nested output structures indirectly specified
+    through the previously retrieved result arrays.
+====
+
+Regardless of the type of query command, any array pointer member of an
+output structure must: either be `NULL`, or point to an
+application-allocated array.
+Query commands must: not return a pointer to implementation allocated
+storage in any output structure.
+
+
+[[fundamentals-binaryresults]]
+=== Opaque Binary Data Results
+
+Some query commands of the form ftext:vkGet* retrieve opaque binary data in
+the form of a byte array and have a possible result code of
+ename:VK_ERROR_NOT_ENOUGH_SPACE_KHR.
+Such commands always have two pointer arguments as follows:
+
+  * A binary data size pointer pointing to a code:size_t variable,
+    conventionally named as ftext:p*Size where ftext:* is the capitalized
+    form of the name of the retrieved binary data.
+  * A pointer to a byte array where the binary data is retrieved,
+    conventionally named as ftext:p* where ftext:* is the capitalized form
+    of the name of the retrieved binary data.
+
+If such commands are called with the binary pointer not set to `NULL`, the
+binary size pointer must: point to a variable set by the application to the
+allocated size of the binary pointer.
+These arguments may: also be placed in an extensible structure, in which
+case the binary data size argument is not a pointer.
+
+If the input binary size is less than the total retrievable binary size, the
+query will not write any data to the location pointed to the binary pointer,
+and the command will return ename:VK_ERROR_NOT_ENOUGH_SPACE_KHR instead of
+ename:VK_SUCCESS.
+
+If the return code is ename:VK_SUCCESS or
+ename:VK_ERROR_NOT_ENOUGH_SPACE_KHR, the total size of the binary data that
+can: be retrieved is returned in the variable pointed to by the binary size
+pointer.
+
+If multiple binaries are being retrieved,
+ename:VK_ERROR_NOT_ENOUGH_SPACE_KHR will be returned if any input binary
+sizes are less than their respective total retrievable binary sizes.
+Unless otherwise specified, this command will determine writing data to each
+binary individually based on if their input binary sizes are sufficiently
+sized, following the behavior for single binary retrieval.
+
+For all other error codes, the contents of the return structures are
+undefined:.
+
+[NOTE]
+====
+If ename:VK_ERROR_NOT_ENOUGH_SPACE_KHR is returned with a command that
+returns multiple binaries, the application can: determine which binaries are
+undersized by comparing the total binary size that is returned for each
+binary against the allocated size that was provided to the command.
+====
+
+[NOTE]
+====
+Some binary queries do not behave consistently with this pattern for
+historical reasons, primarily that the ename:VK_ERROR_NOT_ENOUGH_SPACE_KHR
+error code was not defined until after those queries were written.
+
+A NOTE is added to each such query, describing such inconsistent behavior.
+====
+
+
 [[fundamentals-threadingbehavior]]
 == Threading Behavior
 
@@ -728,16 +705,20 @@ using such a parameter at a given time.
 
 More precisely, Vulkan commands use simple stores to update the state of
 Vulkan objects.
-A parameter declared as externally synchronized may: have its contents
-updated at any time during the host execution of the command.
-If two commands operate on the same object and at least one of the commands
-declares the object to be externally synchronized, then the caller must:
-guarantee not only that the commands do not execute simultaneously, but also
-that the two commands are separated by an appropriate memory barrier (if
-needed).
+The implementation may: not synchronize accesses to memory parameters or
+object parameters declared as externally synchronized with other accesses.
+If two commands access the same object or memory and at least one of the
+commands declares the object to be externally synchronized, then the caller
+must: guarantee not only that the commands do not execute simultaneously,
+but also that the two commands are separated by an appropriate memory
+barrier (if needed).
+Similarly, if a Vulkan command accesses a non-const memory parameter and the
+application also accesses that memory, or if the application writes to that
+memory and the command accesses it as a const memory parameter, the
+application must: ensure the accesses are properly synchronized with a
+memory barrier if needed.
 
 [NOTE]
-.Note
 ====
 Memory barriers are particularly relevant for hosts based on the ARM CPU
 architecture, which is more weakly ordered than many developers are
@@ -747,30 +728,7 @@ library) perform memory barriers as a part of mutual exclusion, so mutexing
 Vulkan objects via these primitives will have the desired effect.
 ====
 
-Similarly the application must: avoid any potential data hazard of
-application-owned memory that has its
-<<fundamentals-objectmodel-lifetime-acquire,ownership temporarily acquired>>
-by a Vulkan command.
-While the ownership of application-owned memory remains acquired by a
-command the implementation may: read the memory at any point, and it may:
-write non-code:const qualified memory at any point.
-Parameters referring to non-code:const qualified application-owned memory
-are not marked explicitly as _externally synchronized_ in the Specification.
-
-ifdef::VK_KHR_deferred_host_operations[]
-If an application is using <<deferred-host-operations, deferred host
-operations>> in a command, and that operation is successfully deferred,
-object parameters and application-owned memory passed to that command may:
-be accessed at any time until the deferred operation is complete.
-endif::VK_KHR_deferred_host_operations[]
-
-Many object types are _immutable_, meaning the objects cannot: change once
-they have been created.
-These types of objects never need external synchronization, except that they
-must: not be destroyed while they are in use on another thread.
-In certain special cases mutable object parameters are internally
-synchronized, making external synchronization unnecessary.
-Any command parameters that are not labeled as externally synchronized are
+Any object parameters that are not labeled as externally synchronized are
 either not mutated by the command or are internally synchronized.
 Additionally, certain objects related to a command's parameters (e.g.
 command pools and descriptor pools) may: be affected by a command, and must:
@@ -781,15 +739,9 @@ Parameters of commands that are externally synchronized are listed below.
 
 include::{generated}/hostsynctable/parameters.adoc[]
 
-ifdef::VK_VERSION_1_3,VK_EXT_pipeline_creation_cache_control[]
-For slink:VkPipelineCache objects created with pname:flags containing
-ename:VK_PIPELINE_CACHE_CREATE_EXTERNALLY_SYNCHRONIZED_BIT, the above table
-is extended with the pname:pipelineCache parameter to
-ftext:vkCreate*Pipelines being externally synchronized.
-endif::VK_VERSION_1_3,VK_EXT_pipeline_creation_cache_control[]
-
-There are also a few instances where a command can: take in a user allocated
-list whose contents are externally synchronized parameters.
+There are also a few instances where a command can: take in an
+application-allocated list whose contents are externally synchronized
+parameters.
 In these cases, the caller must: guarantee that at most one thread is using
 a given element within the list at a given time.
 These parameters are listed below.
@@ -822,7 +774,7 @@ core layer to an application using the API incorrectly is undefined:, and
 may: include program termination.
 However, implementations must: ensure that incorrect usage by an application
 does not affect the integrity of the operating system, the Vulkan
-implementation, or other Vulkan client applications in the system.
+implementation, or other applications in the system using Vulkan.
 In particular, any guarantees made by an operating system about whether
 memory from one process can: be visible to another process or not must: not
 be violated by a Vulkan implementation for *any memory allocation*.
@@ -831,7 +783,6 @@ integrity guarantees beyond those provided by the OS unless explicitly
 directed by the application's use of a particular feature or extension.
 
 [NOTE]
-.Note
 ====
 For instance, if an operating system guarantees that data in all its memory
 allocations are set to zero when newly allocated, the Vulkan implementation
@@ -868,7 +819,6 @@ This is such that a validation layer or linter can: be written directly
 against these statements at the point they are specified.
 
 [NOTE]
-.Note
 ====
 This does lead to some non-obvious places for valid usage statements.
 For instance, the valid values for a structure might depend on a separate
@@ -883,7 +833,7 @@ valid usage statements are attached to the place where all state needs to be
 valid - at the drawing command.
 ====
 
-Valid usage conditions are described in a block labelled "`Valid Usage`"
+Valid usage conditions are described in a block labeled "`Valid Usage`"
 following each command or structure they apply to.
 
 
@@ -915,7 +865,7 @@ endif::VKSC_VERSION_1_0[]
 Some valid usage conditions apply to all commands and structures in the API,
 unless explicitly denoted otherwise for a specific command or structure.
 These conditions are considered _implicit_, and are described in a block
-labelled "`Valid Usage (Implicit)`" following each command or structure they
+labeled "`Valid Usage (Implicit)`" following each command or structure they
 apply to.
 Implicit valid usage conditions are described in detail below.
 
@@ -959,9 +909,14 @@ a structure) satisfy the alignment requirements of the host processor.
 [[fundamentals-validusage-strings]]
 ==== Valid Usage for Strings
 
-Any parameter that is a pointer to `char` must: be a finite sequence of
+Any parameter that is a pointer to code:char must: be a finite sequence of
 values terminated by a null character, or if _explicitly called out in the
 Specification_, can: be `NULL`.
+
+Strings specified as UTF-8 encoded must: not contain invalid UTF-8
+sequences.
+See <<fundamentals-strings, String Representation>> for additional
+information about strings.
 
 
 [[fundamentals-validusage-enums]]
@@ -1000,15 +955,15 @@ endif::VK_VERSION_1_1[]
   ** it was added by a <<extensions, device extension>> that was enabled for
      the device.
 
-ifdef::VK_KHR_maintenance5[]
-Additionally, if <<features-maintenance5,pname:maintenance5>> is supported,
-any integer value representable in the range valid for the defined type is
-valid when used in a function that has a slink:VkPhysicalDevice object as
-its first parameter.
+ifdef::VK_VERSION_1_4,VK_KHR_maintenance5[]
+Additionally, if the <<features-maintenance5,pname:maintenance5>> feature is
+supported, any integer value representable in the range valid for the
+defined type is valid when used in a function that has a
+slink:VkPhysicalDevice object as its first parameter.
 Physical device queries will either return results indicating lack of
 support, or ignore unsupported values when used as a bit flag in a
 etext:Vk*Flags* parameter.
-endif::VK_KHR_maintenance5[]
+endif::VK_VERSION_1_4,VK_KHR_maintenance5[]
 
 Any enumerated type returned from a query command or otherwise output from
 Vulkan to the application must: not have a reserved value.
@@ -1016,7 +971,6 @@ Reserved values are values not defined by any extension for that enumerated
 type.
 
 [NOTE]
-.Note
 ====
 In some special cases, an enumerant is only meaningful if a feature defined
 by an extension is also enabled, as well as the extension itself.
@@ -1025,7 +979,6 @@ cases.
 ====
 
 [NOTE]
-.Note
 ====
 This language is intended to accommodate cases such as "`hidden`" extensions
 known only to driver internals, or layers enabling extensions without
@@ -1034,7 +987,6 @@ by any extension.
 ====
 
 [NOTE]
-.Note
 ====
 Application developers are encouraged to be careful when using `switch`
 statements with Vulkan API enums.
@@ -1085,7 +1037,6 @@ Only the low-order 31 bits (bit positions zero through 30) are available for
 use as flag bits.
 
 [NOTE]
-.Note
 ====
 This restriction is due to poorly defined behavior by C compilers given a C
 enumerant value of `0x80000000`.
@@ -1128,7 +1079,6 @@ undefined: in its corresponding etext:Vk*FlagBits2 type.
 An application cannot: rely on the state of these unspecified bits.
 
 [NOTE]
-.Note
 ====
 Both the etext:Vk*FlagBits2 type, and the individual bits defined for that
 type, are defined as `uint64_t` integers in the C API.
@@ -1249,7 +1199,7 @@ ifdef::VK_VERSION_1_1,VK_KHR_get_physical_device_properties2[]
 Physical-device-level functionality or behavior added by a <<extensions,
 device extension>> to the API must: not be used unless the conditions
 described in <<initialization-phys-dev-extensions, Extending Physical Device
-Core Functionality>> are met.
+From Device Extensions>> are met.
 endif::VK_VERSION_1_1,VK_KHR_get_physical_device_properties2[]
 
 Device-level functionality added by a <<extensions, device extension>> that
@@ -1257,6 +1207,7 @@ is dispatched from a slink:VkDevice, or from a child object of a
 slink:VkDevice must: not be used unless that extension is supported by the
 device as determined by flink:vkEnumerateDeviceExtensionProperties, and that
 extension is enabled in slink:VkDeviceCreateInfo.
+
 
 [[fundamentals-validusage-versions]]
 ==== Valid Usage for Newer Core Versions
@@ -1295,7 +1246,7 @@ two categories:
   * Successful completion codes are returned when a command needs to
     communicate success or status information.
     All successful completion codes are non-negative values.
-  * Run time error codes are returned when a command needs to communicate a
+  * Runtime error codes are returned when a command needs to communicate a
     failure that could only be detected at runtime.
     All runtime error codes are negative values.
 
@@ -1333,9 +1284,27 @@ ifdef::VK_VERSION_1_3,VK_EXT_pipeline_creation_cache_control[]
     have required compilation, but the application requested compilation to
     not be performed.
 endif::VK_VERSION_1_3,VK_EXT_pipeline_creation_cache_control[]
+ifdef::VK_KHR_pipeline_binary[]
+  * ename:VK_PIPELINE_BINARY_MISSING_KHR The application attempted to create
+    a pipeline binary by querying an internal cache, but the internal cache
+    entry did not exist.
+endif::VK_KHR_pipeline_binary[]
+ifdef::VK_EXT_shader_object[]
+  * ename:VK_INCOMPATIBLE_SHADER_BINARY_EXT The provided binary shader code
+    is not compatible with this device.
++
+[NOTE]
+====
+In the initial version of the `apiext:VK_EXT_shader_object` extension, this
+return code was named ename:VK_ERROR_INCOMPATIBLE_SHADER_BINARY_EXT and
+improperly described as an error code.
+The name has been changed, but the old name is retained as an alias for
+compatibility with old code.
+====
+endif::VK_EXT_shader_object[]
 
 [[fundamentals-errorcodes]]
-.Error codes
+.Error Codes
   * ename:VK_ERROR_OUT_OF_HOST_MEMORY A host memory allocation has failed.
   * ename:VK_ERROR_OUT_OF_DEVICE_MEMORY A device memory allocation has
     failed.
@@ -1427,16 +1396,9 @@ ifdef::VK_EXT_full_screen_exclusive[]
     This may: occur due to implementation-dependent reasons, outside of the
     application's control.
 endif::VK_EXT_full_screen_exclusive[]
-ifdef::VKSC_VERSION_1_0,VK_EXT_debug_report[]
-ifdef::VKSC_VERSION_1_0[]
-  * ename:VK_ERROR_VALIDATION_FAILED
-endif::VKSC_VERSION_1_0[]
-ifdef::VK_EXT_debug_report[]
-  * ename:VK_ERROR_VALIDATION_FAILED_EXT
-endif::VK_EXT_debug_report[]
-    A command failed because invalid usage was detected by the
-    implementation or a validation-layer.
-endif::VKSC_VERSION_1_0,VK_EXT_debug_report[]
+  * ename:VK_ERROR_VALIDATION_FAILED A command failed because invalid usage
+    was detected by the implementation or a validation layer.
+    This may: result in the command not being dispatched to the ICD.
 ifdef::VKSC_VERSION_1_0[]
   * ename:VK_ERROR_INVALID_PIPELINE_CACHE_DATA The supplied pipeline cache
     data was not valid for the current implementation.
@@ -1482,10 +1444,16 @@ ifdef::VK_KHR_video_encode_queue[]
     not adhere to the capabilities of the video compression standard or the
     implementation.
 endif::VK_KHR_video_encode_queue[]
-ifdef::VK_EXT_shader_object[]
-  * ename:VK_ERROR_INCOMPATIBLE_SHADER_BINARY_EXT The provided binary shader
-    code is not compatible with this device.
-endif::VK_EXT_shader_object[]
+ifdef::VK_VERSION_1_4,VK_KHR_global_priority,VK_EXT_global_priority[]
+  * ename:VK_ERROR_NOT_PERMITTED The driver implementation has denied a
+    request to acquire a priority above the default priority
+    (ename:VK_QUEUE_GLOBAL_PRIORITY_MEDIUM_EXT) because the application does
+    not have sufficient privileges.
+endif::VK_VERSION_1_4,VK_KHR_global_priority,VK_EXT_global_priority[]
+ifdef::VK_KHR_pipeline_binary[]
+  * ename:VK_ERROR_NOT_ENOUGH_SPACE_KHR The application did not provide
+    enough space to return all the required data.
+endif::VK_KHR_pipeline_binary[]
   * ename:VK_ERROR_UNKNOWN An unknown error has occurred; either the
     application has provided invalid input, or an implementation failure has
     occurred.
@@ -1518,7 +1486,6 @@ endif::hidden[]
 endif::VKSC_VERSION_1_0[]
 
 [NOTE]
-.Note
 ====
 As a general rule, ftext:Free, ftext:Release, and ftext:Reset commands do
 not return ename:VK_ERROR_OUT_OF_HOST_MEMORY, while any other command with a
@@ -1533,24 +1500,18 @@ Under these conditions, it may: be returned from any command returning a
 elink:VkResult.
 
 [NOTE]
-.Note
 ====
 ename:VK_ERROR_UNKNOWN is not expected to ever be returned if the
 application behavior is valid, and if the implementation is bug-free.
-If ename:VK_ERROR_UNKNOWN is received, the application should be checked
+If ename:VK_ERROR_UNKNOWN is returned, the application should be checked
 against the latest validation layers to verify correct behavior as much as
 possible.
 If no issues are identified it could be an implementation issue, and the
 implementor should be contacted for support.
 ====
 
-ifdef::VKSC_VERSION_1_0,VK_EXT_debug_report[]
 Any command returning a elink:VkResult may: return
-ifdef::VKSC_VERSION_1_0[ename:VK_ERROR_VALIDATION_FAILED]
-ifdef::VK_EXT_debug_report[ename:VK_ERROR_VALIDATION_FAILED_EXT]
-if a violation of valid usage is detected, even though commands do not
-explicitly list this as a possible return code.
-endif::VKSC_VERSION_1_0,VK_EXT_debug_report[]
+ename:VK_ERROR_VALIDATION_FAILED if a violation of valid usage is detected.
 
 Performance-critical commands generally do not have return codes.
 If a runtime error occurs in such commands, the implementation will defer
@@ -1560,7 +1521,6 @@ are reported by fname:vkEndCommandBuffer.
 
 ifdef::VKSC_VERSION_1_0[]
 [NOTE]
-.Note
 ====
 Implementations can also use <<fault-handling>> to report runtime errors
 where suitable return values are not available or to provide more prompt
@@ -1590,7 +1550,7 @@ by Vulkan.
 Specific floating-point formats are described later in this section.
 
 
-[[fundamentals-floatingpoint]]
+[[fundamentals-floating-point]]
 === Floating-Point Computation
 
 Most floating-point computation is performed in SPIR-V shader modules.
@@ -1604,20 +1564,6 @@ For these computations, we do not specify how floating-point numbers are to
 be represented, or the details of how operations on them are performed, but
 only place minimal requirements on representation and precision as described
 in the remainder of this section.
-
-ifdef::editing-notes[]
-[NOTE]
-.editing-note
-====
-(Jon, Bug 14966) This is a rat's nest of complexity, both in terms of
-describing/enumerating places such computation may: take place (other than
-"`not shader code`") and in how implementations may: do it.
-We have consciously deferred the resolution of this issue to post-1.0, and
-in the meantime, the following language inherited from the OpenGL
-Specification is inserted as a placeholder.
-Hopefully it can: be tightened up considerably.
-====
-endif::editing-notes[]
 
 We require simply that numbers`' floating-point parts contain enough bits
 and that their exponent fields are large enough so that individual results
@@ -1663,25 +1609,32 @@ formats; and any [eq]#NaN# is converted to a [eq]#NaN#.
 [[fundamentals-fp16]]
 === 16-Bit Floating-Point Numbers
 
-16-bit floating point numbers are defined in the "`16-bit floating point
+16-bit floating-point numbers are defined in the "`16-bit floating-point
 numbers`" section of the <<data-format,Khronos Data Format Specification>>.
 
 
 [[fundamentals-fp11]]
 === Unsigned 11-Bit Floating-Point Numbers
 
-Unsigned 11-bit floating point numbers are defined in the "`Unsigned 11-bit
-floating point numbers`" section of the <<data-format,Khronos Data Format
+Unsigned 11-bit floating-point numbers are defined in the "`Unsigned 11-bit
+floating-point numbers`" section of the <<data-format,Khronos Data Format
 Specification>>.
 
 
 [[fundamentals-fp10]]
 === Unsigned 10-Bit Floating-Point Numbers
 
-Unsigned 10-bit floating point numbers are defined in the "`Unsigned 10-bit
-floating point numbers`" section of the <<data-format,Khronos Data Format
+Unsigned 10-bit floating-point numbers are defined in the "`Unsigned 10-bit
+floating-point numbers`" section of the <<data-format,Khronos Data Format
 Specification>>.
 
+[[fundamentals-bool]]
+=== 8-bit booleans
+
+An 8-bit boolean uses the following representation for `true` and `false`:
+
+* Zero to represent `false`
+* Any non-zero value to represent `true`
 
 [[fundamentals-general]]
 === General Requirements
@@ -1733,9 +1686,9 @@ The conversion from an unsigned normalized fixed-point value [eq]#c# to the
 corresponding floating-point value [eq]#f# is defined as
 
 [latexmath]
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++
 f = { c \over { 2^b - 1 } }
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++
 
 Signed normalized fixed-point integers represent numbers in the range
 [eq]#[-1,1]#.
@@ -1743,9 +1696,9 @@ The conversion from a signed normalized fixed-point value [eq]#c# to the
 corresponding floating-point value [eq]#f# is performed using
 
 [latexmath]
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++
 f = \max\left( {c \over {2^{b-1} - 1}}, -1.0 \right)
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++
 
 Only the range [eq]#[-2^b-1^ {plus} 1, 2^b-1^ - 1]# is used to represent
 signed fixed-point values in the range [eq]#[-1,1]#.
@@ -1797,6 +1750,40 @@ be assigned [eq]#-(2^b-1^ - 1)#, 0, or [eq]#2^b-1^ - 1#, respectively.
 
 This equation is used everywhere that floating-point values are converted to
 signed normalized fixed-point.
+
+
+[[fundamentals-strings]]
+== String Representation
+
+Strings passed into and returned from Vulkan API commands are usually
+defined to be null-terminated and UTF-8 encoded.
+
+[NOTE]
+====
+Exceptions to this rule exist only when strings are defined or used by
+operating system APIs where that OS has a different convention.
+For example, slink:VkExportMemoryWin32HandleInfoKHR::pname:name is a
+null-terminated UTF-16 encoded string used in conjunction with Windows
+handles.
+====
+
+When a UTF-8 string is *returned from* a Vulkan API query, it is returned in
+a fixed-length buffer of C code:char.
+For example, a string returned in
+slink:VkPhysicalDeviceProperties::pname:deviceName has maximum length
+ename:VK_MAX_PHYSICAL_DEVICE_NAME_SIZE, and a string returned in
+slink:VkExtensionProperties::pname:extensionName has maximum length
+ename:VK_MAX_EXTENSION_NAME_SIZE.
+The string, *including* its null terminator, will always fit completely
+within this buffer.
+If the string is shorter than the buffer size, the contents of code:char in
+the buffer following the null terminator are undefined:.
+
+When a UTF-8 string is *passed into* a Vulkan API, such as
+slink:VkDeviceCreateInfo::pname:ppEnabledExtensionNames, there is no
+explicit limit on the length of that string.
+However, the string must: contain a valid UTF-8 encoded string and must: be
+null-terminated.
 
 
 [[fundamentals-common-objects]]
@@ -1944,7 +1931,6 @@ The alias is deprecated and should not be used, but will be retained
 indefinitely.
 
 [NOTE]
-.Note
 ====
 etext:VK_STENCIL_FRONT_AND_BACK is an example of a _typo alias_.
 It was initially defined as part of elink:VkStencilFaceFlagBits.

@@ -1,4 +1,4 @@
-// Copyright 2014-2024 The Khronos Group Inc.
+// Copyright 2014-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -9,7 +9,7 @@ include::{generated}/specattribs.adoc[]
 = Vulkan^®^ Documentation and Extensions: Procedures and Conventions
 Jon Leech, Tobias Hector
 :data-uri:
-:icons: font
+:!icons:
 :toc2:
 :toclevels: 3
 :numbered:

@@ -1,4 +1,4 @@
-// Copyright 2015-2024 The Khronos Group Inc.
+// Copyright 2015-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -87,9 +87,46 @@ The image subresources for a storage image must: be in the
 ifdef::VK_KHR_shared_presentable_image[]
 ename:VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR or
 endif::VK_KHR_shared_presentable_image[]
+ifdef::VK_ARM_tensors[]
+ename:VK_IMAGE_LAYOUT_TENSOR_ALIASING_ARM or
+endif::VK_ARM_tensors[]
 ename:VK_IMAGE_LAYOUT_GENERAL layout in order to access its data in a
 shader.
 
+ifdef::VK_QCOM_tile_shading[]
+When the <<features-tileShadingColorAttachments,
+pname:tileShadingColorAttachments>> feature is enabled, loads using
+code:OpImageRead or code:OpImageSparseRead are supported for color
+<<interfaces-tile-attachment, tile attachments>> in fragment and compute
+shaders for image views whose <<resources-image-view-format-features, format
+features>> contain <<formats-properties,
+ename:VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT>>.
+Additionally, when the <<features-tileShadingColorAttachments,
+pname:tileShadingColorAttachments>> feature is enabled, stores using
+code:OpImageWrite are supported for color attachments in compute shaders
+with the same set of image formats as for loads.
+When the <<features-tileShadingAtomicOps, pname:tileShadingAtomicOps>>
+feature is enabled, tile atomic operations are supported for color
+attachments in compute shaders with the same set of image formats as for
+loads.
+
+When the <<features-tileShadingInputAttachments,
+pname:tileShadingInputAttachments>> feature is enabled, loads using
+code:OpImageRead are supported for input <<interfaces-tile-attachment, tile
+attachments>> in fragment and compute shaders with the same set of image
+formats as for color attachments.
+Stores to input attachments are not supported.
+
+When the <<features-tileShadingDepthAttachments,
+pname:tileShadingDepthAttachments>> or
+<<features-tileShadingStencilAttachments,
+pname:tileShadingStencilAttachments>> feature is enabled, loads using
+code:OpImageRead or code:OpImageSparseRead are supported for depth or
+stencil aspects of a depth/stencil <<interfaces-tile-attachment, tile
+attachment>> in fragment and compute shaders with the same set of image
+formats as for color attachments.
+Stores to depth/stencil attachments are not supported.
+endif::VK_QCOM_tile_shading[]
 
 [[descriptorsets-sampler]]
 === Sampler
@@ -138,6 +175,9 @@ endif::VK_KHR_synchronization2[]
 ifdef::VK_EXT_attachment_feedback_loop_layout[]
   * ename:VK_IMAGE_LAYOUT_ATTACHMENT_FEEDBACK_LOOP_OPTIMAL_EXT
 endif::VK_EXT_attachment_feedback_loop_layout[]
+ifdef::VK_ARM_tensors[]
+  * ename:VK_IMAGE_LAYOUT_TENSOR_ALIASING_ARM
+endif::VK_ARM_tensors[]
 
 
 [[descriptorsets-combinedimagesampler]]
@@ -198,10 +238,12 @@ endif::VK_KHR_synchronization2[]
 ifdef::VK_EXT_attachment_feedback_loop_layout[]
   * ename:VK_IMAGE_LAYOUT_ATTACHMENT_FEEDBACK_LOOP_OPTIMAL_EXT
 endif::VK_EXT_attachment_feedback_loop_layout[]
+ifdef::VK_ARM_tensors[]
+  * ename:VK_IMAGE_LAYOUT_TENSOR_ALIASING_ARM
+endif::VK_ARM_tensors[]
 
 
 [NOTE]
-.Note
 ====
 On some implementations, it may: be more efficient to sample from an image
 using a combination of sampler and sampled image that are stored together in
@@ -278,7 +320,6 @@ described in a shader as a structure with various members that load, store,
 and atomic operations can: be performed on.
 
 [NOTE]
-.Note
 ====
 Atomic operations can: only be performed on members of certain types as
 defined in the <<spirvenv, SPIR-V environment appendix>>.
@@ -348,7 +389,7 @@ A _sample weight image_ (ename:VK_DESCRIPTOR_TYPE_SAMPLE_WEIGHT_IMAGE_QCOM)
 is a descriptor type associated with an <<resources-images, image resource>>
 via an <<resources-image-views, image view>> that can: be used in
 <<textures-weightimage, weight image sampling>>.
-The image view must have been created with
+The image view must: have been created with
 slink:VkImageViewSampleWeightCreateInfoQCOM.
 
 Shaders can: combine a weight image variable, a sampled image variable, and
@@ -430,6 +471,9 @@ endif::VK_KHR_synchronization2[]
 ifdef::VK_EXT_attachment_feedback_loop_layout[]
   * ename:VK_IMAGE_LAYOUT_ATTACHMENT_FEEDBACK_LOOP_OPTIMAL_EXT
 endif::VK_EXT_attachment_feedback_loop_layout[]
+ifdef::VK_VERSION_1_4,VK_KHR_dynamic_rendering_local_read[]
+  * ename:VK_IMAGE_LAYOUT_RENDERING_LOCAL_READ
+endif::VK_VERSION_1_4,VK_KHR_dynamic_rendering_local_read[]
 
 
 ifdef::VK_NV_ray_tracing,VK_KHR_acceleration_structure[]
@@ -452,9 +496,8 @@ ifdef::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
 
 A descriptor of _mutable_ (ename:VK_DESCRIPTOR_TYPE_MUTABLE_EXT) type
 indicates that this descriptor can: mutate to any of the descriptor types
-given in the
-slink:VkMutableDescriptorTypeCreateInfoEXT::pname:pDescriptorTypes list of
-descriptor types in the pname:pNext chain of
+given in the slink:VkMutableDescriptorTypeListEXT::pname:pDescriptorTypes
+list of descriptor types in the pname:pNext chain of
 slink:VkDescriptorSetLayoutCreateInfo for this binding.
 At any point, each individual descriptor of mutable type has an active
 descriptor type.
@@ -474,19 +517,17 @@ what the shader expects, the descriptor is considered an undefined:
 descriptor.
 
 [NOTE]
-.Note
 ====
 To find which descriptor types are supported as
 ename:VK_DESCRIPTOR_TYPE_MUTABLE_EXT, the application can: use
-flink:vkGetDescriptorSetLayoutSupport with an
+flink:vkGetDescriptorSetLayoutSupport with a
 ename:VK_DESCRIPTOR_TYPE_MUTABLE_EXT binding, with the list of descriptor
 types to query in the
-slink:VkMutableDescriptorTypeCreateInfoEXT::pname:pDescriptorTypes array for
-that binding.
+slink:VkMutableDescriptorTypeCreateInfoEXT::pname:pMutableDescriptorTypeLists
+array for that binding.
 ====
 
 [NOTE]
-.Note
 ====
 The intention of a mutable descriptor type is that implementations allocate
 N bytes per descriptor, where N is determined by the maximum descriptor size
@@ -502,6 +543,27 @@ many different descriptors to emulate mutable descriptor types.
 ====
 endif::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
 
+ifdef::VK_ARM_tensors[]
+[[descriptorsets-storagetensor]]
+=== Storage Tensor
+
+A _storage tensor_ (ename:VK_DESCRIPTOR_TYPE_TENSOR_ARM) is a descriptor
+type associated with a <<resources-tensors,tensor resource>> via a
+<<resources-tensor-views,tensor view>> that read and write operations can:
+be performed on.
+
+Storage tensor reads and writes are supported in shaders for tensor views
+whose <<resources-tensor-view-format-features,format features>> contain
+<<formats-properties,ename:VK_FORMAT_FEATURE_2_TENSOR_SHADER_BIT_ARM>>.
+
+ifdef::VK_ARM_data_graph[]
+Storage tensor reads and writes are supported in graph pipelines for tensor
+views whose <<resources-tensor-view-format-features,format features>>
+contain
+<<formats-properties,ename:VK_FORMAT_FEATURE_2_TENSOR_DATA_GRAPH_BIT_ARM>>.
+endif::VK_ARM_data_graph[]
+
+endif::VK_ARM_tensors[]
 
 [[descriptorsets-sets]]
 == Descriptor Sets
@@ -540,6 +602,7 @@ include::{generated}/api/handles/VkDescriptorSetLayout.adoc[]
 :refpage: vkCreateDescriptorSetLayout
 :objectnameplural: descriptor set layouts
 :objectnamecamelcase: descriptorSetLayout
+:objectnamestruct: VkDeviceObjectReservationCreateInfo
 :objectcount: 1
 
 To create descriptor set layout objects, call:
@@ -558,9 +621,20 @@ include::{generated}/api/protos/vkCreateDescriptorSetLayout.adoc[]
 
 include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
 
-ifdef::VKSC_VERSION_1_0[]
+ifdef::VK_VERSION_1_1,VK_KHR_maintenance3,VKSC_VERSION_1_0[]
 .Valid Usage
 ****
+ifdef::VK_VERSION_1_1,VK_KHR_maintenance3[]
+
+  * [[VUID-vkCreateDescriptorSetLayout-support-09582]]
+    If the descriptor layout exceeds the limits reported through the
+    <<limits,physical device limits>>, then
+    flink:vkGetDescriptorSetLayoutSupport must: have returned
+    slink:VkDescriptorSetLayoutSupport with pname:support equal to
+    ename:VK_TRUE for pname:pCreateInfo
+
+endif::VK_VERSION_1_1,VK_KHR_maintenance3[]
+ifdef::VKSC_VERSION_1_0[]
 include::{chapters}/commonvalidity/memory_reservation_request_count_common.adoc[]
 
 :uniqifier: layoutbindings
@@ -569,8 +643,9 @@ include::{chapters}/commonvalidity/memory_reservation_request_count_common.adoc[
 :combinedobjectcount: pname:pCreateInfo->bindingCount
 :combinedobjectnamecamelcase: descriptorSetLayoutBinding
 include::{chapters}/commonvalidity/memory_reservation_request_count_combined_common.adoc[]
-****
 endif::VKSC_VERSION_1_0[]
+****
+endif::VK_VERSION_1_1,VK_KHR_maintenance3,VKSC_VERSION_1_0[]
 
 include::{generated}/validity/protos/vkCreateDescriptorSetLayout.adoc[]
 --
@@ -586,9 +661,9 @@ include::{generated}/api/structs/VkDescriptorSetLayoutCreateInfo.adoc[]
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:flags is a bitmask
-ifdef::VK_KHR_push_descriptor[]
+ifdef::VK_VERSION_1_4,VK_KHR_push_descriptor[]
     of elink:VkDescriptorSetLayoutCreateFlagBits
-endif::VK_KHR_push_descriptor[]
+endif::VK_VERSION_1_4,VK_KHR_push_descriptor[]
     specifying options for descriptor set layout creation.
   * pname:bindingCount is the number of elements in pname:pBindings.
   * pname:pBindings is a pointer to an array of
@@ -607,38 +682,47 @@ ifndef::VK_NV_per_stage_descriptor_set[]
 endif::VK_NV_per_stage_descriptor_set[]
     slink:VkDescriptorSetLayoutBinding::pname:binding members of the
     elements of the pname:pBindings array must: each have different values
+ifdef::VK_VERSION_1_4[]
+  * [[VUID-VkDescriptorSetLayoutCreateInfo-flags-10354]]
+    If pname:flags contains
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT,
 ifdef::VK_KHR_push_descriptor[]
+    and the apiext:VK_KHR_push_descriptor extension is not enabled,
+endif::VK_KHR_push_descriptor[]
+    <<features-pushDescriptor, pname:pushDescriptor>> must: be enabled
+endif::VK_VERSION_1_4[]
+ifdef::VK_VERSION_1_4,VK_KHR_push_descriptor[]
   * [[VUID-VkDescriptorSetLayoutCreateInfo-flags-00280]]
     If pname:flags contains
-    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR, then all
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT, then all
     elements of pname:pBindings must: not have a pname:descriptorType of
     ename:VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC or
     ename:VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC
 ifdef::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
   * [[VUID-VkDescriptorSetLayoutCreateInfo-flags-02208]]
     If pname:flags contains
-    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR, then all
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT, then all
     elements of pname:pBindings must: not have a pname:descriptorType of
     ename:VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK
 endif::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
   * [[VUID-VkDescriptorSetLayoutCreateInfo-flags-00281]]
     If pname:flags contains
-    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR, then the
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT, then the
     total number of elements of all bindings must: be less than or equal to
-    slink:VkPhysicalDevicePushDescriptorPropertiesKHR::pname:maxPushDescriptors
+    slink:VkPhysicalDevicePushDescriptorProperties::pname:maxPushDescriptors
 ifdef::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
   * [[VUID-VkDescriptorSetLayoutCreateInfo-flags-04590]]
     If pname:flags contains
-    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR,
-    pname:flags must: not contain
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT, pname:flags
+    must: not contain
     ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_HOST_ONLY_POOL_BIT_EXT
   * [[VUID-VkDescriptorSetLayoutCreateInfo-flags-04591]]
     If pname:flags contains
-    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR,
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT,
     pname:pBindings must: not have a pname:descriptorType of
     ename:VK_DESCRIPTOR_TYPE_MUTABLE_EXT
 endif::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
-endif::VK_KHR_push_descriptor[]
+endif::VK_VERSION_1_4,VK_KHR_push_descriptor[]
 ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
   * [[VUID-VkDescriptorSetLayoutCreateInfo-flags-03000]]
     If any binding has the ename:VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
@@ -660,10 +744,9 @@ endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
 ifdef::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
   * [[VUID-VkDescriptorSetLayoutCreateInfo-pBindings-07303]]
     If any element pname:pBindings[i] has a pname:descriptorType of
-    ename:VK_DESCRIPTOR_TYPE_MUTABLE_EXT, then a
-    slink:VkMutableDescriptorTypeCreateInfoEXT must: be present in the
-    pname:pNext chain, and pname:mutableDescriptorTypeListCount must: be
-    greater than i
+    ename:VK_DESCRIPTOR_TYPE_MUTABLE_EXT, then the pname:pNext chain must:
+    include a slink:VkMutableDescriptorTypeCreateInfoEXT structure, and
+    pname:mutableDescriptorTypeListCount must: be greater than i
   * [[VUID-VkDescriptorSetLayoutCreateInfo-descriptorType-04594]]
     If a binding has a pname:descriptorType value of
     ename:VK_DESCRIPTOR_TYPE_MUTABLE_EXT, then sname:pImmutableSamplers
@@ -710,13 +793,13 @@ ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
     pname:flags must: not contain
     ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
 endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
-ifdef::VK_VALVE_mutable_descriptor_type[]
+ifdef::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
   * [[VUID-VkDescriptorSetLayoutCreateInfo-flags-08003]]
     If pname:flags contains
     ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT, then
     pname:flags must: not contain
-    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_HOST_ONLY_POOL_BIT_VALVE
-endif::VK_VALVE_mutable_descriptor_type[]
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_HOST_ONLY_POOL_BIT_EXT
+endif::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
 endif::VK_EXT_descriptor_buffer[]
 ifdef::VK_NV_per_stage_descriptor_set[]
   * [[VUID-VkDescriptorSetLayoutCreateInfo-flags-09463]]
@@ -822,6 +905,11 @@ ifdef::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
     pname:pDescriptorTypes must: not contain
     ename:VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK
 endif::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
+ifdef::VK_ARM_tensors[]
+  * [[VUID-VkMutableDescriptorTypeListEXT-pDescriptorTypes-09696]]
+    pname:pDescriptorTypes must: not contain
+    ename:VK_DESCRIPTOR_TYPE_TENSOR_ARM
+endif::VK_ARM_tensors[]
 ****
 
 include::{generated}/validity/structs/VkMutableDescriptorTypeListEXT.adoc[]
@@ -836,11 +924,11 @@ descriptor set layout, are:
 
 include::{generated}/api/enums/VkDescriptorSetLayoutCreateFlagBits.adoc[]
 
-ifdef::VK_KHR_push_descriptor[]
-  * ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR specifies
-    that descriptor sets must: not be allocated using this layout, and
-    descriptors are instead pushed by flink:vkCmdPushDescriptorSetKHR.
-endif::VK_KHR_push_descriptor[]
+ifdef::VK_VERSION_1_4,VK_KHR_push_descriptor[]
+  * ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT specifies that
+    descriptor sets must: not be allocated using this layout, and
+    descriptors are instead pushed by flink:vkCmdPushDescriptorSet.
+endif::VK_VERSION_1_4,VK_KHR_push_descriptor[]
 ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
 // Jon: "UpdateAfterBind" is a vague reference, should be more precise /
 // link to the right specification area
@@ -896,14 +984,13 @@ ifdef::VK_NV_per_stage_descriptor_set[]
     different resources and/or types of resources in each stage.
 endif::VK_NV_per_stage_descriptor_set[]
 
-ifndef::VK_KHR_push_descriptor[]
+ifndef::VK_VERSION_1_4,VK_KHR_push_descriptor[]
 [NOTE]
-.Note
 ====
 All bits for this type are defined by extensions, and none of those
 extensions are enabled in this build of the specification.
 ====
-endif::VK_KHR_push_descriptor[]
+endif::VK_VERSION_1_4,VK_KHR_push_descriptor[]
 --
 
 [open,refpage='VkDescriptorSetLayoutCreateFlags',desc='Bitmask of VkDescriptorSetLayoutCreateFlagBits',type='flags']
@@ -985,7 +1072,6 @@ used, though it should: not consume additional memory from the descriptor
 pool.
 
 [NOTE]
-.Note
 ====
 The maximum binding number specified should: be as compact as possible to
 avoid wasted memory.
@@ -1023,7 +1109,7 @@ ifdef::VK_EXT_descriptor_buffer[]
   * [[VUID-VkDescriptorSetLayoutBinding-flags-08006]]
     If slink:VkDescriptorSetLayoutCreateInfo::pname:flags contains
     ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_EMBEDDED_IMMUTABLE_SAMPLERS_BIT_EXT,
-    pname:descriptorCount must: less than or equal to `1`
+    pname:descriptorCount must: be less than or equal to `1`
   * [[VUID-VkDescriptorSetLayoutBinding-flags-08007]]
     If slink:VkDescriptorSetLayoutCreateInfo::pname:flags contains
     ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_EMBEDDED_IMMUTABLE_SAMPLERS_BIT_EXT,
@@ -1113,21 +1199,16 @@ pname:pBindingFlags[i].
   * [[VUID-VkDescriptorSetLayoutBindingFlagsCreateInfo-bindingCount-03002]]
     If pname:bindingCount is not zero, pname:bindingCount must: equal
     slink:VkDescriptorSetLayoutCreateInfo::pname:bindingCount
-ifdef::VK_KHR_push_descriptor[]
+ifdef::VK_VERSION_1_4,VK_KHR_push_descriptor[]
   * [[VUID-VkDescriptorSetLayoutBindingFlagsCreateInfo-flags-03003]]
     If slink:VkDescriptorSetLayoutCreateInfo::pname:flags includes
-    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR, then all
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT, then all
     elements of pname:pBindingFlags must: not include
     ename:VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
     ename:VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT, or
     ename:VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT
-endif::VK_KHR_push_descriptor[]
+endif::VK_VERSION_1_4,VK_KHR_push_descriptor[]
   * [[VUID-VkDescriptorSetLayoutBindingFlagsCreateInfo-pBindingFlags-03004]]
-    If an element of pname:pBindingFlags includes
-    ename:VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT, then all
-    other elements of slink:VkDescriptorSetLayoutCreateInfo::pname:pBindings
-    must: have a smaller value of pname:binding
-  * [[VUID-VkDescriptorSetLayoutBindingFlagsCreateInfo-pBindingFlags-09379]]
     If an element of pname:pBindingFlags includes
     ename:VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT, then it must:
     be the element with the highest pname:binding number
@@ -1213,6 +1294,14 @@ endif::VK_KHR_acceleration_structure[]
     element's pname:descriptorType must: not be
     ename:VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC or
     ename:VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC
+ifdef::VK_ARM_tensors[]
+  * [[VUID-VkDescriptorSetLayoutBindingFlagsCreateInfo-descriptorBindingStorageTensorUpdateAfterBind-09697]]
+    If
+    slink:VkPhysicalDeviceTensorFeaturesARM::pname:descriptorBindingStorageTensorUpdateAfterBind
+    is not enabled, all bindings with descriptor type
+    ename:VK_DESCRIPTOR_TYPE_TENSOR_ARM must: not use
+    ename:VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
+endif::VK_ARM_tensors[]
 ****
 
 include::{generated}/validity/structs/VkDescriptorSetLayoutBindingFlagsCreateInfo.adoc[]
@@ -1236,7 +1325,7 @@ endif::VK_EXT_descriptor_indexing[]
 :maxBlockSize: <<limits-maxInlineUniformBlockSize, pname:maxInlineUniformBlockSize>>
 :maxTotalSize: <<limits-maxInlineUniformTotalSize, pname:maxInlineUniformTotalSize>>
 
-  * ename:VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT indicates that if
+  * ename:VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT specifies that if
     descriptors in this binding are updated between when the descriptor set
     is bound in a command buffer and when that command buffer is submitted
     to a queue, then the submission will use the most recently set
@@ -1254,14 +1343,14 @@ endif::VK_KHR_descriptor_update_template[]
     Descriptors with this flag set can: be updated concurrently with the set
     being bound to a command buffer in another thread, but not concurrently
     with the set being reset or freed.
-  * ename:VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT indicates that
+  * ename:VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT specifies that
     descriptors in this binding that are not _dynamically used_ need not
     contain valid descriptors at the time the descriptors are consumed.
     A descriptor is dynamically used if any shader invocation executes an
     instruction that performs any memory access using the descriptor.
     If a descriptor is not dynamically used, any resource referenced by the
     descriptor is not considered to be referenced during command execution.
-  * ename:VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT indicates
+  * ename:VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT specifies
     that descriptors in this binding can: be updated after a command buffer
     has bound this descriptor set, or while a command buffer that uses this
     descriptor set is pending execution, as long as the descriptors that are
@@ -1277,7 +1366,7 @@ endif::VK_KHR_descriptor_update_template[]
     If ename:VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT is not set, then
     descriptors can: be updated as long as they are not statically used by
     any shader invocations.
-  * ename:VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT indicates that
+  * ename:VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT specifies that
     this is a _variable-sized descriptor binding_ whose size will be
     specified when a descriptor set is allocated using this layout.
     The value of pname:descriptorCount is treated as an upper bound on the
@@ -1307,7 +1396,6 @@ instead.
 endif::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
 
 [NOTE]
-.Note
 ====
 Note that while ename:VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT and
 ename:VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT both involve
@@ -1382,7 +1470,6 @@ limits such as pname:maxPerStageDescriptor* in order to be used in a
 pipeline layout.
 
 [NOTE]
-.Note
 ====
 This is a sname:VkDevice query rather than sname:VkPhysicalDevice because
 the answer may: depend on enabled features.
@@ -1410,8 +1497,8 @@ endif::VK_KHR_maintenance3[]
   * pname:supported specifies whether the descriptor set layout can: be
     created.
 
-pname:supported is set to ename:VK_TRUE if the descriptor set can: be
-created, or else is set to ename:VK_FALSE.
+pname:supported will be ename:VK_TRUE if the descriptor set can: be created,
+or else ename:VK_FALSE.
 
 include::{generated}/validity/structs/VkDescriptorSetLayoutSupport.adoc[]
 --
@@ -1450,14 +1537,13 @@ If the slink:VkDescriptorSetLayoutCreateInfo structure specified in
 flink:vkGetDescriptorSetLayoutSupport::pname:pCreateInfo includes a
 variable-sized descriptor, then pname:supported is determined assuming the
 requested size of the variable-sized descriptor, and
-pname:maxVariableDescriptorCount is set to the maximum size of that
-descriptor that can: be successfully created (which is greater than or equal
-to the requested size passed in).
+pname:maxVariableDescriptorCount is the maximum size of that descriptor that
+can: be successfully created (which is greater than or equal to the
+requested size passed in).
 If the slink:VkDescriptorSetLayoutCreateInfo structure does not include a
 variable-sized descriptor, or if the
 slink:VkPhysicalDeviceDescriptorIndexingFeatures::pname:descriptorBindingVariableDescriptorCount
-feature is not enabled, then pname:maxVariableDescriptorCount is set to
-zero.
+feature is not enabled, then pname:maxVariableDescriptorCount is zero.
 For the purposes of this command, a variable-sized descriptor binding with a
 pname:descriptorCount of zero is treated as having a pname:descriptorCount
 of
@@ -1478,7 +1564,7 @@ endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
 The following examples show a shader snippet using two descriptor sets, and
 application code that creates corresponding descriptor set layouts.
 
-.GLSL example
+.GLSL Example
 [source,glsl]
 ----
 //
@@ -1500,7 +1586,7 @@ layout (set=1, binding=0) uniform myUniformBuffer
 };
 ----
 
-.SPIR-V example
+.SPIR-V Example
 [source,spirv]
 ----
                ...
@@ -1540,7 +1626,7 @@ layout (set=1, binding=0) uniform myUniformBuffer
                ...
 ----
 
-.API example
+.API Example
 [source,c++]
 ----
 VkResult myResult;
@@ -1672,6 +1758,7 @@ include::{generated}/api/handles/VkPipelineLayout.adoc[]
 :refpage: vkCreatePipelineLayout
 :objectnameplural: pipeline layouts
 :objectnamecamelcase: pipelineLayout
+:objectnamestruct: VkDeviceObjectReservationCreateInfo
 :objectcount: 1
 
 To create a pipeline layout, call:
@@ -1713,16 +1800,17 @@ include::{generated}/api/structs/VkPipelineLayoutCreateInfo.adoc[]
     pipeline layout.
   * pname:pSetLayouts is a pointer to an array of
     sname:VkDescriptorSetLayout objects.
+    The implementation must: not access these objects outside of the
+    duration of the command this structure is passed to.
   * pname:pushConstantRangeCount is the number of push constant ranges
     included in the pipeline layout.
   * pname:pPushConstantRanges is a pointer to an array of
-    sname:VkPushConstantRange structures defining a set of push constant
+    slink:VkPushConstantRange structures defining a set of push constant
     ranges for use in a single pipeline layout.
     In addition to descriptor set layouts, a pipeline layout also describes
     how many push constants can: be accessed by each stage of the pipeline.
 +
 [NOTE]
-.Note
 ====
 Push constants represent a high speed path to modify constant data in
 pipelines that is expected to outperform memory-backed resource updates.
@@ -1827,28 +1915,37 @@ endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
 endif::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
 ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
   * [[VUID-VkPipelineLayoutCreateInfo-descriptorType-03022]]
-    The total number of descriptors with a pname:descriptorType of
-    ename:VK_DESCRIPTOR_TYPE_SAMPLER and
+    If the
+    <<features-descriptorBindingSampledImageUpdateAfterBind,pname:descriptorBindingSampledImageUpdateAfterBind>>
+    feature is supported on the device, the total number of descriptors with
+    a pname:descriptorType of ename:VK_DESCRIPTOR_TYPE_SAMPLER and
     ename:VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER accessible to any given
     shader stage across all elements of pname:pSetLayouts must: be less than
     or equal to
     sname:VkPhysicalDeviceDescriptorIndexingProperties::pname:maxPerStageDescriptorUpdateAfterBindSamplers
   * [[VUID-VkPipelineLayoutCreateInfo-descriptorType-03023]]
-    The total number of descriptors with a pname:descriptorType of
-    ename:VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER and
+    If the
+    <<features-descriptorBindingUniformBufferUpdateAfterBind,pname:descriptorBindingUniformBufferUpdateAfterBind>>
+    feature is supported on the device, the total number of descriptors with
+    a pname:descriptorType of ename:VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER and
     ename:VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC accessible to any given
     shader stage across all elements of pname:pSetLayouts must: be less than
     or equal to
     sname:VkPhysicalDeviceDescriptorIndexingProperties::pname:maxPerStageDescriptorUpdateAfterBindUniformBuffers
   * [[VUID-VkPipelineLayoutCreateInfo-descriptorType-03024]]
-    The total number of descriptors with a pname:descriptorType of
-    ename:VK_DESCRIPTOR_TYPE_STORAGE_BUFFER and
+    If the
+    <<features-descriptorBindingStorageBufferUpdateAfterBind,pname:descriptorBindingStorageBufferUpdateAfterBind>>
+    feature is supported on the device, the total number of descriptors with
+    a pname:descriptorType of ename:VK_DESCRIPTOR_TYPE_STORAGE_BUFFER and
     ename:VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC accessible to any given
     shader stage across all elements of pname:pSetLayouts must: be less than
     or equal to
     sname:VkPhysicalDeviceDescriptorIndexingProperties::pname:maxPerStageDescriptorUpdateAfterBindStorageBuffers
   * [[VUID-VkPipelineLayoutCreateInfo-descriptorType-03025]]
-    The total number of descriptors with a pname:descriptorType of
+    If the
+    <<features-descriptorBindingSampledImageUpdateAfterBind,pname:descriptorBindingSampledImageUpdateAfterBind>>
+    feature is supported on the device, the total number of descriptors with
+    a pname:descriptorType of
     ename:VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
     ename:VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, and
     ename:VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER accessible to any given
@@ -1856,24 +1953,30 @@ ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
     or equal to
     sname:VkPhysicalDeviceDescriptorIndexingProperties::pname:maxPerStageDescriptorUpdateAfterBindSampledImages
   * [[VUID-VkPipelineLayoutCreateInfo-descriptorType-03026]]
-    The total number of descriptors with a pname:descriptorType of
-    ename:VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, and
+    If the
+    <<features-descriptorBindingStorageImageUpdateAfterBind,pname:descriptorBindingStorageImageUpdateAfterBind>>
+    feature is supported on the device, the total number of descriptors with
+    a pname:descriptorType of ename:VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, and
     ename:VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER accessible to any given
     shader stage across all elements of pname:pSetLayouts must: be less than
     or equal to
     sname:VkPhysicalDeviceDescriptorIndexingProperties::pname:maxPerStageDescriptorUpdateAfterBindStorageImages
   * [[VUID-VkPipelineLayoutCreateInfo-descriptorType-03027]]
-    The total number of descriptors with a pname:descriptorType of
+    If any element of pname:pSetLayouts is created with the
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT bit
+    set, the total number of descriptors with a pname:descriptorType of
     ename:VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT accessible to any given shader
     stage across all elements of pname:pSetLayouts must: be less than or
     equal to
     sname:VkPhysicalDeviceDescriptorIndexingProperties::pname:maxPerStageDescriptorUpdateAfterBindInputAttachments
 ifdef::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
   * [[VUID-VkPipelineLayoutCreateInfo-descriptorType-02215]]
-    The total number of bindings with a pname:descriptorType of
-    ename:VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK accessible to any given
-    shader stage across all elements of pname:pSetLayouts must: be less than
-    or equal to
+    If the
+    <<features-descriptorBindingInlineUniformBlockUpdateAfterBind,pname:descriptorBindingInlineUniformBlockUpdateAfterBind>>
+    feature is supported on the device, the total number of bindings with a
+    pname:descriptorType of ename:VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK
+    accessible to any given shader stage across all elements of
+    pname:pSetLayouts must: be less than or equal to
     sname:VkPhysicalDeviceInlineUniformBlockProperties::pname:maxPerStageDescriptorUpdateAfterBindInlineUniformBlocks
 endif::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
 endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
@@ -1899,7 +2002,12 @@ endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
     pname:pSetLayouts must: be less than or equal to
     sname:VkPhysicalDeviceLimits::pname:maxDescriptorSetUniformBuffers
   * [[VUID-VkPipelineLayoutCreateInfo-descriptorType-03030]]
-    The total number of descriptors in descriptor set layouts
+ifdef::VK_KHR_maintenance7[]
+    If the <<features-maintenance7, pname:maintenance7>> feature is not
+    enabled, the
+endif::VK_KHR_maintenance7[]
+ifndef::VK_KHR_maintenance7[The]
+    total number of descriptors in descriptor set layouts
 ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
     created without the
     ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT bit set
@@ -1909,6 +2017,20 @@ endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
     shader stages and across all elements of pname:pSetLayouts must: be less
     than or equal to
     sname:VkPhysicalDeviceLimits::pname:maxDescriptorSetUniformBuffersDynamic
+ifdef::VK_KHR_maintenance7[]
+  * [[VUID-VkPipelineLayoutCreateInfo-maintenance7-10003]]
+    If the <<features-maintenance7, pname:maintenance7>> feature is enabled,
+    the total number of descriptors in descriptor set layouts
+ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
+    created without the
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT bit set
+endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
+    with a pname:descriptorType of
+    ename:VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC accessible across all
+    shader stages and across all elements of pname:pSetLayouts must: be less
+    than or equal to <<limits-maxDescriptorSetTotalUniformBuffersDynamic,
+    sname:VkPhysicalDeviceMaintenance7PropertiesKHR::pname:maxDescriptorSetTotalUniformBuffersDynamic>>
+endif::VK_KHR_maintenance7[]
   * [[VUID-VkPipelineLayoutCreateInfo-descriptorType-03031]]
     The total number of descriptors in descriptor set layouts
 ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
@@ -1920,7 +2042,12 @@ endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
     pname:pSetLayouts must: be less than or equal to
     sname:VkPhysicalDeviceLimits::pname:maxDescriptorSetStorageBuffers
   * [[VUID-VkPipelineLayoutCreateInfo-descriptorType-03032]]
-    The total number of descriptors in descriptor set layouts
+ifdef::VK_KHR_maintenance7[]
+    If the <<features-maintenance7, pname:maintenance7>> feature is not
+    enabled, the
+endif::VK_KHR_maintenance7[]
+ifndef::VK_KHR_maintenance7[The]
+    total number of descriptors in descriptor set layouts
 ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
     created without the
     ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT bit set
@@ -1930,6 +2057,46 @@ endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
     shader stages and across all elements of pname:pSetLayouts must: be less
     than or equal to
     sname:VkPhysicalDeviceLimits::pname:maxDescriptorSetStorageBuffersDynamic
+ifdef::VK_KHR_maintenance7[]
+  * [[VUID-VkPipelineLayoutCreateInfo-maintenance7-10004]]
+    If the <<features-maintenance7, pname:maintenance7>> feature is enabled,
+    the total number of descriptors in descriptor set layouts
+ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
+    created without the
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT bit set
+endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
+    with a pname:descriptorType of
+    ename:VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC accessible across all
+    shader stages and across all elements of pname:pSetLayouts must: be less
+    than or equal to <<limits-maxDescriptorSetTotalStorageBuffersDynamic,
+    sname:VkPhysicalDeviceMaintenance7PropertiesKHR::pname:maxDescriptorSetTotalStorageBuffersDynamic>>
+  * [[VUID-VkPipelineLayoutCreateInfo-None-10005]]
+    The total number of descriptors in descriptor set layouts
+ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
+    created without the
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT bit set
+endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
+    with a pname:descriptorType of
+    ename:VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC or
+    ename:VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC accessible across all
+    shader stages and across all elements of pname:pSetLayouts must: be less
+    than or equal to <<limits-maxDescriptorSetTotalBuffersDynamic,
+    sname:VkPhysicalDeviceMaintenance7PropertiesKHR::pname:maxDescriptorSetTotalBuffersDynamic>>
+ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
+  * [[VUID-VkPipelineLayoutCreateInfo-pSetLayouts-10006]]
+    If either the
+    <<features-descriptorBindingStorageBufferUpdateAfterBind,pname:descriptorBindingStorageBufferUpdateAfterBind>>
+    or
+    <<features-descriptorBindingUniformBufferUpdateAfterBind,pname:descriptorBindingUniformBufferUpdateAfterBind>>
+    feature is supported on the device, the total number of descriptors of
+    the type ename:VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC or
+    ename:VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC accessible across all
+    shader stages and across all elements of pname:pSetLayouts must: be less
+    than or equal to
+    <<limits-maxDescriptorSetUpdateAfterBindTotalBuffersDynamic,
+    sname:VkPhysicalDeviceMaintenance7PropertiesKHR::pname:maxDescriptorSetUpdateAfterBindTotalBuffersDynamic>>
+endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
+endif::VK_KHR_maintenance7[]
   * [[VUID-VkPipelineLayoutCreateInfo-descriptorType-03033]]
     The total number of descriptors in descriptor set layouts
 ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
@@ -1979,63 +2146,115 @@ endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
 endif::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
 ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
   * [[VUID-VkPipelineLayoutCreateInfo-pSetLayouts-03036]]
-    The total number of descriptors of the type
-    ename:VK_DESCRIPTOR_TYPE_SAMPLER and
+    If the
+    <<features-descriptorBindingSampledImageUpdateAfterBind,pname:descriptorBindingSampledImageUpdateAfterBind>>
+    feature is supported on the device, the total number of descriptors of
+    the type ename:VK_DESCRIPTOR_TYPE_SAMPLER and
     ename:VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER accessible across all
     shader stages and across all elements of pname:pSetLayouts must: be less
     than or equal to
     sname:VkPhysicalDeviceDescriptorIndexingProperties::pname:maxDescriptorSetUpdateAfterBindSamplers
   * [[VUID-VkPipelineLayoutCreateInfo-pSetLayouts-03037]]
-    The total number of descriptors of the type
-    ename:VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER accessible across all shader
-    stages and across all elements of pname:pSetLayouts must: be less than
-    or equal to
+    If the
+    <<features-descriptorBindingUniformBufferUpdateAfterBind,pname:descriptorBindingUniformBufferUpdateAfterBind>>
+    feature is supported on the device, the total number of descriptors of
+    the type ename:VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER accessible across all
+    shader stages and across all elements of pname:pSetLayouts must: be less
+    than or equal to
     sname:VkPhysicalDeviceDescriptorIndexingProperties::pname:maxDescriptorSetUpdateAfterBindUniformBuffers
   * [[VUID-VkPipelineLayoutCreateInfo-pSetLayouts-03038]]
-    The total number of descriptors of the type
+    If the
+    <<features-descriptorBindingUniformBufferUpdateAfterBind,pname:descriptorBindingUniformBufferUpdateAfterBind>>
+    feature is supported on the device,
+ifdef::VK_KHR_maintenance7[]
+    and if the <<features-maintenance7, pname:maintenance7>> feature is not
+    enabled,
+endif::VK_KHR_maintenance7[]
+    the total number of descriptors of the type
     ename:VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC accessible across all
     shader stages and across all elements of pname:pSetLayouts must: be less
     than or equal to
-    sname:VkPhysicalDeviceDescriptorIndexingProperties::pname:maxDescriptorSetUpdateAfterBindUniformBuffersDynamic
+    sname:VkPhysicalDeviceLimits::pname:maxDescriptorSetUpdateAfterBindUniformBuffersDynamic
+ifdef::VK_KHR_maintenance7[]
+  * [[VUID-VkPipelineLayoutCreateInfo-maintenance7-10007]]
+    If the
+    <<features-descriptorBindingUniformBufferUpdateAfterBind,pname:descriptorBindingUniformBufferUpdateAfterBind>>
+    feature is supported on the device, and the <<features-maintenance7,
+    pname:maintenance7>> feature is enabled, the total number of descriptors
+    of the type ename:VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC accessible
+    across all shader stages and across all elements of pname:pSetLayouts
+    must: be less than or equal to
+    <<limits-maxDescriptorSetUpdateAfterBindTotalUniformBuffersDynamic,
+    sname:VkPhysicalDeviceMaintenance7PropertiesKHR::pname:maxDescriptorSetUpdateAfterBindTotalUniformBuffersDynamic>>
+endif::VK_KHR_maintenance7[]
   * [[VUID-VkPipelineLayoutCreateInfo-pSetLayouts-03039]]
-    The total number of descriptors of the type
-    ename:VK_DESCRIPTOR_TYPE_STORAGE_BUFFER accessible across all shader
-    stages and across all elements of pname:pSetLayouts must: be less than
-    or equal to
+    If the
+    <<features-descriptorBindingStorageBufferUpdateAfterBind,pname:descriptorBindingStorageBufferUpdateAfterBind>>
+    feature is supported on the device, the total number of descriptors of
+    the type ename:VK_DESCRIPTOR_TYPE_STORAGE_BUFFER accessible across all
+    shader stages and across all elements of pname:pSetLayouts must: be less
+    than or equal to
     sname:VkPhysicalDeviceDescriptorIndexingProperties::pname:maxDescriptorSetUpdateAfterBindStorageBuffers
   * [[VUID-VkPipelineLayoutCreateInfo-pSetLayouts-03040]]
-    The total number of descriptors of the type
+    If the
+    <<features-descriptorBindingStorageBufferUpdateAfterBind,pname:descriptorBindingStorageBufferUpdateAfterBind>>
+    feature is supported on the device,
+ifdef::VK_KHR_maintenance7[]
+    and if the <<features-maintenance7, pname:maintenance7>> feature is not
+    enabled,
+endif::VK_KHR_maintenance7[]
+    the total number of descriptors of the type
     ename:VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC accessible across all
     shader stages and across all elements of pname:pSetLayouts must: be less
     than or equal to
-    sname:VkPhysicalDeviceDescriptorIndexingProperties::pname:maxDescriptorSetUpdateAfterBindStorageBuffersDynamic
+    sname:VkPhysicalDeviceLimits::pname:maxDescriptorSetUpdateAfterBindStorageBuffersDynamic
+ifdef::VK_KHR_maintenance7[]
+  * [[VUID-VkPipelineLayoutCreateInfo-maintenance7-10008]]
+    If the
+    <<features-descriptorBindingStorageBufferUpdateAfterBind,pname:descriptorBindingStorageBufferUpdateAfterBind>>
+    feature is supported on the device, and if the <<features-maintenance7,
+    pname:maintenance7>> feature is enabled, the total number of descriptors
+    of the type ename:VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC accessible
+    across all shader stages and across all elements of pname:pSetLayouts
+    must: be less than or equal to
+    <<limits-maxDescriptorSetUpdateAfterBindTotalStorageBuffersDynamic,
+    sname:VkPhysicalDeviceMaintenance7PropertiesKHR::pname:maxDescriptorSetUpdateAfterBindTotalStorageBuffersDynamic>>
+endif::VK_KHR_maintenance7[]
   * [[VUID-VkPipelineLayoutCreateInfo-pSetLayouts-03041]]
-    The total number of descriptors of the type
-    ename:VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+    If the
+    <<features-descriptorBindingSampledImageUpdateAfterBind,pname:descriptorBindingSampledImageUpdateAfterBind>>
+    feature is supported on the device, the total number of descriptors of
+    the type ename:VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
     ename:VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, and
     ename:VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER accessible across all
     shader stages and across all elements of pname:pSetLayouts must: be less
     than or equal to
     sname:VkPhysicalDeviceDescriptorIndexingProperties::pname:maxDescriptorSetUpdateAfterBindSampledImages
   * [[VUID-VkPipelineLayoutCreateInfo-pSetLayouts-03042]]
-    The total number of descriptors of the type
-    ename:VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, and
+    If the
+    <<features-descriptorBindingStorageImageUpdateAfterBind,pname:descriptorBindingStorageImageUpdateAfterBind>>
+    feature is supported on the device, the total number of descriptors of
+    the type ename:VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, and
     ename:VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER accessible across all
     shader stages and across all elements of pname:pSetLayouts must: be less
     than or equal to
     sname:VkPhysicalDeviceDescriptorIndexingProperties::pname:maxDescriptorSetUpdateAfterBindStorageImages
   * [[VUID-VkPipelineLayoutCreateInfo-pSetLayouts-03043]]
-    The total number of descriptors of the type
+    If any element of pname:pSetLayouts is created with the
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT bit
+    set, the total number of descriptors of the type
     ename:VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT accessible across all shader
     stages and across all elements of pname:pSetLayouts must: be less than
     or equal to
     sname:VkPhysicalDeviceDescriptorIndexingProperties::pname:maxDescriptorSetUpdateAfterBindInputAttachments
 ifdef::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
   * [[VUID-VkPipelineLayoutCreateInfo-descriptorType-02217]]
-    The total number of bindings with a pname:descriptorType of
-    ename:VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK accessible across all
-    shader stages and across all elements of pname:pSetLayouts must: be less
-    than or equal to
+    If the
+    <<features-descriptorBindingInlineUniformBlockUpdateAfterBind,pname:descriptorBindingInlineUniformBlockUpdateAfterBind>>
+    feature is supported on the device, the total number of bindings with a
+    pname:descriptorType of ename:VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK
+    accessible across all shader stages and across all elements of
+    pname:pSetLayouts must: be less than or equal to
     sname:VkPhysicalDeviceInlineUniformBlockProperties::pname:maxDescriptorSetUpdateAfterBindInlineUniformBlocks
 endif::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
 endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
@@ -2050,12 +2269,12 @@ endif::VK_VERSION_1_3[]
   * [[VUID-VkPipelineLayoutCreateInfo-pPushConstantRanges-00292]]
     Any two elements of pname:pPushConstantRanges must: not include the same
     stage in pname:stageFlags
-ifdef::VK_KHR_push_descriptor[]
+ifdef::VK_VERSION_1_4,VK_KHR_push_descriptor[]
   * [[VUID-VkPipelineLayoutCreateInfo-pSetLayouts-00293]]
     pname:pSetLayouts must: not contain more than one descriptor set layout
     that was created with
-    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR set
-endif::VK_KHR_push_descriptor[]
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT set
+endif::VK_VERSION_1_4,VK_KHR_push_descriptor[]
 ifdef::VK_KHR_acceleration_structure[]
   * [[VUID-VkPipelineLayoutCreateInfo-descriptorType-03571]]
     The total number of bindings in descriptor set layouts created without
@@ -2110,8 +2329,8 @@ ifdef::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
 endif::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
   * [[VUID-VkPipelineLayoutCreateInfo-graphicsPipelineLibrary-06753]]
 ifdef::VK_EXT_graphics_pipeline_library[]
-    If <<features-graphicsPipelineLibrary, pname:graphicsPipelineLibrary>>
-    is not enabled, elements
+    If the <<features-graphicsPipelineLibrary,
+    pname:graphicsPipelineLibrary>> feature is not enabled, elements
 endif::VK_EXT_graphics_pipeline_library[]
 ifndef::VK_EXT_graphics_pipeline_library[Elements]
     of pname:pSetLayouts must: be valid slink:VkDescriptorSetLayout objects
@@ -2122,6 +2341,39 @@ ifdef::VK_EXT_descriptor_buffer[]
     all elements of pname:pSetLayouts must: have been created with the
     ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT bit set
 endif::VK_EXT_descriptor_buffer[]
+ifdef::VK_ARM_tensors[]
+  * [[VUID-VkPipelineLayoutCreateInfo-pSetLayouts-09698]]
+    The total number of descriptors in descriptor set layouts
+ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
+    created without the
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT bit set
+endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
+    with a pname:descriptorType of ename:VK_DESCRIPTOR_TYPE_TENSOR_ARM
+    accessible to any given shader stage across all elements of
+    pname:pSetLayouts must: be less than or equal to
+    slink:VkPhysicalDeviceTensorPropertiesARM::pname:maxPerStageDescriptorSetStorageTensors
+  * [[VUID-VkPipelineLayoutCreateInfo-pSetLayouts-09699]]
+    The total number of descriptors in descriptor set layouts
+ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
+    created without the
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT bit set
+endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
+    with a pname:descriptorType of ename:VK_DESCRIPTOR_TYPE_TENSOR_ARM
+    accessible across all shader stages and across all elements of
+    pname:pSetLayouts must: be less than or equal to
+    slink:VkPhysicalDeviceTensorPropertiesARM::pname:maxDescriptorSetStorageTensors
+  * [[VUID-VkPipelineLayoutCreateInfo-pSetLayouts-09878]]
+    The total number of descriptors of the type
+    ename:VK_DESCRIPTOR_TYPE_TENSOR_ARM accessible across all shader stages
+    and across all elements of pname:pSetLayouts must: be less than or equal
+    to
+    slink:VkPhysicalDeviceTensorPropertiesARM::pname:maxDescriptorSetUpdateAfterBindStorageTensors
+  * [[VUID-VkPipelineLayoutCreateInfo-descriptorType-09879]]
+    The total number of descriptors with a pname:descriptorType of
+    ename:VK_DESCRIPTOR_TYPE_TENSOR_ARM accessible to any given shader stage
+    across all elements of pname:pSetLayouts must: be less than or equal to
+    sname:VkPhysicalDeviceTensorPropertiesARM::pname:maxPerStageDescriptorUpdateAfterBindStorageTensors
+endif::VK_ARM_tensors[]
 ****
 
 include::{generated}/validity/structs/VkPipelineLayoutCreateInfo.adoc[]
@@ -2263,6 +2515,9 @@ endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
 ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
 or pname:maxDescriptorSetUpdateAfterBindUniformBuffersDynamic
 endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
+ifdef::VK_KHR_maintenance7[]
+or pname:maxDescriptorSetUpdateAfterBindTotalUniformBuffersDynamic
+endif::VK_KHR_maintenance7[]
             | uniform buffer dynamic
 .2+<.^| pname:maxDescriptorSetStorageBuffers
 ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
@@ -2273,6 +2528,9 @@ endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
 ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
 or pname:maxDescriptorSetUpdateAfterBindStorageBuffersDynamic
 endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
+ifdef::VK_KHR_maintenance7[]
+or pname:maxDescriptorSetUpdateAfterBindTotalStorageBuffersDynamic
+endif::VK_KHR_maintenance7[]
             | storage buffer dynamic
 | pname:maxDescriptorSetInputAttachments
 ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
@@ -2293,6 +2551,11 @@ or pname:maxDescriptorSetUpdateAfterBindAccelerationStructures
 endif::VK_KHR_acceleration_structure[]
             | acceleration structure
 endif::VK_NV_ray_tracing,VK_KHR_acceleration_structure[]
+ifdef::VK_ARM_tensors[]
+| pname:maxDescriptorSetStorageTensors
+or pname:maxDescriptorSetUpdateAfterBindStorageTensors
+            | storage tensor
+endif::VK_ARM_tensors[]
 |====
 
 
@@ -2335,8 +2598,8 @@ Two pipeline layouts are defined to be "`compatible for
 <<descriptorsets-push-constants, push constants>>`" if they were created
 with identical push constant ranges.
 Two pipeline layouts are defined to be "`compatible for set N`" if they were
-created with _identically defined_ descriptor set layouts for sets zero
-through N,
+created with <<glossary-identically-defined,identically defined>> descriptor
+set layouts for sets zero through N,
 ifdef::VK_EXT_graphics_pipeline_library[]
 if both of them either were or were not created with
 ename:VK_PIPELINE_LAYOUT_CREATE_INDEPENDENT_SETS_BIT_EXT,
@@ -2380,7 +2643,6 @@ endif::implementation-guide[]
 
 
 [NOTE]
-.Note
 ====
 Place the least frequently changing descriptor sets near the start of the
 pipeline layout, and place the descriptor sets representing the most
@@ -2394,7 +2656,7 @@ The maximum number of descriptor sets that can: be bound to a pipeline
 layout is queried from physical device properties (see
 pname:maxBoundDescriptorSets in <<limits, Limits>>).
 
-.API example
+.API Example
 [source,c++]
 ----
 const VkDescriptorSetLayout layouts[] = { layout1, layout2 };
@@ -2444,6 +2706,24 @@ Descriptor pools are externally synchronized, meaning that the application
 must: not allocate and/or free descriptor sets from the same pool in
 multiple threads simultaneously.
 
+ifdef::VKSC_VERSION_1_0[]
+ifdef::hidden[]
+// tag::scremoved[]
+  * fname:vkDestroyDescriptorPool <<SCID-4>>
+// end::scremoved[]
+endif::hidden[]
+
+Descriptor pools cannot: be destroyed <<SCID-4>>.
+
+If <<limits-deviceDestroyFreesMemory,
+slink:VkPhysicalDeviceVulkanSC10Properties::pname:deviceDestroyFreesMemory>>
+is ename:VK_TRUE, the memory is returned to the system when the device is
+destroyed.
+Otherwise, it may: not be returned to the system until the process is
+terminated.
+
+endif::VKSC_VERSION_1_0[]
+
 Descriptor pools are represented by sname:VkDescriptorPool handles:
 
 include::{generated}/api/handles/VkDescriptorPool.adoc[]
@@ -2454,6 +2734,7 @@ include::{generated}/api/handles/VkDescriptorPool.adoc[]
 :refpage: vkCreateDescriptorPool
 :objectnameplural: descriptor pools
 :objectnamecamelcase: descriptorPool
+:objectnamestruct: VkDeviceObjectReservationCreateInfo
 :objectcount: 1
 
 To create a descriptor pool object, call:
@@ -2541,9 +2822,9 @@ endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
 ifdef::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
 If a pname:pPoolSizes[i]::pname:type is
 ename:VK_DESCRIPTOR_TYPE_MUTABLE_EXT, a
-slink:VkMutableDescriptorTypeCreateInfoEXT struct in the pname:pNext chain
-can: be used to specify which mutable descriptor types can: be allocated
-from the pool.
+slink:VkMutableDescriptorTypeCreateInfoEXT structure in the pname:pNext
+chain can: be used to specify which mutable descriptor types can: be
+allocated from the pool.
 If included in the pname:pNext chain,
 slink:VkMutableDescriptorTypeCreateInfoEXT::pname:pMutableDescriptorTypeLists[i]
 specifies which kind of ename:VK_DESCRIPTOR_TYPE_MUTABLE_EXT descriptors
@@ -2572,7 +2853,6 @@ The application must: ensure that partial overlap does not exist in
 pname:pPoolSizes.
 
 [NOTE]
-.Note
 ====
 The requirement of no partial overlap is intended to resolve ambiguity for
 validation as there is no confusion which pname:pPoolSizes entries will be
@@ -2631,6 +2911,15 @@ ifdef::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
     must: include a slink:VkDescriptorPoolInlineUniformBlockCreateInfo
     structure whose pname:maxInlineUniformBlockBindings member is not zero
 endif::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
+ifdef::VK_ARM_data_graph[]
+  * [[VUID-VkDescriptorPoolCreateInfo-pNext-09946]]
+    If a slink:VkDataGraphProcessingEngineCreateInfoARM structure is
+    included in the pname:pNext chain, each member of
+    pname:pProcessingEngines must: be identical to an
+    slink:VkQueueFamilyDataGraphPropertiesARM::pname:engine retrieved from
+    flink:vkGetPhysicalDeviceQueueFamilyDataGraphPropertiesARM with the
+    pname:physicalDevice that was used to create pname:device
+endif::VK_ARM_data_graph[]
 ****
 
 include::{generated}/validity/structs/VkDescriptorPoolCreateInfo.adoc[]
@@ -2757,25 +3046,24 @@ ifdef::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
     of this type.
 endif::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
 
-ifdef::VK_VULKAN_1_1,VK_KHR_sampler_ycbcr_conversion[]
+ifdef::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
 [NOTE]
-.Note
 ====
 When creating a descriptor pool that will contain descriptors for combined
-image samplers of multi-planar formats, an application needs to account for
-non-trivial descriptor consumption when choosing the pname:descriptorCount
-value, as indicated by
+image samplers of <<formats-multiplanar, multi-planar formats>>, an
+application needs to account for non-trivial descriptor consumption when
+choosing the pname:descriptorCount value, as indicated by
 slink:VkSamplerYcbcrConversionImageFormatProperties::pname:combinedImageSamplerDescriptorCount.
 
-ifdef::VK_KHR_maintenance6[]
+ifdef::VK_VERSION_1_4,VK_KHR_maintenance6[]
 For simplicity the application can: use the
-slink:VkPhysicalDeviceMaintenance6PropertiesKHR::pname:maxCombinedImageSamplerDescriptorCount
+slink:VkPhysicalDeviceMaintenance6Properties::pname:maxCombinedImageSamplerDescriptorCount
 property, which is sized to accommodate any and all
 <<formats-requiring-sampler-ycbcr-conversion, formats that require a sampler
 {YCbCr} conversion>> supported by the implementation.
-endif::VK_KHR_maintenance6[]
+endif::VK_VERSION_1_4,VK_KHR_maintenance6[]
 ====
-endif::VK_VULKAN_1_1,VK_KHR_sampler_ycbcr_conversion[]
+endif::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
 
 .Valid Usage
 ****
@@ -2791,20 +3079,6 @@ endif::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
 include::{generated}/validity/structs/VkDescriptorPoolSize.adoc[]
 --
 
-ifdef::VKSC_VERSION_1_0[]
-ifdef::hidden[]
-// tag::scremoved[]
-  * fname:vkDestroyDescriptorPool <<SCID-4>>
-// end::scremoved[]
-endif::hidden[]
-
-Descriptor pools cannot: be destroyed <<SCID-4>>.
-If
-slink:VkPhysicalDeviceVulkanSC10Properties::<<limits-deviceDestroyFreesMemory,pname:deviceDestroyFreesMemory>>
-is ename:VK_TRUE, the memory is returned to the system when the device is
-destroyed.
-
-endif::VKSC_VERSION_1_0[]
 ifndef::VKSC_VERSION_1_0[]
 
 [open,refpage='vkDestroyDescriptorPool',desc='Destroy a descriptor pool object',type='protos']
@@ -2854,6 +3128,7 @@ include::{generated}/api/handles/VkDescriptorSet.adoc[]
 :refpage: vkAllocateDescriptorSets
 :objectnameplural: descriptor sets
 :objectnamecamelcase: descriptorSet
+:objectnamestruct: VkDeviceObjectReservationCreateInfo
 :objectcount: slink:VkDescriptorSetAllocateInfo::pname:descriptorSetCount
 
 To allocate descriptor sets from a descriptor pool, call:
@@ -2950,7 +3225,6 @@ endif::VK_VERSION_1_1,VK_KHR_maintenance1[]
 
 ifndef::VK_VERSION_1_1,VK_KHR_maintenance2[]
 [NOTE]
-.Note
 ====
 Applications should: check for a negative return value when allocating new
 descriptor sets, assume that any error
@@ -3018,11 +3292,11 @@ endif::VK_VERSION_1_1,VK_KHR_maintenance1[]
     pname:descriptorPool must: have enough free descriptor capacity
     remaining to allocate the descriptor sets of the specified layouts
 endif::VKSC_VERSION_1_0[]
-ifdef::VK_KHR_push_descriptor[]
+ifdef::VK_VERSION_1_4,VK_KHR_push_descriptor[]
   * [[VUID-VkDescriptorSetAllocateInfo-pSetLayouts-00308]]
     Each element of pname:pSetLayouts must: not have been created with
-    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR set
-endif::VK_KHR_push_descriptor[]
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT set
+endif::VK_VERSION_1_4,VK_KHR_push_descriptor[]
 ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
   * [[VUID-VkDescriptorSetAllocateInfo-pSetLayouts-03044]]
     If any element of pname:pSetLayouts was created with the
@@ -3109,11 +3383,6 @@ ignored.
   * [[VUID-VkDescriptorSetVariableDescriptorCountAllocateInfo-descriptorSetCount-03045]]
     If pname:descriptorSetCount is not zero, pname:descriptorSetCount must:
     equal slink:VkDescriptorSetAllocateInfo::pname:descriptorSetCount
-  * [[VUID-VkDescriptorSetVariableDescriptorCountAllocateInfo-pSetLayouts-03046]]
-    If slink:VkDescriptorSetAllocateInfo::pname:pSetLayouts[i] has a
-    variable-sized descriptor binding, then pname:pDescriptorCounts[i] must:
-    be less than or equal to the descriptor count specified for that binding
-    when the descriptor set layout was created
 ****
 
 include::{generated}/validity/structs/VkDescriptorSetVariableDescriptorCountAllocateInfo.adoc[]
@@ -3251,6 +3520,12 @@ the ename:VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT or
 ename:VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT bits set,
 endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
 that command buffer becomes <<commandbuffers-lifecycle, invalid>>.
+
+Copying a descriptor from a descriptor set does not constitute a use of the
+referenced resource or view, as it is the reference itself that is copied.
+Applications can: copy a descriptor referencing a destroyed resource, and it
+can: copy an undefined: descriptor.
+The destination descriptor becomes undefined: in both cases.
 
 .Valid Usage
 ****
@@ -3397,9 +3672,15 @@ ifdef::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
 endif::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
 ifdef::VK_NV_ray_tracing,VK_KHR_acceleration_structure[]
   ** a value matching the pname:accelerationStructureCount of a
-     slink:VkWriteDescriptorSetAccelerationStructureKHR structure in the
-     pname:pNext chain
+ifdef::VK_KHR_acceleration_structure[slink:VkWriteDescriptorSetAccelerationStructureKHR]
+ifdef::VK_NV_ray_tracing+VK_KHR_acceleration_structure[or]
+ifdef::VK_NV_ray_tracing[slink:VkWriteDescriptorSetAccelerationStructureNV]
+     structure in the pname:pNext chain
 endif::VK_NV_ray_tracing,VK_KHR_acceleration_structure[]
+ifdef::VK_ARM_tensors[]
+  ** a value matching the pname:descriptorCount of a
+     slink:VkWriteDescriptorSetTensorARM structure in the pname:pNext chain
+endif::VK_ARM_tensors[]
   * pname:descriptorType is a elink:VkDescriptorType specifying the type of
     each descriptor in pname:pImageInfo, pname:pBufferInfo, or
     pname:pTexelBufferView, as described below.
@@ -3449,14 +3730,23 @@ data for the descriptor writes is taken from the
 slink:VkWriteDescriptorSetAccelerationStructureNV structure in the
 pname:pNext chain of sname:VkWriteDescriptorSet,
 endif::VK_NV_ray_tracing[]
+ifdef::VK_ARM_tensors[]
+or if pname:descriptorType is ename:VK_DESCRIPTOR_TYPE_TENSOR_ARM, in which
+case the source data for the descriptor writes is taken from the instance of
+slink:VkWriteDescriptorSetTensorARM in the pname:pNext chain of
+sname:VkWriteDescriptorSet,
+endif::VK_ARM_tensors[]
 as specified below.
 
-ifdef::VK_EXT_robustness2[]
+ifdef::VK_EXT_robustness2,VK_KHR_robustness2[]
 If the <<features-nullDescriptor, pname:nullDescriptor>> feature is enabled,
 the buffer,
 ifdef::VK_KHR_acceleration_structure[]
 acceleration structure,
 endif::VK_KHR_acceleration_structure[]
+ifdef::VK_ARM_tensors[]
+tensor,
+endif::VK_ARM_tensors[]
 imageView, or bufferView can: be dlink:VK_NULL_HANDLE.
 Loads from a null descriptor return zero values and stores and atomics to a
 null descriptor are discarded.
@@ -3464,14 +3754,15 @@ ifdef::VK_KHR_acceleration_structure[]
 A null acceleration structure descriptor results in the miss shader being
 invoked.
 endif::VK_KHR_acceleration_structure[]
-endif::VK_EXT_robustness2[]
+endif::VK_EXT_robustness2,VK_KHR_robustness2[]
 
 ifdef::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
 If the destination descriptor is a mutable descriptor, the active descriptor
 type for the destination descriptor becomes pname:descriptorType.
 endif::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
 
-[[descriptorsets-updates-consecutive, consecutive binding updates]]
+[[descriptorsets-updates-consecutive]]
+.Consecutive Binding Updates
 If the pname:dstBinding has fewer than pname:descriptorCount array elements
 remaining starting from pname:dstArrayElement, then the remainder will be
 used to update the subsequent binding - [eq]#pname:dstBinding+1# starting at
@@ -3493,7 +3784,6 @@ endif::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
 
 ifdef::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
 [NOTE]
-.Note
 ====
 The same behavior applies to bindings with a descriptor type of
 ename:VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK where pname:descriptorCount
@@ -3516,14 +3806,27 @@ endif::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
   * [[VUID-VkWriteDescriptorSet-dstBinding-00316]]
     pname:dstBinding must: be a binding with a non-zero
     pname:descriptorCount
+  * [[VUID-VkWriteDescriptorSet-dstBinding-10009]]
+    pname:dstBinding must: be a binding with a non-zero
+    slink:VkDescriptorSetLayoutCreateInfo::pname:bindingCount
   * [[VUID-VkWriteDescriptorSet-descriptorCount-00317]]
     All consecutive bindings updated via a single sname:VkWriteDescriptorSet
     structure, except those with a pname:descriptorCount of zero, must: have
-    identical pname:descriptorType and pname:stageFlags
+    identical pname:descriptorType
+  * [[VUID-VkWriteDescriptorSet-descriptorCount-10776]]
+    All consecutive bindings updated via a single sname:VkWriteDescriptorSet
+    structure, except those with a pname:descriptorCount of zero, must: have
+    identical pname:stageFlags
   * [[VUID-VkWriteDescriptorSet-descriptorCount-00318]]
     All consecutive bindings updated via a single sname:VkWriteDescriptorSet
     structure, except those with a pname:descriptorCount of zero, must: all
     either use immutable samplers or must: all not use immutable samplers
+ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
+  * [[VUID-VkWriteDescriptorSet-descriptorCount-10777]]
+    All consecutive bindings updated via a single sname:VkWriteDescriptorSet
+    structure, except those with a pname:descriptorCount of zero, must: have
+    identical elink:VkDescriptorBindingFlagBits
+endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
   * [[VUID-VkWriteDescriptorSet-descriptorType-00319]]
     pname:descriptorType must: match the type of pname:dstBinding within
     pname:dstSet
@@ -3532,8 +3835,8 @@ endif::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
   * [[VUID-VkWriteDescriptorSet-dstArrayElement-00321]]
     The sum of pname:dstArrayElement and pname:descriptorCount must: be less
     than or equal to the number of array elements in the descriptor set
-    binding specified by pname:dstBinding, and all applicable consecutive
-    bindings, as described by <<descriptorsets-updates-consecutive>>
+    binding specified by pname:dstBinding, and all applicable
+    <<descriptorsets-updates-consecutive, consecutive bindings>>
 ifdef::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
   * [[VUID-VkWriteDescriptorSet-descriptorType-02219]]
     If pname:descriptorType is
@@ -3610,7 +3913,14 @@ ifdef::VK_NV_ray_tracing[]
     structure whose pname:accelerationStructureCount member equals
     pname:descriptorCount
 endif::VK_NV_ray_tracing[]
-ifdef::VK_VULKAN_1_1,VK_KHR_sampler_ycbcr_conversion[]
+ifdef::VK_ARM_tensors[]
+  * [[VUID-VkWriteDescriptorSet-descriptorType-09945]]
+    If pname:descriptorType is ename:VK_DESCRIPTOR_TYPE_TENSOR_ARM, the
+    pname:pNext chain must: include a slink:VkWriteDescriptorSetTensorARM
+    structure whose pname:tensorViewCount member equals
+    pname:descriptorCount
+endif::VK_ARM_tensors[]
+ifdef::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
   * [[VUID-VkWriteDescriptorSet-descriptorType-01946]]
     If pname:descriptorType is ename:VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, then
     the pname:imageView member of each pname:pImageInfo element must: have
@@ -3619,11 +3929,12 @@ ifdef::VK_VULKAN_1_1,VK_KHR_sampler_ycbcr_conversion[]
   * [[VUID-VkWriteDescriptorSet-descriptorType-02738]]
     If pname:descriptorType is
     ename:VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, and if any element of
-    pname:pImageInfo has a pname:imageView member that was created with a
+    pname:pImageInfo has an pname:imageView member that was created with a
     sname:VkSamplerYcbcrConversionInfo structure in its pname:pNext chain,
     then pname:dstSet must: have been allocated with a layout that included
     immutable samplers for pname:dstBinding, and the corresponding immutable
-    sampler must: have been created with an _identically defined_
+    sampler must: have been created with an
+    <<glossary-identically-defined,identically defined>>
     sname:VkSamplerYcbcrConversionInfo object
   * [[VUID-VkWriteDescriptorSet-descriptorType-01948]]
     If pname:descriptorType is
@@ -3633,10 +3944,17 @@ ifdef::VK_VULKAN_1_1,VK_KHR_sampler_ycbcr_conversion[]
     pname:pImageInfo which corresponds to an immutable sampler that enables
     <<samplers-YCbCr-conversion,sampler {YCbCr} conversion>> must: have been
     created with a sname:VkSamplerYcbcrConversionInfo structure in its
-    pname:pNext chain with an _identically defined_
-    sname:VkSamplerYcbcrConversionInfo to the corresponding immutable
-    sampler
-endif::VK_VULKAN_1_1,VK_KHR_sampler_ycbcr_conversion[]
+    pname:pNext chain with an <<glossary-identically-defined,identically
+    defined>> sname:VkSamplerYcbcrConversionInfo to the corresponding
+    immutable sampler
+  * [[VUID-VkWriteDescriptorSet-descriptorType-09506]]
+    If pname:descriptorType is
+    ename:VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pname:dstSet was
+    allocated with a layout that included immutable samplers for
+    pname:dstBinding, and those samplers enable
+    <<samplers-YCbCr-conversion,sampler {YCbCr} conversion>>, then
+    pname:imageView must: not be dlink:VK_NULL_HANDLE
+endif::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
   * [[VUID-VkWriteDescriptorSet-descriptorType-00327]]
     If pname:descriptorType is ename:VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER or
     ename:VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, the pname:offset member
@@ -3815,6 +4133,10 @@ ifdef::VK_QCOM_image_processing[]
     <<descriptorsets-blockmatch, block matching image descriptor>>.
 
 endif::VK_QCOM_image_processing[]
+ifdef::VK_ARM_tensors[]
+  * ename:VK_DESCRIPTOR_TYPE_TENSOR_ARM specifies a
+    <<descriptorsets-storagetensor, storage tensor descriptor>>.
+endif::VK_ARM_tensors[]
 
 When a descriptor set is updated via elements of slink:VkWriteDescriptorSet,
 members of pname:pImageInfo, pname:pBufferInfo and pname:pTexelBufferView
@@ -3865,6 +4187,14 @@ accessed, instead the source data of the descriptor update operation is
 taken from the slink:VkWriteDescriptorSetAccelerationStructureNV structure
 in the pname:pNext chain of sname:VkWriteDescriptorSet.
 endif::VK_NV_ray_tracing[]
+ifdef::VK_ARM_tensors[]
+When updating descriptors with a pname:descriptorType of
+ename:VK_DESCRIPTOR_TYPE_TENSOR_ARM, none of the pname:pImageInfo,
+pname:pBufferInfo, or pname:pTexelBufferView members are accessed, instead
+the source data of the descriptor update operation is taken from the
+instance of slink:VkWriteDescriptorSetTensorARM in the pname:pNext chain of
+slink:VkWriteDescriptorSet.
+endif::VK_ARM_tensors[]
 --
 
 [open,refpage='VkDescriptorBufferInfo',desc='Structure specifying descriptor buffer information',type='structs']
@@ -3874,9 +4204,9 @@ The sname:VkDescriptorBufferInfo structure is defined as:
 include::{generated}/api/structs/VkDescriptorBufferInfo.adoc[]
 
   * pname:buffer is
-ifdef::VK_EXT_robustness2[]
+ifdef::VK_EXT_robustness2,VK_KHR_robustness2[]
 dlink:VK_NULL_HANDLE or
-endif::VK_EXT_robustness2[]
+endif::VK_EXT_robustness2,VK_KHR_robustness2[]
 the buffer resource.
   * pname:offset is the offset in bytes from the start of pname:buffer.
     Access to buffer memory via this descriptor uses addressing that is
@@ -3886,7 +4216,6 @@ the buffer resource.
     end of the buffer.
 +
 [NOTE]
-.Note
 ====
 When setting pname:range to ename:VK_WHOLE_SIZE, the
 <<buffer-info-effective-range, effective range>> must: not be larger than
@@ -3921,11 +4250,11 @@ pname:offset.
   * [[VUID-VkDescriptorBufferInfo-buffer-02998]]
     If the <<features-nullDescriptor, pname:nullDescriptor>> feature is not
     enabled, pname:buffer must: not be dlink:VK_NULL_HANDLE
-ifdef::VK_EXT_robustness2[]
+ifdef::VK_EXT_robustness2,VK_KHR_robustness2[]
   * [[VUID-VkDescriptorBufferInfo-buffer-02999]]
     If pname:buffer is dlink:VK_NULL_HANDLE, pname:offset must: be zero and
     pname:range must: be ename:VK_WHOLE_SIZE
-endif::VK_EXT_robustness2[]
+endif::VK_EXT_robustness2,VK_KHR_robustness2[]
 ****
 
 include::{generated}/validity/structs/VkDescriptorBufferInfo.adoc[]
@@ -3942,9 +4271,9 @@ include::{generated}/api/structs/VkDescriptorImageInfo.adoc[]
     ename:VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER if the binding being
     updated does not use immutable samplers.
   * pname:imageView is
-ifdef::VK_EXT_robustness2[]
+ifdef::VK_EXT_robustness2,VK_KHR_robustness2[]
     dlink:VK_NULL_HANDLE or
-endif::VK_EXT_robustness2[]
+endif::VK_EXT_robustness2,VK_KHR_robustness2[]
     an image view handle, and is used in descriptor updates for types
     ename:VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
     ename:VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
@@ -4028,11 +4357,10 @@ endif::VK_VERSION_1_2,VK_KHR_separate_depth_stencil_layouts[]
 ifdef::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
   * [[VUID-VkDescriptorImageInfo-sampler-01564]]
     If pname:sampler is used and the elink:VkFormat of the image is a
-    <<formats-requiring-sampler-ycbcr-conversion,multi-planar format>>, the
-    image must: have been created with
-    ename:VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT, and the pname:aspectMask of
-    the pname:imageView must: be a valid
-    <<formats-planes-image-aspect,multi-planar aspect mask>> bit
+    <<formats-multiplanar, multi-planar format>>, the image must: have been
+    created with ename:VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT, and the
+    pname:aspectMask of the pname:imageView must: be a valid
+    <<formats-multiplanar-image-aspect,multi-planar aspect mask>> bit
 endif::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
 ifdef::VK_KHR_portability_subset[]
   * [[VUID-VkDescriptorImageInfo-mutableComparisonSamplers-04450]]
@@ -4105,9 +4433,6 @@ include::{generated}/api/structs/VkWriteDescriptorSetAccelerationStructureKHR.ad
 
 .Valid Usage
 ****
-  * [[VUID-VkWriteDescriptorSetAccelerationStructureKHR-accelerationStructureCount-02236]]
-    pname:accelerationStructureCount must: be equal to pname:descriptorCount
-    in the extended structure
   * [[VUID-VkWriteDescriptorSetAccelerationStructureKHR-pAccelerationStructures-03579]]
     Each acceleration structure in pname:pAccelerationStructures must: have
     been created with a pname:type of
@@ -4122,6 +4447,46 @@ include::{generated}/api/structs/VkWriteDescriptorSetAccelerationStructureKHR.ad
 include::{generated}/validity/structs/VkWriteDescriptorSetAccelerationStructureKHR.adoc[]
 --
 endif::VK_KHR_acceleration_structure[]
+
+ifdef::VK_NV_partitioned_acceleration_structure[]
+
+[open,refpage='VkWriteDescriptorSetPartitionedAccelerationStructureNV',desc='Structure specifying descriptor for PTLAS',type='structs']
+--
+:refpage: VkWriteDescriptorSetPartitionedAccelerationStructureNV
+
+If the pname:descriptorType member of slink:VkWriteDescriptorSet is
+ename:VK_DESCRIPTOR_TYPE_PARTITIONED_ACCELERATION_STRUCTURE_NV, then the
+data to write to the descriptor set is specified through a
+sname:VkWriteDescriptorSetPartitionedAccelerationStructureNV structure
+included in the pname:pNext chain of sname:VkWriteDescriptorSet.
+
+The sname:VkWriteDescriptorSetPartitionedAccelerationStructureNV structure
+is defined as:
+
+include::{generated}/api/structs/VkWriteDescriptorSetPartitionedAccelerationStructureNV.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:accelerationStructureCount is the number of elements in
+    pname:pAccelerationStructures.
+  * pname:pAccelerationStructures is a pointer to an array of
+    pname:accelerationStructureCount device addresses pointing to previously
+    built PTLAS.
+
+.Valid Usage
+****
+  * [[VUID-VkWriteDescriptorSetPartitionedAccelerationStructureNV-accelerationStructureCount-10511]]
+    pname:accelerationStructureCount must: be equal to pname:descriptorCount
+    in the extended structure
+  * [[VUID-VkWriteDescriptorSetPartitionedAccelerationStructureNV-pAccelerationStructures-10512]]
+    Each entry in pname:pAccelerationStructures must: be a valid address of
+    a PTLAS
+****
+
+include::{generated}/validity/structs/VkWriteDescriptorSetPartitionedAccelerationStructureNV.adoc[]
+--
+endif::VK_NV_partitioned_acceleration_structure[]
 
 ifdef::VK_NV_ray_tracing[]
 [open,refpage='VkWriteDescriptorSetAccelerationStructureNV',desc='Structure specifying acceleration structure descriptor information',type='structs']
@@ -4144,9 +4509,6 @@ include::{generated}/api/structs/VkWriteDescriptorSetAccelerationStructureNV.ado
 
 .Valid Usage
 ****
-  * [[VUID-VkWriteDescriptorSetAccelerationStructureNV-accelerationStructureCount-03747]]
-    pname:accelerationStructureCount must: be equal to pname:descriptorCount
-    in the extended structure
   * [[VUID-VkWriteDescriptorSetAccelerationStructureNV-pAccelerationStructures-03748]]
     Each acceleration structure in pname:pAccelerationStructures must: have
     been created with ename:VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR
@@ -4159,6 +4521,35 @@ include::{generated}/api/structs/VkWriteDescriptorSetAccelerationStructureNV.ado
 include::{generated}/validity/structs/VkWriteDescriptorSetAccelerationStructureNV.adoc[]
 --
 endif::VK_NV_ray_tracing[]
+
+ifdef::VK_ARM_tensors[]
+[open,refpage='VkWriteDescriptorSetTensorARM',desc='Structure specifying descriptor tensor info',type='structs']
+--
+
+The sname:VkWriteDescriptorSetTensorARM structure is defined as:
+
+include::{generated}/api/structs/VkWriteDescriptorSetTensorARM.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:tensorViewCount is the number of elements in pname:pTensorViews.
+  * pname:pTensorViews are the tensor views that will be used to update the
+    descriptor set.
+
+.Valid Usage
+****
+ifdef::VK_EXT_robustness2[]
+  * [[VUID-VkWriteDescriptorSetTensorARM-nullDescriptor-09898]]
+    If the <<features-nullDescriptor, pname:nullDescriptor>> feature is not
+    enabled, each element of pname:pTensorViews must: not be
+    dlink:VK_NULL_HANDLE
+endif::VK_EXT_robustness2[]
+****
+
+include::{generated}/validity/structs/VkWriteDescriptorSetTensorARM.adoc[]
+--
+endif::VK_ARM_tensors[]
 
 [open,refpage='VkCopyDescriptorSet',desc='Structure specifying a copy descriptor set operation',type='structs']
 --
@@ -4211,7 +4602,6 @@ destination descriptor.
 The active descriptor type can: be different for each source descriptor.
 
 [NOTE]
-.Note
 ====
 The intention is that copies to and from mutable descriptors is a simple
 memcpy.
@@ -4228,23 +4618,23 @@ endif::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
   * [[VUID-VkCopyDescriptorSet-srcArrayElement-00346]]
     The sum of pname:srcArrayElement and pname:descriptorCount must: be less
     than or equal to the number of array elements in the descriptor set
-    binding specified by pname:srcBinding, and all applicable consecutive
-    bindings, as described by <<descriptorsets-updates-consecutive>>
+    binding specified by pname:srcBinding, and all applicable
+    <<descriptorsets-updates-consecutive, consecutive bindings>>
   * [[VUID-VkCopyDescriptorSet-dstBinding-00347]]
     pname:dstBinding must: be a valid binding within pname:dstSet
   * [[VUID-VkCopyDescriptorSet-dstArrayElement-00348]]
     The sum of pname:dstArrayElement and pname:descriptorCount must: be less
     than or equal to the number of array elements in the descriptor set
-    binding specified by pname:dstBinding, and all applicable consecutive
-    bindings, as described by <<descriptorsets-updates-consecutive>>
+    binding specified by pname:dstBinding, and all applicable
+    <<descriptorsets-updates-consecutive, consecutive bindings>>
   * [[VUID-VkCopyDescriptorSet-dstBinding-02632]]
     The type of pname:dstBinding within pname:dstSet must: be equal to the
     type of pname:srcBinding within pname:srcSet
   * [[VUID-VkCopyDescriptorSet-srcSet-00349]]
     If pname:srcSet is equal to pname:dstSet, then the source and
     destination ranges of descriptors must: not overlap, where the ranges
-    may: include array elements from consecutive bindings as described by
-    <<descriptorsets-updates-consecutive>>
+    may: include array elements from <<descriptorsets-updates-consecutive,
+    consecutive bindings>>
 ifdef::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
   * [[VUID-VkCopyDescriptorSet-srcBinding-02223]]
     If the descriptor type of the descriptor set binding specified by
@@ -4345,8 +4735,7 @@ ifdef::hidden[]
   * tname:VkDescriptorUpdateTemplateCreateFlagsKHR <<SCID-8>>
   * ename:VkDescriptorUpdateTemplateType
   ** ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET_KHR <<SCID-8>>
-  ** ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS_KHR
-     <<SCID-8>>
+  ** ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS <<SCID-8>>
 // end::scremoved[]
 endif::hidden[]
 endif::VKSC_VERSION_1_0[]
@@ -4394,23 +4783,19 @@ used as a replacement for flink:vkUpdateDescriptorSets.
 
 sname:VkDescriptorUpdateTemplate allows implementations to convert a set of
 descriptor update operations on a single descriptor set to an internal
-format that, in conjunction with flink:vkUpdateDescriptorSetWithTemplate
-ifdef::VK_KHR_push_descriptor[]
-or flink:vkCmdPushDescriptorSetWithTemplateKHR
-endif::VK_KHR_push_descriptor[]
-, can: be more efficient compared to calling flink:vkUpdateDescriptorSets
-ifdef::VK_KHR_push_descriptor[]
-or flink:vkCmdPushDescriptorSetKHR
-endif::VK_KHR_push_descriptor[]
-.
+format.
+In conjunction with
+ifdef::VK_VERSION_1_4,VK_KHR_push_descriptor[flink:vkCmdPushDescriptorSetWithTemplate or]
+flink:vkUpdateDescriptorSetWithTemplate, this can: be more efficient
+compared to calling
+ifdef::VK_VERSION_1_4,VK_KHR_push_descriptor[flink:vkCmdPushDescriptorSet or]
+flink:vkUpdateDescriptorSets.
 The descriptors themselves are not specified in the
 sname:VkDescriptorUpdateTemplate, rather, offsets into an application
 provided pointer to host memory are specified, which are combined with a
-pointer passed to flink:vkUpdateDescriptorSetWithTemplate
-ifdef::VK_KHR_push_descriptor[]
-or flink:vkCmdPushDescriptorSetWithTemplateKHR
-endif::VK_KHR_push_descriptor[]
-.
+pointer passed to
+ifdef::VK_VERSION_1_4,VK_KHR_push_descriptor[flink:vkCmdPushDescriptorSetWithTemplate or]
+flink:vkUpdateDescriptorSetWithTemplate.
 This allows large batches of updates to be executed without having to
 convert application data structures into a strictly-defined Vulkan data
 structure.
@@ -4432,9 +4817,7 @@ endif::VK_KHR_descriptor_update_template[]
   * pname:pCreateInfo is a pointer to a
     slink:VkDescriptorUpdateTemplateCreateInfo structure specifying the set
     of descriptors to update with a single call to
-ifdef::VK_KHR_push_descriptor[]
-    flink:vkCmdPushDescriptorSetWithTemplateKHR or
-endif::VK_KHR_push_descriptor[]
+ifdef::VK_VERSION_1_4,VK_KHR_push_descriptor[flink:vkCmdPushDescriptorSetWithTemplate or]
     flink:vkUpdateDescriptorSetWithTemplate.
   * pname:pAllocator controls host memory allocation as described in the
     <<memory-allocation, Memory Allocation>> chapter.
@@ -4469,11 +4852,11 @@ endif::VK_KHR_descriptor_update_template[]
     If set to ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET it
     can: only be used to update descriptor sets with a fixed
     pname:descriptorSetLayout.
-ifdef::VK_KHR_push_descriptor[]
-    If set to ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS_KHR
-    it can: only be used to push descriptor sets using the provided
+ifdef::VK_VERSION_1_4,VK_KHR_push_descriptor[]
+    If set to ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS it
+    can: only be used to push descriptor sets using the provided
     pname:pipelineBindPoint, pname:pipelineLayout, and pname:set number.
-endif::VK_KHR_push_descriptor[]
+endif::VK_VERSION_1_4,VK_KHR_push_descriptor[]
   * pname:descriptorSetLayout is the descriptor set layout used to build the
     descriptor update template.
     All descriptor sets which are going to be updated through the newly
@@ -4481,25 +4864,27 @@ endif::VK_KHR_push_descriptor[]
     matches (is the same as, or defined identically to) this layout.
     This parameter is ignored if pname:templateType is not
     ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET.
-ifdef::VK_KHR_push_descriptor[]
+    The implementation must: not access this object outside of the duration
+    of the command this structure is passed to.
+ifdef::VK_VERSION_1_4,VK_KHR_push_descriptor[]
   * pname:pipelineBindPoint is a elink:VkPipelineBindPoint indicating the
     type of the pipeline that will use the descriptors.
     This parameter is ignored if pname:templateType is not
-    ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS_KHR
+    ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS
   * pname:pipelineLayout is a slink:VkPipelineLayout object used to program
     the bindings.
     This parameter is ignored if pname:templateType is not
-    ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS_KHR
+    ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS
   * pname:set is the set number of the descriptor set in the pipeline layout
     that will be updated.
     This parameter is ignored if pname:templateType is not
-    ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS_KHR
-endif::VK_KHR_push_descriptor[]
-ifndef::VK_KHR_push_descriptor[]
+    ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS
+endif::VK_VERSION_1_4,VK_KHR_push_descriptor[]
+ifndef::VK_VERSION_1_4,VK_KHR_push_descriptor[]
   * pname:pipelineBindPoint is reserved for future use and is ignored
   * pname:pipelineLayout is reserved for future use and is ignored
   * pname:set is reserved for future use and is ignored
-endif::VK_KHR_push_descriptor[]
+endif::VK_VERSION_1_4,VK_KHR_push_descriptor[]
 
 .Valid Usage
 ****
@@ -4508,22 +4893,31 @@ endif::VK_KHR_push_descriptor[]
     ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET,
     pname:descriptorSetLayout must: be a valid sname:VkDescriptorSetLayout
     handle
+ifdef::VK_VERSION_1_4[]
+  * [[VUID-VkDescriptorUpdateTemplateCreateInfo-templateType-10355]]
+    If pname:templateType is
+    ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS,
 ifdef::VK_KHR_push_descriptor[]
+    and the apiext:VK_KHR_push_descriptor extension is not enabled,
+endif::VK_KHR_push_descriptor[]
+    <<features-pushDescriptor, pname:pushDescriptor>> must: be enabled
+endif::VK_VERSION_1_4[]
+ifdef::VK_VERSION_1_4,VK_KHR_push_descriptor[]
   * [[VUID-VkDescriptorUpdateTemplateCreateInfo-templateType-00351]]
     If pname:templateType is
-    ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS_KHR,
+    ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS,
     pname:pipelineBindPoint must: be a valid elink:VkPipelineBindPoint value
   * [[VUID-VkDescriptorUpdateTemplateCreateInfo-templateType-00352]]
     If pname:templateType is
-    ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS_KHR,
+    ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS,
     pname:pipelineLayout must: be a valid sname:VkPipelineLayout handle
   * [[VUID-VkDescriptorUpdateTemplateCreateInfo-templateType-00353]]
     If pname:templateType is
-    ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS_KHR, pname:set
+    ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS, pname:set
     must: be the unique set number in the pipeline layout that uses a
     descriptor set layout that was created with
-    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR
-endif::VK_KHR_push_descriptor[]
+    ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT
+endif::VK_VERSION_1_4,VK_KHR_push_descriptor[]
 ifdef::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
   * [[VUID-VkDescriptorUpdateTemplateCreateInfo-templateType-04615]]
     If pname:templateType is
@@ -4568,11 +4962,11 @@ endif::VK_KHR_descriptor_update_template[]
   * ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET specifies that
     the descriptor update template will be used for descriptor set updates
     only.
-ifdef::VK_KHR_push_descriptor[]
-  * ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS_KHR specifies
-    that the descriptor update template will be used for push descriptor
-    updates only.
-endif::VK_KHR_push_descriptor[]
+ifdef::VK_VERSION_1_4,VK_KHR_push_descriptor[]
+  * ename:VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS specifies that
+    the descriptor update template will be used for push descriptor updates
+    only.
+endif::VK_VERSION_1_4,VK_KHR_push_descriptor[]
 --
 
 
@@ -4640,8 +5034,8 @@ endif::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
     pname:dstArrayElement and pname:descriptorCount must: be less than or
     equal to the number of array elements in the descriptor set binding
     implicitly specified when using a descriptor update template to update
-    descriptors, and all applicable consecutive bindings, as described by
-    <<descriptorsets-updates-consecutive>>
+    descriptors, and all applicable <<descriptorsets-updates-consecutive,
+    consecutive bindings>>
 ifdef::VK_VERSION_1_3,VK_EXT_inline_uniform_block[]
   * [[VUID-VkDescriptorUpdateTemplateEntry-descriptor-02226]]
     If pname:descriptor type is
@@ -4741,7 +5135,7 @@ endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
 
 include::{generated}/validity/protos/vkUpdateDescriptorSetWithTemplate.adoc[]
 
-.API example
+.API Example
 [source,c++]
 ----
 struct AppBufferView {
@@ -4753,8 +5147,8 @@ struct AppDataStructure
 {
     VkDescriptorImageInfo  imageInfo;          // a single image info
     VkDescriptorBufferInfo bufferInfoArray[3]; // 3 buffer infos in an array
-    AppBufferView          bufferView[2];      // An application defined structure containing a bufferView
-    // ... some more application related data
+    AppBufferView          bufferView[2];      // An application-defined structure containing a bufferView
+    // ... some more application-related data
 };
 
 const VkDescriptorUpdateTemplateEntry descriptorUpdateTemplateEntries[] =
@@ -4884,10 +5278,10 @@ set layout for that set number.
 When consuming a descriptor, a descriptor is considered valid if the
 descriptor is not undefined: as described by
 <<descriptor-set-initial-state,descriptor set allocation>>.
-ifdef::VK_EXT_robustness2[]
+ifdef::VK_EXT_robustness2,VK_KHR_robustness2[]
 If the <<features-nullDescriptor, pname:nullDescriptor>> feature is enabled,
 a null descriptor is also considered valid.
-endif::VK_EXT_robustness2[]
+endif::VK_EXT_robustness2,VK_KHR_robustness2[]
 A descriptor that was disturbed by <<descriptorsets-compatibility, Pipeline
 Layout Compatibility>>, or was never bound by fname:vkCmdBindDescriptorSets
 is not considered valid.
@@ -4903,7 +5297,6 @@ considered valid.
 endif::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
 
 [NOTE]
-.Note
 ====
 Further validation may be carried out beyond validation for descriptor
 types, e.g. <<textures-input-validation,Texel Input Validation>>.
@@ -4969,37 +5362,51 @@ include::{chapters}/commonvalidity/bind_descriptor_sets_common.adoc[]
 include::{generated}/validity/protos/vkCmdBindDescriptorSets.adoc[]
 --
 
-ifdef::VK_KHR_maintenance6[]
-[open,refpage='vkCmdBindDescriptorSets2KHR',desc='Binds descriptor sets to a command buffer',type='protos']
+ifdef::VK_VERSION_1_4,VK_KHR_maintenance6[]
+[open,refpage='vkCmdBindDescriptorSets2',desc='Binds descriptor sets to a command buffer',type='protos',alias='vkCmdBindDescriptorSets2KHR']
 --
 Alternatively, to bind one or more descriptor sets to a command buffer,
 call:
 
+ifdef::VK_VERSION_1_4[]
+include::{generated}/api/protos/vkCmdBindDescriptorSets2.adoc[]
+endif::VK_VERSION_1_4[]
+
+ifdef::VK_VERSION_1_4+VK_KHR_maintenance6[or the equivalent command]
+
+ifdef::VK_KHR_maintenance6[]
 include::{generated}/api/protos/vkCmdBindDescriptorSets2KHR.adoc[]
+endif::VK_KHR_maintenance6[]
 
   * pname:commandBuffer is the command buffer that the descriptor sets will
     be bound to.
   * pname:pBindDescriptorSetsInfo is a pointer to a
-    sname:VkBindDescriptorSetsInfoKHR structure.
+    sname:VkBindDescriptorSetsInfo structure.
 
 .Valid Usage
 ****
-  * [[VUID-vkCmdBindDescriptorSets2KHR-pBindDescriptorSetsInfo-09467]]
+  * [[VUID-vkCmdBindDescriptorSets2-pBindDescriptorSetsInfo-09467]]
     Each bit in pname:pBindDescriptorSetsInfo->stageFlags must: be a stage
     supported by the pname:commandBuffer's parent sname:VkCommandPool's
     queue family
 ****
 
-include::{generated}/validity/protos/vkCmdBindDescriptorSets2KHR.adoc[]
+include::{generated}/validity/protos/vkCmdBindDescriptorSets2.adoc[]
 --
 
-[open,refpage='VkBindDescriptorSetsInfoKHR',desc='Structure specifying a descriptor set binding operation',type='structs']
+[open,refpage='VkBindDescriptorSetsInfo',desc='Structure specifying a descriptor set binding operation',type='structs',alias='VkBindDescriptorSetsInfoKHR']
 --
-:refpage: VkBindDescriptorSetsInfoKHR
+:refpage: VkBindDescriptorSetsInfo
 
-The sname:VkBindDescriptorSetsInfoKHR structure is defined as:
+The sname:VkBindDescriptorSetsInfo structure is defined as:
+
+include::{generated}/api/structs/VkBindDescriptorSetsInfo.adoc[]
+
+ifdef::VK_KHR_maintenance6[]
+or the equivalent
 
 include::{generated}/api/structs/VkBindDescriptorSetsInfoKHR.adoc[]
+endif::VK_KHR_maintenance6[]
 
   * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
@@ -5041,18 +5448,18 @@ include::{chapters}/commonvalidity/bind_descriptor_sets_common.adoc[]
 include::{chapters}/commonvalidity/dynamic_pipeline_layout_common.adoc[]
 ****
 
-include::{generated}/validity/structs/VkBindDescriptorSetsInfoKHR.adoc[]
+include::{generated}/validity/structs/VkBindDescriptorSetsInfo.adoc[]
 --
-endif::VK_KHR_maintenance6[]
+endif::VK_VERSION_1_4,VK_KHR_maintenance6[]
 
 
-ifdef::VK_KHR_push_descriptor[]
+ifdef::VK_VERSION_1_4,VK_KHR_push_descriptor[]
 [[descriptorsets-push-descriptors]]
 === Push Descriptor Updates
 
-[open,refpage='vkCmdPushDescriptorSetKHR',desc='Pushes descriptor updates into a command buffer',type='protos']
+[open,refpage='vkCmdPushDescriptorSet',desc='Pushes descriptor updates into a command buffer',type='protos',alias='vkCmdPushDescriptorSetKHR']
 --
-:refpage: vkCmdPushDescriptorSetKHR
+:refpage: vkCmdPushDescriptorSet
 
 In addition to allocating descriptor sets and binding them to a command
 buffer, an application can: record descriptor updates into the command
@@ -5060,7 +5467,15 @@ buffer.
 
 To push descriptor updates into a command buffer, call:
 
+ifdef::VK_VERSION_1_4[]
+include::{generated}/api/protos/vkCmdPushDescriptorSet.adoc[]
+endif::VK_VERSION_1_4[]
+
+ifdef::VK_VERSION_1_4+VK_KHR_push_descriptor[or the equivalent command]
+
+ifdef::VK_KHR_push_descriptor[]
 include::{generated}/api/protos/vkCmdPushDescriptorSetKHR.adoc[]
+endif::VK_KHR_push_descriptor[]
 
   * pname:commandBuffer is the command buffer that the descriptors will be
     recorded in.
@@ -5124,44 +5539,74 @@ pipeline layout.
 .Valid Usage
 ****
 include::{chapters}/commonvalidity/push_descriptor_set_common.adoc[]
-  * [[VUID-vkCmdPushDescriptorSetKHR-pipelineBindPoint-00363]]
+  * [[VUID-vkCmdPushDescriptorSet-pipelineBindPoint-00363]]
     pname:pipelineBindPoint must: be supported by the pname:commandBuffer's
     parent sname:VkCommandPool's queue family
+ifdef::VK_VERSION_1_4[]
+  * [[VUID-vkCmdPushDescriptorSet-None-10356]]
+    {empty}
+ifdef::VK_KHR_push_descriptor[]
+    If the apiext:VK_KHR_push_descriptor extension is not enabled,
+endif::VK_KHR_push_descriptor[]
+    <<features-pushDescriptor, pname:pushDescriptor>> must: be enabled
+endif::VK_VERSION_1_4[]
 ****
 
-include::{generated}/validity/protos/vkCmdPushDescriptorSetKHR.adoc[]
+include::{generated}/validity/protos/vkCmdPushDescriptorSet.adoc[]
 --
 
-ifdef::VK_KHR_maintenance6[]
-[open,refpage='vkCmdPushDescriptorSet2KHR',desc='Pushes descriptor updates into a command buffer',type='protos']
+ifdef::VK_VERSION_1_4,VK_KHR_maintenance6[]
+[open,refpage='vkCmdPushDescriptorSet2',desc='Pushes descriptor updates into a command buffer',type='protos',alias='vkCmdPushDescriptorSet2KHR']
 --
 Alternatively, to push descriptor updates into a command buffer, call:
 
+ifdef::VK_VERSION_1_4[]
+include::{generated}/api/protos/vkCmdPushDescriptorSet2.adoc[]
+endif::VK_VERSION_1_4[]
+
+ifdef::VK_VERSION_1_4+VK_KHR_maintenance6[or the equivalent command]
+
+ifdef::VK_KHR_maintenance6[]
 include::{generated}/api/protos/vkCmdPushDescriptorSet2KHR.adoc[]
+endif::VK_KHR_maintenance6[]
 
   * pname:commandBuffer is the command buffer that the descriptors will be
     recorded in.
   * pname:pPushDescriptorSetInfo is a pointer to a
-    sname:VkPushDescriptorSetInfoKHR structure.
+    sname:VkPushDescriptorSetInfo structure.
 
 .Valid Usage
 ****
-  * [[VUID-vkCmdPushDescriptorSet2KHR-pPushDescriptorSetInfo-09468]]
+  * [[VUID-vkCmdPushDescriptorSet2-pPushDescriptorSetInfo-09468]]
     Each bit in pname:pPushDescriptorSetInfo->stageFlags must: be a stage
     supported by the pname:commandBuffer's parent sname:VkCommandPool's
     queue family
+ifdef::VK_VERSION_1_4[]
+  * [[VUID-vkCmdPushDescriptorSet2-None-10357]]
+    {empty}
+ifdef::VK_KHR_push_descriptor[]
+    If the apiext:VK_KHR_push_descriptor extension is not enabled,
+endif::VK_KHR_push_descriptor[]
+    <<features-pushDescriptor, pname:pushDescriptor>> must: be enabled
+endif::VK_VERSION_1_4[]
 ****
 
-include::{generated}/validity/protos/vkCmdPushDescriptorSet2KHR.adoc[]
+include::{generated}/validity/protos/vkCmdPushDescriptorSet2.adoc[]
 --
 
-[open,refpage='VkPushDescriptorSetInfoKHR',desc='Structure specifying a descriptor set push operation',type='structs']
+[open,refpage='VkPushDescriptorSetInfo',desc='Structure specifying a descriptor set push operation',type='structs',alias='VkPushDescriptorSetInfoKHR']
 --
-:refpage: VkPushDescriptorSetInfoKHR
+:refpage: VkPushDescriptorSetInfo
 
-The sname:VkPushDescriptorSetInfoKHR structure is defined as:
+The sname:VkPushDescriptorSetInfo structure is defined as:
+
+include::{generated}/api/structs/VkPushDescriptorSetInfo.adoc[]
+
+ifdef::VK_KHR_maintenance6[]
+or the equivalent
 
 include::{generated}/api/structs/VkPushDescriptorSetInfoKHR.adoc[]
+endif::VK_KHR_maintenance6[]
 
   * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
@@ -5200,23 +5645,31 @@ include::{chapters}/commonvalidity/push_descriptor_set_common.adoc[]
 include::{chapters}/commonvalidity/dynamic_pipeline_layout_common.adoc[]
 ****
 
-include::{generated}/validity/structs/VkPushDescriptorSetInfoKHR.adoc[]
+include::{generated}/validity/structs/VkPushDescriptorSetInfo.adoc[]
 --
-endif::VK_KHR_maintenance6[]
+endif::VK_VERSION_1_4,VK_KHR_maintenance6[]
 
 
 ifdef::VK_VERSION_1_1,VK_KHR_descriptor_update_template[]
 === Push Descriptor Updates With Descriptor Update Templates
 
-[open,refpage='vkCmdPushDescriptorSetWithTemplateKHR',desc='Pushes descriptor updates into a command buffer using a descriptor update template',type='protos']
+[open,refpage='vkCmdPushDescriptorSetWithTemplate',desc='Pushes descriptor updates into a command buffer using a descriptor update template',type='protos',alias='vkCmdPushDescriptorSetWithTemplateKHR']
 --
-:refpage: vkCmdPushDescriptorSetWithTemplateKHR
+:refpage: vkCmdPushDescriptorSetWithTemplate
 
 It is also possible to use a descriptor update template to specify the push
 descriptors to update.
 To do so, call:
 
+ifdef::VK_VERSION_1_4[]
+include::{generated}/api/protos/vkCmdPushDescriptorSetWithTemplate.adoc[]
+endif::VK_VERSION_1_4[]
+
+ifdef::VK_VERSION_1_4+VK_KHR_push_descriptor[or the equivalent command]
+
+ifdef::VK_KHR_push_descriptor[]
 include::{generated}/api/protos/vkCmdPushDescriptorSetWithTemplateKHR.adoc[]
+endif::VK_KHR_push_descriptor[]
 
   * pname:commandBuffer is the command buffer that the descriptors will be
     recorded in.
@@ -5236,18 +5689,26 @@ include::{generated}/api/protos/vkCmdPushDescriptorSetWithTemplateKHR.adoc[]
 .Valid Usage
 ****
 include::{chapters}/commonvalidity/push_descriptor_set_with_template_common.adoc[]
+ifdef::VK_VERSION_1_4[]
+  * [[VUID-vkCmdPushDescriptorSetWithTemplate-None-10358]]
+    {empty}
+ifdef::VK_KHR_push_descriptor[]
+    If the apiext:VK_KHR_push_descriptor extension is not enabled,
+endif::VK_KHR_push_descriptor[]
+    <<features-pushDescriptor, pname:pushDescriptor>> must: be enabled
+endif::VK_VERSION_1_4[]
 ****
 
-include::{generated}/validity/protos/vkCmdPushDescriptorSetWithTemplateKHR.adoc[]
+include::{generated}/validity/protos/vkCmdPushDescriptorSetWithTemplate.adoc[]
 
-.API example
+.API Example
 [source,c++]
 ----
 
 struct AppDataStructure
 {
     VkDescriptorImageInfo  imageInfo;          // a single image info
-    // ... some more application related data
+    // ... some more application-related data
 };
 
 const VkDescriptorUpdateTemplateEntry descriptorUpdateTemplateEntries[] =
@@ -5271,7 +5732,7 @@ const VkDescriptorUpdateTemplateCreateInfo createInfo =
     .flags = 0,
     .descriptorUpdateEntryCount = 1,
     .pDescriptorUpdateEntries = descriptorUpdateTemplateEntries,
-    .templateType = VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS_KHR,
+    .templateType = VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS,
     .descriptorSetLayout = 0,   // ignored by given templateType
     .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
     .pipelineLayout = myPipelineLayout,
@@ -5287,33 +5748,47 @@ myResult = vkCreateDescriptorUpdateTemplate(
 
 AppDataStructure appData;
 // fill appData here or cache it in your engine
-vkCmdPushDescriptorSetWithTemplateKHR(myCmdBuffer, myDescriptorUpdateTemplate, myPipelineLayout, 0,&appData);
+vkCmdPushDescriptorSetWithTemplate(myCmdBuffer, myDescriptorUpdateTemplate, myPipelineLayout, 0,&appData);
 ----
 --
 
-ifdef::VK_KHR_maintenance6[]
-[open,refpage='vkCmdPushDescriptorSetWithTemplate2KHR',desc='Pushes descriptor updates into a command buffer using a descriptor update template',type='protos']
+ifdef::VK_VERSION_1_4,VK_KHR_maintenance6[]
+[open,refpage='vkCmdPushDescriptorSetWithTemplate2',desc='Pushes descriptor updates into a command buffer using a descriptor update template',type='protos',alias='vkCmdPushDescriptorSetWithTemplate2KHR']
 --
 Alternatively, to use a descriptor update template to specify the push
 descriptors to update, call:
 
+ifdef::VK_VERSION_1_4[]
+include::{generated}/api/protos/vkCmdPushDescriptorSetWithTemplate2.adoc[]
+endif::VK_VERSION_1_4[]
+
+ifdef::VK_VERSION_1_4+VK_KHR_maintenance6[or the equivalent command]
+
+ifdef::VK_KHR_maintenance6[]
 include::{generated}/api/protos/vkCmdPushDescriptorSetWithTemplate2KHR.adoc[]
+endif::VK_KHR_maintenance6[]
 
   * pname:commandBuffer is the command buffer that the descriptors will be
     recorded in.
   * pname:pPushDescriptorSetWithTemplateInfo is a pointer to a
-    sname:VkPushDescriptorSetWithTemplateInfoKHR structure.
+    sname:VkPushDescriptorSetWithTemplateInfo structure.
 
-include::{generated}/validity/protos/vkCmdPushDescriptorSetWithTemplate2KHR.adoc[]
+include::{generated}/validity/protos/vkCmdPushDescriptorSetWithTemplate2.adoc[]
 --
 
-[open,refpage='VkPushDescriptorSetWithTemplateInfoKHR',desc='Structure specifying a descriptor set push operation using a descriptor update template',type='structs']
+[open,refpage='VkPushDescriptorSetWithTemplateInfo',desc='Structure specifying a descriptor set push operation using a descriptor update template',type='structs',alias='VkPushDescriptorSetWithTemplateInfoKHR']
 --
-:refpage: VkPushDescriptorSetWithTemplateInfoKHR
+:refpage: VkPushDescriptorSetWithTemplateInfo
 
-The sname:VkPushDescriptorSetWithTemplateInfoKHR structure is defined as:
+The sname:VkPushDescriptorSetWithTemplateInfo structure is defined as:
+
+include::{generated}/api/structs/VkPushDescriptorSetWithTemplateInfo.adoc[]
+
+ifdef::VK_KHR_maintenance6[]
+or the equivalent
 
 include::{generated}/api/structs/VkPushDescriptorSetWithTemplateInfoKHR.adoc[]
+endif::VK_KHR_maintenance6[]
 
   * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
@@ -5341,14 +5816,22 @@ endif::VK_NV_per_stage_descriptor_set[]
 ****
 include::{chapters}/commonvalidity/push_descriptor_set_with_template_common.adoc[]
 include::{chapters}/commonvalidity/dynamic_pipeline_layout_common.adoc[]
+ifdef::VK_VERSION_1_4[]
+  * [[VUID-VkPushDescriptorSetWithTemplateInfo-None-10359]]
+    {empty}
+ifdef::VK_KHR_push_descriptor[]
+    If the apiext:VK_KHR_push_descriptor extension is not enabled,
+endif::VK_KHR_push_descriptor[]
+    <<features-pushDescriptor, pname:pushDescriptor>> must: be enabled
+endif::VK_VERSION_1_4[]
 ****
 
-include::{generated}/validity/structs/VkPushDescriptorSetWithTemplateInfoKHR.adoc[]
+include::{generated}/validity/structs/VkPushDescriptorSetWithTemplateInfo.adoc[]
 --
-endif::VK_KHR_maintenance6[]
+endif::VK_VERSION_1_4,VK_KHR_maintenance6[]
 
 endif::VK_VERSION_1_1,VK_KHR_descriptor_update_template[]
-endif::VK_KHR_push_descriptor[]
+endif::VK_VERSION_1_4,VK_KHR_push_descriptor[]
 
 
 [[descriptorsets-push-constants]]
@@ -5360,7 +5843,6 @@ updated via Vulkan commands rather than via writes to memory or copy
 commands.
 
 [NOTE]
-.Note
 ====
 Push constants represent a high speed path to modify constant data in
 pipelines that is expected to outperform memory-backed resource updates.
@@ -5407,7 +5889,6 @@ Binding a pipeline with a layout that is not compatible with the push
 constant layout does not disturb the push constant values.
 
 [NOTE]
-.Note
 ====
 As pname:stageFlags needs to include all flags the relevant push constant
 ranges were created with, any flags that are not supported by the queue
@@ -5423,28 +5904,42 @@ include::{chapters}/commonvalidity/push_constants_common.adoc[]
 include::{generated}/validity/protos/vkCmdPushConstants.adoc[]
 --
 
-ifdef::VK_KHR_maintenance6[]
-[open,refpage='vkCmdPushConstants2KHR',desc='Update the values of push constants',type='protos']
+ifdef::VK_VERSION_1_4,VK_KHR_maintenance6[]
+[open,refpage='vkCmdPushConstants2',desc='Update the values of push constants',type='protos',alias='vkCmdPushConstants2KHR']
 --
 Alternatively, to update push constants, call:
 
+ifdef::VK_VERSION_1_4[]
+include::{generated}/api/protos/vkCmdPushConstants2.adoc[]
+endif::VK_VERSION_1_4[]
+
+ifdef::VK_VERSION_1_4+VK_KHR_maintenance6[or the equivalent command]
+
+ifdef::VK_KHR_maintenance6[]
 include::{generated}/api/protos/vkCmdPushConstants2KHR.adoc[]
+endif::VK_KHR_maintenance6[]
 
   * pname:commandBuffer is the command buffer in which the push constant
     update will be recorded.
-  * pname:pPushConstantsInfo is a pointer to a sname:VkPushConstantsInfoKHR
+  * pname:pPushConstantsInfo is a pointer to a slink:VkPushConstantsInfo
     structure.
 
-include::{generated}/validity/protos/vkCmdPushConstants2KHR.adoc[]
+include::{generated}/validity/protos/vkCmdPushConstants2.adoc[]
 --
 
-[open,refpage='VkPushConstantsInfoKHR',desc='Structure specifying a push constant update operation',type='structs']
+[open,refpage='VkPushConstantsInfo',desc='Structure specifying a push constant update operation',type='structs',alias='VkPushConstantsInfoKHR']
 --
-:refpage: VkPushConstantsInfoKHR
+:refpage: VkPushConstantsInfo
 
-The sname:VkPushConstantsInfoKHR structure is defined as:
+The sname:VkPushConstantsInfo structure is defined as:
+
+include::{generated}/api/structs/VkPushConstantsInfo.adoc[]
+
+ifdef::VK_KHR_maintenance6[]
+or the equivalent
 
 include::{generated}/api/structs/VkPushConstantsInfoKHR.adoc[]
+endif::VK_KHR_maintenance6[]
 
   * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
@@ -5472,46 +5967,17 @@ include::{chapters}/commonvalidity/push_constants_common.adoc[]
 include::{chapters}/commonvalidity/dynamic_pipeline_layout_common.adoc[]
 ****
 
-include::{generated}/validity/structs/VkPushConstantsInfoKHR.adoc[]
+include::{generated}/validity/structs/VkPushConstantsInfo.adoc[]
 --
-endif::VK_KHR_maintenance6[]
+endif::VK_VERSION_1_4,VK_KHR_maintenance6[]
 
 
 ifdef::VK_VERSION_1_2,VK_EXT_buffer_device_address,VK_KHR_buffer_device_address[]
 [[descriptorsets-physical-storage-buffer]]
 == Physical Storage Buffer Access
 
-[open,refpage='vkGetBufferDeviceAddress',desc='Query an address of a buffer',type='protos',alias='vkGetBufferDeviceAddressKHR']
---
-To query a 64-bit buffer device address value through which buffer memory
-can: be accessed in a shader, call:
-
-ifdef::VK_VERSION_1_2[]
-include::{generated}/api/protos/vkGetBufferDeviceAddress.adoc[]
-endif::VK_VERSION_1_2[]
-
-ifdef::VK_VERSION_1_2+VK_KHR_buffer_device_address[or the equivalent command]
-
-ifdef::VK_KHR_buffer_device_address[]
-include::{generated}/api/protos/vkGetBufferDeviceAddressKHR.adoc[]
-endif::VK_KHR_buffer_device_address[]
-
-// Jon: 3-way conditional logic here is wrong
-
-ifdef::VK_EXT_buffer_device_address[]
-or the equivalent command
-
-include::{generated}/api/protos/vkGetBufferDeviceAddressEXT.adoc[]
-endif::VK_EXT_buffer_device_address[]
-
-  * pname:device is the logical device that the buffer was created on.
-  * pname:pInfo is a pointer to a slink:VkBufferDeviceAddressInfo structure
-    specifying the buffer to retrieve an address for.
-
-The 64-bit return value is an address of the start of pname:pInfo->buffer.
-The address range starting at this value and whose size is the size of the
-buffer can: be used in a shader to access the memory bound to that buffer,
-using the
+<<resources-buffer-device-addresses, Buffer device addresses>> can: also be
+used to access buffer memory in a shader, using the
 ifdef::VK_VERSION_1_2,VK_KHR_buffer_device_address[]
 `SPV_KHR_physical_storage_buffer` extension
 ifdef::VK_EXT_buffer_device_address[or the equivalent]
@@ -5523,139 +5989,10 @@ and the code:PhysicalStorageBuffer storage class.
 For example, this value can: be stored in a uniform buffer, and the shader
 can: read the value from the uniform buffer and use it to do a dependent
 read/write to this buffer.
-A value of zero is reserved as a "`null`" pointer and must: not be returned
-as a valid buffer device address.
 All loads, stores, and atomics in a shader through
 code:PhysicalStorageBuffer pointers must: access addresses in the address
 range of some buffer.
-
-If the buffer was created with a non-zero value of
-ifdef::VK_VERSION_1_2,VK_KHR_buffer_device_address[]
-ifdef::VK_EXT_buffer_device_address[slink:VkBufferOpaqueCaptureAddressCreateInfo::pname:opaqueCaptureAddress or]
-ifndef::VK_EXT_buffer_device_address[slink:VkBufferOpaqueCaptureAddressCreateInfo::pname:opaqueCaptureAddress,]
-endif::VK_VERSION_1_2,VK_KHR_buffer_device_address[]
-ifdef::VK_EXT_buffer_device_address[]
-slink:VkBufferDeviceAddressCreateInfoEXT::pname:deviceAddress,
-endif::VK_EXT_buffer_device_address[]
-the return value will be the same address that was returned at capture time.
-
-The returned address must: satisfy the alignment requirement specified by
-slink:VkMemoryRequirements::pname:alignment for the buffer in
-slink:VkBufferDeviceAddressInfo::pname:buffer.
-
-If multiple slink:VkBuffer objects are bound to overlapping ranges of
-slink:VkDeviceMemory, implementations may: return address ranges which
-overlap.
-In this case, it is ambiguous which slink:VkBuffer is associated with any
-given device address.
-For purposes of valid usage, if multiple slink:VkBuffer objects can: be
-attributed to a device address, a slink:VkBuffer is selected such that valid
-usage passes, if it exists.
-
-.Valid Usage
-****
-  * [[VUID-vkGetBufferDeviceAddress-bufferDeviceAddress-03324]]
-    The <<features-bufferDeviceAddress, pname:bufferDeviceAddress>>
-ifdef::VK_EXT_buffer_device_address[]
-    or <<features-bufferDeviceAddressEXT,
-    sname:VkPhysicalDeviceBufferDeviceAddressFeaturesEXT::pname:bufferDeviceAddress>>
-endif::VK_EXT_buffer_device_address[]
-    feature must: be enabled
-  * [[VUID-vkGetBufferDeviceAddress-device-03325]]
-    If pname:device was created with multiple physical devices, then the
-    <<features-bufferDeviceAddressMultiDevice,
-    pname:bufferDeviceAddressMultiDevice>>
-ifdef::VK_EXT_buffer_device_address[]
-    or <<features-bufferDeviceAddressMultiDeviceEXT,
-    sname:VkPhysicalDeviceBufferDeviceAddressFeaturesEXT::pname:bufferDeviceAddressMultiDevice>>
-endif::VK_EXT_buffer_device_address[]
-    feature must: be enabled
-****
-
-include::{generated}/validity/protos/vkGetBufferDeviceAddress.adoc[]
---
-
-[open,refpage='VkBufferDeviceAddressInfo',desc='Structure specifying the buffer to query an address for',type='structs',alias='VkBufferDeviceAddressInfoKHR,VkBufferDeviceAddressInfoEXT']
---
-The sname:VkBufferDeviceAddressInfo structure is defined as:
-
-include::{generated}/api/structs/VkBufferDeviceAddressInfo.adoc[]
-
-ifdef::VK_KHR_buffer_device_address[]
-or the equivalent
-
-include::{generated}/api/structs/VkBufferDeviceAddressInfoKHR.adoc[]
-endif::VK_KHR_buffer_device_address[]
-
-// Jon: three-way conditional logic is broken
-ifdef::VK_EXT_buffer_device_address[]
-or the equivalent
-
-include::{generated}/api/structs/VkBufferDeviceAddressInfoEXT.adoc[]
-endif::VK_EXT_buffer_device_address[]
-
-  * pname:sType is a elink:VkStructureType value identifying this structure.
-  * pname:pNext is `NULL` or a pointer to a structure extending this
-    structure.
-  * pname:buffer specifies the buffer whose address is being queried.
-
-.Valid Usage
-****
-  * [[VUID-VkBufferDeviceAddressInfo-buffer-02600]]
-    If pname:buffer is non-sparse and was not created with the
-    ename:VK_BUFFER_CREATE_DEVICE_ADDRESS_CAPTURE_REPLAY_BIT flag, then it
-    must: be bound completely and contiguously to a single
-    sname:VkDeviceMemory object
-  * [[VUID-VkBufferDeviceAddressInfo-buffer-02601]]
-    pname:buffer must: have been created with
-    ename:VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
-****
-
-include::{generated}/validity/structs/VkBufferDeviceAddressInfo.adoc[]
---
 endif::VK_VERSION_1_2,VK_EXT_buffer_device_address,VK_KHR_buffer_device_address[]
-
-ifdef::VK_VERSION_1_2,VK_KHR_buffer_device_address[]
-[open,refpage='vkGetBufferOpaqueCaptureAddress',desc='Query an opaque capture address of a buffer',type='protos',alias='vkGetBufferOpaqueCaptureAddressKHR']
---
-To query a 64-bit buffer opaque capture address, call:
-
-ifdef::VK_VERSION_1_2[]
-include::{generated}/api/protos/vkGetBufferOpaqueCaptureAddress.adoc[]
-endif::VK_VERSION_1_2[]
-
-ifdef::VK_VERSION_1_2+VK_KHR_buffer_device_address[or the equivalent command]
-
-ifdef::VK_KHR_buffer_device_address[]
-include::{generated}/api/protos/vkGetBufferOpaqueCaptureAddressKHR.adoc[]
-endif::VK_KHR_buffer_device_address[]
-
-  * pname:device is the logical device that the buffer was created on.
-  * pname:pInfo is a pointer to a slink:VkBufferDeviceAddressInfo structure
-    specifying the buffer to retrieve an address for.
-
-The 64-bit return value is an opaque capture address of the start of
-pname:pInfo->buffer.
-
-If the buffer was created with a non-zero value of
-slink:VkBufferOpaqueCaptureAddressCreateInfo::pname:opaqueCaptureAddress the
-return value must: be the same address.
-
-.Valid Usage
-****
-  * [[VUID-vkGetBufferOpaqueCaptureAddress-None-03326]]
-    The <<features-bufferDeviceAddress, pname:bufferDeviceAddress>> feature
-    must: be enabled
-  * [[VUID-vkGetBufferOpaqueCaptureAddress-device-03327]]
-    If pname:device was created with multiple physical devices, then the
-    <<features-bufferDeviceAddressMultiDevice,
-    pname:bufferDeviceAddressMultiDevice>> feature must: be enabled
-****
-
-include::{generated}/validity/protos/vkGetBufferOpaqueCaptureAddress.adoc[]
---
-endif::VK_VERSION_1_2,VK_KHR_buffer_device_address[]
-
 
 ifdef::VK_EXT_descriptor_buffer[]
 [[descriptorbuffers]]
@@ -5783,16 +6120,16 @@ ename:VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT, that
 pname:binding must: have the largest offset of any pname:binding.
 endif::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
 
-ifdef::VK_VALVE_mutable_descriptor_type[]
-A descriptor pname:binding with type ename:VK_DESCRIPTOR_TYPE_MUTABLE_VALVE
+ifdef::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
+A descriptor pname:binding with type ename:VK_DESCRIPTOR_TYPE_MUTABLE_EXT
 can: be used.
 Any potential types in
-slink:VkMutableDescriptorTypeCreateInfoVALVE::pname:pDescriptorTypes for
+slink:VkMutableDescriptorTypeCreateInfoEXT::pname:pDescriptorTypes for
 pname:binding share the same offset.
 If the size of the <<descriptorsets-mutable, mutable descriptor>> is larger
 than the size of a concrete descriptor type being accessed, the padding area
 is ignored by the implementation.
-endif::VK_VALVE_mutable_descriptor_type[]
+endif::VK_EXT_mutable_descriptor_type,VK_VALVE_mutable_descriptor_type[]
 
 .Valid Usage
 ****
@@ -5817,8 +6154,8 @@ include::{generated}/api/protos/vkGetDescriptorEXT.adoc[]
   * pname:pDescriptorInfo is a pointer to a slink:VkDescriptorGetInfoEXT
     structure specifying the parameters of the descriptor to get.
   * pname:dataSize is the amount of the descriptor data to get in bytes.
-  * pname:pDescriptor is a pointer to a user-allocated buffer where the
-    descriptor will be written.
+  * pname:pDescriptor is a pointer to an application-allocated buffer where
+    the descriptor will be written.
 
 The size of the data for each descriptor type is determined by the value in
 slink:VkPhysicalDeviceDescriptorBufferPropertiesEXT.
@@ -5854,13 +6191,13 @@ underlying slink:VkBuffer is referenced instead.
     The <<features-descriptorBuffer, pname:descriptorBuffer>> feature must:
     be enabled
   * [[VUID-vkGetDescriptorEXT-dataSize-08125]]
-ifdef::VK_VULKAN_1_1,VK_KHR_sampler_ycbcr_conversion[]
+ifdef::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
     If pname:pDescriptorInfo->type is not
     ename:VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER or
-    pname:pDescriptorInfo->data.pCombinedImageSampler has a pname:imageView
+    pname:pDescriptorInfo->data.pCombinedImageSampler has an pname:imageView
     member that was not created with a sname:VkSamplerYcbcrConversionInfo
     structure in its pname:pNext chain,
-endif::VK_VULKAN_1_1,VK_KHR_sampler_ycbcr_conversion[]
+endif::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
     pname:dataSize must: equal the size of a descriptor of type
     slink:VkDescriptorGetInfoEXT::pname:type determined by the value in
     slink:VkPhysicalDeviceDescriptorBufferPropertiesEXT
@@ -5871,21 +6208,24 @@ ifdef::VK_EXT_fragment_density_map[]
     ename:VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER whose slink:VkSampler
     was created with ename:VK_SAMPLER_CREATE_SUBSAMPLED_BIT_EXT set
 endif::VK_EXT_fragment_density_map[]
-ifdef::VK_VULKAN_1_1,VK_KHR_sampler_ycbcr_conversion[]
+ifdef::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
   * [[VUID-vkGetDescriptorEXT-descriptorType-09469]]
     If pname:pDescriptorInfo->type is
     ename:VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER and
-    pname:pDescriptorInfo->data.pCombinedImageSampler has a pname:imageView
+    pname:pDescriptorInfo->data.pCombinedImageSampler has an pname:imageView
     member that was created with a sname:VkSamplerYcbcrConversionInfo
     structure in its pname:pNext chain, pname:dataSize must: equal the size
     of
     slink:VkPhysicalDeviceDescriptorBufferPropertiesEXT::pname:combinedImageSamplerDescriptorSize
     times
     slink:VkSamplerYcbcrConversionImageFormatProperties::pname:combinedImageSamplerDescriptorCount
-endif::VK_VULKAN_1_1,VK_KHR_sampler_ycbcr_conversion[]
-  * [[VUID-vkGetDescriptorEXT-pDescriptor-08016]]
-    pname:pDescriptor must: be a valid pointer to an array of at least
-    pname:dataSize bytes
+endif::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
+  * [[VUID-vkGetDescriptorEXT-pDescriptorInfo-09507]]
+    If pname:pDescriptorInfo->type is
+    ename:VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER and it has a
+    pname:imageView that is dlink:VK_NULL_HANDLE then pname:dataSize must:
+    be equal to the size of
+    slink:VkPhysicalDeviceDescriptorBufferPropertiesEXT::pname:combinedImageSamplerDescriptorSize
 ****
 
 include::{generated}/validity/protos/vkGetDescriptorEXT.adoc[]
@@ -5902,8 +6242,8 @@ include::{generated}/api/structs/VkDescriptorGetInfoEXT.adoc[]
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:type is the type of descriptor to get.
-  * pname:data is a structure containing the information needed to get the
-    descriptor.
+  * pname:data is a slink:VkDescriptorDataEXT union containing the
+    information needed to get the descriptor.
 
 .Valid Usage
 ****
@@ -5987,6 +6327,12 @@ ifdef::VK_NV_ray_tracing[]
     must: contain the handle of a slink:VkAccelerationStructureNV created on
     pname:device, returned by flink:vkGetAccelerationStructureHandleNV
 endif::VK_NV_ray_tracing[]
+ifdef::VK_ARM_tensors[]
+  * [[VUID-VkDescriptorGetInfoEXT-type-09701]]
+    If pname:type is ename:VK_DESCRIPTOR_TYPE_TENSOR_ARM, a
+    slink:VkDescriptorGetTensorInfoARM structure must: be included in the
+    pname:pNext chain and pname:data is ignored
+endif::VK_ARM_tensors[]
 ****
 
 include::{generated}/validity/structs/VkDescriptorGetInfoEXT.adoc[]
@@ -6042,7 +6388,7 @@ ifndef::VK_NV_ray_tracing,VK_NV_ray_tracing[]
   * pname:accelerationStructure is reserved for future use and is ignored.
 endif::VK_NV_ray_tracing,VK_NV_ray_tracing[]
 
-ifdef::VK_EXT_robustness2[]
+ifdef::VK_EXT_robustness2,VK_KHR_robustness2[]
 If the <<features-nullDescriptor, pname:nullDescriptor>> feature is enabled,
 pname:pSampledImage, pname:pStorageImage, pname:pUniformTexelBuffer,
 pname:pStorageTexelBuffer, pname:pUniformBuffer, and pname:pStorageBuffer
@@ -6056,92 +6402,68 @@ pname:accelerationStructure can: be `0`.
 A null acceleration structure descriptor results in the miss shader being
 invoked.
 endif::VK_KHR_acceleration_structure,VK_NV_ray_tracing[]
+endif::VK_EXT_robustness2,VK_KHR_robustness2[]
 
 .Valid Usage
 ****
-  * [[VUID-VkDescriptorDataEXT-type-08030]]
-    If slink:VkDescriptorGetInfoEXT:pname:type is
-    ename:VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, and
-    pname:pUniformBuffer->address is the address of a non-sparse buffer,
-    then that buffer must: be bound completely and contiguously to a single
-    sname:VkDeviceMemory object
-  * [[VUID-VkDescriptorDataEXT-type-08031]]
-    If slink:VkDescriptorGetInfoEXT:pname:type is
-    ename:VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, and
-    pname:pStorageBuffer->address is the address of a non-sparse buffer,
-    then that buffer must: be bound completely and contiguously to a single
-    sname:VkDeviceMemory object
-  * [[VUID-VkDescriptorDataEXT-type-08032]]
-    If slink:VkDescriptorGetInfoEXT:pname:type is
-    ename:VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, and
-    pname:pUniformTexelBuffer->address is the address of a non-sparse
-    buffer, then that buffer must: be bound completely and contiguously to a
-    single sname:VkDeviceMemory object
-  * [[VUID-VkDescriptorDataEXT-type-08033]]
-    If slink:VkDescriptorGetInfoEXT:pname:type is
-    ename:VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, and
-    pname:pStorageTexelBuffer->address is the address of a non-sparse
-    buffer, then that buffer must: be bound completely and contiguously to a
-    single sname:VkDeviceMemory object
-ifdef::VK_EXT_robustness2[]
+ifdef::VK_EXT_robustness2,VK_KHR_robustness2[]
   * [[VUID-VkDescriptorDataEXT-type-08034]]
-    If slink:VkDescriptorGetInfoEXT:pname:type is
+    If slink:VkDescriptorGetInfoEXT::pname:type is
     ename:VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, and the
     <<features-nullDescriptor, pname:nullDescriptor>> feature is not
     enabled, pname:pCombinedImageSampler->imageView must: not be
     dlink:VK_NULL_HANDLE
   * [[VUID-VkDescriptorDataEXT-type-08035]]
-    If slink:VkDescriptorGetInfoEXT:pname:type is
+    If slink:VkDescriptorGetInfoEXT::pname:type is
     ename:VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, and the
     <<features-nullDescriptor, pname:nullDescriptor>> feature is not
     enabled, pname:pSampledImage must: not be `NULL` and
     pname:pSampledImage->imageView must: not be dlink:VK_NULL_HANDLE
   * [[VUID-VkDescriptorDataEXT-type-08036]]
-    If slink:VkDescriptorGetInfoEXT:pname:type is
+    If slink:VkDescriptorGetInfoEXT::pname:type is
     ename:VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, and the
     <<features-nullDescriptor, pname:nullDescriptor>> feature is not
     enabled, pname:pStorageImage must: not be `NULL` and
     pname:pStorageImage->imageView must: not be dlink:VK_NULL_HANDLE
   * [[VUID-VkDescriptorDataEXT-type-08037]]
-    If slink:VkDescriptorGetInfoEXT:pname:type is
+    If slink:VkDescriptorGetInfoEXT::pname:type is
     ename:VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, and the
     <<features-nullDescriptor, pname:nullDescriptor>> feature is not
     enabled, pname:pUniformTexelBuffer must: not be `NULL`
   * [[VUID-VkDescriptorDataEXT-type-08038]]
-    If slink:VkDescriptorGetInfoEXT:pname:type is
+    If slink:VkDescriptorGetInfoEXT::pname:type is
     ename:VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, and the
     <<features-nullDescriptor, pname:nullDescriptor>> feature is not
     enabled, pname:pStorageTexelBuffer must: not be `NULL`
   * [[VUID-VkDescriptorDataEXT-type-08039]]
-    If slink:VkDescriptorGetInfoEXT:pname:type is
+    If slink:VkDescriptorGetInfoEXT::pname:type is
     ename:VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, and the
     <<features-nullDescriptor, pname:nullDescriptor>> feature is not
     enabled, pname:pUniformBuffer must: not be `NULL`
   * [[VUID-VkDescriptorDataEXT-type-08040]]
-    If slink:VkDescriptorGetInfoEXT:pname:type is
+    If slink:VkDescriptorGetInfoEXT::pname:type is
     ename:VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, and the
     <<features-nullDescriptor, pname:nullDescriptor>> feature is not
     enabled, pname:pStorageBuffer must: not be `NULL`
 ifdef::VK_KHR_acceleration_structure[]
   * [[VUID-VkDescriptorDataEXT-type-08041]]
-    If slink:VkDescriptorGetInfoEXT:pname:type is
+    If slink:VkDescriptorGetInfoEXT::pname:type is
     ename:VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, and the
     <<features-nullDescriptor, pname:nullDescriptor>> feature is not
     enabled, pname:accelerationStructure must: not be `0`
 endif::VK_KHR_acceleration_structure[]
 ifdef::VK_NV_ray_tracing[]
   * [[VUID-VkDescriptorDataEXT-type-08042]]
-    If slink:VkDescriptorGetInfoEXT:pname:type is
+    If slink:VkDescriptorGetInfoEXT::pname:type is
     ename:VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV, and the
     <<features-nullDescriptor, pname:nullDescriptor>> feature is not
     enabled, pname:accelerationStructure must: not be `0`
 endif::VK_NV_ray_tracing[]
-endif::VK_EXT_robustness2[]
+endif::VK_EXT_robustness2,VK_KHR_robustness2[]
 ****
 
 include::{generated}/validity/structs/VkDescriptorDataEXT.adoc[]
 
-endif::VK_EXT_robustness2[]
 --
 
 [open,refpage='VkDescriptorAddressInfoEXT',desc='Structure specifying descriptor buffer address info',type='structs']
@@ -6167,24 +6489,29 @@ include::{generated}/api/structs/VkDescriptorAddressInfoEXT.adoc[]
 
 .Valid Usage
 ****
+  * [[VUID-VkDescriptorAddressInfoEXT-None-09508]]
+    If
+ifdef::VK_EXT_robustness2,VK_KHR_robustness2[]
+    pname:address is not zero, and
+endif::VK_EXT_robustness2,VK_KHR_robustness2[]
+    the descriptor is of type ename:VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER
+    or ename:VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, then pname:format
+    must: not be ename:VK_FORMAT_UNDEFINED
   * [[VUID-VkDescriptorAddressInfoEXT-address-08043]]
-ifdef::VK_EXT_robustness2[]
+ifdef::VK_EXT_robustness2,VK_KHR_robustness2[]
     If the <<features-nullDescriptor, pname:nullDescriptor>> feature is not
     enabled,
-endif::VK_EXT_robustness2[]
+endif::VK_EXT_robustness2,VK_KHR_robustness2[]
     pname:address must: not be zero
-ifdef::VK_EXT_robustness2[]
+ifdef::VK_EXT_robustness2,VK_KHR_robustness2[]
   * [[VUID-VkDescriptorAddressInfoEXT-nullDescriptor-08938]]
     If pname:address is zero, pname:range must: be ename:VK_WHOLE_SIZE
-endif::VK_EXT_robustness2[]
+endif::VK_EXT_robustness2,VK_KHR_robustness2[]
   * [[VUID-VkDescriptorAddressInfoEXT-nullDescriptor-08939]]
-ifdef::VK_EXT_robustness2[]
+ifdef::VK_EXT_robustness2,VK_KHR_robustness2[]
     If pname:address is not zero,
-endif::VK_EXT_robustness2[]
+endif::VK_EXT_robustness2,VK_KHR_robustness2[]
     pname:range must: not be ename:VK_WHOLE_SIZE
-  * [[VUID-VkDescriptorAddressInfoEXT-None-08044]]
-    If pname:address is not zero, pname:address must: be a valid device
-    address at an offset within a slink:VkBuffer
   * [[VUID-VkDescriptorAddressInfoEXT-range-08045]]
     pname:range must: be less than or equal to the size of the buffer
     containing pname:address minus the offset of pname:address from the base
@@ -6195,12 +6522,12 @@ endif::VK_EXT_robustness2[]
 
 include::{generated}/validity/structs/VkDescriptorAddressInfoEXT.adoc[]
 
-ifdef::VK_EXT_robustness2[]
+ifdef::VK_EXT_robustness2,VK_KHR_robustness2[]
 If the <<features-nullDescriptor, pname:nullDescriptor>> feature is enabled,
 pname:address can: be zero.
 Loads from a null descriptor return zero values and stores and atomics to a
 null descriptor are discarded.
-endif::VK_EXT_robustness2[]
+endif::VK_EXT_robustness2,VK_KHR_robustness2[]
 --
 
 Immutable samplers specified in a descriptor set layout through
@@ -6211,7 +6538,6 @@ parameters to the immutable samplers in the descriptor set layout that
 consumes the sampler.
 
 [NOTE]
-.Note
 ====
 If the descriptor set layout was created with
 ename:VK_DESCRIPTOR_SET_LAYOUT_CREATE_EMBEDDED_IMMUTABLE_SAMPLERS_BIT_EXT,
@@ -6221,7 +6547,6 @@ The implementation handles allocation of these descriptors internally.
 ====
 
 [NOTE]
-.Note
 ====
 As descriptors are now in regular memory, drivers cannot hide copies of
 immutable samplers that end up in descriptor sets from the application.
@@ -6229,6 +6554,31 @@ As such, applications are required to provide these samplers as if they were
 not provided immutably.
 ====
 
+ifdef::VK_ARM_tensors[]
+[open,refpage='VkDescriptorGetTensorInfoARM',desc='Structure specifying parameters to get descriptor data for tensor views',type='structs']
+--
+The sname:VkDescriptorGetTensorInfoARM is defined as:
+
+include::{generated}/api/structs/VkDescriptorGetTensorInfoARM.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:tensorView is a slink:VkTensorViewARM handle specifying the
+    parameters of a ename:VK_DESCRIPTOR_TYPE_TENSOR_ARM descriptor.
+
+ifdef::VK_EXT_robustness2[]
+.Valid Usage
+****
+  * [[VUID-VkDescriptorGetTensorInfoARM-nullDescriptor-09899]]
+    If the <<features-nullDescriptor, pname:nullDescriptor>> feature is not
+    enabled, pname:tensorView must: not be dlink:VK_NULL_HANDLE
+****
+endif::VK_EXT_robustness2[]
+
+include::{generated}/validity/structs/VkDescriptorGetTensorInfoARM.adoc[]
+--
+endif::VK_ARM_tensors[]
 
 [[descriptorbuffers-binding]]
 === Binding Descriptor Buffers
@@ -6277,22 +6627,22 @@ pname:bufferCount are unbound.
   * [[VUID-vkCmdBindDescriptorBuffersEXT-maxSamplerDescriptorBufferBindings-08048]]
     There must: be no more than
     slink:VkPhysicalDeviceDescriptorBufferPropertiesEXT::pname:maxSamplerDescriptorBufferBindings
-    descriptor buffers containing sampler descriptor data bound
+    elements in pname:pBindingInfos with
+    slink:VkDescriptorBufferBindingInfoEXT::pname:usage containing
+    ename:VK_BUFFER_USAGE_SAMPLER_DESCRIPTOR_BUFFER_BIT_EXT
   * [[VUID-vkCmdBindDescriptorBuffersEXT-maxResourceDescriptorBufferBindings-08049]]
     There must: be no more than
     slink:VkPhysicalDeviceDescriptorBufferPropertiesEXT::pname:maxResourceDescriptorBufferBindings
-    descriptor buffers containing resource descriptor data bound
+    elements in pname:pBindingInfos with
+    slink:VkDescriptorBufferBindingInfoEXT::pname:usage containing
+    ename:VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT
   * [[VUID-vkCmdBindDescriptorBuffersEXT-None-08050]]
-    There must: be no more than `1` descriptor buffer bound that was created
-    with the
-    ename:VK_BUFFER_USAGE_PUSH_DESCRIPTORS_DESCRIPTOR_BUFFER_BIT_EXT bit set
+    There must: be no more than `1` element in pname:pBindingInfos with
+    slink:VkDescriptorBufferBindingInfoEXT::pname:usage containing
+    ename:VK_BUFFER_USAGE_PUSH_DESCRIPTORS_DESCRIPTOR_BUFFER_BIT_EXT
   * [[VUID-vkCmdBindDescriptorBuffersEXT-bufferCount-08051]]
     pname:bufferCount must: be less than or equal to
     slink:VkPhysicalDeviceDescriptorBufferPropertiesEXT::pname:maxDescriptorBufferBindings
-  * [[VUID-vkCmdBindDescriptorBuffersEXT-pBindingInfos-08052]]
-    For any element of pname:pBindingInfos, if the buffer from which
-    pname:address was queried is non-sparse then it must: be bound
-    completely and contiguously to a single slink:VkDeviceMemory object
   * [[VUID-vkCmdBindDescriptorBuffersEXT-pBindingInfos-08053]]
     For any element of pname:pBindingInfos, the buffer from which
     pname:address was queried must: have been created with the
@@ -6306,6 +6656,16 @@ pname:bufferCount are unbound.
   * [[VUID-vkCmdBindDescriptorBuffersEXT-pBindingInfos-08055]]
     For any element of pname:pBindingInfos, pname:usage must: match the
     buffer from which pname:address was queried
+ifdef::VK_ARM_data_graph[]
+  * [[VUID-vkCmdBindDescriptorBuffersEXT-pBindingInfos-09947]]
+    For all elements of pname:pBindingInfos, the buffer from which
+    pname:address was queried must: have been created with the
+    ename:VK_BUFFER_USAGE_2_DATA_GRAPH_FOREIGN_DESCRIPTOR_BIT_ARM bit set if
+    the command pool from which pname:commandBuffer was allocated from was
+    created with any element of
+    slink:VkDataGraphProcessingEngineCreateInfoARM::pProcessingEngines with
+    pname:isForeign set to ename:VK_TRUE
+endif::VK_ARM_data_graph[]
 ****
 
 include::{generated}/validity/protos/vkCmdBindDescriptorBuffersEXT.adoc[]
@@ -6329,11 +6689,11 @@ include::{generated}/api/structs/VkDescriptorBufferBindingInfoEXT.adoc[]
     slink:VkBufferCreateInfo::pname:usage for the buffer from which
     pname:address was queried.
 
-ifdef::VK_KHR_maintenance5[]
-If a slink:VkBufferUsageFlags2CreateInfoKHR structure is present in the
-pname:pNext chain, slink:VkBufferUsageFlags2CreateInfoKHR::pname:usage from
-that structure is used instead of pname:usage from this structure.
-endif::VK_KHR_maintenance5[]
+ifdef::VK_VERSION_1_4,VK_KHR_maintenance5[]
+If the pname:pNext chain includes a slink:VkBufferUsageFlags2CreateInfo
+structure, slink:VkBufferUsageFlags2CreateInfo::pname:usage from that
+structure is used instead of pname:usage from this structure.
+endif::VK_VERSION_1_4,VK_KHR_maintenance5[]
 
 .Valid Usage
 ****
@@ -6358,13 +6718,13 @@ include::{chapters}/commonvalidity/buffer_usage_flags_common.adoc[]
     ename:VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT, pname:address
     must: be an address within a valid buffer that was created with
     ename:VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT
-ifdef::VK_KHR_push_descriptor[]
+ifdef::VK_VERSION_1_4,VK_KHR_push_descriptor[]
   * [[VUID-VkDescriptorBufferBindingInfoEXT-usage-08124]]
     If pname:usage includes
     ename:VK_BUFFER_USAGE_PUSH_DESCRIPTORS_DESCRIPTOR_BUFFER_BIT_EXT,
     pname:address must: be an address within a valid buffer that was created
     with ename:VK_BUFFER_USAGE_PUSH_DESCRIPTORS_DESCRIPTOR_BUFFER_BIT_EXT
-endif::VK_KHR_push_descriptor[]
+endif::VK_VERSION_1_4,VK_KHR_push_descriptor[]
 ****
 
 include::{generated}/validity/structs/VkDescriptorBufferBindingInfoEXT.adoc[]
@@ -6423,7 +6783,7 @@ include::{generated}/api/protos/vkCmdSetDescriptorBufferOffsetsEXT.adoc[]
 fname:vkCmdSetDescriptorBufferOffsetsEXT binds pname:setCount pairs of
 descriptor buffers, specified by indices into the binding points bound using
 flink:vkCmdBindDescriptorBuffersEXT, and buffer offsets to set numbers
-[pname:firstSet..pname:firstSet+pname:descriptorSetCount-1] for subsequent
+[pname:firstSet..pname:firstSet+pname:setCount-1] for subsequent
 <<pipelines-bindpoint-commands, bound pipeline commands>> set by
 pname:pipelineBindPoint.
 Set [pname:firstSet + i] is bound to the descriptor buffer at binding
@@ -6462,7 +6822,6 @@ read must: be in-bounds of the underlying descriptor buffer binding.
 
 ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
 [NOTE]
-.Note
 ====
 Applications can freely decide how large a variable descriptor buffer
 binding is, so it may not be safe to read such descriptor payloads
@@ -6478,7 +6837,6 @@ partially-resident buffer>> will result in invalid descriptor data being
 read, and therefore undefined: behavior.
 
 [NOTE]
-.Note
 ====
 For descriptors written by the host, visibility is implied through the
 automatic visibility operation on queue submit, and there is no need to
@@ -6489,7 +6847,6 @@ are updated on the device.
 
 ifdef::VK_VERSION_1_2,VK_EXT_descriptor_indexing[]
 [NOTE]
-.Note
 ====
 The requirements above imply that all descriptor bindings have been defined
 with the equivalent of ename:VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
@@ -6513,7 +6870,7 @@ include::{chapters}/commonvalidity/set_descriptor_buffer_offsets_common.adoc[]
 include::{generated}/validity/protos/vkCmdSetDescriptorBufferOffsetsEXT.adoc[]
 --
 
-ifdef::VK_KHR_maintenance6[]
+ifdef::VK_VERSION_1_4,VK_KHR_maintenance6[]
 [open,refpage='vkCmdSetDescriptorBufferOffsets2EXT',desc='Setting descriptor buffer offsets in a command buffer',type='protos']
 --
 Alternatively, to set descriptor buffer offsets in a command buffer, call:
@@ -6587,7 +6944,7 @@ include::{chapters}/commonvalidity/dynamic_pipeline_layout_common.adoc[]
 
 include::{generated}/validity/structs/VkSetDescriptorBufferOffsetsInfoEXT.adoc[]
 --
-endif::VK_KHR_maintenance6[]
+endif::VK_VERSION_1_4,VK_KHR_maintenance6[]
 
 [open,refpage='vkCmdBindDescriptorBufferEmbeddedSamplersEXT',desc='Setting embedded immutable samplers offsets in a command buffer',type='protos']
 --
@@ -6632,7 +6989,7 @@ include::{chapters}/commonvalidity/bind_descriptor_buffer_embedded_samplers_comm
 include::{generated}/validity/protos/vkCmdBindDescriptorBufferEmbeddedSamplersEXT.adoc[]
 --
 
-ifdef::VK_KHR_maintenance6[]
+ifdef::VK_VERSION_1_4,VK_KHR_maintenance6[]
 [open,refpage='vkCmdBindDescriptorBufferEmbeddedSamplers2EXT',desc='Setting embedded immutable samplers offsets in a command buffer',type='protos']
 --
 Alternatively, to bind an embedded immutable sampler set to a command
@@ -6701,7 +7058,7 @@ include::{chapters}/commonvalidity/dynamic_pipeline_layout_common.adoc[]
 
 include::{generated}/validity/structs/VkBindDescriptorBufferEmbeddedSamplersInfoEXT.adoc[]
 --
-endif::VK_KHR_maintenance6[]
+endif::VK_VERSION_1_4,VK_KHR_maintenance6[]
 
 
 [[descriptorbuffers-updates]]
@@ -6758,14 +7115,14 @@ include::{generated}/api/protos/vkGetBufferOpaqueCaptureDescriptorDataEXT.adoc[]
   * pname:device is the logical device that gets the data.
   * pname:pInfo is a pointer to a slink:VkBufferCaptureDescriptorDataInfoEXT
     structure specifying the buffer.
-  * pname:pData is a pointer to a user-allocated buffer where the data will
-    be written.
+  * pname:pData is a pointer to an application-allocated buffer where the
+    data will be written.
 
 .Valid Usage
 ****
   * [[VUID-vkGetBufferOpaqueCaptureDescriptorDataEXT-None-08072]]
-    The <<features-descriptorBuffer, pname:descriptorBufferCaptureReplay>>
-    feature must: be enabled
+    The <<features-descriptorBufferCaptureReplay,
+    pname:descriptorBufferCaptureReplay>> feature must: be enabled
   * [[VUID-vkGetBufferOpaqueCaptureDescriptorDataEXT-pData-08073]]
     pname:pData must: point to a buffer that is at least
     slink:VkPhysicalDeviceDescriptorBufferPropertiesEXT::pname:bufferCaptureReplayDescriptorDataSize
@@ -6813,14 +7170,14 @@ include::{generated}/api/protos/vkGetImageOpaqueCaptureDescriptorDataEXT.adoc[]
   * pname:device is the logical device that gets the data.
   * pname:pInfo is a pointer to a slink:VkImageCaptureDescriptorDataInfoEXT
     structure specifying the image.
-  * pname:pData is a pointer to a user-allocated buffer where the data will
-    be written.
+  * pname:pData is a pointer to an application-allocated buffer where the
+    data will be written.
 
 .Valid Usage
 ****
   * [[VUID-vkGetImageOpaqueCaptureDescriptorDataEXT-None-08076]]
-    The <<features-descriptorBuffer, pname:descriptorBufferCaptureReplay>>
-    feature must: be enabled
+    The <<features-descriptorBufferCaptureReplay,
+    pname:descriptorBufferCaptureReplay>> feature must: be enabled
   * [[VUID-vkGetImageOpaqueCaptureDescriptorDataEXT-pData-08077]]
     pname:pData must: point to a buffer that is at least
     slink:VkPhysicalDeviceDescriptorBufferPropertiesEXT::pname:imageCaptureReplayDescriptorDataSize
@@ -6868,14 +7225,14 @@ include::{generated}/api/protos/vkGetImageViewOpaqueCaptureDescriptorDataEXT.ado
   * pname:pInfo is a pointer to a
     slink:VkImageViewCaptureDescriptorDataInfoEXT structure specifying the
     image view.
-  * pname:pData is a pointer to a user-allocated buffer where the data will
-    be written.
+  * pname:pData is a pointer to an application-allocated buffer where the
+    data will be written.
 
 .Valid Usage
 ****
   * [[VUID-vkGetImageViewOpaqueCaptureDescriptorDataEXT-None-08080]]
-    The <<features-descriptorBuffer, pname:descriptorBufferCaptureReplay>>
-    feature must: be enabled
+    The <<features-descriptorBufferCaptureReplay,
+    pname:descriptorBufferCaptureReplay>> feature must: be enabled
   * [[VUID-vkGetImageViewOpaqueCaptureDescriptorDataEXT-pData-08081]]
     pname:pData must: point to a buffer that is at least
     slink:VkPhysicalDeviceDescriptorBufferPropertiesEXT::pname:imageViewCaptureReplayDescriptorDataSize
@@ -6923,14 +7280,14 @@ include::{generated}/api/protos/vkGetSamplerOpaqueCaptureDescriptorDataEXT.adoc[
   * pname:pInfo is a pointer to a
     slink:VkSamplerCaptureDescriptorDataInfoEXT structure specifying the
     sampler.
-  * pname:pData is a pointer to a user-allocated buffer where the data will
-    be written.
+  * pname:pData is a pointer to an application-allocated buffer where the
+    data will be written.
 
 .Valid Usage
 ****
   * [[VUID-vkGetSamplerOpaqueCaptureDescriptorDataEXT-None-08084]]
-    The <<features-descriptorBuffer, pname:descriptorBufferCaptureReplay>>
-    feature must: be enabled
+    The <<features-descriptorBufferCaptureReplay,
+    pname:descriptorBufferCaptureReplay>> feature must: be enabled
   * [[VUID-vkGetSamplerOpaqueCaptureDescriptorDataEXT-pData-08085]]
     pname:pData must: point to a buffer that is at least
     slink:VkPhysicalDeviceDescriptorBufferPropertiesEXT::pname:samplerCaptureReplayDescriptorDataSize
@@ -6980,14 +7337,14 @@ include::{generated}/api/protos/vkGetAccelerationStructureOpaqueCaptureDescripto
   * pname:pInfo is a pointer to a
     slink:VkAccelerationStructureCaptureDescriptorDataInfoEXT structure
     specifying the acceleration structure.
-  * pname:pData is a pointer to a user-allocated buffer where the data will
-    be written.
+  * pname:pData is a pointer to an application-allocated buffer where the
+    data will be written.
 
 .Valid Usage
 ****
   * [[VUID-vkGetAccelerationStructureOpaqueCaptureDescriptorDataEXT-None-08088]]
-    The <<features-descriptorBuffer, pname:descriptorBufferCaptureReplay>>
-    feature must: be enabled
+    The <<features-descriptorBufferCaptureReplay,
+    pname:descriptorBufferCaptureReplay>> feature must: be enabled
   * [[VUID-vkGetAccelerationStructureOpaqueCaptureDescriptorDataEXT-pData-08089]]
     pname:pData must: point to a buffer that is at least
     slink:VkPhysicalDeviceDescriptorBufferPropertiesEXT::pname:accelerationStructureCaptureReplayDescriptorDataSize
@@ -7051,11 +7408,15 @@ include::{generated}/api/structs/VkOpaqueCaptureDescriptorDataCreateInfoEXT.adoc
   * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
-  * pname:opaqueCaptureDescriptorData is a pointer to a user-allocated
-    buffer containing opaque capture data retrieved using
-    flink:vkGetBufferOpaqueCaptureDescriptorDataEXT,
+  * pname:opaqueCaptureDescriptorData is a pointer to an
+    application-allocated buffer containing opaque capture data retrieved
+    using flink:vkGetBufferOpaqueCaptureDescriptorDataEXT,
     flink:vkGetImageOpaqueCaptureDescriptorDataEXT,
     flink:vkGetImageViewOpaqueCaptureDescriptorDataEXT,
+ifdef::VK_ARM_tensors[]
+    flink:vkGetTensorOpaqueCaptureDescriptorDataARM,
+    flink:vkGetTensorViewOpaqueCaptureDescriptorDataARM,
+endif::VK_ARM_tensors[]
     flink:vkGetSamplerOpaqueCaptureDescriptorDataEXT, or
     flink:vkGetAccelerationStructureOpaqueCaptureDescriptorDataEXT.
 
@@ -7063,11 +7424,130 @@ During replay, opaque descriptor capture data can: be specified by adding a
 sname:VkOpaqueCaptureDescriptorDataCreateInfoEXT structure to the relevant
 pname:pNext chain of a slink:VkBufferCreateInfo, slink:VkImageCreateInfo,
 slink:VkImageViewCreateInfo, slink:VkSamplerCreateInfo,
+ifdef::VK_ARM_tensors[]
+slink:VkTensorCreateInfoARM, slink:VkTensorViewCreateInfoARM,
+endif::VK_ARM_tensors[]
 slink:VkAccelerationStructureCreateInfoNV or
 slink:VkAccelerationStructureCreateInfoKHR structure.
 
 
 include::{generated}/validity/structs/VkOpaqueCaptureDescriptorDataCreateInfoEXT.adoc[]
 --
+
+ifdef::VK_ARM_tensors[]
+[open,refpage='vkGetTensorOpaqueCaptureDescriptorDataARM',desc='Get tensor opaque capture descriptor data',type='protos']
+--
+To get the opaque capture descriptor data for a tensor, call:
+
+include::{generated}/api/protos/vkGetTensorOpaqueCaptureDescriptorDataARM.adoc[]
+
+  * pname:device is the logical device that gets the data.
+  * pname:pInfo is a pointer to a slink:VkTensorCaptureDescriptorDataInfoARM
+    structure specifying the tensor.
+  * pname:pData is a pointer to a user-allocated buffer where the data will
+    be written.
+
+.Valid Usage
+****
+  * [[VUID-vkGetTensorOpaqueCaptureDescriptorDataARM-descriptorBufferCaptureReplay-09702]]
+    The <<features-descriptorBuffer, pname:descriptorBufferCaptureReplay>>
+    and <<features-descriptorBufferTensorDescriptors,
+    pname:descriptorBufferTensorDescriptors>> features must: be enabled
+  * [[VUID-vkGetTensorOpaqueCaptureDescriptorDataARM-pData-09703]]
+    pname:pData must: point to a buffer that is at least
+    slink:VkPhysicalDeviceDescriptorBufferTensorPropertiesARM::pname:tensorCaptureReplayDescriptorDataSize
+    bytes in size
+  * [[VUID-vkGetTensorOpaqueCaptureDescriptorDataARM-device-09704]]
+    If pname:device was created with multiple physical devices, then the
+    <<features-bufferDeviceAddressMultiDevice,
+    pname:bufferDeviceAddressMultiDevice>> feature must: be enabled
+****
+
+include::{generated}/validity/protos/vkGetTensorOpaqueCaptureDescriptorDataARM.adoc[]
+--
+
+[open,refpage='VkTensorCaptureDescriptorDataInfoARM',desc='Structure specifying a tensor for descriptor capture',type='structs']
+--
+Information about the tensor to get descriptor buffer capture data for is
+passed in a sname:VkTensorCaptureDescriptorDataInfoARM structure:
+
+include::{generated}/api/structs/VkTensorCaptureDescriptorDataInfoARM.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:tensor is the sname:VkTensorARM handle of the tensor to get opaque
+    capture data for.
+
+.Valid Usage
+****
+  * [[VUID-VkTensorCaptureDescriptorDataInfoARM-tensor-09705]]
+    If pname:tensor is not dlink:VK_NULL_HANDLE then pname:tensor must: have
+    been created with
+    ename:VK_TENSOR_CREATE_DESCRIPTOR_BUFFER_CAPTURE_REPLAY_BIT_ARM set in
+    slink:VkTensorCreateInfoARM::pname:flags
+****
+
+include::{generated}/validity/structs/VkTensorCaptureDescriptorDataInfoARM.adoc[]
+--
+
+[open,refpage='vkGetTensorViewOpaqueCaptureDescriptorDataARM',desc='Get tensor view opaque capture descriptor data',type='protos']
+--
+To get the opaque capture descriptor data for a tensor view, call:
+
+include::{generated}/api/protos/vkGetTensorViewOpaqueCaptureDescriptorDataARM.adoc[]
+
+  * pname:device is the logical device that gets the data.
+  * pname:pInfo is a pointer to a
+    slink:VkTensorViewCaptureDescriptorDataInfoARM structure specifying the
+    tensor view.
+  * pname:pData is a pointer to a user-allocated buffer where the data will
+    be written.
+
+.Valid Usage
+****
+  * [[VUID-vkGetTensorViewOpaqueCaptureDescriptorDataARM-descriptorBufferCaptureReplay-09706]]
+    The <<features-descriptorBuffer, pname:descriptorBufferCaptureReplay>>
+    and <<features-descriptorBufferTensorDescriptors,
+    pname:descriptorBufferTensorDescriptors>> features must: be enabled
+  * [[VUID-vkGetTensorViewOpaqueCaptureDescriptorDataARM-pData-09707]]
+    pname:pData must: point to a buffer that is at least
+    slink:VkPhysicalDeviceDescriptorBufferTensorPropertiesARM::pname:tensorViewCaptureReplayDescriptorDataSize
+    bytes in size
+  * [[VUID-vkGetTensorViewOpaqueCaptureDescriptorDataARM-device-09708]]
+    If pname:device was created with multiple physical devices, then the
+    <<features-bufferDeviceAddressMultiDevice,
+    pname:bufferDeviceAddressMultiDevice>> feature must: be enabled
+****
+
+include::{generated}/validity/protos/vkGetTensorViewOpaqueCaptureDescriptorDataARM.adoc[]
+--
+
+[open,refpage='VkTensorViewCaptureDescriptorDataInfoARM',desc='Structure specifying a tensor view for descriptor capture',type='structs']
+--
+Information about the tensor view to get descriptor buffer capture data for
+is passed in a sname:VkTensorViewCaptureDescriptorDataInfoARM structure:
+
+include::{generated}/api/structs/VkTensorViewCaptureDescriptorDataInfoARM.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:tensorView is the sname:VkTensorViewARM handle of the tensor view
+    to get opaque capture data for.
+
+.Valid Usage
+****
+  * [[VUID-VkTensorViewCaptureDescriptorDataInfoARM-tensorView-09709]]
+    If pname:tensorView is not dlink:VK_NULL_HANDLE then pname:tensorView
+    must: have been created with
+    ename:VK_TENSOR_VIEW_CREATE_DESCRIPTOR_BUFFER_CAPTURE_REPLAY_BIT_ARM set
+    in slink:VkTensorViewCreateInfoARM::pname:flags
+****
+
+include::{generated}/validity/structs/VkTensorViewCaptureDescriptorDataInfoARM.adoc[]
+--
+
+endif::VK_ARM_tensors[]
 
 endif::VK_EXT_descriptor_buffer[]

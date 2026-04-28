@@ -1,4 +1,4 @@
-// Copyright 2022-2024 The Khronos Group Inc.
+// Copyright 2022-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -38,9 +38,9 @@ The new features are as follows:
     performed after sample counting in EarlyFragmentTests mode
   * Relax VkBufferView creation requirements by allowing subsets of the
     associated VkBuffer usage using sname:VkBufferUsageFlags2CreateInfoKHR
-  * A new entry point flink:vkCmdBindIndexBuffer2KHR, allowing a range of
-    memory to be bound as an index buffer
-  * flink:vkGetDeviceProcAddr must return code:NULL for supported core
+  * A new command flink:vkCmdBindIndexBuffer2KHR, allowing a range of memory
+    to be bound as an index buffer
+  * flink:vkGetDeviceProcAddr must return `NULL` for supported core
     functions beyond the version requested by the application.
   * A property to indicate that the sample mask test is performed after
     sample counting in EarlyFragmentTests mode
@@ -48,8 +48,8 @@ The new features are as follows:
     `pSizes` parameter.
   * A default size of 1.0 is used if code:PointSize is not written
   * Shader modules are deprecated - applications can now pass
-    slink:VkShaderModuleCreateInfo as a chained struct to pipeline creation
-    via slink:VkPipelineShaderStageCreateInfo
+    slink:VkShaderModuleCreateInfo as a chained structure to pipeline
+    creation via slink:VkPipelineShaderStageCreateInfo
   * A function flink:vkGetRenderingAreaGranularityKHR to query the optimal
     render area for a dynamic rendering instance.
   * A property to indicate that depth/stencil texturing operations with
@@ -78,9 +78,12 @@ The new features are as follows:
 
 include::{generated}/interfaces/VK_KHR_maintenance5.adoc[]
 
-=== Issues
+=== Promotion to Vulkan 1.4
 
-None.
+Functionality in this extension is included in core Vulkan 1.4 with the KHR
+suffix omitted.
+The original type, enum and command names are still available as aliases of
+the core functionality.
 
 === Version History
 

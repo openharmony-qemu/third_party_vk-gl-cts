@@ -1,10 +1,11 @@
-// Copyright 2021-2024 The Khronos Group Inc.
+// Copyright 2021-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
 = VK_KHR_video_decode_queue
 :toc: left
-:refpage: https://registry.khronos.org/vulkan/specs/1.2-extensions/man/html/
+:docs: https://docs.vulkan.org/spec/latest/
+:extensions: {docs}appendices/extensions.html#
 :sectnums:
 
 This document outlines a proposal to enable performing video decode operations in Vulkan.
@@ -178,7 +179,6 @@ The image subresource backing the decode output picture has to be in the new `VK
 Accordingly, `pSetupReferenceSlot` must never be `NULL`, except when the video session was created without any DPB slots.
 
 [NOTE]
-.Note
 ====
 The original version of this extension only required the specification of the reconstructed picture information (i.e. a non-`NULL` `pSetupReferenceSlot`) when the application intended to set up a reference picture by activating a DPB slot. Consequently, the presence of reconstructed picture information always implied DPB slot activation. This was changed in revision 8 of the extension, and whether DPB slot activation happens is now subject to codec-specific semantics. More details on this change are discussed in the corresponding issue in this proposal document.
 ====
@@ -203,7 +203,6 @@ Generally speaking, the application has to create the following images in order 
   * Optionally, an additional image usable as the decode output picture when the reconstructed picture has to be _distinct_ or when using video sessions without any DPB slots.
 
 [NOTE]
-.Note
 ====
 In practice, applications will typically allocate more than one decode output pictures for buffering purposes and/or to minimize synchronization overhead resulting from having to prevent write-after-write hazards across subsequent video decode operations targeting the same decode output picture resource. Some applications may also allocate more resources for reference pictures than the number of DPB slots for similar reasons.
 ====
@@ -419,7 +418,7 @@ formatInfo.imageUsage = VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR;
 vkGetPhysicalDeviceVideoFormatPropertiesKHR(physicalDevice, &formatInfo, &formatCount, NULL);
 formatProps = calloc(formatCount, sizeof(VkVideoFormatPropertiesKHR));
 for (uint32_t i = 0; i < formatCount; ++i) {
-    formatProps.sType = VK_STRUCTURE_TYPE_VIDEO_FORMAT_PROPERTIES_KHR;
+    formatProps[i].sType = VK_STRUCTURE_TYPE_VIDEO_FORMAT_PROPERTIES_KHR;
 }
 vkGetPhysicalDeviceVideoFormatPropertiesKHR(physicalDevice, &formatInfo, &formatCount, formatProps);
 
@@ -441,7 +440,7 @@ if ((decodeCapabilities.flags & VK_VIDEO_DECODE_CAPABILITY_DPB_AND_OUTPUT_DISTIN
 vkGetPhysicalDeviceVideoFormatPropertiesKHR(physicalDevice, &formatInfo, &formatCount, NULL);
 formatProps = calloc(formatCount, sizeof(VkVideoFormatPropertiesKHR));
 for (uint32_t i = 0; i < formatCount; ++i) {
-    formatProps.sType = VK_STRUCTURE_TYPE_VIDEO_FORMAT_PROPERTIES_KHR;
+    formatProps[i].sType = VK_STRUCTURE_TYPE_VIDEO_FORMAT_PROPERTIES_KHR;
 }
 vkGetPhysicalDeviceVideoFormatPropertiesKHR(physicalDevice, &formatInfo, &formatCount, formatProps);
 
@@ -833,3 +832,5 @@ Currently the following layered extensions are available:
 
   * `VK_KHR_video_decode_h264` - adds support for decoding H.264/AVC video sequences
   * `VK_KHR_video_decode_h265` - adds support for decoding H.265/HEVC video sequences
+  * `VK_KHR_video_decode_vp9` - adds support for decoding VP9 video sequences
+  * `VK_KHR_video_decode_av1` - adds support for decoding AV1 video sequences

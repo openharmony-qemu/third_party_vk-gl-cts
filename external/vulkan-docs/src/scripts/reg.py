@@ -1,6 +1,6 @@
-#!/usr/bin/python3 -i
+#!/usr/bin/env python3 -i
 #
-# Copyright 2013-2024 The Khronos Group Inc.
+# Copyright 2013-2025 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -134,8 +134,10 @@ def mergeAPIs(tree, fromApiNames, toApiName):
                     definitionName = child.get('name')
                     definitionVariants = parent.findall(f"{child.tag}[@name='{definitionName}']")
                 elif child.tag in ['require']:
-                    definitionName = child.get('feature')
-                    definitionVariants = parent.findall(f"{child.tag}[@feature='{definitionName}']")
+                    # No way to correlate require tags because they do not have a definite identifier in the way they
+                    # are used in the latest forms of the XML so the best we can do is simply enable all of them
+                    if child.get('api') in fromApiNames:
+                        child.set('api', toApiName)
                 elif child.tag in ['command']:
                     definitionName = child.find('proto/name').text
                     definitionVariants = parent.findall(f"{child.tag}/proto/name[.='{definitionName}']/../..")
@@ -208,6 +210,10 @@ class BaseInfo:
 
         self.elem = elem
         "etree Element for this feature"
+
+        self.deprecatedbyversion = None
+        self.deprecatedbyextensions = []
+        self.deprecatedlink = None
 
     def resetState(self):
         """Reset required/declared to initial values. Used
@@ -347,6 +353,8 @@ class FeatureInfo(BaseInfo):
 
             self.number = 0
             self.supported = None
+
+            self.deprecates = elem.findall('deprecate')
         else:
             # Extract vendor portion of <APIprefix>_<vendor>_<name>
             self.category = self.name.split('_', 2)[1]
@@ -435,6 +443,12 @@ class Registry:
 
         self.cmddict = {}
         "dictionary of CmdInfo objects keyed by command name"
+
+        self.aliasdict = {}
+        "dictionary of type and command names mapped to their alias, such as VkFooKHR -> VkFoo"
+
+        self.enumvaluedict = {}
+        "dictionary of enum values mapped to their type, such as VK_FOO_VALUE -> VkFoo"
 
         self.apidict = {}
         "dictionary of FeatureInfo objects for `<feature>` elements keyed by API name"
@@ -548,6 +562,22 @@ class Registry:
         """Specify a feature name regexp to break on when generating features."""
         self.breakPat = re.compile(regexp)
 
+    def addEnumValue(self, enum, type_name):
+        """Track aliasing and map back from enum values to their type"""
+        # Record alias, if any
+        value = enum.get('name')
+        alias = enum.get('alias')
+        if alias:
+            self.aliasdict[value] = alias
+        # Map the value back to the type
+        if type_name in self.aliasdict:
+            type_name = self.aliasdict[type_name]
+        if value in self.enumvaluedict:
+            # Some times the same enum is defined by multiple extensions
+            assert(type_name == self.enumvaluedict[value])
+        else:
+            self.enumvaluedict[value] = type_name
+
     def parseTree(self):
         """Parse the registry Element, once created"""
         # This must be the Element for the root <registry>
@@ -571,6 +601,9 @@ class Registry:
         else:
             stripNonmatchingAPIs(self.reg, self.genOpts.apiname, actuallyDelete = True)
 
+        self.aliasdict = {}
+        self.enumvaluedict = {}
+
         # Create dictionary of registry types from toplevel <types> tags
         # and add 'name' attribute to each <type> tag (where missing)
         # based on its <name> element.
@@ -581,12 +614,19 @@ class Registry:
         for type_elem in self.reg.findall('types/type'):
             # If the <type> does not already have a 'name' attribute, set
             # it from contents of its <name> tag.
-            if type_elem.get('name') is None:
+            name = type_elem.get('name')
+            if name is None:
                 name_elem = type_elem.find('name')
                 if name_elem is None or not name_elem.text:
                     raise RuntimeError("Type without a name!")
-                type_elem.set('name', name_elem.text)
+                name = name_elem.text
+                type_elem.set('name', name)
             self.addElementInfo(type_elem, TypeInfo(type_elem), 'type', self.typedict)
+
+            # Record alias, if any
+            alias = type_elem.get('alias')
+            if alias:
+                self.aliasdict[name] = alias
 
         # Create dictionary of registry enum groups from <enums> tags.
         #
@@ -609,10 +649,14 @@ class Registry:
         self.enumdict = {}
         for enums in self.reg.findall('enums'):
             required = (enums.get('type') is not None)
+            type_name = enums.get('name')
+            # Enum values are defined only for the type that is not aliased to something else.
+            assert(type_name not in self.aliasdict)
             for enum in enums.findall('enum'):
                 enumInfo = EnumInfo(enum)
                 enumInfo.required = required
                 self.addElementInfo(enum, enumInfo, 'enum', self.enumdict)
+                self.addEnumValue(enum, type_name)
 
         # Create dictionary of registry commands from <command> tags
         # and add 'name' attribute to each <command> tag (where missing)
@@ -622,7 +666,7 @@ class Registry:
         # Required <command> attributes: 'name' or <proto><name> tag contents
         self.cmddict = {}
         # List of commands which alias others. Contains
-        #   [ aliasName, element ]
+        #   [ name, aliasName, element ]
         # for each alias
         cmdAlias = []
         for cmd in self.reg.findall('commands/command'):
@@ -639,10 +683,14 @@ class Registry:
             alias = cmd.get('alias')
             if alias:
                 cmdAlias.append([name, alias, cmd])
+                self.aliasdict[name] = alias
 
         # Now loop over aliases, injecting a copy of the aliased command's
         # Element with the aliased prototype name replaced with the command
         # name - if it exists.
+        # Copy the 'export' sttribute (whether it exists or not) from the
+        # original, aliased command, since that can be different for a
+        # command and its alias.
         for (name, alias, cmd) in cmdAlias:
             if alias in self.cmddict:
                 aliasInfo = self.cmddict[alias]
@@ -650,6 +698,14 @@ class Registry:
                 cmdElem.find('proto/name').text = name
                 cmdElem.set('name', name)
                 cmdElem.set('alias', alias)
+                export = cmd.get('export')
+                if export is not None:
+                    # Replicate the command's 'export' attribute
+                    cmdElem.set('export', export)
+                elif cmdElem.get('export') is not None:
+                    # Remove the 'export' attribute, if the alias has one but
+                    # the command does not.
+                    del cmdElem.attrib['export']
                 ci = CmdInfo(cmdElem)
                 # Replace the dictionary entry for the CmdInfo element
                 self.cmddict[name] = ci
@@ -713,6 +769,7 @@ class Registry:
                     if addEnumInfo:
                         enumInfo = EnumInfo(enum)
                         self.addElementInfo(enum, enumInfo, 'enum', self.enumdict)
+                        self.addEnumValue(enum, groupName)
 
         sync_pipeline_stage_condition = dict()
         sync_access_condition = dict()
@@ -761,7 +818,7 @@ class Registry:
                             if enum.get('alias'):
                                 format_name = enum.get('alias')
                             if format_name in format_condition:
-                                format_condition[format_name] += "," + featureInfo.name
+                                format_condition[format_name] += f",{featureInfo.name}"
                             else:
                                 format_condition[format_name] = featureInfo.name
                         elif groupName == "VkPipelineStageFlagBits2":
@@ -770,7 +827,7 @@ class Registry:
                                 stage_flag = enum.get('alias')
                             featureName = elem.get('depends') if elem.get('depends') is not None else featureInfo.name
                             if stage_flag in sync_pipeline_stage_condition:
-                                sync_pipeline_stage_condition[stage_flag] += "," + featureName
+                                sync_pipeline_stage_condition[stage_flag] += f",{featureName}"
                             else:
                                 sync_pipeline_stage_condition[stage_flag] = featureName
                         elif groupName == "VkAccessFlagBits2":
@@ -779,7 +836,7 @@ class Registry:
                                 access_flag = enum.get('alias')
                             featureName = elem.get('depends') if elem.get('depends') is not None else featureInfo.name
                             if access_flag in sync_access_condition:
-                                sync_access_condition[access_flag] += "," + featureName
+                                sync_access_condition[access_flag] += f",{featureName}"
                             else:
                                 sync_access_condition[access_flag] = featureName
 
@@ -791,6 +848,7 @@ class Registry:
                     if addEnumInfo:
                         enumInfo = EnumInfo(enum)
                         self.addElementInfo(enum, enumInfo, 'enum', self.enumdict)
+                        self.addEnumValue(enum, groupName)
 
         # Parse out all spirv tags in dictionaries
         # Use addElementInfo to catch duplicates
@@ -950,7 +1008,7 @@ class Registry:
                     # Look up the Info with matching groupName
                     if groupName in self.groupdict:
                         gi = self.groupdict[groupName]
-                        gienum = gi.elem.find("enum[@name='" + enumname + "']")
+                        gienum = gi.elem.find(f"enum[@name='{enumname}']")
                         if gienum is not None:
                             # Remove copy of this enum from the group
                             gi.elem.remove(gienum)
@@ -1154,6 +1212,8 @@ class Registry:
                             # Resolve the type info to the actual type, so we get an accurate read for 'structextends'
                             while alias:
                                 typeinfo = self.lookupElementInfo(alias, self.typedict)
+                                if not typeinfo:
+                                    raise RuntimeError(f"Missing alias {alias}")
                                 alias = typeinfo.elem.get('alias')
 
                             typecat = typeinfo.elem.get('category')
@@ -1164,7 +1224,7 @@ class Registry:
                                 self.gen.featureDictionary[featurename][typecat][required_key][typeextends] = []
                             self.gen.featureDictionary[featurename][typecat][required_key][typeextends].append(typename)
                         else:
-                            self.gen.logMsg('warn', 'fillFeatureDictionary: NOT filling for {}'.format(typename))
+                            self.gen.logMsg('warn', f'fillFeatureDictionary: NOT filling for {typename}')
 
 
                 for enumElem in require.findall('enum'):
@@ -1181,7 +1241,7 @@ class Registry:
                             self.gen.featureDictionary[featurename]['enumconstant'][required_key][enumextends] = []
                         self.gen.featureDictionary[featurename]['enumconstant'][required_key][enumextends].append(enumname)
                     else:
-                        self.gen.logMsg('warn', 'fillFeatureDictionary: NOT filling for {}'.format(typename))
+                        self.gen.logMsg('warn', f'fillFeatureDictionary: NOT filling for {typename}')
 
                 for cmdElem in require.findall('command'):
                     # Remove aliases in the same extension/feature; these are always added as a correction. Do not need the original to be visible.
@@ -1191,7 +1251,7 @@ class Registry:
                             self.gen.featureDictionary[featurename]['command'][required_key] = []
                         self.gen.featureDictionary[featurename]['command'][required_key].append(cmdElem.get('name'))
                     else:
-                        self.gen.logMsg('warn', 'fillFeatureDictionary: NOT filling for {}'.format(typename))
+                        self.gen.logMsg('warn', f'fillFeatureDictionary: NOT filling for {typename}')
 
     def requireFeatures(self, interface, featurename, api, profile):
         """Process `<require>` tags for a `<version>` or `<extension>`.
@@ -1206,6 +1266,51 @@ class Registry:
         for feature in interface.findall('require'):
             if matchAPIProfile(api, profile, feature):
                 self.markRequired(featurename, feature, True)
+
+    def deprecateFeatures(self, interface, featurename, api, profile):
+        """Process `<require>` tags for a `<version>` or `<extension>`.
+
+        - interface - Element for `<version>` or `<extension>`, containing
+          `<require>` tags
+        - featurename - name of the feature
+        - api - string specifying API name being generated
+        - profile - string specifying API profile being generated"""
+
+        versionmatch = APIConventions().is_api_version_name(featurename)
+
+        # <deprecate> marks things that are deprecated by this version/profile
+        for deprecation in interface.findall('deprecate'):
+            if matchAPIProfile(api, profile, deprecation):
+                for typeElem in deprecation.findall('type'):
+                    type = self.lookupElementInfo(typeElem.get('name'), self.typedict)
+                    if type:
+                        if versionmatch is not False:
+                            type.deprecatedbyversion = featurename
+                        else:
+                            type.deprecatedbyextensions.append(featurename)
+                        type.deprecatedlink = deprecation.get('explanationlink')
+                    else:
+                        self.gen.logMsg('error', typeElem.get('name'), ' is tagged for deprecation but not present in registry')
+                for enumElem in deprecation.findall('enum'):
+                    enum = self.lookupElementInfo(enumElem.get('name'), self.enumdict)
+                    if enum:
+                        if versionmatch is not False:
+                            enum.deprecatedbyversion = featurename
+                        else:
+                            enum.deprecatedbyextensions.append(featurename)
+                        enum.deprecatedlink = deprecation.get('explanationlink')
+                    else:
+                        self.gen.logMsg('error', enumElem.get('name'), ' is tagged for deprecation but not present in registry')
+                for cmdElem in deprecation.findall('command'):
+                    cmd = self.lookupElementInfo(cmdElem.get('name'), self.cmddict)
+                    if cmd:
+                        if versionmatch is not False:
+                            cmd.deprecatedbyversion = featurename
+                        else:
+                            cmd.deprecatedbyextensions.append(featurename)
+                        cmd.deprecatedlink = deprecation.get('explanationlink')
+                    else:
+                        self.gen.logMsg('error', cmdElem.get('name'), ' is tagged for deprecation but not present in registry')
 
     def removeFeatures(self, interface, featurename, api, profile):
         """Process `<remove>` tags for a `<version>` or `<extension>`.
@@ -1707,6 +1812,7 @@ class Registry:
             self.gen.logMsg('diag', 'PASS 1: Tagging required and features for', f.name)
             self.fillFeatureDictionary(f.elem, f.name, self.genOpts.apiname, self.genOpts.profile)
             self.requireFeatures(f.elem, f.name, self.genOpts.apiname, self.genOpts.profile)
+            self.deprecateFeatures(f.elem, f.name, self.genOpts.apiname, self.genOpts.profile)
             self.assignAdditionalValidity(f.elem, self.genOpts.apiname, self.genOpts.profile)
 
         for f in features:

@@ -101,8 +101,8 @@ public:
 
 	vk::wsi::Window* createWindow (const Maybe<UVec2>& initialSize) const
 	{
-		const deUint32		height		= !initialSize ? (deUint32)300 : initialSize->y();
-		const deUint32		width		= !initialSize ? (deUint32)400 : initialSize->x();
+		const uint32_t		height		= !initialSize ? (uint32_t)300 : initialSize->y();
+		const uint32_t		width		= !initialSize ? (uint32_t)400 : initialSize->x();
 		printf("%d,%d\n",width,height);
 		uint64_t i = OHOS::OhosContextI::GetInstance().CreateWindow(0,0,width,height);
 		return new VulkanWindowOhos(i);//cxunmz

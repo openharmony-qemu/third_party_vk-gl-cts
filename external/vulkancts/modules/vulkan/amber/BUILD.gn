@@ -37,6 +37,7 @@ ohos_source_set("deqp_vk_amber_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber/vktAmberTestCase.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber/vktAmberTestCase.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber/vktAmberTestCaseUtil.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber/vktAmberDepthTests.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs

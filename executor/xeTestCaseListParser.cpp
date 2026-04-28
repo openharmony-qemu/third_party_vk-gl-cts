@@ -1,3 +1,5 @@
+#ifndef _XETESTCASE_HPP
+#define _XETESTCASE_HPP
 /*-------------------------------------------------------------------------
  * drawElements Quality Program Test Executor
  * ------------------------------------------
@@ -18,129 +20,243 @@
  *
  *//*!
  * \file
- * \brief Test case list parser.
+ * \brief Test case.
  *//*--------------------------------------------------------------------*/
 
-#include "xeTestCaseListParser.hpp"
-#include "deString.h"
+#include "xeDefs.hpp"
 
-using std::vector;
-using std::string;
+#include <string>
+#include <vector>
+#include <set>
+#include <map>
 
 namespace xe
 {
 
-static TestCaseType getTestCaseType (const char* caseType)
+enum TestCaseType
 {
-	// \todo [2012-06-11 pyry] Use hashes for speedup.
-	static const struct
-	{
-		const char*		name;
-		TestCaseType	caseType;
-	} s_caseTypeMap[] =
-	{
-		{ "SelfValidate",	TESTCASETYPE_SELF_VALIDATE	},
-		{ "Capability",		TESTCASETYPE_CAPABILITY		},
-		{ "Accuracy",		TESTCASETYPE_ACCURACY		},
-		{ "Performance",	TESTCASETYPE_PERFORMANCE	}
-	};
+    TESTCASETYPE_SELF_VALIDATE,
+    TESTCASETYPE_CAPABILITY,
+    TESTCASETYPE_ACCURACY,
+    TESTCASETYPE_PERFORMANCE,
 
-	for (int ndx = 0; ndx < DE_LENGTH_OF_ARRAY(s_caseTypeMap); ndx++)
-	{
-		if (deStringEqual(caseType, s_caseTypeMap[ndx].name))
-			return s_caseTypeMap[ndx].caseType;
-	}
+    TESTCASETYPE_LAST
+};
 
-	XE_FAIL((string("Unknown test case type '") + caseType + "'").c_str());
-}
+const char *getTestCaseTypeName(TestCaseType caseType);
 
-TestCaseListParser::TestCaseListParser (void)
-	: m_root(DE_NULL)
+enum TestNodeType
 {
-}
+    TESTNODETYPE_ROOT,
+    TESTNODETYPE_GROUP,
+    TESTNODETYPE_TEST_CASE,
 
-TestCaseListParser::~TestCaseListParser (void)
+    TESTNODETYPE_LAST
+};
+
+class TestGroup;
+class TestCase;
+
+class TestNode
 {
-}
+public:
+    virtual ~TestNode(void)
+    {
+    }
 
-void TestCaseListParser::clear (void)
+    TestNodeType getNodeType(void) const
+    {
+        return m_nodeType;
+    }
+    const char *getName(void) const
+    {
+        return m_name.c_str();
+    }
+    const TestGroup *getParent(void) const
+    {
+        return m_parent;
+    }
+
+    void getFullPath(std::string &path) const;
+    std::string getFullPath(void) const
+    {
+        std::string str;
+        getFullPath(str);
+        return str;
+    }
+
+    const TestNode *find(const char *path) const;
+    TestNode *find(const char *path);
+
+protected:
+    TestNode(TestGroup *parent, TestNodeType nodeType, const char *name);
+
+private:
+    TestNode(const TestNode &other);
+    TestNode &operator=(const TestNode &other);
+
+    TestGroup *m_parent;
+    TestNodeType m_nodeType;
+    std::string m_name;
+    std::string m_description;
+};
+
+class TestGroup : public TestNode
 {
-	m_xmlParser.clear();
-	m_nodeStack.clear();
-	m_root = DE_NULL;
-}
+public:
+    ~TestGroup(void);
 
-void TestCaseListParser::init (TestGroup* rootGroup)
+    int getNumChildren(void) const
+    {
+        return (int)m_children.size();
+    }
+    TestNode *getChild(int ndx)
+    {
+        return m_children[ndx];
+    }
+    const TestNode *getChild(int ndx) const
+    {
+        return m_children[ndx];
+    }
+
+    TestNode *findChildNode(const char *path);
+    const TestNode *findChildNode(const char *path) const;
+
+    TestGroup *createGroup(const char *name);
+    TestCase *createCase(TestCaseType caseType, const char *name);
+
+protected:
+    TestGroup(TestGroup *parent, TestNodeType nodeType, const char *name);
+
+private:
+    std::vector<TestNode *> m_children;
+    std::set<std::string> m_childNames; //!< Used for checking for duplicate test case names.
+
+    // For adding TestCase to m_children. \todo [2012-06-15 pyry] Is the API broken perhaps?
+    friend class TestNode;
+};
+
+class TestRoot : public TestGroup
 {
-	clear();
-	m_root = rootGroup;
-}
+public:
+    TestRoot(void);
+};
 
-void TestCaseListParser::parse (const deUint8* bytes, int numBytes)
+class TestCase : public TestNode
 {
-	DE_ASSERT(m_root);
-	m_xmlParser.feed(bytes, numBytes);
+public:
+    ~TestCase(void);
 
-	for (;;)
-	{
-		xml::Element element = m_xmlParser.getElement();
+    TestCaseType getCaseType(void) const
+    {
+        return m_caseType;
+    }
 
-		if (element == xml::ELEMENT_INCOMPLETE ||
-			element == xml::ELEMENT_END_OF_STRING)
-			break;
+    static TestCase *createAsChild(TestGroup *parent, TestCaseType caseType, const char *name);
 
-		if (element == xml::ELEMENT_START || element == xml::ELEMENT_END)
-		{
-			bool		isStart		= element == xml::ELEMENT_START;
-			const char* elemName	= m_xmlParser.getElementName();
+protected:
+    TestCase(TestGroup *parent, TestCaseType caseType, const char *name);
 
-			if (deStringEqual(elemName, "TestCase"))
-			{
-				if (isStart)
-				{
-					XE_CHECK_MSG(!m_nodeStack.empty(), "<TestCase> outside of <TestCaseList>");
+private:
+    TestCaseType m_caseType;
+};
 
-					TestNode*		parent		= m_nodeStack.back();
-					const char*		name		= m_xmlParser.hasAttribute("Name")			? m_xmlParser.getAttribute("Name")			: DE_NULL;
-					const char*		description	= m_xmlParser.hasAttribute("Description")	? m_xmlParser.getAttribute("Description")	: DE_NULL;
-					const char*		caseType	= m_xmlParser.hasAttribute("CaseType")		? m_xmlParser.getAttribute("CaseType")		: DE_NULL;
+// Helper class for efficiently constructing TestCase hierarchy from test case list.
+class TestHierarchyBuilder
+{
+public:
+    TestHierarchyBuilder(TestRoot *root);
+    ~TestHierarchyBuilder(void);
 
-					XE_CHECK_MSG(name && description && caseType, "Missing attribute in <TestCase>");
-					XE_CHECK_MSG(parent->getNodeType() == TESTNODETYPE_GROUP, "Only TestGroups are allowed to have child nodes");
+    TestCase *createCase(const char *path, TestCaseType caseType);
 
-					bool			isGroup		= deStringEqual(caseType, "TestGroup") == DE_TRUE;
-					TestNode*		node		= isGroup ? static_cast<TestNode*>(static_cast<TestGroup*>(parent)->createGroup(name))
-														  : static_cast<TestNode*>(static_cast<TestGroup*>(parent)->createCase(getTestCaseType(caseType), name));
+private:
+    TestHierarchyBuilder(const TestHierarchyBuilder &other);
+    TestHierarchyBuilder &operator=(const TestHierarchyBuilder &other);
 
-					m_nodeStack.push_back(node);
-				}
-				else
-				{
-					XE_CHECK_MSG(m_nodeStack.size() >= 2, "Unexpected </TestCase>");
-					m_nodeStack.pop_back();
-				}
-			}
-			else if (deStringEqual(elemName, "TestCaseList"))
-			{
-				if (isStart)
-				{
-					XE_CHECK_MSG(m_nodeStack.empty(), "Unexpected <TestCaseList>");
-					m_nodeStack.push_back(m_root);
-				}
-				else
-				{
-					XE_CHECK_MSG(m_nodeStack.size() == 1, "Unexpected </TestCaseList>");
-					m_nodeStack.pop_back();
-				}
-			}
-			else
-				XE_FAIL((string("Unexpected <") + elemName + ">").c_str());
-		}
-		else if (element != xml::ELEMENT_DATA)
-			DE_ASSERT(false); // \note Data elements are just ignored, they should be whitespace anyway.
+    TestRoot *m_root;
+    std::map<std::string, TestGroup *> m_groupMap;
+};
 
-		m_xmlParser.advance();
-	}
-}
+// Helper class for computing and iterating test sets.
+class TestSet
+{
+public:
+    TestSet(void)
+    {
+    }
+    ~TestSet(void)
+    {
+    }
 
-} // xe
+    bool empty(void) const
+    {
+        return m_set.empty();
+    }
+
+    void add(const TestNode *node);
+    void addCase(const TestCase *testCase);
+    void addGroup(const TestGroup *testGroup);
+
+    void remove(const TestNode *node);
+    void removeCase(const TestCase *testCase);
+    void removeGroup(const TestGroup *testGroup);
+
+    bool hasNode(const TestNode *node) const
+    {
+        return m_set.find(node) != m_set.end();
+    }
+
+private:
+    std::set<const TestNode *> m_set;
+};
+
+class ConstTestNodeIterator
+{
+public:
+    static ConstTestNodeIterator begin(const TestNode *root);
+    static ConstTestNodeIterator end(const TestNode *root);
+
+    ConstTestNodeIterator &operator++(void);
+    ConstTestNodeIterator operator++(int);
+
+    const TestNode *operator*(void) const;
+
+    bool operator!=(const ConstTestNodeIterator &other) const;
+
+protected:
+    ConstTestNodeIterator(const TestNode *root);
+
+private:
+    struct GroupState
+    {
+        GroupState(const TestGroup *group_) : group(group_), childNdx(0)
+        {
+        }
+
+        const TestGroup *group;
+        int childNdx;
+
+        bool operator!=(const GroupState &other) const
+        {
+            return group != other.group || childNdx != other.childNdx;
+        }
+
+        bool operator==(const GroupState &other) const
+        {
+            return group == other.group && childNdx == other.childNdx;
+        }
+    };
+
+    const TestNode *m_root;
+    std::vector<GroupState> m_iterStack;
+};
+
+// \todo [2012-06-19 pyry] Implement following iterators:
+//  - TestNodeIterator
+//  - ConstTestSetIterator
+//  - TestSetIterator
+
+} // namespace xe
+
+#endif // _XETESTCASE_HPP

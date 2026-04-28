@@ -1,6 +1,6 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
-# Copyright 2016-2024 The Khronos Group Inc.
+# Copyright 2016-2025 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 """This script builds a full release package including XHTML and PDF
@@ -54,18 +54,18 @@ def buildRelease(label,
     - `miscDst` = path to copy misc files to, if non-None
     - `needRefSources` = True if ref pages must be extracted from the spec sources"""
 
-    print('echo Info: Generating target=' + label,
-          'outdir=' + outdir)
+    print(f"echo Info: Generating target={label}",
+          f"outdir={outdir}")
 
-    outarg = 'OUTDIR=' + outdir
+    outarg = f"OUTDIR={outdir}"
 
     if versions != None and len(versions) > 0:
-        versarg = 'VERSIONS="' + ' '.join(versions) + '"'
+        versarg = f"VERSIONS=\"{' '.join(versions)}\""
     else:
         versarg = ''
 
     if extensions != None and len(extensions) > 0:
-        extarg = 'EXTENSIONS="' + ' '.join(extensions) + '"'
+        extarg = f"EXTENSIONS=\"{' '.join(extensions)}\""
     else:
         extarg = ''
 
@@ -75,16 +75,16 @@ def buildRelease(label,
         ratifiedarg = ''
 
     if apititle != None:
-        titlearg = 'APITITLE="' + apititle + '"'
+        titlearg = f"APITITLE=\"{apititle}\""
     else:
         titlearg = ''
 
     # print('echo Info: Creating directory and cleaning spec in', outdir)
     print('mkdir -p', outdir)
     print('(cd ', outdir, '&& rm -rf',
-          'html chunked pdf',
+          'html pdf',
           'man config checks',
-          'vkspec.html styleguide.html apispec.html apispec.pdf registry.html',
+          'vkspec.html styleguide.html registry.html',
           ')')
 
     if xmlTargets != '':
@@ -108,7 +108,7 @@ def buildRelease(label,
 
     if miscSrc != None and miscDst != None:
         print('mkdir -p', miscDst)
-        print('cp', miscSrc + '/*.adoc', miscDst + '/')
+        print('cp', f"{miscSrc}/*.adoc", f"{miscDst}/")
 
     print('')
 
@@ -143,7 +143,7 @@ def buildBranch(targetDir = '',
                  versions,
                  extensions,
                  ratified,
-                 outDir + '/' + targetDir,
+                 f"{outDir}/{targetDir}",
                  apititle,
                  xmlDir, xmlTargets,
                  specDir, specTargets,
@@ -160,5 +160,4 @@ def createTags(releaseNum, tagdate):
     now = tagdate.strftime('%Y%m%d')
 
     print('echo To tag the spec branch for this release, execute the command:')
-    print('echo git tag -a -m \\"Tag Vulkan API specification for 1.3.' +
-          releaseNum, 'release\\"', 'v1.3.' + releaseNum)
+    print(f'echo git tag -a -m \\"Tag Vulkan API specification for 1.4.{releaseNum} release\\" v1.4.{releaseNum}')

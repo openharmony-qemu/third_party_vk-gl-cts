@@ -1,12 +1,9 @@
-// Copyright 2023-2024 The Khronos Group Inc.
-//
+// Copyright 2023-2025 The Khronos Group Inc.
 // SPDX-License-Identifier: CC-BY-4.0
 
-
 [[low-latency2]]
-= Low Latency 2
+=== Latency Reduction
 
-== Latency Reduction
 [open,refpage='vkSetLatencySleepModeNV',desc='Enable or Disable low latency mode on a swapchain',type='protos']
 --
 To enable or disable low latency mode on a swapchain, call:
@@ -48,14 +45,13 @@ include::{generated}/api/structs/VkLatencySleepModeInfoNV.adoc[]
   * pname:lowLatencyBoost allows an application to hint to the GPU to
     increase performance to provide additional latency savings at a cost of
     increased power consumption.
-  * pname:minimumPresentIntervalUs is the microseconds between
+  * pname:minimumIntervalUs is the microseconds between
     flink:vkQueuePresentKHR calls for a given swapchain that
     flink:vkLatencySleepNV will enforce.
 
-If pname:lowLatencyMode is set to ename:VK_FALSE, pname:lowLatencyBoost will
-still hint to the GPU to increase its power state and fname:vkLatencySleepNV
-will still enforce pname:minimumIntervalUs between fname:vkQueuePresentKHR
-calls.
+If pname:lowLatencyMode is ename:VK_FALSE, pname:lowLatencyBoost will still
+hint to the GPU to increase its power state and fname:vkLatencySleepNV will
+still enforce pname:minimumIntervalUs between fname:vkQueuePresentKHR calls.
 
 include::{generated}/validity/structs/VkLatencySleepModeInfoNV.adoc[]
 --
@@ -79,9 +75,8 @@ pname:pSleepInfo->signalSemaphore to delay host CPU work.
 CPU work refers to application work done before presenting which includes
 but is not limited to: input sampling, simulation, command buffer recording,
 command buffer submission, and present submission.
-It is recommended to call this function before input sampling.
-When using this function, it should: be called exactly once between
-presents.
+Applications should: call this function before input sampling, and exactly
+once between presents.
 
 include::{generated}/validity/protos/vkLatencySleepNV.adoc[]
 --
@@ -147,9 +142,14 @@ include::{generated}/api/structs/VkSetLatencyMarkerInfoNV.adoc[]
   * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
-  * pname:presentId is an application provided value that is used to
+  * pname:presentID is an application provided value that is used to
     associate the timestamp with a fname:vkQueuePresentKHR command using
-    slink:VkPresentIdKHR::pname:pPresentIds for a given present.
+ifdef::VK_KHR_present_id[]
+ifdef::VK_KHR_present_id2[slink:VkPresentIdKHR::pname:pPresentIds or]
+ifndef::VK_KHR_present_id2[slink:VkPresentIdKHR::pname:pPresentIds]
+endif::VK_KHR_present_id[]
+ifdef::VK_KHR_present_id2[slink:VkPresentId2KHR::pname:pPresentIds]
+    for a given present.
   * pname:marker is the type of timestamp to be recorded.
 
 include::{generated}/validity/structs/VkSetLatencyMarkerInfoNV.adoc[]
@@ -195,7 +195,7 @@ include::{generated}/api/protos/vkGetLatencyTimingsNV.adoc[]
 
   * pname:device is the device associated with pname:swapchain.
   * pname:swapchain is the swapchain to return data from.
-  * pname:pGetLatencyMarkerInfo is a pointer to a
+  * pname:pLatencyMarkerInfo is a pointer to a
     slink:VkGetLatencyMarkerInfoNV structure specifying the parameters for
     returning latency information.
 
@@ -216,15 +216,15 @@ include::{generated}/api/structs/VkGetLatencyMarkerInfoNV.adoc[]
   * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is either `NULL` or a pointer to a structure extending this
     structure.
-  * pname:timingCount is an integer related to the number of of previous
-    frames of latency data available or queried, as described below.
+  * pname:timingCount is an integer related to the number of previous frames
+    of latency data available or queried, as described below.
   * pname:pTimings is either `NULL` or a pointer to an array of
     slink:VkLatencyTimingsFrameReportNV structures.
 
 If pname:pTimings is `NULL` then the maximum number of queryable frame data
 is returned in pname:timingCount.
-Otherwise, pname:timingCount must: be set by the user to the number of
-elements in the pname:pTimings array, and on return the variable is
+Otherwise, pname:timingCount must: be set by the application to the number
+of elements in the pname:pTimings array, and on return the variable is
 overwritten with the number of values actually written to pname:pTimings.
 The elements of pname:pTimings are arranged in the order they were requested
 in, with the oldest data in the first entry.
@@ -242,9 +242,17 @@ include::{generated}/api/structs/VkLatencyTimingsFrameReportNV.adoc[]
 The members of the slink:VkLatencyTimingsFrameReportNV structure describe
 the following:
 
-  * pname:presentId is the application provided value that is used to
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:presentID is the application provided value that is used to
     associate the timestamp with a fname:vkQueuePresentKHR command using
-    slink:VkPresentIdKHR::pname:pPresentIds for a given present.
+ifdef::VK_KHR_present_id[]
+ifdef::VK_KHR_present_id2[slink:VkPresentIdKHR::pname:pPresentIds or]
+ifndef::VK_KHR_present_id2[slink:VkPresentIdKHR::pname:pPresentIds]
+endif::VK_KHR_present_id[]
+ifdef::VK_KHR_present_id2[slink:VkPresentId2KHR::pname:pPresentIds]
+    for a given present.
   * pname:simStartTimeUs is the timestamp written when
     fname:vkSetLatencyMarkerNV is called with the ename:VkLatencyMarkerNV
     enum ename:VK_LATENCY_MARKER_SIMULATION_START_NV.
@@ -288,24 +296,28 @@ include::{generated}/api/structs/VkLatencySubmissionPresentIdNV.adoc[]
   * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
-  * pname:presentId is used to associate the fname:vkQueueSubmit with the
+  * pname:presentID is used to associate the fname:vkQueueSubmit with the
     presentId used for a given fname:vkQueuePresentKHR via
-    slink:VkPresentIdKHR::pname:pPresentIds.
+ifdef::VK_KHR_present_id[]
+ifdef::VK_KHR_present_id2[slink:VkPresentIdKHR::pname:pPresentIds or]
+ifndef::VK_KHR_present_id2[slink:VkPresentIdKHR::pname:pPresentIds.]
+endif::VK_KHR_present_id[]
+ifdef::VK_KHR_present_id2[slink:VkPresentId2KHR::pname:pPresentIds.]
 
 For any submission to be tracked with low latency mode pacing, it needs to
 be associated with other submissions in a given present.
-Applications :must include the VkLatencySubmissionPresentIdNV in the pNext
-chain of flink:vkQueueSubmit to associate that submission with the
-pname:presentId present for low latency mode.
+To associate a submission with pname:presentID for low latency mode, the
+pname:pNext chain of flink:vkQueueSubmit must: include a
+sname:VkLatencySubmissionPresentIdNV structure.
 
 include::{generated}/validity/structs/VkLatencySubmissionPresentIdNV.adoc[]
 --
 
 [open,refpage='vkQueueNotifyOutOfBandNV',desc='Notify out of band queue',type='protos']
 --
-An application can mark a queue as Out of Band to indicate that all
-fname:vkQueueSubmit calls on this queue are ignored for latency evaluation
-by calling:
+To mark a queue as _out of band_, so that all fname:vkQueueSubmit calls on
+the queue are ignored for latency evaluation, call:
+
 include::{generated}/api/protos/vkQueueNotifyOutOfBandNV.adoc[]
 
   * pname:queue is the VkQueue to be marked as out of band.
@@ -339,9 +351,9 @@ include::{generated}/api/enums/VkOutOfBandQueueTypeNV.adoc[]
 The members of the elink:VkOutOfBandQueueTypeNV are used to describe the
 queue type in slink:VkOutOfBandQueueTypeInfoNV as described below:
 
-  * ename:VK_OUT_OF_BAND_QUEUE_TYPE_RENDER_NV indicates that work will be
+  * ename:VK_OUT_OF_BAND_QUEUE_TYPE_RENDER_NV specifies that work will be
     submitted to this queue.
-  * ename:VK_OUT_OF_BAND_QUEUE_TYPE_PRESENT_NV indicates that this queue
+  * ename:VK_OUT_OF_BAND_QUEUE_TYPE_PRESENT_NV specifies that this queue
     will be presented from.
 --
 
@@ -358,8 +370,8 @@ include::{generated}/api/structs/VkSwapchainLatencyCreateInfoNV.adoc[]
   * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
-  * pname:lowLatencyModeEnable indicates if the swapchain created will
-    utilize low latency mode.
+  * pname:latencyModeEnable is ename:VK_TRUE if the created swapchain will
+    utilize low latency mode, ename:VK_FALSE otherwise.
 
 include::{generated}/validity/structs/VkSwapchainLatencyCreateInfoNV.adoc[]
 --
@@ -379,9 +391,9 @@ include::{generated}/api/structs/VkLatencySurfaceCapabilitiesNV.adoc[]
 
 If pname:pPresentModes is `NULL`, then the number of present modes that are
 optimized for use with low latency mode returned in pname:presentModeCount.
-Otherwise, pname:presentModeCount must be set by the user to the number of
-elements in the pname:pPresentModes array, and on return the variable is
-overwritten with the number of values actually written to
+Otherwise, pname:presentModeCount must: be set by the application to the
+number of elements in the pname:pPresentModes array, and on return the
+variable is overwritten with the number of values actually written to
 pname:pPresentModes.
 If the value of pname:presentModeCount is less than the number of optimized
 present modes, at most pname:presentModeCount values will be written to

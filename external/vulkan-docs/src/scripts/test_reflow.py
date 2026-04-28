@@ -1,6 +1,6 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
-# Copyright 2023-2024 The Khronos Group Inc.
+# Copyright 2023-2025 The Khronos Group Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -26,11 +26,11 @@ def makeTestId(variations):
     testid = ''
 
     if not variations.reflow:
-        testid += separator + 'noreflow'
+        testid += f"{separator}noreflow"
         separator = '-'
 
     if not variations.addVUID:
-        testid += separator + 'novuid'
+        testid += f"{separator}novuid"
         separator = '-'
 
     if testid == '':
@@ -79,8 +79,8 @@ def match_with_expected(resultFile, expectation):
 def run_reflow_test(args, filetag):
     testid = makeTestId(args.variations)
 
-    source = 'src-' + filetag + '.adoc'
-    expect = 'expect-' + filetag + '-' + testid + '.adoc'
+    source = f"src-{filetag}.adoc"
+    expect = f"expect-{filetag}-{testid}.adoc"
 
     filename = getPath(source)
 

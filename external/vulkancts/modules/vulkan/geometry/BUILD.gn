@@ -27,6 +27,7 @@ ohos_source_set("deqp_vk_geometry_source") {
   sources = [
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryBasicClass.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryBasicGeometryShaderTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryBuiltinVariableGeometryShaderTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryEmitGeometryShaderTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryInputGeometryShaderTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryInstancedRenderingTests.cpp",
@@ -34,6 +35,16 @@ ohos_source_set("deqp_vk_geometry_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryTestsUtil.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryVaryingGeometryShaderTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryBasicClass.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryBasicGeometryShaderTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryBuiltinVariableGeometryShaderTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryEmitGeometryShaderTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryInputGeometryShaderTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryInstancedRenderingTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryLayeredRenderingTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryTestsUtil.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/geometry/vktGeometryVaryingGeometryShaderTests.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs

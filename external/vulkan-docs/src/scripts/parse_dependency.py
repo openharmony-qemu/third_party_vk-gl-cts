@@ -1,6 +1,6 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
-# Copyright 2022-2024 The Khronos Group Inc.
+# Copyright 2022-2025 The Khronos Group Inc.
 # Copyright 2003-2019 Paul McGuire
 # SPDX-License-Identifier: MIT
 
@@ -31,7 +31,8 @@
 #   - ',' as OR connector
 #   - parenthesization for grouping
 
-# Based on https://github.com/pyparsing/pyparsing/blob/master/examples/fourFn.py
+# Based on `examples/fourFn.py` from the
+# https://github.com/pyparsing/pyparsing/ repository.
 
 from pyparsing import (
     Literal,
@@ -83,7 +84,7 @@ def leafMarkupC(name):
 opMarkupAsciidocMap = { '+' : 'and', ',' : 'or' }
 
 def opMarkupAsciidoc(op):
-    """Markup a operator as an asciidoc spec markup equivalent
+    """Markup an operator as an asciidoc spec markup equivalent
 
        - op - operator ('+' or ',')"""
 
@@ -92,7 +93,7 @@ def opMarkupAsciidoc(op):
 opMarkupCMap = { '+' : '&&', ',' : '||' }
 
 def opMarkupC(op):
-    """Markup a operator as an C language equivalent
+    """Markup an operator as a C language equivalent
 
        - op - operator ('+' or ',')"""
 
@@ -109,8 +110,8 @@ def push_first(toks):
 
     exprStack.append(toks[0])
 
-# An identifier (version or extension name)
-dependencyIdent = Word(alphanums + '_')
+# An identifier (version, feature boolean, or extension name)
+dependencyIdent = Word(f"{alphanums}_:")
 
 # Infix expression for depends expressions
 dependencyExpr = pp.infixNotation(dependencyIdent,
@@ -287,7 +288,7 @@ def markupTraverse(expr, level = 0, root = True):
        - root - True only on initial call"""
 
     if level > 0:
-        prefix = '{nbsp}{nbsp}' * level * 2 + ' '
+        prefix = f"{'{nbsp}{nbsp}' * level * 2} "
     else:
         prefix = ''
     str = ''
@@ -302,9 +303,9 @@ def markupTraverse(expr, level = 0, root = True):
 
             str = str + markupTraverse(elem, level = nextlevel, root = False)
         elif elem in ('+', ','):
-            str = str + f'{prefix}{opMarkupAsciidoc(elem)} +\n'
+            str = f"{str}{prefix}{opMarkupAsciidoc(elem)} +\n"
         else:
-            str = str + f'{prefix}{leafMarkupAsciidoc(elem)} +\n'
+            str = f"{str}{prefix}{leafMarkupAsciidoc(elem)} +\n"
 
     return str
 

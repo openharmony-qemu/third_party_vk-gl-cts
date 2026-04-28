@@ -106,6 +106,22 @@ ohos_source_set("deqp_vk_spirv_assembly_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmVectorShuffleTests.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmWorkgroupMemoryTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmWorkgroupMemoryTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmComputeShaderDerivativesTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmComputeShaderDerivativesTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmFloatControls2Tests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmFloatControls2Tests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmLdexpTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmLdexpTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmMaint9VectorizationTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmMaint9VectorizationTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmMultipleShadersTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmMultipleShadersTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmRawAccessChainTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmRawAccessChainTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmRelaxedWithForwardReferenceTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmRelaxedWithForwardReferenceTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmUntypedPointersTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly/vktSpvAsmUntypedPointersTests.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs
@@ -113,7 +129,7 @@ ohos_source_set("deqp_vk_spirv_assembly_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/spirv_assembly",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber",
     "//third_party/vk-gl-cts/external/amber/src/include",
-    "//third_party/spirv-headers/include",
+    "//third_party/vk-gl-cts/external/spirv-headers/src/include",
   ]
 
   deps = [

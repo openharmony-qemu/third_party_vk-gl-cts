@@ -1,4 +1,4 @@
-// Copyright 2015-2024 The Khronos Group Inc.
+// Copyright 2015-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -76,16 +76,20 @@ then the limitations for code:usage1 and code:flags1 must: be no more strict
 than the limitations for code:usage2 and code:flags2, for all values of
 pname:format, pname:type, and pname:tiling.
 
-ifdef::VK_EXT_host_image_copy[]
-If `apiext:VK_EXT_host_image_copy` is supported, pname:usage includes
-ename:VK_IMAGE_USAGE_SAMPLED_BIT, and pname:flags does not include either of
-ename:VK_IMAGE_CREATE_SPARSE_BINDING_BIT,
-ename:VK_IMAGE_CREATE_SPARSE_RESIDENCY_BIT, or
-ename:VK_IMAGE_CREATE_SPARSE_ALIASED_BIT, then the result of calls to
-fname:vkGetPhysicalDeviceImageFormatProperties with identical parameters
-except for the inclusion of ename:VK_IMAGE_USAGE_HOST_TRANSFER_BIT_EXT in
-pname:usage must: be identical.
-endif::VK_EXT_host_image_copy[]
+ifdef::VK_VERSION_1_4,VK_EXT_host_image_copy[]
+If the <<features-hostImageCopy, pname:hostImageCopy>> feature is supported,
+and:
+
+  ** pname:usage includes ename:VK_IMAGE_USAGE_SAMPLED_BIT, and
+  ** pname:flags does not include any of
+     ename:VK_IMAGE_CREATE_SPARSE_BINDING_BIT,
+     ename:VK_IMAGE_CREATE_SPARSE_RESIDENCY_BIT, or
+     ename:VK_IMAGE_CREATE_SPARSE_ALIASED_BIT
+
+Then the result of calls to fname:vkGetPhysicalDeviceImageFormatProperties
+with identical parameters except for the inclusion of
+ename:VK_IMAGE_USAGE_HOST_TRANSFER_BIT in pname:usage must: be identical.
+endif::VK_VERSION_1_4,VK_EXT_host_image_copy[]
 
 include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
 
@@ -163,7 +167,6 @@ endif::VK_EXT_image_drm_format_modifier[]
     pname:maxResourceSize must: be at least 2^31^.
 
 [NOTE]
-.Note
 ====
 There is no mechanism to query the size of an image before creating it, to
 compare that size against pname:maxResourceSize.
@@ -181,7 +184,6 @@ implementation for use in flink:vkCreateImage, then all members of
 sname:VkImageFormatProperties will be filled with zero.
 
 [NOTE]
-.Note
 ====
 Filling sname:VkImageFormatProperties with zero for unsupported formats is
 an exception to the usual rule that output structures have undefined:
@@ -243,9 +245,34 @@ any image usage flag not supported by the specified video profiles, then
 this command returns ename:VK_ERROR_IMAGE_USAGE_NOT_SUPPORTED_KHR.
 endif::VK_KHR_video_queue[]
 
+ifdef::VK_VERSION_1_4,VK_EXT_host_image_copy[]
+If the <<features-hostImageCopy, pname:hostImageCopy>> feature is supported,
+and:
+
+  ** pname:pImageFormatInfo->usage includes ename:VK_IMAGE_USAGE_SAMPLED_BIT
+  ** pname:pImageFormatInfo->flags does not include either of
+     ename:VK_IMAGE_CREATE_SPARSE_BINDING_BIT,
+     ename:VK_IMAGE_CREATE_SPARSE_RESIDENCY_BIT, or
+     ename:VK_IMAGE_CREATE_SPARSE_ALIASED_BIT
+ifdef::VK_VERSION_1_1,VK_KHR_external_memory_capabilities[]
+  ** The pname:pNext chain of pname:pImageFormatInfo does not include a
+     slink:VkPhysicalDeviceExternalImageFormatInfo structure with non-zero
+     pname:handleType
+endif::VK_VERSION_1_1,VK_KHR_external_memory_capabilities[]
+ifdef::VK_EXT_image_drm_format_modifier[]
+  ** pname:pImageFormatInfo->tiling is not
+     ename:VK_IMAGE_TILING_DRM_FORMAT_MODIFIER_EXT
+endif::VK_EXT_image_drm_format_modifier[]
+
+Then the result of calls to fname:vkGetPhysicalDeviceImageFormatProperties2
+with identical parameters except for the inclusion of
+ename:VK_IMAGE_USAGE_HOST_TRANSFER_BIT in pname:pImageFormatInfo->usage
+must: be identical.
+endif::VK_VERSION_1_4,VK_EXT_host_image_copy[]
+
 include::{chapters}/commonvalidity/no_dynamic_allocations_common.adoc[]
 
-ifdef::VK_ANDROID_external_memory_android_hardware_buffer,VK_EXT_host_image_copy[]
+ifdef::VK_VERSION_1_4,VK_EXT_host_image_copy,VK_ANDROID_external_memory_android_hardware_buffer[]
 .Valid Usage
 ****
 ifdef::VK_ANDROID_external_memory_android_hardware_buffer[]
@@ -257,15 +284,15 @@ ifdef::VK_ANDROID_external_memory_android_hardware_buffer[]
     pname:handleType set to
     ename:VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID
 endif::VK_ANDROID_external_memory_android_hardware_buffer[]
-ifdef::VK_EXT_host_image_copy[]
+ifdef::VK_VERSION_1_4,VK_EXT_host_image_copy[]
   * [[VUID-vkGetPhysicalDeviceImageFormatProperties2-pNext-09004]]
     If the pname:pNext chain of pname:pImageFormatProperties includes a
-    slink:VkHostImageCopyDevicePerformanceQueryEXT structure,
+    slink:VkHostImageCopyDevicePerformanceQuery structure,
     pname:pImageFormatInfo->usage must: contain
-    ename:VK_IMAGE_USAGE_HOST_TRANSFER_BIT_EXT
-endif::VK_EXT_host_image_copy[]
+    ename:VK_IMAGE_USAGE_HOST_TRANSFER_BIT
+endif::VK_VERSION_1_4,VK_EXT_host_image_copy[]
 ****
-endif::VK_ANDROID_external_memory_android_hardware_buffer,VK_EXT_host_image_copy[]
+endif::VK_VERSION_1_4,VK_EXT_host_image_copy,VK_ANDROID_external_memory_android_hardware_buffer[]
 
 include::{generated}/validity/protos/vkGetPhysicalDeviceImageFormatProperties2.adoc[]
 --
@@ -350,7 +377,6 @@ implementation for use in flink:vkCreateImage, then all members of
 pname:imageFormatProperties will be filled with zero.
 
 [NOTE]
-.Note
 ====
 Filling pname:imageFormatProperties with zero for unsupported formats is an
 exception to the usual rule that output structures have undefined: contents
@@ -384,7 +410,7 @@ include::{generated}/api/structs/VkTextureLODGatherFormatPropertiesAMD.adoc[]
     used with texture gather bias/LOD functions, as introduced by the
     `apiext:VK_AMD_texture_gather_bias_lod` extension.
     This field is set by the implementation.
-    User-specified value is ignored.
+    An application-specified value is ignored.
 
 include::{generated}/validity/structs/VkTextureLODGatherFormatPropertiesAMD.adoc[]
 --
@@ -531,6 +557,14 @@ ifdef::VK_QNX_external_memory_screen_buffer[]
     See <<memory-external-qnx-screen-buffer,QNX Screen Buffer>> for more
     details of this handle type.
 endif::VK_QNX_external_memory_screen_buffer[]
+ifdef::VK_EXT_external_memory_metal[]
+  * ename:VK_EXTERNAL_MEMORY_HANDLE_TYPE_MTLBUFFER_BIT_EXT is a handle to a
+    `MTLResource` holding a `MTLBuffer`.
+  * ename:VK_EXTERNAL_MEMORY_HANDLE_TYPE_MTLTEXTURE_BIT_EXT is a handle to a
+    `MTLResource` holding a `MTLTexture`.
+  * ename:VK_EXTERNAL_MEMORY_HANDLE_TYPE_MTLHEAP_BIT_EXT is a handle to a
+    `MTLResource` holding a `MTLHeap`.
+endif::VK_EXT_external_memory_metal[]
 
 <<<
 
@@ -539,7 +573,7 @@ underlying physical device and/or the same driver version, as defined in the
 following table:
 
 [[external-memory-handle-types-compatibility]]
-.External memory handle types compatibility
+.External Memory Handle Types Compatibility
 |====
 | Handle type | sname:VkPhysicalDeviceIDProperties{wbro}::pname:driverUUID | sname:VkPhysicalDeviceIDProperties{wbro}::pname:deviceUUID
 | ename:VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT | Must match | Must match
@@ -571,11 +605,15 @@ endif::VK_NV_external_memory_sci_buf[]
 ifdef::VK_QNX_external_memory_screen_buffer[]
 | ename:VK_EXTERNAL_MEMORY_HANDLE_TYPE_SCREEN_BUFFER_BIT_QNX | No restriction | No restriction
 endif::VK_QNX_external_memory_screen_buffer[]
+ifdef::VK_EXT_external_memory_metal[]
+| ename:VK_EXTERNAL_MEMORY_HANDLE_TYPE_MTLBUFFER_BIT_EXT | No restriction | Must match
+| ename:VK_EXTERNAL_MEMORY_HANDLE_TYPE_MTLTEXTURE_BIT_EXT | No restriction | Must match
+| ename:VK_EXTERNAL_MEMORY_HANDLE_TYPE_MTLHEAP_BIT_EXT | No restriction | Must match
+endif::VK_EXT_external_memory_metal[]
 |====
 
 ifdef::VK_EXT_external_memory_host[]
 [NOTE]
-.Note
 ====
 The above table does not restrict the drivers and devices with which
 ename:VK_EXTERNAL_MEMORY_HANDLE_TYPE_HOST_ALLOCATION_BIT_EXT and
@@ -588,7 +626,6 @@ endif::VK_EXT_external_memory_host[]
 
 ifdef::VK_EXT_external_memory_dma_buf[]
 [NOTE]
-.Note
 ====
 Even though the above table does not restrict the drivers and devices with
 which ename:VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT may: be shared,
@@ -687,10 +724,14 @@ include::{generated}/api/enums/VkExternalMemoryFeatureFlagBitsKHR.adoc[]
 endif::VK_KHR_external_memory_capabilities[]
 
   * ename:VK_EXTERNAL_MEMORY_FEATURE_DEDICATED_ONLY_BIT specifies that
+ifdef::VK_ARM_tensors[tensors,]
     images or buffers created with the specified parameters and handle type
     must: use the mechanisms defined by slink:VkMemoryDedicatedRequirements
-    and slink:VkMemoryDedicatedAllocateInfo to create (or import) a
-    dedicated allocation for the image or buffer.
+    and slink:VkMemoryDedicatedAllocateInfo
+ifdef::VK_ARM_tensors[or slink:VkMemoryDedicatedAllocateInfoTensorARM]
+    to create (or import) a dedicated allocation for the
+ifdef::VK_ARM_tensors[tensor,]
+    image or buffer.
   * ename:VK_EXTERNAL_MEMORY_FEATURE_EXPORTABLE_BIT specifies that handles
     of this type can: be exported from Vulkan memory objects.
   * ename:VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT specifies that handles
@@ -712,6 +753,9 @@ ifdef::VK_QNX_external_memory_screen_buffer[]
   * ename:VK_EXTERNAL_MEMORY_HANDLE_TYPE_SCREEN_BUFFER_BIT_QNX for images
     only
 endif::VK_QNX_external_memory_screen_buffer[]
+ifdef::VK_EXT_external_memory_metal[]
+  * ename:VK_EXTERNAL_MEMORY_HANDLE_TYPE_MTLTEXTURE_BIT_EXT
+endif::VK_EXT_external_memory_metal[]
 
 ifdef::VK_ANDROID_external_memory_android_hardware_buffer[]
 Implementations must: not report
@@ -727,8 +771,9 @@ ename:VK_EXTERNAL_MEMORY_HANDLE_TYPE_SCREEN_BUFFER_BIT_QNX.
 endif::VK_QNX_external_memory_screen_buffer[]
 ifdef::VK_EXT_external_memory_host[]
 Implementations must: not report
-ename:VK_EXTERNAL_MEMORY_FEATURE_DEDICATED_ONLY_BIT for images or buffers
-with external handle type
+ename:VK_EXTERNAL_MEMORY_FEATURE_DEDICATED_ONLY_BIT for
+ifdef::VK_ARM_tensors[tensors,]
+images or buffers with external handle type
 ename:VK_EXTERNAL_MEMORY_HANDLE_TYPE_HOST_ALLOCATION_BIT_EXT, or
 ename:VK_EXTERNAL_MEMORY_HANDLE_TYPE_HOST_MAPPED_FOREIGN_MEMORY_BIT_EXT.
 endif::VK_EXT_external_memory_host[]
@@ -770,8 +815,9 @@ include::{generated}/api/structs/VkPhysicalDeviceImageDrmFormatModifierInfoEXT.a
     structure.
   * pname:drmFormatModifier is the image's _Linux DRM format modifier_,
     corresponding to
-    slink:VkImageDrmFormatModifierExplicitCreateInfoEXT::pname:modifier or
-    to slink:VkImageDrmFormatModifierListCreateInfoEXT::pname:pModifiers.
+    slink:VkImageDrmFormatModifierExplicitCreateInfoEXT::pname:drmFormatModifier
+    or to
+    slink:VkImageDrmFormatModifierListCreateInfoEXT::pname:pDrmFormatModifiers.
   * pname:sharingMode specifies how the image will be accessed by multiple
     queue families.
   * pname:queueFamilyIndexCount is the number of entries in the
@@ -813,9 +859,10 @@ ifdef::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
 [open,refpage='VkSamplerYcbcrConversionImageFormatProperties',desc='Structure specifying combined image sampler descriptor count for multi-planar images',type='structs']
 --
 To determine the number of combined image samplers required to support a
-multi-planar format, add slink:VkSamplerYcbcrConversionImageFormatProperties
-to the pname:pNext chain of the slink:VkImageFormatProperties2 structure in
-a call to fname:vkGetPhysicalDeviceImageFormatProperties2.
+<<formats-multiplanar, multi-planar format>>, add
+slink:VkSamplerYcbcrConversionImageFormatProperties to the pname:pNext chain
+of the slink:VkImageFormatProperties2 structure in a call to
+fname:vkGetPhysicalDeviceImageFormatProperties2.
 
 The sname:VkSamplerYcbcrConversionImageFormatProperties structure is defined
 as:
@@ -853,7 +900,6 @@ pname:maxDescriptorSetSamplers, pname:maxDescriptorSetSampledImages,
 pname:maxPerStageDescriptorSamplers, and
 pname:maxPerStageDescriptorSampledImages limits.
 
-.Note
 [NOTE]
 ====
 All descriptors in a binding use the same maximum
@@ -862,7 +908,8 @@ implementations to use a uniform stride for dynamic indexing of the
 descriptors in the binding.
 
 For example, consider a descriptor set layout binding with two descriptors
-and immutable samplers for multi-planar formats that have
+and immutable samplers for <<formats-multiplanar, multi-planar formats>>
+that have
 sname:VkSamplerYcbcrConversionImageFormatProperties::pname:combinedImageSamplerDescriptorCount
 values of `2` and `3` respectively.
 There are two descriptors in the binding and the maximum
@@ -872,19 +919,18 @@ To create a descriptor pool that allows allocating four descriptor sets with
 this layout, pname:descriptorCount must be at least `24`.
 ====
 
-ifdef::VK_KHR_maintenance6[]
+ifdef::VK_VERSION_1_4,VK_KHR_maintenance6[]
 Instead of querying all the potential formats that the application might use
 in the descriptor layout, the application can: use the
-slink:VkPhysicalDeviceMaintenance6PropertiesKHR::pname:maxCombinedImageSamplerDescriptorCount
-property to determine the maximum descriptor size that that will accommodate
-any and all <<formats-requiring-sampler-ycbcr-conversion, formats that
-require a sampler {YCbCr} conversion>> supported by the implementation.
-endif::VK_KHR_maintenance6[]
+slink:VkPhysicalDeviceMaintenance6Properties::pname:maxCombinedImageSamplerDescriptorCount
+property to determine the maximum descriptor size that will accommodate any
+and all <<formats-requiring-sampler-ycbcr-conversion, formats that require a
+sampler {YCbCr} conversion>> supported by the implementation.
+endif::VK_VERSION_1_4,VK_KHR_maintenance6[]
 
 endif::VK_VERSION_1_1,VK_KHR_sampler_ycbcr_conversion[]
 
 ifdef::VK_ANDROID_external_memory_android_hardware_buffer[]
-
 [open,refpage='VkAndroidHardwareBufferUsageANDROID',desc='Struct containing Android hardware buffer usage flags',type='structs']
 --
 To obtain optimal Android hardware buffer usage flags for specific image
@@ -911,7 +957,6 @@ It must: include at least one GPU usage flag
 (code:AHARDWAREBUFFER_USAGE_GPU_*), even if none of the corresponding Vulkan
 usages or flags are requested.
 
-.Note
 [NOTE]
 ====
 Requiring at least one GPU usage flag ensures that Android hardware buffer
@@ -925,23 +970,27 @@ uses indicated in slink:VkImageFormatProperties2 are required.
 
 include::{generated}/validity/structs/VkAndroidHardwareBufferUsageANDROID.adoc[]
 --
-
 endif::VK_ANDROID_external_memory_android_hardware_buffer[]
 
-ifdef::VK_EXT_host_image_copy[]
-
-[open,refpage='VkHostImageCopyDevicePerformanceQueryEXT',desc='Struct containing information about optimality of device access',type='structs']
+ifdef::VK_VERSION_1_4,VK_EXT_host_image_copy[]
+[open,refpage='VkHostImageCopyDevicePerformanceQuery',desc='Struct containing information about optimality of device access',type='structs',alias='VkHostImageCopyDevicePerformanceQueryEXT']
 --
-To query if using ename:VK_IMAGE_USAGE_HOST_TRANSFER_BIT_EXT has a negative
+To query if using ename:VK_IMAGE_USAGE_HOST_TRANSFER_BIT has a negative
 impact on device performance when accessing an image, add
-ename:VK_IMAGE_USAGE_HOST_TRANSFER_BIT_EXT to
+ename:VK_IMAGE_USAGE_HOST_TRANSFER_BIT to
 slink:VkPhysicalDeviceImageFormatInfo2::pname:usage, and add a
-sname:VkHostImageCopyDevicePerformanceQueryEXT structure to the pname:pNext
+sname:VkHostImageCopyDevicePerformanceQuery structure to the pname:pNext
 chain of a slink:VkImageFormatProperties2 structure passed to
 flink:vkGetPhysicalDeviceImageFormatProperties2.
 This structure is defined as:
 
+include::{generated}/api/structs/VkHostImageCopyDevicePerformanceQuery.adoc[]
+
+ifdef::VK_EXT_host_image_copy[]
+or the equivalent
+
 include::{generated}/api/structs/VkHostImageCopyDevicePerformanceQueryEXT.adoc[]
+endif::VK_EXT_host_image_copy[]
 
   * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
@@ -950,15 +999,14 @@ include::{generated}/api/structs/VkHostImageCopyDevicePerformanceQueryEXT.adoc[]
     copy has no adverse effect on device access performance, compared to an
     image that is created with exact same creation parameters, and bound to
     the same slink:VkDeviceMemory, except that
-    ename:VK_IMAGE_USAGE_HOST_TRANSFER_BIT_EXT is replaced with
+    ename:VK_IMAGE_USAGE_HOST_TRANSFER_BIT is replaced with
     ename:VK_IMAGE_USAGE_TRANSFER_SRC_BIT and
     ename:VK_IMAGE_USAGE_TRANSFER_DST_BIT.
   * pname:identicalMemoryLayout returns ename:VK_TRUE if use of host image
     copy has no impact on memory layout compared to an image that is created
     with exact same creation parameters, and bound to the same
-    slink:VkDeviceMemory, except that
-    ename:VK_IMAGE_USAGE_HOST_TRANSFER_BIT_EXT is replaced with
-    ename:VK_IMAGE_USAGE_TRANSFER_SRC_BIT and
+    slink:VkDeviceMemory, except that ename:VK_IMAGE_USAGE_HOST_TRANSFER_BIT
+    is replaced with ename:VK_IMAGE_USAGE_TRANSFER_SRC_BIT and
     ename:VK_IMAGE_USAGE_TRANSFER_DST_BIT.
 
 The implementation may: return ename:VK_FALSE in pname:optimalDeviceAccess
@@ -975,7 +1023,6 @@ block-compressed format and flink:vkGetPhysicalDeviceImageFormatProperties2
 returns ename:VK_SUCCESS, the implementation must: return ename:VK_TRUE in
 pname:optimalDeviceAccess.
 
-.Note
 [NOTE]
 ====
 Applications can make use of pname:optimalDeviceAccess to determine their
@@ -985,7 +1032,6 @@ and the implementation considers the resource sub-optimally accessed, it is
 likely better to use device copies instead.
 ====
 
-.Note
 [NOTE]
 ====
 Layout not being identical yet still considered optimal for device access
@@ -993,7 +1039,6 @@ could happen if the implementation has different memory layout patterns,
 some of which are easier to access on the host.
 ====
 
-.Note
 [NOTE]
 ====
 The most practical reason for pname:optimalDeviceAccess to be ename:VK_FALSE
@@ -1007,13 +1052,11 @@ ename:VK_FALSE if certain conditions are met, such as specific image usage
 flags or creation flags.
 ====
 
-include::{generated}/validity/structs/VkHostImageCopyDevicePerformanceQueryEXT.adoc[]
+include::{generated}/validity/structs/VkHostImageCopyDevicePerformanceQuery.adoc[]
 --
-
-endif::VK_EXT_host_image_copy[]
+endif::VK_VERSION_1_4,VK_EXT_host_image_copy[]
 
 ifdef::VK_EXT_filter_cubic[]
-
 To determine if cubic filtering can be used with a given image format and a
 given image view type add a
 slink:VkPhysicalDeviceImageViewImageFormatInfoEXT structure to the
@@ -1050,11 +1093,11 @@ include::{generated}/api/structs/VkFilterCubicImageViewImageFormatPropertiesEXT.
   * pname:filterCubic tells if image format, image type and image view type
     can: be used with cubic filtering.
     This field is set by the implementation.
-    User-specified value is ignored.
+    An application-specified value is ignored.
   * pname:filterCubicMinmax tells if image format, image type and image view
     type can: be used with cubic filtering and minmax filtering.
     This field is set by the implementation.
-    User-specified value is ignored.
+    An application-specified value is ignored.
 
 include::{generated}/validity/structs/VkFilterCubicImageViewImageFormatPropertiesEXT.adoc[]
 
@@ -1080,8 +1123,8 @@ fname:vkGetPhysicalDeviceImageFormatProperties returns a bitmask of
 elink:VkSampleCountFlagBits in pname:sampleCounts specifying the supported
 sample counts for the image parameters.
 
-pname:sampleCounts will be set to ename:VK_SAMPLE_COUNT_1_BIT if at least
-one of the following conditions is true:
+pname:sampleCounts will be ename:VK_SAMPLE_COUNT_1_BIT if at least one of
+the following conditions is true:
 
   * pname:tiling is ename:VK_IMAGE_TILING_LINEAR
   * pname:type is not ename:VK_IMAGE_TYPE_2D
@@ -1158,7 +1201,6 @@ slink:VkImageFormatProperties::pname:maxExtent for each type is subject to
 the constraints below.
 
 [NOTE]
-.Note
 ====
 Implementations must: support images with dimensions up to the
 <<limits-minmax, required minimum/maximum values>> for all types of images.
@@ -1260,11 +1302,11 @@ endif::VK_KHR_external_memory_capabilities[]
 
 Only usage flags representable in elink:VkBufferUsageFlagBits are returned
 in this structure's pname:usage.
-ifdef::VK_KHR_maintenance5[]
-If a slink:VkBufferUsageFlags2CreateInfoKHR structure is present in the
-pname:pNext chain, all usage flags of the buffer are returned in
-slink:VkBufferUsageFlags2CreateInfoKHR::pname:usage.
-endif::VK_KHR_maintenance5[]
+ifdef::VK_VERSION_1_4,VK_KHR_maintenance5[]
+If the pname:pNext chain includes a slink:VkBufferUsageFlags2CreateInfo
+structure, all usage flags of the buffer are returned in
+slink:VkBufferUsageFlags2CreateInfo::pname:usage.
+endif::VK_VERSION_1_4,VK_KHR_maintenance5[]
 
 .Valid Usage
 ****
@@ -1297,6 +1339,67 @@ include::{generated}/validity/structs/VkExternalBufferProperties.adoc[]
 --
 endif::VK_VERSION_1_1,VK_KHR_external_memory_capabilities[]
 
+ifdef::VK_ARM_tensors[]
+[[capabilities-tensor]]
+== Additional Tensor Capabilities
+
+
+[open,refpage='vkGetPhysicalDeviceExternalTensorPropertiesARM',desc='Function for querying external tensor handle capabilities.',type='protos']
+--
+To query the external handle types supported by tensors, call:
+
+include::{generated}/api/protos/vkGetPhysicalDeviceExternalTensorPropertiesARM.adoc[]
+
+  * pname:physicalDevice is the physical device from which to query the
+    tensor capabilities.
+  * pname:pExternalTensorInfo is a pointer to a
+    slink:VkPhysicalDeviceExternalTensorInfoARM structure describing the
+    parameters that would be consumed by flink:vkCreateTensorARM.
+  * pname:pExternalTensorProperties is a pointer to a
+    slink:VkExternalTensorPropertiesARM structure in which the capabilities
+    are returned.
+
+include::{generated}/validity/protos/vkGetPhysicalDeviceExternalTensorPropertiesARM.adoc[]
+--
+
+[open,refpage='VkPhysicalDeviceExternalTensorInfoARM',desc='Structure specifying tensor creation parameters.',type='structs']
+--
+The sname:VkPhysicalDeviceExternalTensorInfoARM structure is defined as:
+
+include::{generated}/api/structs/VkPhysicalDeviceExternalTensorInfoARM.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:flags is a bitmask of elink:VkTensorCreateFlagBitsARM describing
+    additional parameters of the tensor, corresponding to
+    slink:VkTensorCreateInfoARM::pname:flags.
+  * pname:pDescription is a slink:VkTensorDescriptionARM structure
+    describing the tensor, corresponding to
+    slink:VkTensorCreateInfoARM::pname:pDescription.
+  * pname:handleType is a elink:VkExternalMemoryHandleTypeFlagBits value
+    specifying the external memory handle type for which capabilities will
+    be returned.
+
+include::{generated}/validity/structs/VkPhysicalDeviceExternalTensorInfoARM.adoc[]
+--
+
+[open,refpage='VkExternalTensorPropertiesARM',desc='Structure specifying supported external handle capabilities for a tensor',type='structs']
+--
+The sname:VkExternalTensorPropertiesARM structure is defined as:
+
+include::{generated}/api/structs/VkExternalTensorPropertiesARM.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:externalMemoryProperties is a slink:VkExternalMemoryProperties
+    structure specifying various capabilities of the external handle type
+    when used with the specified tensor creation parameters.
+
+include::{generated}/validity/structs/VkExternalTensorPropertiesARM.adoc[]
+--
+endif::VK_ARM_tensors[]
 
 ifdef::VK_VERSION_1_1,VK_KHR_external_semaphore_capabilities[]
 [[capabilities-semaphore]]
@@ -1428,7 +1531,6 @@ ifdef::VK_NV_external_sci_sync[]
 endif::VK_NV_external_sci_sync[]
 
 [NOTE]
-.Note
 ====
 Handles of type ename:VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_SYNC_FD_BIT
 generated by the implementation may represent either Linux Sync Files or
@@ -1446,7 +1548,7 @@ underlying physical device and/or the same driver version, as defined in the
 following table:
 
 [[external-semaphore-handle-types-compatibility]]
-.External semaphore handle types compatibility
+.External Semaphore Handle Types Compatibility
 |====
 | Handle type | sname:VkPhysicalDeviceIDProperties{wbro}::pname:driverUUID | sname:VkPhysicalDeviceIDProperties{wbro}::pname:deviceUUID
 | ename:VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_FD_BIT | Must match | Must match
@@ -1454,7 +1556,9 @@ following table:
 | ename:VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_KMT_BIT | Must match | Must match
 | ename:VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_D3D12_FENCE_BIT | Must match | Must match
 | ename:VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_SYNC_FD_BIT | No restriction | No restriction
+ifdef::VK_FUCHSIA_external_semaphore[]
 | ename:VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_ZIRCON_EVENT_BIT_FUCHSIA | No restriction | No restriction
+endif::VK_FUCHSIA_external_semaphore[]
 ifdef::VK_NV_external_sci_sync[]
 | ename:VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_SCI_SYNC_OBJ_BIT_NV | No restriction | No restriction
 endif::VK_NV_external_sci_sync[]
@@ -1503,7 +1607,7 @@ endif::VK_KHR_external_semaphore_capabilities[]
 
 If pname:handleType is not supported by the implementation, then
 slink:VkExternalSemaphoreProperties::pname:externalSemaphoreFeatures will be
-set to zero.
+zero.
 
 include::{generated}/validity/structs/VkExternalSemaphoreProperties.adoc[]
 --
@@ -1596,7 +1700,6 @@ endif::VK_KHR_external_fence_capabilities[]
     returned.
 
 [NOTE]
-.Note
 ====
 Handles of type ename:VK_EXTERNAL_FENCE_HANDLE_TYPE_SYNC_FD_BIT generated by
 the implementation may represent either Linux Sync Files or Android Fences
@@ -1667,8 +1770,8 @@ ifdef::VK_NV_external_sci_sync,VK_NV_external_sci_sync2[]
     hardware engines including the CPU and software (intra-process and
     inter-process) operating domains and perform signal and wait operations.
   * ename:VK_EXTERNAL_FENCE_HANDLE_TYPE_SCI_SYNC_FENCE_BIT_NV specifies a
-    struct of code:NvSciSyncFence that is a snapshot of a synchronization
-    object’s underlying primitive and represents its possible state.
+    structure of code:NvSciSyncFence that is a snapshot of a synchronization
+    object's underlying primitive and represents its possible state.
 endif::VK_NV_external_sci_sync,VK_NV_external_sci_sync2[]
 
 <<<
@@ -1678,7 +1781,7 @@ underlying physical device and/or the same driver version, as defined in the
 following table:
 
 [[external-fence-handle-types-compatibility]]
-.External fence handle types compatibility
+.External Fence Handle Types Compatibility
 |====
 | Handle type | sname:VkPhysicalDeviceIDProperties{wbro}::pname:driverUUID | sname:VkPhysicalDeviceIDProperties{wbro}::pname:deviceUUID
 | ename:VK_EXTERNAL_FENCE_HANDLE_TYPE_OPAQUE_FD_BIT | Must match | Must match
@@ -1730,8 +1833,7 @@ endif::VK_KHR_external_fence_capabilities[]
     pname:handleType.
 
 If pname:handleType is not supported by the implementation, then
-slink:VkExternalFenceProperties::pname:externalFenceFeatures will be set to
-zero.
+slink:VkExternalFenceProperties::pname:externalFenceFeatures will be zero.
 
 include::{generated}/validity/structs/VkExternalFenceProperties.adoc[]
 --
@@ -1804,10 +1906,10 @@ endif::VK_EXT_calibrated_timestamps[]
 If pname:pTimeDomains is `NULL`, then the number of calibrateable time
 domains supported for the given pname:physicalDevice is returned in
 pname:pTimeDomainCount.
-Otherwise, pname:pTimeDomainCount must: point to a variable set by the user
-to the number of elements in the pname:pTimeDomains array, and on return the
-variable is overwritten with the number of values actually written to
-pname:pTimeDomains.
+Otherwise, pname:pTimeDomainCount must: point to a variable set by the
+application to the number of elements in the pname:pTimeDomains array, and
+on return the variable is overwritten with the number of values actually
+written to pname:pTimeDomains.
 If the value of pname:pTimeDomainCount is less than the number of
 calibrateable time domains supported, at most pname:pTimeDomainCount values
 will be written to pname:pTimeDomains, and ename:VK_INCOMPLETE will be

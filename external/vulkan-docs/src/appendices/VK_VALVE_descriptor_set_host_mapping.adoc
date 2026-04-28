@@ -1,4 +1,4 @@
-// Copyright 2020-2024 The Khronos Group Inc.
+// Copyright 2020-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -22,7 +22,6 @@ Memory offsets and sizes for descriptors can: be queried from a
 slink:VkDescriptorSetLayout as well.
 
 [NOTE]
-.Note
 ====
 There is currently no specification language written for this extension.
 The links to APIs defined by the extension are to stubs that only include
@@ -31,7 +30,6 @@ statements.
 ====
 
 [NOTE]
-.Note
 ====
 This extension is only intended for use in specific embedded environments
 with known implementation details, and is therefore undocumented.
@@ -45,6 +43,7 @@ ifndef::isrefpage[]
 
 [open,refpage='vkGetDescriptorSetLayoutHostMappingInfoVALVE',desc='Stub description of vkGetDescriptorSetLayoutHostMappingInfoVALVE',type='protos']
 --
+[[features-descriptorSetHostMapping]]
 There is currently no specification language written for this command.
 This section acts only as placeholder and to avoid dead links in the
 specification and reference pages.

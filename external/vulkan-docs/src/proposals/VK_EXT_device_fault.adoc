@@ -1,10 +1,11 @@
-// Copyright 2021-2024 The Khronos Group Inc.
+// Copyright 2021-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
 = VK_EXT_device_fault
 :toc: left
-:refpage: https://registry.khronos.org/vulkan/specs/1.2-extensions/man/html/
+:docs: https://docs.vulkan.org/spec/latest/
+:extensions: {docs}appendices/extensions.html#
 :sectnums:
 
 This document outlines functionality to allow applications to query for
@@ -13,7 +14,7 @@ additional diagnostic information following device-loss.
 == Problem Statement
 
 Device-loss errors can be challenging to diagnose. They can be triggered by a
-number of issues, including invalid application behaviour, driver bugs, and
+number of issues, including invalid application behavior, driver bugs, and
 physical failure or removal of hardware. Whilst the Vulkan Validation layers are
 recommended as a first step in diagnosing the majority of API usage issues, they
 are unable to address all possible causes of device-loss.
@@ -156,7 +157,6 @@ upper_address = (pInfo->reportedAddress |  (pInfo->addressPrecision-1))
 ---------------------------------------------------
 
 [NOTE]
-.Note
 ====
 It is valid for the `reportedAddress` to contain a more precise address
 than indicated by `addressPrecision`.
@@ -228,12 +228,12 @@ structure. Should they be combined?
 to reduce API surface area.
 
 6) How should implementors approach extensibility for vendor-specific faults?
-Should they rely on pname:pNext chains, or should the extension introduce a
+Should they rely on `pNext` chains, or should the extension introduce a
 generic structure to return vendor error codes and human-readable descriptions
 in the base structure?
 
 *RESOLVED*: Implementors should utilize the generic
 `VkDeviceFaultVendorInfoEXT` structures where applicable, and fallback to
-extending pname:pNext chains where this is insufficient. Where a pname:pNext
+extending `pNext` chains where this is insufficient. Where a `pNext`
 chain is required, vendors should tailor their human-readable error
 descriptions to advise developers that additional information may be available.

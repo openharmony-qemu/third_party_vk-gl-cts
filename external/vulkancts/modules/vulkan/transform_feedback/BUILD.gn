@@ -32,6 +32,13 @@ ohos_source_set("deqp_vk_transform_feedback_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback/vktTransformFeedbackRandomLayoutCase.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback/vktTransformFeedbackSimpleTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback/vktTransformFeedbackTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback/vktTransformFeedbackFuzzLayoutCase.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback/vktTransformFeedbackFuzzLayoutTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback/vktTransformFeedbackPrimitiveRestartTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback/vktTransformFeedbackPrimitiveRestartTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback/vktTransformFeedbackRandomLayoutCase.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback/vktTransformFeedbackSimpleTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/transform_feedback/vktTransformFeedbackTests.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs

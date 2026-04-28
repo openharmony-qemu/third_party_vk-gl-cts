@@ -1,18 +1,20 @@
 # GL-CTS.es2
 
 set(GLCTS_GL_SRCS
-	gl3cClipDistance.cpp
-	gl3cClipDistance.hpp
 	gl3cCommonBugsTests.cpp
 	gl3cCommonBugsTests.hpp
+    gl3cDrawBuffers.cpp
+    gl3cDrawBuffers.hpp
 	gl3cTestPackages.cpp
 	gl3cTestPackages.hpp
-	gl3cCullDistanceTests.cpp
-	gl3cCullDistanceTests.hpp
+	gl3cGetUniform.cpp
+	gl3cGetUniform.hpp
 	gl3cGPUShader5Tests.cpp
 	gl3cGPUShader5Tests.hpp
 	gl3cGLSLnoperspectiveTests.cpp
 	gl3cGLSLnoperspectiveTests.hpp
+	gl3cPrimitiveRestart.cpp
+	gl3cPrimitiveRestart.hpp
 	gl3cTextureSizePromotion.cpp
 	gl3cTextureSizePromotion.hpp
 	gl3cTextureSwizzleTests.cpp
@@ -21,6 +23,8 @@ set(GLCTS_GL_SRCS
 	gl3cTransformFeedbackTests.hpp
 	gl3cTransformFeedbackOverflowQueryTests.cpp
 	gl3cTransformFeedbackOverflowQueryTests.hpp
+	gl3cTransformFeedback3Tests.cpp
+	gl3cTransformFeedback3Tests.hpp
 	gl4cTestPackages.cpp
 	gl4cTestPackages.hpp
 	gl4cBufferStorageTests.cpp
@@ -43,9 +47,6 @@ set(GLCTS_GL_SRCS
 	gl4cEnhancedLayoutsTests.hpp
 	gl4cGetTextureSubImageTests.cpp
 	gl4cGetTextureSubImageTests.hpp
-	gl4cES31CompatibilitySampleVariablesTests.cpp
-	gl4cES31CompatibilityShaderImageLoadStoreTests.cpp
-	gl4cES31CompatibilityShaderStorageBufferObjectTests.cpp
 	gl4cES31CompatibilityTests.cpp
 	gl4cES31CompatibilityTests.hpp
 	gl4cMapBufferAlignmentTests.cpp
@@ -114,14 +115,22 @@ set(GLCTS_GL_SRCS
 	gl4cSparseTextureClampTests.hpp
 	gl4cSpirvExtensionsTests.cpp
 	gl4cSpirvExtensionsTests.hpp
+	gl4cClearTexImageAndSubImageTests.hpp
+	gl4cClearTexImageAndSubImageTests.cpp
 	gl4cPostDepthCoverageTests.cpp
 	gl4cPostDepthCoverageTests.hpp
 	gl4cIndirectParametersTests.cpp
 	gl4cIndirectParametersTests.hpp
 	gl4cLimitsTests.cpp
 	gl4cLimitsTests.hpp
+	gl4cTextureQueryLevelsTests.hpp
+	gl4cTextureQueryLevelsTests.cpp
 	gl4cGlSpirvTests.cpp
 	gl4cGlSpirvTests.hpp
+	gl4cTextureQueryLodTests.hpp
+	gl4cTextureQueryLodTests.cpp
+	gl4cTextureBufferTests.hpp
+	gl4cTextureBufferTests.cpp
 	)
 
 set(GLCTS_GL_LIBS
@@ -129,10 +138,6 @@ set(GLCTS_GL_LIBS
 	glutil
 	tcutil
 	)
-
-if (DEQP_GTF_AVAILABLE)
-	list(APPEND GLCTS_GL_LIBS glcts-gtf)
-endif ()
 
 PCH(GLCTS_GL_SRCS ../pch.cpp)
 

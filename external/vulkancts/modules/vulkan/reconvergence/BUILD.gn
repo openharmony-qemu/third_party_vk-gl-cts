@@ -24,12 +24,17 @@ config("deqp_vk_reconvergence_config") {
 }
 
 ohos_source_set("deqp_vk_reconvergence_source") {
-  sources = [ "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/reconvergence/vktReconvergenceTests.cpp" ]
+  sources = [
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/reconvergence/vktReconvergenceTerminateInvocationTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/reconvergence/vktReconvergenceTests.cpp",
+  ]
 
   include_dirs = deqp_vk_common_include_dirs
   include_dirs += [
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/reconvergence",
-    #"//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/reconvergence/vktReconvergenceTerminateInvocationTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/reconvergence/vktReconvergenceTests.hpp",
   ]
   deps = []
   part_name = "acts"

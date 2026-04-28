@@ -1,4 +1,4 @@
-// Copyright 2017-2024 The Khronos Group Inc.
+// Copyright 2017-2025 The Khronos Group Inc.
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
@@ -52,6 +52,14 @@ slink:VkRenderPassBeginInfo to provide sample locations for layout
 transitions performed implicitly by a render pass instance.
 
 include::{generated}/interfaces/VK_EXT_sample_locations.adoc[]
+
+=== Issues
+
+1) When using with Dynamic Rendering, is there a
+VkRenderPassSampleLocationsBeginInfoEXT equivalent struct
+
+*RESOLVED*: No, there are no subpasses that need to have a sample location
+set.
 
 === Version History
 

@@ -55,11 +55,16 @@ ohos_source_set("deqp_vk_tessellation_source") {
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/tessellation/vktTessellationUtil.hpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/tessellation/vktTessellationWindingTests.cpp",
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/tessellation/vktTessellationWindingTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/tessellation/vktTessellationMatrixMultiplicationTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/tessellation/vktTessellationMatrixMultiplicationTests.hpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/tessellation/vktTessellationMaxIOTests.cpp",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/tessellation/vktTessellationMaxIOTests.hpp",
   ]
 
   include_dirs = deqp_vk_common_include_dirs
   include_dirs += [
     "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/tessellation",
+    "//third_party/vk-gl-cts/external/vulkancts/modules/vulkan/amber",
   ]
 
   deps = [
