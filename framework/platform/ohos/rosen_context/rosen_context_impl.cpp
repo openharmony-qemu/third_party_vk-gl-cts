@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Copyright (c) 2022 Shenzhen Kaihong Digital Industry Development Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +15,9 @@
  */
 
 #include "rosen_context_impl.h"
-
+#include <ui/rs_ui_director.h>
+#include <ui/rs_ui_context.h>
+#include <transaction/rs_interfaces.h>
 #include "ui/rs_surface_extractor.h"
 #include "backend/rs_surface_ohos_gl.h"
 
@@ -23,7 +26,8 @@ using namespace Rosen;
 
 RosenContextImpl::RosenContextImpl()
 {
-    InitEgl();
+    bool eglRet = InitEgl();
+    printf("RosenContextImpl: InitEgl ret=%d\n", eglRet);
     InitProducer();
 }
 
@@ -79,16 +83,31 @@ void RosenContextImpl::ShowConfig(EGLConfig cfg)
     printf("%8d%8d%8d%8d%8d%8d%8d%8d%8d\n", red, green, blue, alpha, depth, stencil, samples, sft, rt);
 }
 
+static std::shared_ptr<RSUIDirector> CreateRSUIDirector()
+{
+    auto screenId = RSInterfaces::GetInstance().GetDefaultScreenId();
+    sptr<IRemoteObject> connectToRender = RSInterfaces::GetInstance().GetConnectToRenderToken(screenId);
+    std::shared_ptr<RSUIDirector> rsUiDirector = OHOS::Rosen::RSUIDirector::Create(connectToRender, nullptr);
+    return rsUiDirector;
+}
+
 void RosenContextImpl::InitProducer()
 {
-    displayNode_ = RSDisplayNode::Create(RSDisplayNodeConfig());
-    surfaceNode_ = RSSurfaceNode::Create(RSSurfaceNodeConfig());
+    auto uidirector = CreateRSUIDirector();
+    auto rsUIContext = uidirector->GetRSUIContext();
+    displayNode_ = RSDisplayNode::Create(RSDisplayNodeConfig(), rsUIContext);
+    printf("InitProducer: displayNode_=%p\n", (void*)displayNode_.get());
+    surfaceNode_ = RSSurfaceNode::Create(RSSurfaceNodeConfig(), true, rsUIContext);
+    printf("InitProducer: surfaceNode_=%p\n", (void*)surfaceNode_.get());
     surfaceNode_->SetBounds(0, 0, 512, 512);
     displayNode_->AddChild(surfaceNode_, -1);
 
     std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode_);
+    printf("InitProducer: rsSurface=%p\n", (void*)rsSurface.get());
     std::shared_ptr<RSSurfaceOhosGl> rsSurfaceOhosGl = std::static_pointer_cast<RSSurfaceOhosGl>(rsSurface);
+    printf("InitProducer: rsSurfaceOhosGl=%p\n", (void*)rsSurfaceOhosGl.get());
     producer_ = rsSurfaceOhosGl->GetSurface();
+    printf("InitProducer: producer_=%p\n", (void*)producer_.GetRefPtr());
 }
 
 bool RosenContextImpl::InitEgl()
@@ -481,17 +500,20 @@ uint64_t RosenContextImpl::CreateWindow(uint32_t x, uint32_t y, uint32_t width, 
     static uint64_t windowId = 1;
     uint64_t wid = windowId++;
 
-    // printf("impl create window %llu\n",wid);
     if (displayNode_ == nullptr)
     {
         displayNode_ = RSDisplayNode::Create(RSDisplayNodeConfig());
     }
     vulkanWindows_[wid].surfaceNode_ = RSSurfaceNode::Create(RSSurfaceNodeConfig());
+    printf("CreateWindow: surfaceNode_=%p displayNode_=%p\n", (void*)vulkanWindows_[wid].surfaceNode_.get(),
+        (void*)displayNode_.get());
     vulkanWindows_[wid].surfaceNode_->SetBounds(x, y, width, height);
     displayNode_->AddChild(vulkanWindows_[wid].surfaceNode_, -1);
 
     std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(vulkanWindows_[wid].surfaceNode_);
+    printf("CreateWindow: rsSurface=%p\n", (void*)rsSurface.get());
     std::shared_ptr<RSSurfaceOhosGl> rsSurfaceOhosGl = std::static_pointer_cast<RSSurfaceOhosGl>(rsSurface);
+    printf("CreateWindow: rsSurfaceOhosGl=%p\n", (void*)rsSurfaceOhosGl.get());
     vulkanWindows_[wid].producer_ = rsSurfaceOhosGl->GetSurface();
 
     vulkanWindows_[wid].nativeWindow_ = CreateNativeWindowFromSurface(&vulkanWindows_[wid].producer_);

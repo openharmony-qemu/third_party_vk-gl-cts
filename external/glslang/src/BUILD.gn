@@ -363,7 +363,6 @@ ohos_static_library("glslang") {
   if (build_xts) {
     deps += [
       "//third_party/vk-gl-cts/external/glslang/src/SPIRV:libdeqp_spirv",
-      "//third_party/vk-gl-cts/external/glslang/src/SPIRV:libdeqp_spvremapper",
     ]
   }
   public_configs = [ ":glslang_public" ]

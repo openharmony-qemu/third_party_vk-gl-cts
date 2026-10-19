@@ -50,6 +50,7 @@ ohos_source_set("SPIRV_source") {
     "//third_party/vk-gl-cts/external/glslang/src/SPIRV/SpvTools.cpp",
     "//third_party/vk-gl-cts/external/glslang/src/SPIRV/disassemble.cpp",
     "//third_party/vk-gl-cts/external/glslang/src/SPIRV/doc.cpp",
+    "//third_party/vk-gl-cts/external/glslang/src/SPIRV/SPVRemapper.cpp",
   ]
   include_dirs = [
     "//third_party/vk-gl-cts/external/glslang/src",
@@ -72,25 +73,3 @@ ohos_shared_library("libdeqp_spirv") {
   subsystem_name = "thirdparty"
 }
 
-#lib SPVRemapper
-ohos_source_set("SPVRemapper_source") {
-  sources = [
-    "//third_party/vk-gl-cts/external/glslang/src/SPIRV/SPVRemapper.cpp",
-    "//third_party/vk-gl-cts/external/glslang/src/SPIRV/doc.cpp",
-  ]
-  include_dirs = [
-    "//third_party/vk-gl-cts/external/glslang/src",
-    "//third_party/vk-gl-cts/external/glslang/src/glslang",
-  ]
-
-  deps = []
-  configs = [ ":SPIRV_config" ]
-  part_name = "vk-gl-cts"
-  subsystem_name = "thirdparty"
-}
-
-ohos_shared_library("libdeqp_spvremapper") {
-  deps = [ ":SPVRemapper_source" ]
-  part_name = "vk-gl-cts"
-  subsystem_name = "thirdparty"
-}
