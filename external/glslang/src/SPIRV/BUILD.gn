@@ -72,4 +72,3 @@ ohos_shared_library("libdeqp_spirv") {
   part_name = "vk-gl-cts"
   subsystem_name = "thirdparty"
 }
-
