@@ -83,7 +83,6 @@ ohos_source_set("deqp_vkutilnoshader_source") {
   deps = [
     # "//third_party/vk-gl-cts/external/glslang/src/OGLCompilersDLL:libdeqp_OGLCompiler",
     "//third_party/vk-gl-cts/external/glslang/src/SPIRV:libdeqp_spirv",
-    "//third_party/vk-gl-cts/external/glslang/src/SPIRV:libdeqp_spvremapper",
     "//third_party/vk-gl-cts/external/glslang/src/glslang:libdeqp_GenericCodeGen",
     "//third_party/vk-gl-cts/external/glslang/src/glslang:libdeqp_MachineIndependent",
     "//third_party/vk-gl-cts/external/glslang/src/glslang:libdeqp_OSDependent",
@@ -161,7 +160,6 @@ ohos_source_set("deqp_vkutil_source") {
 
     # "//third_party/vk-gl-cts/external/glslang/src/OGLCompilersDLL:libdeqp_OGLCompiler",
     "//third_party/vk-gl-cts/external/glslang/src/SPIRV:libdeqp_spirv",
-    "//third_party/vk-gl-cts/external/glslang/src/SPIRV:libdeqp_spvremapper",
     "//third_party/vk-gl-cts/external/glslang/src/glslang:libdeqp_GenericCodeGen",
     "//third_party/vk-gl-cts/external/glslang/src/glslang:libdeqp_MachineIndependent",
     "//third_party/vk-gl-cts/external/glslang/src/glslang:libdeqp_OSDependent",
